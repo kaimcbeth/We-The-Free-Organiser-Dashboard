@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
 import { formatEventDate, formatTimeRange } from "@/lib/time";
 import { CheckIn, type Person } from "./check-in";
+import { signPhotos } from "@/lib/photos";
+import { LoadError } from "@/components/load-error";
 
 type EventDetail = {
   id: string;
@@ -30,10 +32,10 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
   const [people, attendance, earlier] = await Promise.all([
     supabase
       .from("people")
-      .select("id, first_name, last_name, suburb")
+      .select("id, first_name, last_name, suburb, photo_updated_at")
       .eq("team_id", event.team_id)
       .order("first_name")
-      .returns<Person[]>(),
+      .returns<(Person & { photo_updated_at: string | null })[]>(),
     supabase.from("attendance").select("person_id").eq("event_id", event.id),
     // Everyone who came to any earlier event: used to spot first-timers.
     supabase
@@ -42,6 +44,9 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
       .eq("events.team_id", event.team_id)
       .lt("events.starts_at", event.starts_at),
   ]);
+
+  if (people.error || attendance.error || earlier.error) return <LoadError what="this event's check-in list" />;
+  const photos = await signPhotos(supabase, people.data ?? []);
 
   return (
     <div>
@@ -69,6 +74,7 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
         initialPeople={people.data ?? []}
         initialCheckedIn={(attendance.data ?? []).map((a) => a.person_id)}
         returningIds={[...new Set((earlier.data ?? []).map((a) => a.person_id))]}
+        photos={photos}
       />
     </div>
   );

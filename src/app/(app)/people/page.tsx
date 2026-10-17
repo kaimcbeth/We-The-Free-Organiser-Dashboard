@@ -1,25 +1,32 @@
 import { requireOrganiser } from "@/lib/organiser";
+import { signPhotos } from "@/lib/photos";
+import { LoadError } from "@/components/load-error";
 import { PeopleList, type PersonRow } from "./people-list";
 
-type Row = Omit<PersonRow, "events" | "connected"> & {
+type Row = Omit<PersonRow, "events" | "connected" | "photoUrl"> & {
   user_id: string | null;
+  photo_updated_at: string | null;
   attendance: { count: number }[];
 };
 
 export default async function PeoplePage() {
   const { supabase, organiser } = await requireOrganiser();
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("people")
-    .select("id, first_name, last_name, suburb, email, phone, user_id, attendance(count)")
+    .select("id, first_name, last_name, suburb, email, phone, user_id, photo_updated_at, attendance(count)")
     .eq("team_id", organiser.team_id)
     .order("first_name")
     .returns<Row[]>();
 
-  const people: PersonRow[] = (data ?? []).map(({ attendance, user_id, ...p }) => ({
+  if (error) return <LoadError what="people" />;
+
+  const photos = await signPhotos(supabase, data ?? []);
+  const people: PersonRow[] = (data ?? []).map(({ attendance, user_id, photo_updated_at, ...p }) => ({
     ...p,
     connected: !!user_id,
     events: attendance[0]?.count ?? 0,
+    photoUrl: photo_updated_at ? (photos[p.id] ?? null) : null,
   }));
   const connected = people.filter((p) => p.connected).length;
 

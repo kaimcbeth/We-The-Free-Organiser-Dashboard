@@ -6,6 +6,7 @@ import { inputClass } from "@/components/form";
 import { Sheet } from "@/components/sheet";
 import { ConnectInvite } from "@/components/connect-invite";
 import { ShareLink } from "@/components/share-link";
+import { Avatar } from "@/components/avatar";
 
 export type Person = {
   id: string;
@@ -24,10 +25,12 @@ export function CheckIn({
   initialCheckedIn,
   returningIds,
   teamSlug,
+  photos,
 }: {
   eventId: string;
   teamId: string;
   teamSlug: string;
+  photos: Record<string, string>;
   organiserId: string;
   initialPeople: Person[];
   initialCheckedIn: string[];
@@ -288,6 +291,7 @@ export function CheckIn({
                       </svg>
                     )}
                   </span>
+                  <Avatar name={fullName(p)} url={photos[p.id]} size={40} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{fullName(p)}</span>
                     {p.suburb && <span className="block truncate text-sm text-stone-500">{p.suburb}</span>}

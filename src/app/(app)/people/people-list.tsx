@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createPerson, type FormState } from "@/app/actions";
 import { Field, inputClass } from "@/components/form";
+import { Avatar } from "@/components/avatar";
 
 export type PersonRow = {
   id: string;
@@ -13,6 +14,7 @@ export type PersonRow = {
   email: string | null;
   phone: string | null;
   connected: boolean;
+  photoUrl: string | null;
   events: number;
 };
 
@@ -58,13 +60,16 @@ export function PeopleList({ people }: { people: PersonRow[] }) {
           {visible.map((p) => (
             <li key={p.id} className="border-b border-black/5 last:border-0">
               <Link href={`/people/${p.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50">
-                <span
-                  className={`h-2.5 w-2.5 shrink-0 rounded-full ${p.connected ? "bg-cyan" : "bg-stone-300"}`}
-                  title={p.connected ? "Account connected" : "No account yet"}
-                  aria-label={p.connected ? "Account connected" : "No account yet"}
-                />
+                <Avatar name={[p.first_name, p.last_name].filter(Boolean).join(" ")} url={p.photoUrl} size={40} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{[p.first_name, p.last_name].filter(Boolean).join(" ")}</p>
+                  <p className="flex items-center gap-2 truncate font-medium">
+                    {[p.first_name, p.last_name].filter(Boolean).join(" ")}
+                    <span
+                      className={`h-2 w-2 shrink-0 rounded-full ${p.connected ? "bg-cyan" : "bg-stone-300"}`}
+                      title={p.connected ? "Account connected" : "No account yet"}
+                      aria-label={p.connected ? "Account connected" : "No account yet"}
+                    />
+                  </p>
                   <p className="truncate text-sm text-stone-500">
                     {[p.suburb, p.email, p.phone].filter(Boolean).join(" · ") || "No details yet"}
                   </p>

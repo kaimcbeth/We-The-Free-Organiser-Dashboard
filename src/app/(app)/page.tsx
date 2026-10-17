@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LoadError } from "@/components/load-error";
 import { requireOrganiser } from "@/lib/organiser";
 import { dayBoundsUtc, formatEventDate, formatTimeRange, todayInTz } from "@/lib/time";
 
@@ -45,6 +46,7 @@ export default async function EventsPage() {
       .returns<EventRow[]>(),
   ]);
 
+  if (today.error || upcoming.error || past.error) return <LoadError what="events" />;
   const todays = today.data ?? [];
 
   return (

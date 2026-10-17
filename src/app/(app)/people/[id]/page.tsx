@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
 import { formatEventDate } from "@/lib/time";
 import { InviteButton } from "./invite-button";
+import { PhotoPicker } from "@/components/photo-picker";
+import { signPhotos } from "@/lib/photos";
 
 type Person = {
   id: string;
@@ -17,6 +19,7 @@ type Person = {
   added_via: string;
   created_at: string;
   starting_outreach_count: number;
+  photo_updated_at: string | null;
 };
 
 type Attended = {
@@ -35,7 +38,7 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
   const { data: person } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, suburb, email, phone, user_id, linked_at, consent_marketing, added_via, created_at, starting_outreach_count",
+      "id, first_name, last_name, suburb, email, phone, user_id, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at",
     )
     .eq("id", id)
     .eq("team_id", organiser.team_id)
@@ -54,13 +57,17 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
     .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
   const outreach = events.filter((e) => e.event_type?.counts_as_outreach).length + person.starting_outreach_count;
   const name = [person.first_name, person.last_name].filter(Boolean).join(" ");
+  const photos = await signPhotos(supabase, [person]);
 
   return (
     <div>
       <Link href="/people" className="text-sm text-stone-500 hover:text-stone-800">
         ← People
       </Link>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight">{name}</h1>
+      <div className="mt-3 flex items-center gap-4">
+        <PhotoPicker personId={person.id} name={name} url={photos[person.id] ?? null} size={72} />
+      </div>
+      <h1 className="mt-4 text-2xl font-semibold tracking-tight">{name}</h1>
       <p className="mt-1 text-sm text-stone-500">
         {[person.suburb, person.email, person.phone].filter(Boolean).join(" · ") || "No details yet"}
       </p>

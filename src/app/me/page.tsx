@@ -6,6 +6,8 @@ import { AttendeeShell } from "@/components/attendee-shell";
 import { DEFAULT_TEAM_SLUG } from "@/lib/teams";
 import { formatEventDate } from "@/lib/time";
 import { ProfileForm } from "./profile-form";
+import { PhotoPicker } from "@/components/photo-picker";
+import { signPhotos } from "@/lib/photos";
 
 type Me = {
   id: string;
@@ -16,6 +18,7 @@ type Me = {
   email: string | null;
   consent_marketing: boolean;
   starting_outreach_count: number;
+  photo_updated_at: string | null;
   team: { name: string } | null;
 };
 
@@ -39,7 +42,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
   const [{ data: me }, { data: organiser }] = await Promise.all([
     supabase
       .from("people")
-      .select("id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, team:teams(name)")
+      .select("id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, photo_updated_at, team:teams(name)")
       .eq("user_id", user.id)
       .maybeSingle<Me>(),
     supabase.from("organisers").select("id").eq("id", user.id).maybeSingle(),
@@ -94,6 +97,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     .map((r) => r.event)
     .filter((e): e is NonNullable<Attended["event"]> => !!e)
     .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
+  const photos = await signPhotos(supabase, [me]);
   const outreach = events.filter((e) => e.event_type?.counts_as_outreach).length + me.starting_outreach_count;
 
   return (
@@ -103,7 +107,13 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
           You&apos;re connected. Welcome to We The Free!
         </p>
       )}
-      <p className="text-sm text-stone-500">{me.team?.name}</p>
+      <PhotoPicker
+        personId={me.id}
+        name={[me.first_name, me.last_name].filter(Boolean).join(" ")}
+        url={photos[me.id] ?? null}
+        size={80}
+      />
+      <p className="mt-4 text-sm text-stone-500">{me.team?.name}</p>
       <h1 className="text-3xl font-semibold tracking-tight">
         {[me.first_name, me.last_name].filter(Boolean).join(" ")}
       </h1>
