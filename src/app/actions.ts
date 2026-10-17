@@ -118,3 +118,28 @@ export async function createInvite(personId: string): Promise<InviteResult> {
   if (error || !data) return { error: "Couldn't create an invite. Please try again." };
   return { token: data.token };
 }
+
+// Remove a person and everything linked to them (check-ins, invites, photo).
+// Their login (if they had one) stays, but is no longer connected to anything.
+export async function deletePerson(personId: string): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+
+  const { data: person } = await supabase
+    .from("people")
+    .select("id, photo_updated_at")
+    .eq("id", personId)
+    .eq("team_id", organiser.team_id)
+    .maybeSingle();
+  if (!person) return { error: "Couldn't find that person." };
+
+  if (person.photo_updated_at) {
+    await supabase.storage.from("avatars").remove([`${personId}.jpg`]);
+  }
+
+  const { error } = await supabase.from("people").delete().eq("id", personId).eq("team_id", organiser.team_id);
+  if (error) return { error: "Couldn't delete this person. Please try again." };
+
+  revalidatePath("/people");
+  revalidatePath("/");
+  redirect("/people?deleted=1");
+}

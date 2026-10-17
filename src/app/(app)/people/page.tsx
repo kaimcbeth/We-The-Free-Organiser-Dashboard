@@ -9,7 +9,8 @@ type Row = Omit<PersonRow, "events" | "connected" | "photoUrl"> & {
   attendance: { count: number }[];
 };
 
-export default async function PeoplePage() {
+export default async function PeoplePage({ searchParams }: PageProps<"/people">) {
+  const { deleted } = await searchParams;
   const { supabase, organiser } = await requireOrganiser();
 
   const { data, error } = await supabase
@@ -37,6 +38,9 @@ export default async function PeoplePage() {
         {people.length} {people.length === 1 ? "person" : "people"} in {organiser.team?.name ?? "your team"} ·{" "}
         {connected} with an account
       </p>
+      {deleted && (
+        <p className="mt-4 rounded-2xl bg-cyan/20 px-4 py-3 text-sm font-medium text-navy">Person deleted.</p>
+      )}
       <PeopleList people={people} />
     </div>
   );

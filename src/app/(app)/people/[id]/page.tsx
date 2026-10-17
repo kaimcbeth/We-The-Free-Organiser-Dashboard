@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
 import { formatEventDate } from "@/lib/time";
 import { InviteButton } from "./invite-button";
+import { DeletePerson } from "./delete-person";
 import { PhotoPicker } from "@/components/photo-picker";
 import { signPhotos } from "@/lib/photos";
 
@@ -128,6 +129,9 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
             ))}
           </ul>
         )}
+      </section>
+      <section className="mt-10 border-t border-black/10 pt-6">
+        <DeletePerson personId={person.id} name={person.first_name} events={events.length} />
       </section>
     </div>
   );
