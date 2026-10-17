@@ -1,0 +1,147 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { signOut } from "@/app/actions";
+import { AttendeeShell } from "@/components/attendee-shell";
+import { DEFAULT_TEAM_SLUG } from "@/lib/teams";
+import { formatEventDate } from "@/lib/time";
+import { ProfileForm } from "./profile-form";
+
+type Me = {
+  id: string;
+  first_name: string;
+  last_name: string | null;
+  phone: string | null;
+  suburb: string | null;
+  email: string | null;
+  consent_marketing: boolean;
+  starting_outreach_count: number;
+  team: { name: string } | null;
+};
+
+type Attended = {
+  event: {
+    id: string;
+    title: string;
+    starts_at: string;
+    event_type: { name: string; counts_as_outreach: boolean } | null;
+  } | null;
+};
+
+export default async function MePage({ searchParams }: PageProps<"/me">) {
+  const { welcome } = await searchParams;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const [{ data: me }, { data: organiser }] = await Promise.all([
+    supabase
+      .from("people")
+      .select("id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, team:teams(name)")
+      .eq("user_id", user.id)
+      .maybeSingle<Me>(),
+    supabase.from("organisers").select("id").eq("id", user.id).maybeSingle(),
+  ]);
+
+  const headerRight = (
+    <div className="flex items-center gap-1">
+      {organiser && (
+        <Link href="/" className="rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10">
+          Organiser view
+        </Link>
+      )}
+      <form action={signOut}>
+        <button className="rounded-lg px-3 py-2 text-sm text-white/75 hover:bg-white/10 hover:text-white">
+          Sign out
+        </button>
+      </form>
+    </div>
+  );
+
+  if (!me) {
+    return (
+      <AttendeeShell right={headerRight}>
+        <h1 className="text-2xl font-semibold tracking-tight">You&apos;re logged in</h1>
+        <p className="mt-2 text-stone-600">
+          <span className="font-medium text-stone-900">{user.email}</span> isn&apos;t connected to a profile yet.
+        </p>
+        <ul className="mt-4 space-y-2 text-stone-700">
+          <li>
+            <span className="font-medium">Been to an event already?</span> Ask an organiser to show you your
+            connect QR code.
+          </li>
+          <li>
+            <span className="font-medium">New to We The Free?</span>{" "}
+            <Link href={`/join/${DEFAULT_TEAM_SLUG}`} className="font-medium text-pink-ink">
+              Join here
+            </Link>
+            .
+          </li>
+        </ul>
+      </AttendeeShell>
+    );
+  }
+
+  const { data: rows } = await supabase
+    .from("attendance")
+    .select("event:events(id, title, starts_at, event_type:event_types(name, counts_as_outreach))")
+    .eq("person_id", me.id)
+    .returns<Attended[]>();
+
+  const events = (rows ?? [])
+    .map((r) => r.event)
+    .filter((e): e is NonNullable<Attended["event"]> => !!e)
+    .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
+  const outreach = events.filter((e) => e.event_type?.counts_as_outreach).length + me.starting_outreach_count;
+
+  return (
+    <AttendeeShell right={headerRight}>
+      {welcome && (
+        <p className="mb-6 rounded-2xl bg-cyan/20 px-4 py-3 text-sm font-medium text-navy">
+          You&apos;re connected. Welcome to We The Free!
+        </p>
+      )}
+      <p className="text-sm text-stone-500">{me.team?.name}</p>
+      <h1 className="text-3xl font-semibold tracking-tight">
+        {[me.first_name, me.last_name].filter(Boolean).join(" ")}
+      </h1>
+
+      <div className="mt-6 grid grid-cols-2 gap-3">
+        <div className="rounded-2xl bg-navy p-4 text-white">
+          <p className="text-3xl font-semibold tabular-nums">{events.length}</p>
+          <p className="text-sm text-white/75">{events.length === 1 ? "event" : "events"}</p>
+        </div>
+        <div className="rounded-2xl bg-navy p-4 text-white">
+          <p className="text-3xl font-semibold tabular-nums text-pink">{outreach}</p>
+          <p className="text-sm text-white/75">outreach</p>
+        </div>
+      </div>
+
+      <section className="mt-8">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">Your events</h2>
+        {events.length === 0 ? (
+          <p className="text-sm text-stone-500">Your events will show here once an organiser checks you in.</p>
+        ) : (
+          <ul className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+            {events.map((e) => (
+              <li key={e.id} className="flex items-center gap-4 border-b border-black/5 px-4 py-3 last:border-0">
+                <div className="w-16 shrink-0 text-sm font-medium text-stone-500">{formatEventDate(e.starts_at)}</div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{e.title}</p>
+                  {e.event_type && <p className="truncate text-sm text-stone-500">{e.event_type.name}</p>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="mt-8">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">Your details</h2>
+        <ProfileForm me={me} />
+      </section>
+    </AttendeeShell>
+  );
+}

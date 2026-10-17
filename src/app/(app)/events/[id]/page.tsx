@@ -64,6 +64,7 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
       <CheckIn
         eventId={event.id}
         teamId={event.team_id}
+        teamSlug={organiser.team?.slug ?? ""}
         organiserId={organiser.id}
         initialPeople={people.data ?? []}
         initialCheckedIn={(attendance.data ?? []).map((a) => a.person_id)}

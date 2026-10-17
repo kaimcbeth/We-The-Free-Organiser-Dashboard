@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createPerson, type FormState } from "@/app/actions";
 import { Field, inputClass } from "@/components/form";
@@ -11,6 +12,7 @@ export type PersonRow = {
   suburb: string | null;
   email: string | null;
   phone: string | null;
+  connected: boolean;
   events: number;
 };
 
@@ -54,17 +56,24 @@ export function PeopleList({ people }: { people: PersonRow[] }) {
       ) : (
         <ul className="mt-4 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
           {visible.map((p) => (
-            <li key={p.id} className="flex items-center gap-3 border-b border-black/5 px-4 py-3 last:border-0">
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">{[p.first_name, p.last_name].filter(Boolean).join(" ")}</p>
-                <p className="truncate text-sm text-stone-500">
-                  {[p.suburb, p.email, p.phone].filter(Boolean).join(" · ") || "No details yet"}
-                </p>
-              </div>
-              <div className="shrink-0 text-right">
-                <p className="text-sm font-semibold tabular-nums">{p.events}</p>
-                <p className="text-xs text-stone-500">{p.events === 1 ? "event" : "events"}</p>
-              </div>
+            <li key={p.id} className="border-b border-black/5 last:border-0">
+              <Link href={`/people/${p.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50">
+                <span
+                  className={`h-2.5 w-2.5 shrink-0 rounded-full ${p.connected ? "bg-cyan" : "bg-stone-300"}`}
+                  title={p.connected ? "Account connected" : "No account yet"}
+                  aria-label={p.connected ? "Account connected" : "No account yet"}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{[p.first_name, p.last_name].filter(Boolean).join(" ")}</p>
+                  <p className="truncate text-sm text-stone-500">
+                    {[p.suburb, p.email, p.phone].filter(Boolean).join(" · ") || "No details yet"}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-sm font-semibold tabular-nums">{p.events}</p>
+                  <p className="text-xs text-stone-500">{p.events === 1 ? "event" : "events"}</p>
+                </div>
+              </Link>
             </li>
           ))}
         </ul>

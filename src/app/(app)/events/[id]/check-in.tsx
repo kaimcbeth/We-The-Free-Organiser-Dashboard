@@ -3,6 +3,9 @@
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { inputClass } from "@/components/form";
+import { Sheet } from "@/components/sheet";
+import { ConnectInvite } from "@/components/connect-invite";
+import { ShareLink } from "@/components/share-link";
 
 export type Person = {
   id: string;
@@ -20,9 +23,11 @@ export function CheckIn({
   initialPeople,
   initialCheckedIn,
   returningIds,
+  teamSlug,
 }: {
   eventId: string;
   teamId: string;
+  teamSlug: string;
   organiserId: string;
   initialPeople: Person[];
   initialCheckedIn: string[];
@@ -38,6 +43,9 @@ export function CheckIn({
   const [onlyHere, setOnlyHere] = useState(false);
   const [error, setError] = useState("");
   const [adding, setAdding] = useState(false);
+  // Someone just added on the spot: offer their connect QR.
+  const [justAdded, setJustAdded] = useState<Person | null>(null);
+  const [sheet, setSheet] = useState<null | "connect" | "signup">(null);
 
   const firstTimers = [...checkedIn].filter((id) => !returning.has(id)).length;
 
@@ -121,6 +129,7 @@ export function CheckIn({
     }
     setQuery("");
     setAdding(false);
+    setJustAdded(data);
     return true;
   }
 
@@ -163,12 +172,20 @@ export function CheckIn({
               Here ({checkedIn.size})
             </button>
           </div>
-          <button
-            onClick={() => setAdding(true)}
-            className="rounded-lg px-3 py-1.5 text-sm font-semibold text-pink-ink hover:bg-pink/10"
-          >
-            + New person
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setSheet("signup")}
+              className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-stone-600 hover:bg-black/5"
+            >
+              Sign-up QR
+            </button>
+            <button
+              onClick={() => setAdding(true)}
+              className="rounded-lg px-2.5 py-1.5 text-sm font-semibold text-pink-ink hover:bg-pink/10"
+            >
+              + New person
+            </button>
+          </div>
         </div>
       </div>
 
@@ -184,6 +201,49 @@ export function CheckIn({
           onCancel={() => setAdding(false)}
           onSave={addAndCheckIn}
         />
+      )}
+
+      {justAdded && !adding && (
+        <div className="mb-4 flex items-center gap-3 rounded-2xl bg-navy p-4 text-white">
+          <p className="min-w-0 flex-1 text-sm">
+            <span className="font-semibold">{justAdded.first_name}</span> added and checked in. Want them to
+            connect an account?
+          </p>
+          <button
+            onClick={() => setSheet("connect")}
+            className="shrink-0 rounded-xl bg-pink px-3.5 py-2 text-sm font-semibold text-navy hover:bg-pink-strong"
+          >
+            Show QR
+          </button>
+          <button
+            onClick={() => setJustAdded(null)}
+            aria-label="Dismiss"
+            className="shrink-0 rounded-lg px-2 py-1 text-white/70 hover:bg-white/10"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {sheet === "connect" && justAdded && (
+        <Sheet title={`Connect ${justAdded.first_name}`} onClose={() => setSheet(null)}>
+          <ConnectInvite personId={justAdded.id} firstName={justAdded.first_name} />
+        </Sheet>
+      )}
+
+      {sheet === "signup" && (
+        <Sheet title="Sign-up QR" onClose={() => setSheet(null)}>
+          <p className="mb-4 text-sm text-stone-600">
+            For anyone who hasn&apos;t been added yet. They scan it, sign up, and appear in your list. If
+            you&apos;ve already added them, use their own connect QR from the People page instead.
+          </p>
+          <ShareLink
+            url={`${window.location.origin}/join/${teamSlug}`}
+            title="Join We The Free"
+            text="Sign up to We The Free so we can keep you in the loop:"
+            qrLabel="Sign-up QR code"
+          />
+        </Sheet>
       )}
 
       {/* People */}

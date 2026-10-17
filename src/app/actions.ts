@@ -83,3 +83,38 @@ export async function createPerson(_prev: FormState, formData: FormData): Promis
   revalidatePath("/people");
   return {};
 }
+
+export type InviteResult = { token?: string; error?: string };
+
+// Make (or reuse) a personal connect link for someone who hasn't got a login yet.
+export async function createInvite(personId: string): Promise<InviteResult> {
+  const { supabase, organiser } = await requireOrganiser();
+
+  const { data: person } = await supabase
+    .from("people")
+    .select("id, user_id")
+    .eq("id", personId)
+    .eq("team_id", organiser.team_id)
+    .maybeSingle();
+  if (!person) return { error: "Couldn't find that person." };
+  if (person.user_id) return { error: "This person is already connected." };
+
+  const { data: existing } = await supabase
+    .from("person_invites")
+    .select("token")
+    .eq("person_id", personId)
+    .is("used_at", null)
+    .gt("expires_at", new Date(Date.now() + 864e5).toISOString())
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (existing) return { token: existing.token };
+
+  const { data, error } = await supabase
+    .from("person_invites")
+    .insert({ person_id: personId, created_by: organiser.id })
+    .select("token")
+    .single();
+  if (error || !data) return { error: "Couldn't create an invite. Please try again." };
+  return { token: data.token };
+}

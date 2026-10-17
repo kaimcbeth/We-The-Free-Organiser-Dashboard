@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 // Runs before every page: keeps the login session fresh and sends
 // signed-out visitors to the login page.
-const PUBLIC_PATHS = ["/login", "/auth"];
+const PUBLIC_PATHS = ["/login", "/auth", "/join", "/invite"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
