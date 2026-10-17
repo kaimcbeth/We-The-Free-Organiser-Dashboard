@@ -55,7 +55,7 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
         </p>
         <h1 className="mt-0.5 text-2xl font-semibold leading-tight tracking-tight">{event.title}</h1>
         {event.event_type && (
-          <span className="mt-2 inline-block rounded-full bg-brand-soft px-2.5 py-0.5 text-xs font-medium text-brand">
+          <span className="mt-2 inline-block rounded-full bg-cyan/25 px-2.5 py-0.5 text-xs font-medium text-navy">
             {event.event_type.name}
           </span>
         )}

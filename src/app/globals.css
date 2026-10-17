@@ -1,16 +1,33 @@
 @import "tailwindcss";
 
+/* We The Free brand colours */
 :root {
-  --background: #f6f5f1;
-  --foreground: #1c1b18;
+  --background: #f4f5f9;
+  --foreground: #071130;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-brand: #0f6b4f;
-  --color-brand-strong: #0b5440;
-  --color-brand-soft: #e3f1ea;
+
+  --color-navy: #071130;
+  --color-navy-2: #212c4c;
+  --color-pink: #ff47b9;
+  --color-pink-strong: #ff2aa9;
+  --color-pink-ink: #c8007f; /* darker pink for small text on white */
+  --color-cyan: #2fd9df;
+  --color-yellow: #ffd90f;
+
+  /* Neutral greys, tinted towards the brand navy */
+  --color-stone-50: #f4f5f9;
+  --color-stone-300: #cfd3df;
+  --color-stone-400: #8a91a8;
+  --color-stone-500: #5b6380;
+  --color-stone-600: #4a5270;
+  --color-stone-700: #212c4c;
+  --color-stone-800: #121b3a;
+  --color-stone-900: #071130;
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

@@ -16,7 +16,7 @@ export default async function NotSetUpPage() {
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand">We The Free</p>
+        <p className="text-sm font-semibold uppercase tracking-wide text-pink-ink">We The Free</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">You&apos;re signed in</h1>
         <p className="mt-3 text-stone-600">
           <span className="font-medium text-stone-900">{user.email}</span> isn&apos;t set up as an

@@ -19,7 +19,7 @@ export function NavLinks() {
             key={l.href}
             href={l.href}
             className={`border-b-2 px-3 pb-2.5 pt-1 text-sm font-medium ${
-              active ? "border-brand text-stone-900" : "border-transparent text-stone-500 hover:text-stone-800"
+              active ? "border-pink text-white" : "border-transparent text-white/65 hover:text-white"
             }`}
           >
             {l.label}

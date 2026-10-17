@@ -49,7 +49,7 @@ export function NewEventForm({ types, today }: { types: { id: string; name: stri
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-xl bg-brand px-4 py-3 font-semibold text-white hover:bg-brand-strong disabled:opacity-60"
+        className="w-full rounded-xl bg-pink px-4 py-3 font-semibold text-navy hover:bg-pink-strong disabled:opacity-60"
       >
         {pending ? "Saving…" : "Save and open check-in"}
       </button>

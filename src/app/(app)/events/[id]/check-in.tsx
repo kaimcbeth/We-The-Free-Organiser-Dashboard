@@ -165,7 +165,7 @@ export function CheckIn({
           </div>
           <button
             onClick={() => setAdding(true)}
-            className="rounded-lg px-3 py-1.5 text-sm font-semibold text-brand hover:bg-brand-soft"
+            className="rounded-lg px-3 py-1.5 text-sm font-semibold text-pink-ink hover:bg-pink/10"
           >
             + New person
           </button>
@@ -196,7 +196,7 @@ export function CheckIn({
           ) : (
             <>
               No one matches “{query}”.{" "}
-              <button onClick={() => setAdding(true)} className="font-semibold text-brand">
+              <button onClick={() => setAdding(true)} className="font-semibold text-pink-ink">
                 Add them
               </button>
             </>
@@ -213,13 +213,13 @@ export function CheckIn({
                   onClick={() => toggle(p)}
                   aria-pressed={here}
                   className={`flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors ${
-                    here ? "bg-brand-soft" : "hover:bg-stone-50"
+                    here ? "bg-cyan/15" : "hover:bg-stone-50"
                   }`}
                 >
                   <span
                     aria-hidden
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 ${
-                      here ? "border-brand bg-brand text-white" : "border-stone-300"
+                      here ? "border-cyan bg-cyan text-navy" : "border-stone-300"
                     } ${pending.has(p.id) ? "opacity-50" : ""}`}
                   >
                     {here && (
@@ -233,7 +233,7 @@ export function CheckIn({
                     {p.suburb && <span className="block truncate text-sm text-stone-500">{p.suburb}</span>}
                   </span>
                   {isNew && (
-                    <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                    <span className="shrink-0 rounded-full bg-yellow px-2 py-0.5 text-xs font-semibold text-navy">
                       First event
                     </span>
                   )}
@@ -271,7 +271,7 @@ function QuickAdd({
   }
 
   return (
-    <form onSubmit={submit} className="mb-4 space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-2 ring-brand/30">
+    <form onSubmit={submit} className="mb-4 space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-2 ring-pink/60">
       <p className="font-medium">Add someone new</p>
       <div className="grid grid-cols-2 gap-2">
         <input
@@ -302,7 +302,7 @@ function QuickAdd({
         <button
           type="submit"
           disabled={saving}
-          className="flex-1 rounded-xl bg-brand px-4 py-2.5 font-semibold text-white hover:bg-brand-strong disabled:opacity-60"
+          className="flex-1 rounded-xl bg-pink px-4 py-2.5 font-semibold text-navy hover:bg-pink-strong disabled:opacity-60"
         >
           {saving ? "Adding…" : "Add and check in"}
         </button>

@@ -28,7 +28,7 @@ export default function LoginPage() {
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand">We The Free</p>
+        <p className="text-sm font-semibold uppercase tracking-wide text-pink-ink">We The Free</p>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight">Organiser login</h1>
 
         {status === "sent" ? (
@@ -41,7 +41,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setStatus("idle")}
-              className="mt-4 text-sm font-medium text-brand"
+              className="mt-4 text-sm font-medium text-pink-ink"
             >
               Use a different email
             </button>
@@ -59,13 +59,13 @@ export default function LoginPage() {
               inputMode="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+              className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base outline-none focus:border-navy focus:ring-2 focus:ring-pink/40"
               placeholder="you@example.com"
             />
             <button
               type="submit"
               disabled={status === "sending"}
-              className="w-full rounded-xl bg-brand px-4 py-3 text-base font-semibold text-white hover:bg-brand-strong disabled:opacity-60"
+              className="w-full rounded-xl bg-pink px-4 py-3 text-base font-semibold text-navy hover:bg-pink-strong disabled:opacity-60"
             >
               {status === "sending" ? "Sending…" : "Email me a login link"}
             </button>

@@ -53,7 +53,7 @@ export default async function EventsPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Events</h1>
         <Link
           href="/events/new"
-          className="rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-strong"
+          className="rounded-xl bg-pink px-4 py-2.5 text-sm font-semibold text-navy hover:bg-pink-strong"
         >
           Add event
         </Link>
@@ -71,16 +71,16 @@ export default async function EventsPage() {
               <Link
                 key={e.id}
                 href={`/events/${e.id}`}
-                className="block rounded-2xl bg-brand p-5 text-white shadow-sm hover:bg-brand-strong"
+                className="block rounded-2xl bg-navy p-5 text-white shadow-sm hover:bg-navy-2"
               >
-                <p className="text-sm text-white/80">
+                <p className="text-sm text-cyan">
                   {formatTimeRange(e.starts_at, e.ends_at)}
                   {e.venue ? ` · ${e.venue}` : ""}
                 </p>
                 <p className="mt-1 text-lg font-semibold leading-snug">{e.title}</p>
                 <div className="mt-4 flex items-center justify-between">
                   <span className="text-sm text-white/80">{e.attendance[0]?.count ?? 0} checked in</span>
-                  <span className="rounded-lg bg-white px-3 py-1.5 text-sm font-semibold text-brand">
+                  <span className="rounded-lg bg-pink px-3 py-1.5 text-sm font-semibold text-navy">
                     Check in →
                   </span>
                 </div>

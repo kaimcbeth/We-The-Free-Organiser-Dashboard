@@ -39,7 +39,7 @@ export function PeopleList({ people }: { people: PersonRow[] }) {
         />
         <button
           onClick={() => setAdding((a) => !a)}
-          className="shrink-0 rounded-xl bg-brand px-4 font-semibold text-white hover:bg-brand-strong"
+          className="shrink-0 rounded-xl bg-pink px-4 font-semibold text-navy hover:bg-pink-strong"
         >
           Add
         </button>
@@ -91,7 +91,7 @@ function AddPersonForm({ onDone }: { onDone: () => void }) {
   }, [state, onDone]);
 
   return (
-    <form ref={formRef} action={action} className="mt-4 space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-2 ring-brand/30">
+    <form ref={formRef} action={action} className="mt-4 space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-2 ring-pink/60">
       <div className="grid grid-cols-2 gap-3">
         <Field label="First name" htmlFor="first_name">
           <input id="first_name" name="first_name" required autoFocus className={inputClass} />
@@ -115,7 +115,7 @@ function AddPersonForm({ onDone }: { onDone: () => void }) {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-xl bg-brand px-4 py-2.5 font-semibold text-white hover:bg-brand-strong disabled:opacity-60"
+        className="w-full rounded-xl bg-pink px-4 py-2.5 font-semibold text-navy hover:bg-pink-strong disabled:opacity-60"
       >
         {pending ? "Saving…" : "Save person"}
       </button>
