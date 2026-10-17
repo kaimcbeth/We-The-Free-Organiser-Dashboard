@@ -53,15 +53,13 @@ export async function createEvent(_prev: FormState, formData: FormData): Promise
   redirect(`/events/${data.id}`);
 }
 
-// Add a person from the People page.
+// Add a person from the People page. Organisers only enter a name;
+// members add their own details when they connect their account.
 export async function createPerson(_prev: FormState, formData: FormData): Promise<FormState> {
   const { supabase, organiser } = await requireOrganiser();
 
   const firstName = String(formData.get("first_name") ?? "").trim();
   const lastName = String(formData.get("last_name") ?? "").trim() || null;
-  const suburb = String(formData.get("suburb") ?? "").trim() || null;
-  const email = String(formData.get("email") ?? "").trim() || null;
-  const phone = String(formData.get("phone") ?? "").trim() || null;
 
   if (!firstName) return { error: "Please add a first name." };
 
@@ -69,16 +67,10 @@ export async function createPerson(_prev: FormState, formData: FormData): Promis
     team_id: organiser.team_id,
     first_name: firstName,
     last_name: lastName,
-    suburb,
-    email,
-    phone,
     added_via: "host",
   });
 
-  if (error) {
-    if (error.code === "23505") return { error: "Someone with that email is already in the list." };
-    return { error: "Couldn't save this person. Please try again." };
-  }
+  if (error) return { error: "Couldn't save this person. Please try again." };
 
   revalidatePath("/people");
   return {};

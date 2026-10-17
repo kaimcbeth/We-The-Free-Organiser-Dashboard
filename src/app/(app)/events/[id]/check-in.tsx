@@ -102,7 +102,7 @@ export function CheckIn({
     setBusy(person.id, false);
   }
 
-  async function addAndCheckIn(firstName: string, lastName: string, suburb: string) {
+  async function addAndCheckIn(firstName: string, lastName: string) {
     setError("");
     const { data, error } = await supabase
       .from("people")
@@ -110,7 +110,6 @@ export function CheckIn({
         team_id: teamId,
         first_name: firstName,
         last_name: lastName || null,
-        suburb: suburb || null,
         added_via: "host",
       })
       .select("id, first_name, last_name, suburb")
@@ -318,19 +317,18 @@ function QuickAdd({
 }: {
   initialName: string;
   onCancel: () => void;
-  onSave: (first: string, last: string, suburb: string) => Promise<boolean>;
+  onSave: (first: string, last: string) => Promise<boolean>;
 }) {
   const [first, ...rest] = initialName.trim().split(/\s+/);
   const [firstName, setFirstName] = useState(first ?? "");
   const [lastName, setLastName] = useState(rest.join(" "));
-  const [suburb, setSuburb] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!firstName.trim()) return;
     setSaving(true);
-    const ok = await onSave(firstName.trim(), lastName.trim(), suburb.trim());
+    const ok = await onSave(firstName.trim(), lastName.trim());
     if (!ok) setSaving(false);
   }
 
@@ -355,13 +353,6 @@ function QuickAdd({
           className={inputClass}
         />
       </div>
-      <input
-        value={suburb}
-        onChange={(e) => setSuburb(e.target.value)}
-        placeholder="Suburb"
-        aria-label="Suburb"
-        className={inputClass}
-      />
       <div className="flex gap-2">
         <button
           type="submit"

@@ -114,17 +114,9 @@ function AddPersonForm({ onDone }: { onDone: () => void }) {
           <input id="last_name" name="last_name" className={inputClass} />
         </Field>
       </div>
-      <Field label="Suburb" htmlFor="suburb">
-        <input id="suburb" name="suburb" className={inputClass} />
-      </Field>
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Email" htmlFor="email" hint="optional">
-          <input id="email" name="email" type="email" className={inputClass} />
-        </Field>
-        <Field label="Phone" htmlFor="phone" hint="optional">
-          <input id="phone" name="phone" type="tel" className={inputClass} />
-        </Field>
-      </div>
+      <p className="text-xs text-stone-500">
+        Just a name. They add their own details and photo when they connect their account.
+      </p>
       {state.error && <p className="text-sm text-red-700">{state.error}</p>}
       <button
         type="submit"

@@ -4,7 +4,7 @@ import { requireOrganiser } from "@/lib/organiser";
 import { formatEventDate } from "@/lib/time";
 import { InviteButton } from "./invite-button";
 import { DeletePerson } from "./delete-person";
-import { PhotoPicker } from "@/components/photo-picker";
+import { Avatar } from "@/components/avatar";
 import { signPhotos } from "@/lib/photos";
 
 type Person = {
@@ -65,12 +65,13 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
       <Link href="/people" className="text-sm text-stone-500 hover:text-stone-800">
         ← People
       </Link>
-      <div className="mt-3 flex items-center gap-4">
-        <PhotoPicker personId={person.id} name={name} url={photos[person.id] ?? null} size={72} />
+      <div className="mt-3">
+        <Avatar name={name} url={photos[person.id] ?? null} size={72} />
       </div>
       <h1 className="mt-4 text-2xl font-semibold tracking-tight">{name}</h1>
       <p className="mt-1 text-sm text-stone-500">
-        {[person.suburb, person.email, person.phone].filter(Boolean).join(" · ") || "No details yet"}
+        {[person.suburb, person.email, person.phone].filter(Boolean).join(" · ") ||
+          (person.user_id ? "No details added yet" : `${person.first_name} adds their own details when they connect`)}
       </p>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
