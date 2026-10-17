@@ -110,6 +110,9 @@ as $$
   );
 $$;
 
+revoke execute on function is_team_organiser(uuid) from public, anon;
+grant execute on function is_team_organiser(uuid) to authenticated;
+
 alter table teams       enable row level security;
 alter table organisers  enable row level security;
 alter table event_types enable row level security;
