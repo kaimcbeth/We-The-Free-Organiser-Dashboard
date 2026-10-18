@@ -32,9 +32,9 @@ export default async function PeoplePage({
     supabase.from("regions").select("id, name").order("sort_order"),
   ]);
   const roles = new Map(
-    (
-      (roleRows as { person_id: string | null; role: Access }[] | null) ?? []
-    ).map((r) => [r.person_id, r.role]),
+    ((roleRows as { person_id: string | null; role: Access }[] | null) ?? [])
+      .filter((r) => organiser.role === "god" || r.role !== "god")
+      .map((r) => [r.person_id, r.role]),
   );
 
   const photos = await signPhotos(supabase, data ?? []);

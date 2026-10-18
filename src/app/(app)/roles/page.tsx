@@ -45,7 +45,11 @@ export default async function RolesPage() {
 
   const viewRole = organiser.role as Access;
   const gives = GIVES[viewRole] ?? [];
-  const list = (roles.data as RoleRow[]) ?? [];
+  // God Mode is only visible to God Mode (also hidden while previewing other roles).
+  const isGod = organiser.role === "god";
+  const list = ((roles.data as RoleRow[]) ?? []).filter(
+    (r) => isGod || r.role !== "god",
+  );
 
   return (
     <div className="space-y-8">
@@ -62,16 +66,16 @@ export default async function RolesPage() {
       </div>
 
       <ol className="space-y-2">
-        {(["god", "regional_lead", "organiser", "core_team"] as Access[]).map(
-          (r) => (
+        {(["god", "regional_lead", "organiser", "core_team"] as Access[])
+          .filter((r) => isGod || r !== "god")
+          .map((r) => (
             <li key={r} className="flex items-start gap-3 text-sm">
               <span className="w-44 shrink-0">
                 <RoleChip role={r} />
               </span>
               <span className="text-stone-600">{WHAT[r]}</span>
             </li>
-          ),
-        )}
+          ))}
       </ol>
 
       {gives.length > 0 && (

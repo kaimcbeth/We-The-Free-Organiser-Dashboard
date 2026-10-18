@@ -76,9 +76,9 @@ export default async function PersonPage({
     supabase.from("regions").select("id, name").order("sort_order"),
   ]);
   const role =
-    (
-      (roleRows as { person_id: string | null; role: Access }[] | null) ?? []
-    ).find((r) => r.person_id === person.id)?.role ?? null;
+    ((roleRows as { person_id: string | null; role: Access }[] | null) ?? [])
+      .filter((r) => organiser.role === "god" || r.role !== "god")
+      .find((r) => r.person_id === person.id)?.role ?? null;
 
   // Buddy info: this person's buddy, who they look after, and who could be their buddy.
   const fullName = (p: { first_name: string; last_name: string | null }) =>
