@@ -49,11 +49,30 @@ export function PeopleList({ people }: { people: PersonRow[] }) {
         </button>
       </div>
 
-      {adding && <AddPersonForm onDone={() => setAdding(false)} />}
+      {adding && (
+        <AddPersonForm
+          initialName={query}
+          onDone={() => {
+            setAdding(false);
+            setQuery("");
+          }}
+        />
+      )}
 
       {visible.length === 0 ? (
         <p className="mt-6 text-center text-sm text-stone-500">
-          {people.length === 0 ? "No one in the list yet." : `No one matches “${query}”.`}
+          {people.length === 0 ? (
+            "No one in the list yet."
+          ) : (
+            <>
+              No one matches “{query}”.{" "}
+              {!adding && (
+                <button onClick={() => setAdding(true)} className="font-semibold text-pink-ink">
+                  Add them
+                </button>
+              )}
+            </>
+          )}
         </p>
       ) : (
         <ul className="mt-4 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
@@ -87,7 +106,15 @@ export function PeopleList({ people }: { people: PersonRow[] }) {
   );
 }
 
-function AddPersonForm({ onDone }: { onDone: () => void }) {
+// Splits "Crystal Serfaty" into first "Crystal" and last "Serfaty"
+// (everything after the first word counts as the last name).
+function splitName(full: string) {
+  const [first = "", ...rest] = full.trim().split(/\s+/);
+  return { first, last: rest.join(" ") };
+}
+
+function AddPersonForm({ onDone, initialName = "" }: { onDone: () => void; initialName?: string }) {
+  const [names] = useState(() => splitName(initialName));
   const [state, action, pending] = useActionState<FormState & { ok?: boolean }, FormData>(
     async (prev, formData) => {
       const result = await createPerson(prev, formData);
@@ -108,10 +135,17 @@ function AddPersonForm({ onDone }: { onDone: () => void }) {
     <form ref={formRef} action={action} className="mt-4 space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-2 ring-pink/60">
       <div className="grid grid-cols-2 gap-3">
         <Field label="First name" htmlFor="first_name">
-          <input id="first_name" name="first_name" required autoFocus className={inputClass} />
+          <input
+            id="first_name"
+            name="first_name"
+            required
+            autoFocus
+            defaultValue={names.first}
+            className={inputClass}
+          />
         </Field>
         <Field label="Last name" htmlFor="last_name">
-          <input id="last_name" name="last_name" className={inputClass} />
+          <input id="last_name" name="last_name" defaultValue={names.last} className={inputClass} />
         </Field>
       </div>
       <p className="text-xs text-stone-500">
