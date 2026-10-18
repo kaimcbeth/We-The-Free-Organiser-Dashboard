@@ -17,7 +17,11 @@ export function Avatar({
     .map((w) => w[0]?.toUpperCase())
     .join("");
 
-  const style = { width: size, height: size, fontSize: Math.round(size * 0.38) };
+  const style = {
+    width: size,
+    height: size,
+    fontSize: Math.round(size * 0.38),
+  };
 
   if (url) {
     return (

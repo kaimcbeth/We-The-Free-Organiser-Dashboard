@@ -9,7 +9,12 @@ export function QrCode({ value, label }: { value: string; label: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    QRCode.toString(value, { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#071130", light: "#ffffff" } })
+    QRCode.toString(value, {
+      type: "svg",
+      margin: 1,
+      errorCorrectionLevel: "M",
+      color: { dark: "#071130", light: "#ffffff" },
+    })
       .then((s) => {
         if (!cancelled) setSvg(s);
       })

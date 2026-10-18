@@ -9,7 +9,9 @@ const SIZE = 512;
 
 // Crop to a centred square and shrink, so uploads are small and quick.
 async function toSquareJpeg(file: File): Promise<Blob> {
-  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const bitmap = await createImageBitmap(file, {
+    imageOrientation: "from-image",
+  });
   const side = Math.min(bitmap.width, bitmap.height);
   const canvas = document.createElement("canvas");
   canvas.width = SIZE;
@@ -28,7 +30,11 @@ async function toSquareJpeg(file: File): Promise<Blob> {
   );
   bitmap.close();
   return new Promise((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("encode"))), "image/jpeg", 0.85),
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("encode"))),
+      "image/jpeg",
+      0.85,
+    ),
   );
 }
 
@@ -63,9 +69,16 @@ export function PhotoPicker({
       const supabase = createClient();
       const { error: upErr } = await supabase.storage
         .from("avatars")
-        .upload(`${personId}.jpg`, blob, { upsert: true, contentType: "image/jpeg", cacheControl: "60" });
+        .upload(`${personId}.jpg`, blob, {
+          upsert: true,
+          contentType: "image/jpeg",
+          cacheControl: "60",
+        });
       if (upErr) throw upErr;
-      const { error: rpcErr } = await supabase.rpc("set_person_photo", { p_person_id: personId, p_has_photo: true });
+      const { error: rpcErr } = await supabase.rpc("set_person_photo", {
+        p_person_id: personId,
+        p_has_photo: true,
+      });
       if (rpcErr) throw rpcErr;
       router.refresh();
     } catch {
@@ -80,7 +93,10 @@ export function PhotoPicker({
     setError("");
     const supabase = createClient();
     await supabase.storage.from("avatars").remove([`${personId}.jpg`]);
-    const { error: rpcErr } = await supabase.rpc("set_person_photo", { p_person_id: personId, p_has_photo: false });
+    const { error: rpcErr } = await supabase.rpc("set_person_photo", {
+      p_person_id: personId,
+      p_has_photo: false,
+    });
     if (rpcErr) setError("Couldn't remove the photo. Please try again.");
     setPreview(null);
     setBusy(false);
@@ -98,7 +114,13 @@ export function PhotoPicker({
       >
         <Avatar name={name} url={shown} size={size} />
         <span className="absolute -bottom-0.5 -right-0.5 flex h-7 w-7 items-center justify-center rounded-full bg-pink text-navy ring-2 ring-background">
-          <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            viewBox="0 0 20 20"
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <path d="M3 7h3l1.5-2h5L14 7h3v9H3z" strokeLinejoin="round" />
             <circle cx="10" cy="11.5" r="2.75" />
           </svg>
@@ -114,13 +136,23 @@ export function PhotoPicker({
           {busy ? "Saving…" : shown ? "Change photo" : "Add photo"}
         </button>
         {shown && !busy && (
-          <button type="button" onClick={remove} className="ml-3 text-stone-500 hover:text-stone-800">
+          <button
+            type="button"
+            onClick={remove}
+            className="ml-3 text-stone-500 hover:text-stone-800"
+          >
             Remove
           </button>
         )}
         {error && <p className="mt-1 text-red-700">{error}</p>}
       </div>
-      <input ref={input} type="file" accept="image/*" className="hidden" onChange={onFile} />
+      <input
+        ref={input}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={onFile}
+      />
     </div>
   );
 }

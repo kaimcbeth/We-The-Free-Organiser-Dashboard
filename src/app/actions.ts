@@ -387,3 +387,23 @@ export async function revokeTeamLinks(): Promise<{ error?: string }> {
   revalidatePath("/");
   return {};
 }
+
+// Change (or clear) the team's WhatsApp community link.
+export async function setTeamWhatsapp(
+  url: string,
+): Promise<{ error?: string; url?: string | null }> {
+  const { supabase } = await requireOrganiser();
+  const { data, error } = await supabase.rpc("set_team_whatsapp", {
+    p_url: url,
+  });
+  if (error) return { error: "Couldn't save. Please try again." };
+  if (data === "invalid")
+    return {
+      error:
+        "That doesn't look like a WhatsApp invite link (https://chat.whatsapp.com/…).",
+    };
+  if (data !== "ok") return { error: "Only organisers can change this." };
+  revalidatePath("/", "layout");
+  const m = url.trim().match(/^https:\/\/chat\.whatsapp\.com\/[A-Za-z0-9]+/);
+  return { url: m ? m[0] : null };
+}

@@ -7,7 +7,12 @@ export type Organiser = {
   name: string;
   email: string;
   role: "organiser" | "admin";
-  team: { id: string; name: string; slug: string } | null;
+  team: {
+    id: string;
+    name: string;
+    slug: string;
+    whatsapp_url: string | null;
+  } | null;
 };
 
 // Returns the signed-in organiser, or sends them to the right place:
@@ -21,7 +26,9 @@ export async function requireOrganiser() {
 
   const { data: organiser } = await supabase
     .from("organisers")
-    .select("id, team_id, name, email, role, team:teams(id, name, slug)")
+    .select(
+      "id, team_id, name, email, role, team:teams(id, name, slug, whatsapp_url)",
+    )
     .eq("id", user.id)
     .maybeSingle<Organiser>();
 

@@ -16,7 +16,10 @@ export function Field({
 }) {
   return (
     <div>
-      <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-medium text-stone-700">
+      <label
+        htmlFor={htmlFor}
+        className="mb-1.5 block text-sm font-medium text-stone-700"
+      >
         {label}
         {hint && <span className="font-normal text-stone-400"> · {hint}</span>}
       </label>

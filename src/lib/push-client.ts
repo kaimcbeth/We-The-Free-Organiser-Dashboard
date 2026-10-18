@@ -71,16 +71,14 @@ export async function enablePush(): Promise<string> {
   if (!user || !json.endpoint || !json.keys)
     return "Couldn't set up notifications. Please try again.";
 
-  const { error } = await supabase
-    .from("push_subscriptions")
-    .upsert(
-      {
-        user_id: user.id,
-        endpoint: json.endpoint,
-        p256dh: json.keys.p256dh,
-        auth: json.keys.auth,
-      },
-      { onConflict: "endpoint" },
-    );
+  const { error } = await supabase.from("push_subscriptions").upsert(
+    {
+      user_id: user.id,
+      endpoint: json.endpoint,
+      p256dh: json.keys.p256dh,
+      auth: json.keys.auth,
+    },
+    { onConflict: "endpoint" },
+  );
   return error ? "Couldn't save this device. Please try again." : "";
 }

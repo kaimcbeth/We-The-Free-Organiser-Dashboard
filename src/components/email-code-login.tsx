@@ -7,7 +7,13 @@ import { inputClass } from "@/components/form";
 
 // Log in with an emailed 6-digit code (the email also has a link as a backup).
 // `next` is where to go once signed in.
-export function EmailCodeLogin({ next, buttonLabel = "Email me a code" }: { next: string; buttonLabel?: string }) {
+export function EmailCodeLogin({
+  next,
+  buttonLabel = "Email me a code",
+}: {
+  next: string;
+  buttonLabel?: string;
+}) {
   const router = useRouter();
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
@@ -59,10 +65,14 @@ export function EmailCodeLogin({ next, buttonLabel = "Email me a code" }: { next
     return (
       <form onSubmit={verify} className="space-y-3">
         <p className="text-sm text-stone-600">
-          We emailed a code to <span className="font-medium text-stone-900">{email}</span>. Enter it below,
-          or tap the link in the email.
+          We emailed a code to{" "}
+          <span className="font-medium text-stone-900">{email}</span>. Enter it
+          below, or tap the link in the email.
         </p>
-        <label htmlFor="code" className="block text-sm font-medium text-stone-700">
+        <label
+          htmlFor="code"
+          className="block text-sm font-medium text-stone-700"
+        >
           Code
         </label>
         <input
@@ -103,7 +113,10 @@ export function EmailCodeLogin({ next, buttonLabel = "Email me a code" }: { next
 
   return (
     <form onSubmit={sendCode} className="space-y-3">
-      <label htmlFor="email" className="block text-sm font-medium text-stone-700">
+      <label
+        htmlFor="email"
+        className="block text-sm font-medium text-stone-700"
+      >
         Email address
       </label>
       <input
@@ -125,7 +138,9 @@ export function EmailCodeLogin({ next, buttonLabel = "Email me a code" }: { next
         {busy ? "Sending…" : buttonLabel}
       </button>
       {error && <p className="text-sm text-red-700">{error}</p>}
-      <p className="pt-1 text-sm text-stone-500">No password needed. We&apos;ll email you a login code.</p>
+      <p className="pt-1 text-sm text-stone-500">
+        No password needed. We&apos;ll email you a login code.
+      </p>
     </form>
   );
 }

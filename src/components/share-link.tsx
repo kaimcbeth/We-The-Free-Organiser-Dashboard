@@ -4,7 +4,17 @@ import { useState } from "react";
 import { QrCode } from "@/components/qr-code";
 
 // A QR code plus copy / share buttons for a link.
-export function ShareLink({ url, title, text, qrLabel }: { url: string; title: string; text: string; qrLabel: string }) {
+export function ShareLink({
+  url,
+  title,
+  text,
+  qrLabel,
+}: {
+  url: string;
+  title: string;
+  text: string;
+  qrLabel: string;
+}) {
   const [copied, setCopied] = useState(false);
   const canShare = typeof navigator !== "undefined" && "share" in navigator;
 
@@ -32,7 +42,11 @@ export function ShareLink({ url, title, text, qrLabel }: { url: string; title: s
         </button>
         <button
           type="button"
-          onClick={() => (canShare ? navigator.share({ title, text, url }).catch(() => {}) : copy())}
+          onClick={() =>
+            canShare
+              ? navigator.share({ title, text, url }).catch(() => {})
+              : copy()
+          }
           className="rounded-xl bg-pink px-4 py-2.5 text-sm font-semibold text-navy hover:bg-pink-strong"
         >
           Send link…

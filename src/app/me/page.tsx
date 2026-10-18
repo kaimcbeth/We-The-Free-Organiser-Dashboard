@@ -9,6 +9,7 @@ import { ProfileForm } from "./profile-form";
 import { PhotoPicker } from "@/components/photo-picker";
 import { signPhotos } from "@/lib/photos";
 import { NotificationBell } from "@/components/notification-bell";
+import { WhatsAppJoin } from "@/components/whatsapp";
 import { BuddySection, type BuddyDashboard } from "./buddy-section";
 
 type Me = {
@@ -21,7 +22,7 @@ type Me = {
   consent_marketing: boolean;
   starting_outreach_count: number;
   photo_updated_at: string | null;
-  team: { name: string } | null;
+  team: { name: string; whatsapp_url: string | null } | null;
 };
 
 type Attended = {
@@ -45,7 +46,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     supabase
       .from("people")
       .select(
-        "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, photo_updated_at, team:teams(name)",
+        "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, photo_updated_at, team:teams(name, whatsapp_url)",
       )
       .eq("user_id", user.id)
       .maybeSingle<Me>(),
@@ -157,6 +158,12 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
       <h1 className="text-3xl font-semibold tracking-tight">
         {[me.first_name, me.last_name].filter(Boolean).join(" ")}
       </h1>
+
+      {me.team?.whatsapp_url && (
+        <div className="mt-6">
+          <WhatsAppJoin url={me.team.whatsapp_url} />
+        </div>
+      )}
 
       <div className="mt-6 grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-navy p-4 text-white">

@@ -7,6 +7,7 @@ import { ConnectInvite } from "@/components/connect-invite";
 import { ShareLink } from "@/components/share-link";
 import { CheckInList, type CheckInPerson } from "@/components/check-in-list";
 import { HelperLinkSheet } from "./helper-link-sheet";
+import { WhatsAppShare } from "@/components/whatsapp";
 
 export type Person = CheckInPerson;
 
@@ -25,6 +26,7 @@ export function CheckIn({
   isOutreach,
   outreachBefore,
   likely,
+  whatsappUrl,
 }: {
   eventId: string;
   teamId: string;
@@ -38,9 +40,11 @@ export function CheckIn({
   isOutreach: boolean;
   outreachBefore: Record<string, number>;
   likely: Record<string, number>;
+  whatsappUrl: string | null;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [justAdded, setJustAdded] = useState<Person | null>(null);
+  const [qrTab, setQrTab] = useState<"signup" | "whatsapp">("signup");
   const [sheet, setSheet] = useState<null | "connect" | "signup" | "helper">(
     null,
   );
@@ -48,13 +52,11 @@ export function CheckIn({
   const onToggle = useCallback(
     async (p: Person, here: boolean) => {
       const { error } = here
-        ? await supabase
-            .from("attendance")
-            .upsert({
-              event_id: eventId,
-              person_id: p.id,
-              checked_in_by: organiserId,
-            })
+        ? await supabase.from("attendance").upsert({
+            event_id: eventId,
+            person_id: p.id,
+            checked_in_by: organiserId,
+          })
         : await supabase
             .from("attendance")
             .delete()
@@ -78,13 +80,11 @@ export function CheckIn({
         .select("id, first_name, last_name")
         .single<Person>();
       if (error || !data) return null;
-      await supabase
-        .from("attendance")
-        .insert({
-          event_id: eventId,
-          person_id: data.id,
-          checked_in_by: organiserId,
-        });
+      await supabase.from("attendance").insert({
+        event_id: eventId,
+        person_id: data.id,
+        checked_in_by: organiserId,
+      });
       return data;
     },
     [supabase, teamId, eventId, organiserId],
@@ -142,7 +142,7 @@ export function CheckIn({
             onClick={() => setSheet("signup")}
             className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-stone-600 hover:bg-black/5"
           >
-            Sign-up QR
+            QR codes
           </button>
         </>
       }
@@ -182,18 +182,35 @@ export function CheckIn({
       )}
 
       {sheet === "signup" && (
-        <Sheet title="Sign-up QR" onClose={() => setSheet(null)}>
-          <p className="mb-4 text-sm text-stone-600">
-            For anyone who hasn&apos;t been added yet. They scan it, sign up,
-            and appear in your list. If you&apos;ve already added them, use
-            their own connect QR from the People page instead.
-          </p>
-          <ShareLink
-            url={`${window.location.origin}/join/${teamSlug}`}
-            title="Join We The Free"
-            text="Sign up to We The Free so we can keep you in the loop:"
-            qrLabel="Sign-up QR code"
-          />
+        <Sheet title="QR codes" onClose={() => setSheet(null)}>
+          <div className="mb-4 flex gap-1 rounded-lg bg-black/5 p-0.5 text-sm">
+            {(["signup", "whatsapp"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setQrTab(t)}
+                className={`flex-1 rounded-md px-3 py-1.5 ${qrTab === t ? "bg-white font-medium shadow-sm" : "text-stone-600"}`}
+              >
+                {t === "signup" ? "Sign up" : "WhatsApp"}
+              </button>
+            ))}
+          </div>
+          {qrTab === "whatsapp" ? (
+            <WhatsAppShare initial={whatsappUrl} />
+          ) : (
+            <>
+              <p className="mb-4 text-sm text-stone-600">
+                For anyone who hasn&apos;t been added yet. They scan it, sign
+                up, and appear in your list. If you&apos;ve already added them,
+                use their own connect QR from the People page instead.
+              </p>
+              <ShareLink
+                url={`${window.location.origin}/join/${teamSlug}`}
+                title="Join We The Free"
+                text="Sign up to We The Free so we can keep you in the loop:"
+                qrLabel="Sign-up QR code"
+              />
+            </>
+          )}
         </Sheet>
       )}
 
