@@ -10,6 +10,8 @@ export type HelperState = {
   people: CheckInPerson[];
   checked_in: string[];
   returning: string[];
+  is_outreach: boolean;
+  outreach_before: Record<string, number>;
 };
 
 export function HelperCheckIn({ token, state }: { token: string; state: HelperState }) {
@@ -51,6 +53,8 @@ export function HelperCheckIn({ token, state }: { token: string; state: HelperSt
       onAdd={onAdd}
       poll={poll}
       stickyTopClass="top-0"
+      isOutreach={state.is_outreach}
+      outreachBefore={state.outreach_before ?? {}}
     />
   );
 }

@@ -6,6 +6,8 @@ import { CheckIn, type Person } from "./check-in";
 import { TypePicker } from "./type-picker";
 import { signPhotos } from "@/lib/photos";
 import { LoadError } from "@/components/load-error";
+import { loadInsightData } from "@/lib/insights-data";
+import { outreachCounts } from "@/lib/insights";
 
 type EventDetail = {
   id: string;
@@ -45,7 +47,7 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
       .select("person_id, events!inner(starts_at, team_id)")
       .eq("events.team_id", event.team_id)
       .lt("events.starts_at", event.starts_at),
-    supabase.from("event_types").select("id, name").order("sort_order"),
+    supabase.from("event_types").select("id, name, counts_as_outreach").order("sort_order"),
     supabase
       .from("checkin_links")
       .select("token, expires_at")
@@ -58,7 +60,14 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
   ]);
 
   if (people.error || attendance.error || earlier.error) return <LoadError what="this event's check-in list" />;
-  const photos = await signPhotos(supabase, people.data ?? []);
+  const [photos, insightData] = await Promise.all([
+    signPhotos(supabase, people.data ?? []),
+    loadInsightData(supabase, event.team_id),
+  ]);
+  const isOutreach = !!types.data?.find((t) => t.id === event.event_type_id)?.counts_as_outreach;
+  const outreachBefore = insightData
+    ? Object.fromEntries(outreachCounts(insightData.people, insightData.checkIns, event.id))
+    : {};
 
   return (
     <div>
@@ -96,6 +105,8 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
         returningIds={[...new Set((earlier.data ?? []).map((a) => a.person_id))]}
         photos={photos}
         helperLink={helper.data ?? null}
+        isOutreach={isOutreach}
+        outreachBefore={outreachBefore}
       />
     </div>
   );

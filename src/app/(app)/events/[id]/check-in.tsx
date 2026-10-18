@@ -22,6 +22,8 @@ export function CheckIn({
   teamSlug,
   photos,
   helperLink,
+  isOutreach,
+  outreachBefore,
 }: {
   eventId: string;
   teamId: string;
@@ -32,6 +34,8 @@ export function CheckIn({
   initialCheckedIn: string[];
   returningIds: string[];
   helperLink: { token: string; expires_at: string } | null;
+  isOutreach: boolean;
+  outreachBefore: Record<string, number>;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [justAdded, setJustAdded] = useState<Person | null>(null);
@@ -80,6 +84,8 @@ export function CheckIn({
       onAdd={onAdd}
       onAdded={setJustAdded}
       poll={poll}
+      isOutreach={isOutreach}
+      outreachBefore={outreachBefore}
       toolbarExtra={
         <>
           <button

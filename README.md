@@ -19,7 +19,11 @@ Also built:
   team's activism.wtf calendar feed (`/teams/<slug>/events.ics`) at 6am and
   2pm Sydney time, adding new events and updating changed ones.
 
-Coming next: insights and outreach milestones (Phase 3).
+- **Check-in helpers:** organisers share a no-login QR/link so anyone at the
+  door can check people in for that one event (names only; expires after).
+- **Insights:** this month at a glance, monthly totals, regulars, one-timers
+  to follow up, people who've drifted off, and outreach milestones, each
+  downloadable as CSV. Check-in celebrates every 10th outreach event.
 
 ## How it fits together
 

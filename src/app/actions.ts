@@ -200,3 +200,19 @@ export async function revokeHelperLinks(eventId: string): Promise<{ error?: stri
   revalidatePath(`/events/${eventId}`);
   return {};
 }
+
+// Outreach events someone did before the app existed (for milestone counts).
+export async function setStartingOutreach(personId: string, count: number): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  const n = Math.max(0, Math.min(1000, Math.round(count)));
+  if (!Number.isFinite(n)) return { error: "Please enter a number." };
+  const { error } = await supabase
+    .from("people")
+    .update({ starting_outreach_count: n })
+    .eq("id", personId)
+    .eq("team_id", organiser.team_id);
+  if (error) return { error: "Couldn't save. Please try again." };
+  revalidatePath(`/people/${personId}`);
+  revalidatePath("/insights");
+  return {};
+}

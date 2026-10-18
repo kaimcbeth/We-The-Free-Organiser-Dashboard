@@ -4,6 +4,7 @@ import { requireOrganiser } from "@/lib/organiser";
 import { formatEventDate } from "@/lib/time";
 import { InviteButton } from "./invite-button";
 import { DeletePerson } from "./delete-person";
+import { StartingOutreach } from "./starting-outreach";
 import { Avatar } from "@/components/avatar";
 import { signPhotos } from "@/lib/photos";
 
@@ -83,6 +84,10 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
           <p className="text-3xl font-semibold tabular-nums">{outreach}</p>
           <p className="text-sm text-stone-500">outreach</p>
         </div>
+      </div>
+
+      <div className="mt-3">
+        <StartingOutreach personId={person.id} initial={person.starting_outreach_count} />
       </div>
 
       <section className="mt-5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">

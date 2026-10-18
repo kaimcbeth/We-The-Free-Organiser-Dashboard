@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { inputClass } from "@/components/form";
 import { Avatar } from "@/components/avatar";
+import { isMilestone, ordinal } from "@/lib/insights";
 
 export type CheckInPerson = {
   id: string;
@@ -28,6 +29,8 @@ export function CheckInList({
   toolbarExtra,
   children,
   stickyTopClass = "top-[92px]",
+  isOutreach = false,
+  outreachBefore = {},
 }: {
   initialPeople: CheckInPerson[];
   initialCheckedIn: string[];
@@ -40,6 +43,8 @@ export function CheckInList({
   toolbarExtra?: React.ReactNode;
   children?: React.ReactNode; // shown between the toolbar and the list
   stickyTopClass?: string;
+  isOutreach?: boolean; // does this event count towards outreach milestones?
+  outreachBefore?: Record<string, number>; // each person's outreach count not counting this event
 }) {
   const returning = useMemo(() => new Set(returningIds), [returningIds]);
   const [people, setPeople] = useState(() => [...initialPeople].sort(byName));
@@ -49,6 +54,14 @@ export function CheckInList({
   const [onlyHere, setOnlyHere] = useState(false);
   const [error, setError] = useState("");
   const [adding, setAdding] = useState(false);
+  const [celebrate, setCelebrate] = useState<{ name: string; n: number } | null>(null);
+
+  // Their outreach count including this event, if they're checked in to it.
+  const milestoneFor = (id: string) => {
+    if (!isOutreach || !checkedIn.has(id)) return null;
+    const n = (outreachBefore[id] ?? 0) + 1;
+    return isMilestone(n) ? n : null;
+  };
 
   // Pick up ticks made on other phones every 15 seconds.
   const busy = useRef(false);
@@ -103,6 +116,10 @@ export function CheckInList({
     setBusy(person.id, true);
     flip(person.id, here); // update the screen straight away, then save
     const ok = await onToggle(person, here);
+    if (ok && here && isOutreach) {
+      const n = (outreachBefore[person.id] ?? 0) + 1;
+      if (isMilestone(n)) setCelebrate({ name: person.first_name, n });
+    }
     if (!ok) {
       flip(person.id, !here);
       setError(`Couldn't save ${person.first_name}. Check your connection and try again.`);
@@ -180,6 +197,25 @@ export function CheckInList({
         </p>
       )}
 
+      {celebrate && (
+        <div role="status" className="mb-4 flex items-center gap-3 rounded-2xl bg-pink p-4 text-navy shadow-sm">
+          <span aria-hidden className="text-3xl">🎉</span>
+          <p className="min-w-0 flex-1">
+            <span className="block text-lg font-bold leading-tight">
+              {celebrate.name}&apos;s {ordinal(celebrate.n)} outreach event!
+            </span>
+            <span className="text-sm">Give them a shout-out.</span>
+          </p>
+          <button
+            onClick={() => setCelebrate(null)}
+            aria-label="Dismiss"
+            className="shrink-0 rounded-lg px-2 py-1 text-navy/70 hover:bg-white/30"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {adding && <QuickAdd initialName={query} onCancel={() => setAdding(false)} onSave={add} />}
 
       {children}
@@ -227,6 +263,11 @@ export function CheckInList({
                   </span>
                   <Avatar name={fullName(p)} url={photos[p.id]} size={40} />
                   <span className="min-w-0 flex-1 truncate font-medium">{fullName(p)}</span>
+                  {milestoneFor(p.id) && (
+                    <span className="shrink-0 rounded-full bg-pink px-2 py-0.5 text-xs font-semibold text-navy">
+                      {ordinal(milestoneFor(p.id)!)} outreach
+                    </span>
+                  )}
                   {isNew && (
                     <span className="shrink-0 rounded-full bg-yellow px-2 py-0.5 text-xs font-semibold text-navy">
                       First event
