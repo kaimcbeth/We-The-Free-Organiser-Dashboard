@@ -1,22 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { inputClass } from "@/components/form";
 import { Sheet } from "@/components/sheet";
 import { ConnectInvite } from "@/components/connect-invite";
 import { ShareLink } from "@/components/share-link";
-import { Avatar } from "@/components/avatar";
+import { CheckInList, type CheckInPerson } from "@/components/check-in-list";
+import { HelperLinkSheet } from "./helper-link-sheet";
 
-export type Person = {
-  id: string;
-  first_name: string;
-  last_name: string | null;
-  suburb: string | null;
-};
+export type Person = CheckInPerson;
 
-const fullName = (p: Person) => [p.first_name, p.last_name].filter(Boolean).join(" ");
-
+// Organiser's check-in screen: the shared list, plus connect QR, sign-up QR
+// and the "share check-in" helper link.
 export function CheckIn({
   eventId,
   teamId,
@@ -26,6 +21,7 @@ export function CheckIn({
   returningIds,
   teamSlug,
   photos,
+  helperLink,
 }: {
   eventId: string;
   teamId: string;
@@ -35,181 +31,77 @@ export function CheckIn({
   initialPeople: Person[];
   initialCheckedIn: string[];
   returningIds: string[];
+  helperLink: { token: string; expires_at: string } | null;
 }) {
   const supabase = useMemo(() => createClient(), []);
-  const returning = useMemo(() => new Set(returningIds), [returningIds]);
-
-  const [people, setPeople] = useState(initialPeople);
-  const [checkedIn, setCheckedIn] = useState(() => new Set(initialCheckedIn));
-  const [pending, setPending] = useState<Set<string>>(new Set());
-  const [query, setQuery] = useState("");
-  const [onlyHere, setOnlyHere] = useState(false);
-  const [error, setError] = useState("");
-  const [adding, setAdding] = useState(false);
-  // Someone just added on the spot: offer their connect QR.
   const [justAdded, setJustAdded] = useState<Person | null>(null);
-  const [sheet, setSheet] = useState<null | "connect" | "signup">(null);
+  const [sheet, setSheet] = useState<null | "connect" | "signup" | "helper">(null);
 
-  const firstTimers = [...checkedIn].filter((id) => !returning.has(id)).length;
+  const onToggle = useCallback(
+    async (p: Person, here: boolean) => {
+      const { error } = here
+        ? await supabase.from("attendance").upsert({ event_id: eventId, person_id: p.id, checked_in_by: organiserId })
+        : await supabase.from("attendance").delete().eq("event_id", eventId).eq("person_id", p.id);
+      return !error;
+    },
+    [supabase, eventId, organiserId],
+  );
 
-  const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return people.filter((p) => {
-      if (onlyHere && !checkedIn.has(p.id)) return false;
-      if (!q) return true;
-      return `${fullName(p)} ${p.suburb ?? ""}`.toLowerCase().includes(q);
-    });
-  }, [people, query, onlyHere, checkedIn]);
+  const onAdd = useCallback(
+    async (first: string, last: string) => {
+      const { data, error } = await supabase
+        .from("people")
+        .insert({ team_id: teamId, first_name: first, last_name: last || null, added_via: "host" })
+        .select("id, first_name, last_name")
+        .single<Person>();
+      if (error || !data) return null;
+      await supabase.from("attendance").insert({ event_id: eventId, person_id: data.id, checked_in_by: organiserId });
+      return data;
+    },
+    [supabase, teamId, eventId, organiserId],
+  );
 
-  function setBusy(id: string, busy: boolean) {
-    setPending((prev) => {
-      const next = new Set(prev);
-      if (busy) next.add(id);
-      else next.delete(id);
-      return next;
-    });
-  }
-
-  async function toggle(person: Person) {
-    if (pending.has(person.id)) return;
-    const wasHere = checkedIn.has(person.id);
-    setError("");
-    setBusy(person.id, true);
-    // Update the screen straight away, then save.
-    setCheckedIn((prev) => {
-      const next = new Set(prev);
-      if (wasHere) next.delete(person.id);
-      else next.add(person.id);
-      return next;
-    });
-
-    const { error } = wasHere
-      ? await supabase.from("attendance").delete().eq("event_id", eventId).eq("person_id", person.id)
-      : await supabase
-          .from("attendance")
-          .upsert({ event_id: eventId, person_id: person.id, checked_in_by: organiserId });
-
-    if (error) {
-      // Put it back and say so.
-      setCheckedIn((prev) => {
-        const next = new Set(prev);
-        if (wasHere) next.add(person.id);
-        else next.delete(person.id);
-        return next;
-      });
-      setError(`Couldn't save ${person.first_name}. Check your connection and try again.`);
-    }
-    setBusy(person.id, false);
-  }
-
-  async function addAndCheckIn(firstName: string, lastName: string) {
-    setError("");
-    const { data, error } = await supabase
-      .from("people")
-      .insert({
-        team_id: teamId,
-        first_name: firstName,
-        last_name: lastName || null,
-        added_via: "host",
-      })
-      .select("id, first_name, last_name, suburb")
-      .single<Person>();
-
-    if (error || !data) {
-      setError("Couldn't add that person. Please try again.");
-      return false;
-    }
-
-    setPeople((prev) => [...prev, data].sort((a, b) => fullName(a).localeCompare(fullName(b))));
-    const { error: checkInError } = await supabase
-      .from("attendance")
-      .insert({ event_id: eventId, person_id: data.id, checked_in_by: organiserId });
-    if (checkInError) {
-      setError(`${data.first_name} was added but not checked in. Tap their name to check them in.`);
-    } else {
-      setCheckedIn((prev) => new Set(prev).add(data.id));
-    }
-    setQuery("");
-    setAdding(false);
-    setJustAdded(data);
-    return true;
-  }
+  const poll = useCallback(async () => {
+    const [people, attendance] = await Promise.all([
+      supabase.from("people").select("id, first_name, last_name").eq("team_id", teamId),
+      supabase.from("attendance").select("person_id").eq("event_id", eventId),
+    ]);
+    if (people.error || attendance.error) return null;
+    return { people: people.data as Person[], checkedIn: attendance.data.map((a) => a.person_id as string) };
+  }, [supabase, teamId, eventId]);
 
   return (
-    <div className="mt-5">
-      {/* Live counts */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-          <p className="text-3xl font-semibold tabular-nums">{checkedIn.size}</p>
-          <p className="text-sm text-stone-500">checked in</p>
-        </div>
-        <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-          <p className="text-3xl font-semibold tabular-nums">{firstTimers}</p>
-          <p className="text-sm text-stone-500">{firstTimers === 1 ? "first-timer" : "first-timers"}</p>
-        </div>
-      </div>
-
-      {/* Search and filters */}
-      <div className="sticky top-[92px] z-[5] -mx-4 mt-5 bg-background/95 px-4 pb-3 pt-1 backdrop-blur">
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by name or suburb"
-          className={inputClass}
-          aria-label="Search people"
-        />
-        <div className="mt-2 flex items-center justify-between">
-          <div className="flex gap-1 rounded-lg bg-black/5 p-0.5 text-sm">
-            <button
-              onClick={() => setOnlyHere(false)}
-              className={`rounded-md px-3 py-1 ${!onlyHere ? "bg-white font-medium shadow-sm" : "text-stone-600"}`}
-            >
-              Everyone
-            </button>
-            <button
-              onClick={() => setOnlyHere(true)}
-              className={`rounded-md px-3 py-1 ${onlyHere ? "bg-white font-medium shadow-sm" : "text-stone-600"}`}
-            >
-              Here ({checkedIn.size})
-            </button>
-          </div>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setSheet("signup")}
-              className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-stone-600 hover:bg-black/5"
-            >
-              Sign-up QR
-            </button>
-            <button
-              onClick={() => setAdding(true)}
-              className="rounded-lg px-2.5 py-1.5 text-sm font-semibold text-pink-ink hover:bg-pink/10"
-            >
-              + New person
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {error && (
-        <p role="alert" className="mb-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </p>
-      )}
-
-      {adding && (
-        <QuickAdd
-          initialName={query}
-          onCancel={() => setAdding(false)}
-          onSave={addAndCheckIn}
-        />
-      )}
-
-      {justAdded && !adding && (
+    <CheckInList
+      initialPeople={initialPeople}
+      initialCheckedIn={initialCheckedIn}
+      returningIds={returningIds}
+      photos={photos}
+      onToggle={onToggle}
+      onAdd={onAdd}
+      onAdded={setJustAdded}
+      poll={poll}
+      toolbarExtra={
+        <>
+          <button
+            onClick={() => setSheet("helper")}
+            className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-stone-600 hover:bg-black/5"
+          >
+            Share
+          </button>
+          <button
+            onClick={() => setSheet("signup")}
+            className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-stone-600 hover:bg-black/5"
+          >
+            Sign-up QR
+          </button>
+        </>
+      }
+    >
+      {justAdded && (
         <div className="mb-4 flex items-center gap-3 rounded-2xl bg-navy p-4 text-white">
           <p className="min-w-0 flex-1 text-sm">
-            <span className="font-semibold">{justAdded.first_name}</span> added and checked in. Want them to
-            connect an account?
+            <span className="font-semibold">{justAdded.first_name}</span> added and checked in. Want them to connect
+            an account?
           </p>
           <button
             onClick={() => setSheet("connect")}
@@ -236,8 +128,8 @@ export function CheckIn({
       {sheet === "signup" && (
         <Sheet title="Sign-up QR" onClose={() => setSheet(null)}>
           <p className="mb-4 text-sm text-stone-600">
-            For anyone who hasn&apos;t been added yet. They scan it, sign up, and appear in your list. If
-            you&apos;ve already added them, use their own connect QR from the People page instead.
+            For anyone who hasn&apos;t been added yet. They scan it, sign up, and appear in your list. If you&apos;ve
+            already added them, use their own connect QR from the People page instead.
           </p>
           <ShareLink
             url={`${window.location.origin}/join/${teamSlug}`}
@@ -248,123 +140,11 @@ export function CheckIn({
         </Sheet>
       )}
 
-      {/* People */}
-      {visible.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-stone-300 px-4 py-8 text-center text-sm text-stone-500">
-          {people.length === 0 ? (
-            <>No one in the list yet. Add the first person with “+ New person”.</>
-          ) : onlyHere ? (
-            <>No one checked in yet.</>
-          ) : (
-            <>
-              No one matches “{query}”.{" "}
-              <button onClick={() => setAdding(true)} className="font-semibold text-pink-ink">
-                Add them
-              </button>
-            </>
-          )}
-        </div>
-      ) : (
-        <ul className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-          {visible.map((p) => {
-            const here = checkedIn.has(p.id);
-            const isNew = here && !returning.has(p.id);
-            return (
-              <li key={p.id} className="border-b border-black/5 last:border-0">
-                <button
-                  onClick={() => toggle(p)}
-                  aria-pressed={here}
-                  className={`flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors ${
-                    here ? "bg-cyan/15" : "hover:bg-stone-50"
-                  }`}
-                >
-                  <span
-                    aria-hidden
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 ${
-                      here ? "border-cyan bg-cyan text-navy" : "border-stone-300"
-                    } ${pending.has(p.id) ? "opacity-50" : ""}`}
-                  >
-                    {here && (
-                      <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="3">
-                        <path d="M4 10.5l4 4 8-9" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
-                  </span>
-                  <Avatar name={fullName(p)} url={photos[p.id]} size={40} />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{fullName(p)}</span>
-                    {p.suburb && <span className="block truncate text-sm text-stone-500">{p.suburb}</span>}
-                  </span>
-                  {isNew && (
-                    <span className="shrink-0 rounded-full bg-yellow px-2 py-0.5 text-xs font-semibold text-navy">
-                      First event
-                    </span>
-                  )}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+      {sheet === "helper" && (
+        <Sheet title="Share check-in" onClose={() => setSheet(null)}>
+          <HelperLinkSheet eventId={eventId} initial={helperLink} />
+        </Sheet>
       )}
-    </div>
-  );
-}
-
-function QuickAdd({
-  initialName,
-  onCancel,
-  onSave,
-}: {
-  initialName: string;
-  onCancel: () => void;
-  onSave: (first: string, last: string) => Promise<boolean>;
-}) {
-  const [first, ...rest] = initialName.trim().split(/\s+/);
-  const [firstName, setFirstName] = useState(first ?? "");
-  const [lastName, setLastName] = useState(rest.join(" "));
-  const [saving, setSaving] = useState(false);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!firstName.trim()) return;
-    setSaving(true);
-    const ok = await onSave(firstName.trim(), lastName.trim());
-    if (!ok) setSaving(false);
-  }
-
-  return (
-    <form onSubmit={submit} className="mb-4 space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-2 ring-pink/60">
-      <p className="font-medium">Add someone new</p>
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          autoFocus
-          required
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          placeholder="First name"
-          aria-label="First name"
-          className={inputClass}
-        />
-        <input
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          placeholder="Last name"
-          aria-label="Last name"
-          className={inputClass}
-        />
-      </div>
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={saving}
-          className="flex-1 rounded-xl bg-pink px-4 py-2.5 font-semibold text-navy hover:bg-pink-strong disabled:opacity-60"
-        >
-          {saving ? "Adding…" : "Add and check in"}
-        </button>
-        <button type="button" onClick={onCancel} className="rounded-xl px-4 py-2.5 text-stone-600 hover:bg-black/5">
-          Cancel
-        </button>
-      </div>
-    </form>
+    </CheckInList>
   );
 }

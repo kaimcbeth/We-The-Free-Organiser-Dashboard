@@ -67,3 +67,8 @@ export function formatTime(iso: string, timeZone = TEAM_TZ): string {
 export function formatTimeRange(startIso: string, endIso: string | null): string {
   return endIso ? `${formatTime(startIso)} – ${formatTime(endIso)}` : formatTime(startIso);
 }
+
+// Current time as an ISO string (kept out of components so renders stay pure).
+export function nowIso(): string {
+  return new Date().toISOString();
+}

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
-import { formatEventDate, formatTimeRange } from "@/lib/time";
+import { formatEventDate, formatTimeRange, nowIso } from "@/lib/time";
 import { CheckIn, type Person } from "./check-in";
 import { TypePicker } from "./type-picker";
 import { signPhotos } from "@/lib/photos";
@@ -31,10 +31,10 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
 
   if (!event) notFound();
 
-  const [people, attendance, earlier, types] = await Promise.all([
+  const [people, attendance, earlier, types, helper] = await Promise.all([
     supabase
       .from("people")
-      .select("id, first_name, last_name, suburb, photo_updated_at")
+      .select("id, first_name, last_name, photo_updated_at")
       .eq("team_id", event.team_id)
       .order("first_name")
       .returns<(Person & { photo_updated_at: string | null })[]>(),
@@ -46,6 +46,15 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
       .eq("events.team_id", event.team_id)
       .lt("events.starts_at", event.starts_at),
     supabase.from("event_types").select("id, name").order("sort_order"),
+    supabase
+      .from("checkin_links")
+      .select("token, expires_at")
+      .eq("event_id", event.id)
+      .is("revoked_at", null)
+      .gt("expires_at", nowIso())
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   if (people.error || attendance.error || earlier.error) return <LoadError what="this event's check-in list" />;
@@ -86,6 +95,7 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
         initialCheckedIn={(attendance.data ?? []).map((a) => a.person_id)}
         returningIds={[...new Set((earlier.data ?? []).map((a) => a.person_id))]}
         photos={photos}
+        helperLink={helper.data ?? null}
       />
     </div>
   );

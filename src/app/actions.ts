@@ -149,3 +149,54 @@ export async function setEventType(eventId: string, eventTypeId: string | null):
   revalidatePath("/");
   return {};
 }
+
+export type HelperLink = { token: string; expires_at: string };
+
+// Make (or reuse) a no-login check-in link for one event, for a helper at the door.
+// It stops working 6 hours after the event ends.
+export async function createHelperLink(eventId: string): Promise<{ link?: HelperLink; error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+
+  const { data: event } = await supabase
+    .from("events")
+    .select("id, starts_at, ends_at")
+    .eq("id", eventId)
+    .eq("team_id", organiser.team_id)
+    .maybeSingle();
+  if (!event) return { error: "Couldn't find that event." };
+
+  const { data: existing } = await supabase
+    .from("checkin_links")
+    .select("token, expires_at")
+    .eq("event_id", eventId)
+    .is("revoked_at", null)
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (existing) return { link: existing };
+
+  const end = event.ends_at ? Date.parse(event.ends_at) : Date.parse(event.starts_at) + 4 * 3600e3;
+  const expires = new Date(Math.max(end + 6 * 3600e3, Date.now() + 2 * 3600e3)).toISOString();
+
+  const { data, error } = await supabase
+    .from("checkin_links")
+    .insert({ event_id: eventId, created_by: organiser.id, expires_at: expires })
+    .select("token, expires_at")
+    .single();
+  if (error || !data) return { error: "Couldn't create a link. Please try again." };
+  return { link: data };
+}
+
+// Turn off every helper link for an event.
+export async function revokeHelperLinks(eventId: string): Promise<{ error?: string }> {
+  const { supabase } = await requireOrganiser();
+  const { error } = await supabase
+    .from("checkin_links")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("event_id", eventId)
+    .is("revoked_at", null);
+  if (error) return { error: "Couldn't turn off the link. Please try again." };
+  revalidatePath(`/events/${eventId}`);
+  return {};
+}
