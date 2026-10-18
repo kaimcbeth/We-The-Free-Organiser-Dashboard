@@ -3,6 +3,7 @@ import { requireOrganiser } from "@/lib/organiser";
 import { signPhotos } from "@/lib/photos";
 import { Avatar } from "@/components/avatar";
 import { NavLinks } from "./nav-links";
+import { NotificationBell } from "@/components/notification-bell";
 
 const ROLE_LABEL = { admin: "Lead organiser", organiser: "Organiser" } as const;
 
@@ -28,6 +29,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
               {organiser.team?.name ?? "Your team"}
             </span>
           </Link>
+          <div className="flex min-w-0 items-center gap-1">
+          <NotificationBell supabase={supabase} userId={user.id} />
           <Link
             href="/me"
             className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pl-3 pr-1 hover:bg-white/10"
@@ -39,6 +42,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             </span>
             <Avatar name={name} url={me ? photos[me.id] : null} size={36} className="ring-2 ring-white/20" />
           </Link>
+          </div>
         </div>
         <NavLinks />
       </header>

@@ -25,6 +25,15 @@ Also built:
   to follow up, people who've drifted off, and outreach milestones, each
   downloadable as CSV. Check-in celebrates every 10th outreach event.
 
+- **Buddies:** organisers switch on "Approved buddy" for trusted members and
+  pick a buddy for any newcomer from their profile; approved buddies can also
+  claim newcomers (first event in the last 45 days) from their own page. A week
+  after pairing the buddy is reminded to invite the newcomer to an upcoming
+  event, with a ready-made message. The `buddy-reminders` Edge Function runs
+  hourly: it always adds an in-app notification (the bell) and also sends an
+  email or phone notification, whichever the buddy chose. Email needs the
+  `SMTP_USER` / `SMTP_PASS` (Google Workspace app password) function secrets.
+
 ## How it fits together
 
 - **Next.js** web app (`src/app`), mobile-first.

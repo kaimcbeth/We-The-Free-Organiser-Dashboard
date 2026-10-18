@@ -214,3 +214,78 @@ export async function setAttendedBefore(personId: string, value: boolean): Promi
   revalidatePath("/insights");
   return {};
 }
+
+// Approve (or remove) someone as a buddy. Only people with a connected account
+// can be buddies, because the reminders go to their login.
+export async function setIsBuddy(personId: string, value: boolean): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  const { data: person } = await supabase
+    .from("people")
+    .select("id, user_id")
+    .eq("id", personId)
+    .eq("team_id", organiser.team_id)
+    .maybeSingle();
+  if (!person) return { error: "Couldn't find that person." };
+  if (value && !person.user_id) return { error: "They need to connect their account first." };
+
+  const { error } = await supabase.from("people").update({ is_buddy: value }).eq("id", personId);
+  if (error) return { error: "Couldn't save. Please try again." };
+
+  // No longer a buddy: end the pairings they had.
+  if (!value) {
+    await supabase
+      .from("buddy_pairings")
+      .update({ ended_at: new Date().toISOString() })
+      .eq("buddy_id", personId)
+      .is("ended_at", null);
+  }
+  revalidatePath(`/people/${personId}`);
+  return {};
+}
+
+// Give a newcomer a buddy (or change / remove it). buddyId null = no buddy.
+export async function assignBuddy(newcomerId: string, buddyId: string | null): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+
+  if (buddyId) {
+    const { data: buddy } = await supabase
+      .from("people")
+      .select("id, is_buddy")
+      .eq("id", buddyId)
+      .eq("team_id", organiser.team_id)
+      .maybeSingle();
+    if (!buddy?.is_buddy) return { error: "That person isn't an approved buddy." };
+    if (buddyId === newcomerId) return { error: "Someone can't be their own buddy." };
+  }
+
+  const { data: current } = await supabase
+    .from("buddy_pairings")
+    .select("id, buddy_id")
+    .eq("newcomer_id", newcomerId)
+    .is("ended_at", null)
+    .maybeSingle();
+  if (current?.buddy_id === buddyId) return {};
+
+  if (current) {
+    const { error } = await supabase
+      .from("buddy_pairings")
+      .update({ ended_at: new Date().toISOString() })
+      .eq("id", current.id);
+    if (error) return { error: "Couldn't change the buddy. Please try again." };
+  }
+
+  if (buddyId) {
+    const { error } = await supabase.from("buddy_pairings").insert({
+      team_id: organiser.team_id,
+      newcomer_id: newcomerId,
+      buddy_id: buddyId,
+      via: "organiser",
+      created_by: organiser.id,
+    });
+    if (error) return { error: "Couldn't save the buddy. Please try again." };
+  }
+
+  revalidatePath(`/people/${newcomerId}`);
+  if (buddyId) revalidatePath(`/people/${buddyId}`);
+  return {};
+}

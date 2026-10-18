@@ -8,6 +8,8 @@ import { formatEventDate } from "@/lib/time";
 import { ProfileForm } from "./profile-form";
 import { PhotoPicker } from "@/components/photo-picker";
 import { signPhotos } from "@/lib/photos";
+import { NotificationBell } from "@/components/notification-bell";
+import { BuddySection, type BuddyDashboard } from "./buddy-section";
 
 type Me = {
   id: string;
@@ -50,6 +52,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
 
   const headerRight = (
     <div className="flex items-center gap-1">
+      <NotificationBell supabase={supabase} userId={user.id} />
       {organiser && (
         <Link href="/" className="rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10">
           Organiser view
@@ -116,6 +119,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     .filter((e): e is NonNullable<Attended["event"]> => !!e)
     .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
   const photos = await signPhotos(supabase, [me]);
+  const { data: buddy } = await supabase.rpc("my_buddy_dashboard");
   const outreach = events.filter((e) => e.event_type?.counts_as_outreach).length + me.starting_outreach_count;
 
   return (
@@ -146,6 +150,8 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
           <p className="text-sm text-white/75">outreach</p>
         </div>
       </div>
+
+      {buddy?.status === "ok" && <BuddySection data={buddy as BuddyDashboard} hasEmail={!!me.email} />}
 
       <section className="mt-8">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">Your events</h2>

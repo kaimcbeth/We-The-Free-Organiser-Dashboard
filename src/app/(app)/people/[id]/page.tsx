@@ -5,6 +5,7 @@ import { formatEventDate } from "@/lib/time";
 import { InviteButton } from "./invite-button";
 import { DeletePerson } from "./delete-person";
 import { AttendedBefore } from "./attended-before";
+import { BuddyPicker, BuddySwitch } from "./buddy-controls";
 import { Avatar } from "@/components/avatar";
 import { signPhotos } from "@/lib/photos";
 
@@ -23,6 +24,7 @@ type Person = {
   starting_outreach_count: number;
   photo_updated_at: string | null;
   attended_before_app: boolean;
+  is_buddy: boolean;
 };
 
 type Attended = {
@@ -41,7 +43,7 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
   const { data: person } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, suburb, email, phone, user_id, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app",
+      "id, first_name, last_name, suburb, email, phone, user_id, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, is_buddy",
     )
     .eq("id", id)
     .eq("team_id", organiser.team_id)
@@ -61,6 +63,32 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
   const outreach = events.filter((e) => e.event_type?.counts_as_outreach).length + person.starting_outreach_count;
   const name = [person.first_name, person.last_name].filter(Boolean).join(" ");
   const photos = await signPhotos(supabase, [person]);
+
+  // Buddy info: this person's buddy, who they look after, and who could be their buddy.
+  const fullName = (p: { first_name: string; last_name: string | null }) =>
+    [p.first_name, p.last_name].filter(Boolean).join(" ");
+  const [{ data: buddies }, { data: pairings }] = await Promise.all([
+    supabase
+      .from("people")
+      .select("id, first_name, last_name")
+      .eq("team_id", organiser.team_id)
+      .eq("is_buddy", true)
+      .neq("id", person.id)
+      .order("first_name"),
+    supabase
+      .from("buddy_pairings")
+      .select("id, newcomer_id, buddy_id, via, created_at")
+      .or(`newcomer_id.eq.${person.id},buddy_id.eq.${person.id}`)
+      .is("ended_at", null),
+  ]);
+  const myPairing = (pairings ?? []).find((p) => p.newcomer_id === person.id);
+  const lookingAfterIds = (pairings ?? []).filter((p) => p.buddy_id === person.id).map((p) => p.newcomer_id);
+  const ids = [...lookingAfterIds, ...(myPairing ? [myPairing.buddy_id] : [])];
+  const { data: related } = ids.length
+    ? await supabase.from("people").select("id, first_name, last_name").in("id", ids)
+    : { data: [] as { id: string; first_name: string; last_name: string | null }[] };
+  const nameOf = new Map((related ?? []).map((p) => [p.id, fullName(p)]));
+  const buddyOptions = (buddies ?? []).map((b) => ({ id: b.id, name: fullName(b) }));
 
   return (
     <div>
@@ -90,6 +118,48 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
       <div className="mt-4">
         <AttendedBefore personId={person.id} initial={person.attended_before_app} />
       </div>
+
+      <section className="mt-5 space-y-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+        <div>
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">Buddy</h2>
+          <BuddyPicker
+            key={myPairing?.id ?? "none"}
+            newcomerId={person.id}
+            current={
+              myPairing
+                ? {
+                    buddyId: myPairing.buddy_id,
+                    name: nameOf.get(myPairing.buddy_id) ?? "Their buddy",
+                    since: myPairing.created_at,
+                    via: myPairing.via,
+                  }
+                : null
+            }
+            options={buddyOptions}
+          />
+        </div>
+        <div className="border-t border-black/5 pt-4">
+          <BuddySwitch
+            personId={person.id}
+            initial={person.is_buddy}
+            connected={!!person.user_id}
+            firstName={person.first_name}
+          />
+          {lookingAfterIds.length > 0 && (
+            <p className="mt-3 text-sm text-stone-600">
+              Looking after:{" "}
+              {lookingAfterIds.map((id, i) => (
+                <span key={id}>
+                  {i > 0 && ", "}
+                  <Link href={`/people/${id}`} className="font-medium text-stone-900 hover:underline">
+                    {nameOf.get(id) ?? "someone"}
+                  </Link>
+                </span>
+              ))}
+            </p>
+          )}
+        </div>
+      </section>
 
       <section className="mt-5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
         {person.user_id ? (
