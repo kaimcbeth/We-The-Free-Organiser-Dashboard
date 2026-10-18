@@ -7,9 +7,14 @@ const cell = (v: string | number | null | undefined) => {
   const s = v == null ? "" : String(v);
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
-const toCsv = (rows: (string | number | null)[][]) => rows.map((r) => r.map(cell).join(",")).join("\r\n");
+const toCsv = (rows: (string | number | null)[][]) =>
+  rows.map((r) => r.map(cell).join(",")).join("\r\n");
 const day = (iso: string | null) =>
-  iso ? new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney" }).format(new Date(iso)) : "";
+  iso
+    ? new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney" }).format(
+        new Date(iso),
+      )
+    : "";
 
 const LISTS: Record<string, string> = {
   everyone: "Everyone",
@@ -35,13 +40,43 @@ export async function GET(request: NextRequest) {
   let csv: string;
   if (list === "everyone") {
     csv = toCsv([
-      ["Name", "Last event", "Events (3 months)", "Events (6 months)", "Events (12 months)", "Events (all time)", "Outreach events"],
-      ...r.everyone.map((p) => [p.name, day(p.lastSeen), p.m3, p.m6, p.m12, p.total, p.outreach]),
+      [
+        "Name",
+        "Last event",
+        "Events (3 months)",
+        "Events (6 months)",
+        "Events (12 months)",
+        "Events (all time)",
+        "Outreach events",
+      ],
+      ...r.everyone.map((p) => [
+        p.name,
+        day(p.lastSeen),
+        p.m3,
+        p.m6,
+        p.m12,
+        p.total,
+        p.outreach,
+      ]),
     ]);
   } else if (list === "monthly") {
     csv = toCsv([
-      ["Month", "Events", "Check-ins", "Outreach check-ins", "People", "First-timers"],
-      ...r.months.map((m) => [m.label, m.events, m.checkIns, m.outreachCheckIns, m.people, m.firstTimers]),
+      [
+        "Month",
+        "Events",
+        "Check-ins",
+        "Outreach check-ins",
+        "People",
+        "First-timers",
+      ],
+      ...r.months.map((m) => [
+        m.label,
+        m.events,
+        m.checkIns,
+        m.outreachCheckIns,
+        m.people,
+        m.firstTimers,
+      ]),
     ]);
   } else {
     const people: PersonInsight[] = {
@@ -52,8 +87,22 @@ export async function GET(request: NextRequest) {
       "milestones-recent": r.milestoneRecent,
     }[list]!;
     csv = toCsv([
-      ["Name", "Events", "Outreach events", "First event", "Last event", "Note"],
-      ...people.map((p) => [p.name, p.events, p.outreach, day(p.firstSeen), day(p.lastSeen), p.detail]),
+      [
+        "Name",
+        "Events",
+        "Outreach events",
+        "First event",
+        "Last event",
+        "Note",
+      ],
+      ...people.map((p) => [
+        p.name,
+        p.events,
+        p.outreach,
+        day(p.firstSeen),
+        day(p.lastSeen),
+        p.detail,
+      ]),
     ]);
   }
 

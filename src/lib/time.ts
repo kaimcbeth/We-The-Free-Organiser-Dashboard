@@ -15,13 +15,25 @@ function tzOffsetMs(instant: number, timeZone: string): number {
     minute: "2-digit",
     second: "2-digit",
   }).formatToParts(new Date(instant));
-  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value);
-  const asUtc = Date.UTC(get("year"), get("month") - 1, get("day"), get("hour"), get("minute"), get("second"));
+  const get = (type: string) =>
+    Number(parts.find((p) => p.type === type)?.value);
+  const asUtc = Date.UTC(
+    get("year"),
+    get("month") - 1,
+    get("day"),
+    get("hour"),
+    get("minute"),
+    get("second"),
+  );
   return asUtc - Math.floor(instant / 1000) * 1000;
 }
 
 // "2026-10-17" + "13:30" in Sydney -> ISO string in UTC.
-export function zonedToUtcIso(date: string, time: string, timeZone = TEAM_TZ): string {
+export function zonedToUtcIso(
+  date: string,
+  time: string,
+  timeZone = TEAM_TZ,
+): string {
   const [y, m, d] = date.split("-").map(Number);
   const [hh, mm] = time.split(":").map(Number);
   const guess = Date.UTC(y, m - 1, d, hh, mm);
@@ -39,7 +51,9 @@ export function todayInTz(timeZone = TEAM_TZ): string {
 // Start and end of a given local day, as UTC ISO strings.
 export function dayBoundsUtc(date: string, timeZone = TEAM_TZ) {
   const start = zonedToUtcIso(date, "00:00", timeZone);
-  const next = new Date(Date.parse(date + "T12:00:00Z") + 864e5).toISOString().slice(0, 10);
+  const next = new Date(Date.parse(date + "T12:00:00Z") + 864e5)
+    .toISOString()
+    .slice(0, 10);
   const end = zonedToUtcIso(next, "00:00", timeZone);
   return { start, end };
 }
@@ -64,8 +78,13 @@ export function formatTime(iso: string, timeZone = TEAM_TZ): string {
     .toLowerCase();
 }
 
-export function formatTimeRange(startIso: string, endIso: string | null): string {
-  return endIso ? `${formatTime(startIso)} – ${formatTime(endIso)}` : formatTime(startIso);
+export function formatTimeRange(
+  startIso: string,
+  endIso: string | null,
+): string {
+  return endIso
+    ? `${formatTime(startIso)} – ${formatTime(endIso)}`
+    : formatTime(startIso);
 }
 
 // Current time as an ISO string (kept out of components so renders stay pure).

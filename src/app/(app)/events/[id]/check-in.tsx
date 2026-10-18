@@ -24,6 +24,7 @@ export function CheckIn({
   helperLink,
   isOutreach,
   outreachBefore,
+  likely,
 }: {
   eventId: string;
   teamId: string;
@@ -36,6 +37,7 @@ export function CheckIn({
   helperLink: { token: string; expires_at: string } | null;
   isOutreach: boolean;
   outreachBefore: Record<string, number>;
+  likely: Record<string, number>;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [justAdded, setJustAdded] = useState<Person | null>(null);
@@ -95,6 +97,7 @@ export function CheckIn({
       isOutreach={isOutreach}
       outreachBefore={outreachBefore}
       onMarkNotNew={onMarkNotNew}
+      likely={likely}
       toolbarExtra={
         <>
           <button

@@ -35,7 +35,11 @@ export const fullName = (p: { first_name: string; last_name: string | null }) =>
   [p.first_name, p.last_name].filter(Boolean).join(" ");
 
 export function ordinal(n: number): string {
-  const s = n % 100 >= 11 && n % 100 <= 13 ? "th" : ({ 1: "st", 2: "nd", 3: "rd" } as Record<number, string>)[n % 10] ?? "th";
+  const s =
+    n % 100 >= 11 && n % 100 <= 13
+      ? "th"
+      : (({ 1: "st", 2: "nd", 3: "rd" } as Record<number, string>)[n % 10] ??
+        "th");
   return `${n}${s}`;
 }
 
@@ -44,8 +48,14 @@ export function isMilestone(outreachCount: number) {
 }
 
 // Outreach events per person (including any starting count for long-time volunteers).
-export function outreachCounts(people: InsightPerson[], checkIns: InsightCheckIn[], excludeEventId?: string) {
-  const counts = new Map(people.map((p) => [p.id, p.starting_outreach_count ?? 0]));
+export function outreachCounts(
+  people: InsightPerson[],
+  checkIns: InsightCheckIn[],
+  excludeEventId?: string,
+) {
+  const counts = new Map(
+    people.map((p) => [p.id, p.starting_outreach_count ?? 0]),
+  );
   for (const c of checkIns) {
     if (!c.outreach || c.event_id === excludeEventId) continue;
     counts.set(c.person_id, (counts.get(c.person_id) ?? 0) + 1);
@@ -54,10 +64,20 @@ export function outreachCounts(people: InsightPerson[], checkIns: InsightCheckIn
 }
 
 const monthKey = (iso: string) =>
-  new Intl.DateTimeFormat("en-CA", { timeZone: TEAM_TZ, year: "numeric", month: "2-digit" }).format(new Date(iso)).slice(0, 7);
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: TEAM_TZ,
+    year: "numeric",
+    month: "2-digit",
+  })
+    .format(new Date(iso))
+    .slice(0, 7);
 
 const monthLabel = (key: string) =>
-  new Intl.DateTimeFormat("en-AU", { month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${key}-15T00:00:00Z`));
+  new Intl.DateTimeFormat("en-AU", {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${key}-15T00:00:00Z`));
 
 export type PersonInsight = {
   id: string;
@@ -106,7 +126,8 @@ export function computeInsights(
     list.push(c);
     byPerson.set(c.person_id, list);
   }
-  for (const list of byPerson.values()) list.sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+  for (const list of byPerson.values())
+    list.sort((a, b) => a.starts_at.localeCompare(b.starts_at));
 
   const outreach = outreachCounts(people, past);
 
@@ -129,7 +150,11 @@ export function computeInsights(
     if (d < 60) return `${Math.round(d / 7)} weeks ago`;
     return `${Math.round(d / 30)} months ago`;
   };
-  const inWindow = (list: InsightCheckIn[], fromDaysAgo: number, toDaysAgo: number) =>
+  const inWindow = (
+    list: InsightCheckIn[],
+    fromDaysAgo: number,
+    toDaysAgo: number,
+  ) =>
     list.filter((c) => {
       const d = daysAgo(c.starts_at);
       return d < fromDaysAgo && d >= toDaysAgo;
@@ -151,7 +176,11 @@ export function computeInsights(
     };
   });
   // Most recently seen first; never-seen at the bottom.
-  everyone.sort((a, b) => (b.lastSeen ?? "").localeCompare(a.lastSeen ?? "") || a.name.localeCompare(b.name));
+  everyone.sort(
+    (a, b) =>
+      (b.lastSeen ?? "").localeCompare(a.lastSeen ?? "") ||
+      a.name.localeCompare(b.name),
+  );
 
   const regulars: PersonInsight[] = [];
   const oneTimers: PersonInsight[] = [];
@@ -170,19 +199,34 @@ export function computeInsights(
       regulars.push({ ...b, detail: `${recent} events in the last 3 months` });
     }
 
-    if (!p.attended_before_app && list.length === 1 && b.lastSeen && daysAgo(b.lastSeen) > RULES.oneTimerMinAgeDays) {
+    if (
+      !p.attended_before_app &&
+      list.length === 1 &&
+      b.lastSeen &&
+      daysAgo(b.lastSeen) > RULES.oneTimerMinAgeDays
+    ) {
       oneTimers.push({ ...b, detail: `Came once, ${ago(b.lastSeen)}` });
     }
 
     // Was a regular in the 3 months before going quiet, and nothing since.
-    const before = inWindow(list, RULES.driftedQuietDays + RULES.regularWindowDays, RULES.driftedQuietDays);
+    const before = inWindow(
+      list,
+      RULES.driftedQuietDays + RULES.regularWindowDays,
+      RULES.driftedQuietDays,
+    );
     if (quiet && before >= RULES.regularMinEvents && b.lastSeen) {
-      drifted.push({ ...b, detail: `Last came ${ago(b.lastSeen)}, after ${before} events` });
+      drifted.push({
+        ...b,
+        detail: `Last came ${ago(b.lastSeen)}, after ${before} events`,
+      });
     }
 
     const next = b.outreach + 1;
     if (isMilestone(next)) {
-      milestoneSoon.push({ ...b, detail: `On ${b.outreach}: next outreach is their ${ordinal(next)}` });
+      milestoneSoon.push({
+        ...b,
+        detail: `On ${b.outreach}: next outreach is their ${ordinal(next)}`,
+      });
     }
 
     // Milestones reached in the last 30 days.
@@ -191,12 +235,16 @@ export function computeInsights(
     outreachList.forEach((c, i) => {
       const n = start + i + 1;
       if (isMilestone(n) && daysAgo(c.starts_at) <= 30) {
-        milestoneRecent.push({ ...b, detail: `${ordinal(n)} outreach event, ${ago(c.starts_at)}` });
+        milestoneRecent.push({
+          ...b,
+          detail: `${ordinal(n)} outreach event, ${ago(c.starts_at)}`,
+        });
       }
     });
   }
 
-  const byLastSeen = (a: PersonInsight, b: PersonInsight) => (b.lastSeen ?? "").localeCompare(a.lastSeen ?? "");
+  const byLastSeen = (a: PersonInsight, b: PersonInsight) =>
+    (b.lastSeen ?? "").localeCompare(a.lastSeen ?? "");
   regulars.sort((a, b) => b.events - a.events || a.name.localeCompare(b.name));
   oneTimers.sort(byLastSeen);
   drifted.sort(byLastSeen);
@@ -204,8 +252,11 @@ export function computeInsights(
 
   // Monthly totals, last 6 months, newest first.
   const firstEver = new Map<string, string>();
-  const beenBefore = new Set(people.filter((p) => p.attended_before_app).map((p) => p.id));
-  for (const [id, list] of byPerson) if (list[0] && !beenBefore.has(id)) firstEver.set(id, list[0].event_id);
+  const beenBefore = new Set(
+    people.filter((p) => p.attended_before_app).map((p) => p.id),
+  );
+  for (const [id, list] of byPerson)
+    if (list[0] && !beenBefore.has(id)) firstEver.set(id, list[0].event_id);
 
   const months = new Map<string, MonthRow>();
   const nowKey = monthKey(new Date(now).toISOString());
@@ -216,7 +267,15 @@ export function computeInsights(
     keys.push(d.toISOString().slice(0, 7));
   }
   for (const k of keys) {
-    months.set(k, { key: k, label: monthLabel(k), events: 0, checkIns: 0, people: 0, firstTimers: 0, outreachCheckIns: 0 });
+    months.set(k, {
+      key: k,
+      label: monthLabel(k),
+      events: 0,
+      checkIns: 0,
+      people: 0,
+      firstTimers: 0,
+      outreachCheckIns: 0,
+    });
   }
   const peopleByMonth = new Map<string, Set<string>>();
   for (const e of events) {
@@ -256,3 +315,65 @@ export function computeInsights(
 }
 
 export type Insights = ReturnType<typeof computeInsights>;
+
+export const isMonthKey = (key: string) => /^\d{4}-(0[1-9]|1[0-2])$/.test(key);
+export { monthKey, monthLabel };
+
+// Everything behind one month's numbers: which events, who came, who was new.
+export function monthDetail(
+  people: InsightPerson[],
+  checkIns: InsightCheckIn[],
+  key: string,
+  now = Date.now(),
+) {
+  const past = checkIns.filter((c) => Date.parse(c.starts_at) <= now);
+  const names = new Map(people.map((p) => [p.id, fullName(p)]));
+  const beenBefore = new Set(
+    people.filter((p) => p.attended_before_app).map((p) => p.id),
+  );
+
+  // Each person's first ever event (not counting people who came before the app).
+  const first = new Map<string, InsightCheckIn>();
+  for (const c of [...past].sort((a, b) =>
+    a.starts_at.localeCompare(b.starts_at),
+  )) {
+    if (!first.has(c.person_id) && !beenBefore.has(c.person_id))
+      first.set(c.person_id, c);
+  }
+
+  const inMonth = past.filter((c) => monthKey(c.starts_at) === key);
+  const perEvent = new Map<string, number>();
+  const perPerson = new Map<string, number>();
+  for (const c of inMonth) {
+    perEvent.set(c.event_id, (perEvent.get(c.event_id) ?? 0) + 1);
+    perPerson.set(c.person_id, (perPerson.get(c.person_id) ?? 0) + 1);
+  }
+
+  const firstTimers = [...first.values()]
+    .filter((c) => monthKey(c.starts_at) === key)
+    .map((c) => ({
+      id: c.person_id,
+      name: names.get(c.person_id) ?? "Unknown",
+      eventId: c.event_id,
+      at: c.starts_at,
+    }))
+    .sort((a, b) => a.at.localeCompare(b.at) || a.name.localeCompare(b.name));
+  const newIds = new Set(firstTimers.map((f) => f.id));
+
+  const attendees = [...perPerson]
+    .map(([id, count]) => ({
+      id,
+      name: names.get(id) ?? "Unknown",
+      count,
+      isNew: newIds.has(id),
+    }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
+  return {
+    label: monthLabel(key),
+    checkIns: inMonth.length,
+    perEvent,
+    attendees,
+    firstTimers,
+  };
+}

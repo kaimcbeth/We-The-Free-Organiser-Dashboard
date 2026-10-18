@@ -19,12 +19,13 @@ export default async function InsightsPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Insights</h1>
         <p className="mt-1 text-sm text-stone-500">
-          {r.totals.everAttended} of {r.totals.people} people have been checked in to an event.
+          {r.totals.everAttended} of {r.totals.people} people have been checked
+          in to an event.
         </p>
         {totalCheckIns < 30 && (
           <p className="mt-3 rounded-xl bg-white px-4 py-3 text-sm text-stone-600 ring-1 ring-black/5">
-            These get more useful after a few weeks of check-ins. Regulars, follow-ups and milestones will fill in
-            as people come along.
+            These get more useful after a few weeks of check-ins. Regulars,
+            follow-ups and milestones will fill in as people come along.
           </p>
         )}
       </div>
@@ -32,23 +33,56 @@ export default async function InsightsPage() {
       <section>
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-            Everyone <span className="text-stone-400">· {r.everyone.length}</span>
+            Everyone{" "}
+            <span className="text-stone-400">· {r.everyone.length}</span>
           </h2>
-          <a href="/insights/export?list=everyone" className="text-sm font-medium text-pink-ink">
+          <a
+            href="/insights/export?list=everyone"
+            className="text-sm font-medium text-pink-ink"
+          >
             Download CSV
           </a>
         </div>
         <EveryoneTable rows={r.everyone} />
-        <p className="mt-2 text-xs text-stone-500">Tap a column heading to sort. Counts are events attended.</p>
+        <p className="mt-2 text-xs text-stone-500">
+          Tap a column heading to sort. Counts are events attended.
+        </p>
       </section>
 
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">{thisMonth.label}</h2>
+        <div className="mb-3 flex items-baseline justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+            {thisMonth.label}
+          </h2>
+          <Link
+            href={`/insights/month/${thisMonth.key}`}
+            className="text-sm font-medium text-pink-ink"
+          >
+            See details
+          </Link>
+        </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat value={thisMonth.events} label="events" />
-          <Stat value={thisMonth.checkIns} label="check-ins" />
-          <Stat value={thisMonth.people} label="people" />
-          <Stat value={thisMonth.firstTimers} label="first-timers" accent />
+          <Stat
+            href={`/insights/month/${thisMonth.key}#events`}
+            value={thisMonth.events}
+            label="events"
+          />
+          <Stat
+            href={`/insights/month/${thisMonth.key}#events`}
+            value={thisMonth.checkIns}
+            label="check-ins"
+          />
+          <Stat
+            href={`/insights/month/${thisMonth.key}#people`}
+            value={thisMonth.people}
+            label="people"
+          />
+          <Stat
+            href={`/insights/month/${thisMonth.key}#first-timers`}
+            value={thisMonth.firstTimers}
+            label="first-timers"
+            accent
+          />
         </div>
       </section>
 
@@ -90,8 +124,13 @@ export default async function InsightsPage() {
 
       <section>
         <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">Monthly totals</h2>
-          <a href="/insights/export?list=monthly" className="text-sm font-medium text-pink-ink">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+            Monthly totals
+          </h2>
+          <a
+            href="/insights/export?list=monthly"
+            className="text-sm font-medium text-pink-ink"
+          >
             Download CSV
           </a>
         </div>
@@ -101,7 +140,9 @@ export default async function InsightsPage() {
               <tr className="border-b border-black/5 text-left text-stone-500">
                 <th className="px-4 py-2.5 font-medium">Month</th>
                 <th className="px-3 py-2.5 text-right font-medium">Events</th>
-                <th className="px-3 py-2.5 text-right font-medium">Check-ins</th>
+                <th className="px-3 py-2.5 text-right font-medium">
+                  Check-ins
+                </th>
                 <th className="px-3 py-2.5 text-right font-medium">Outreach</th>
                 <th className="px-3 py-2.5 text-right font-medium">People</th>
                 <th className="px-4 py-2.5 text-right font-medium">New</th>
@@ -109,11 +150,23 @@ export default async function InsightsPage() {
             </thead>
             <tbody className="tabular-nums">
               {r.months.map((m) => (
-                <tr key={m.key} className="border-b border-black/5 last:border-0">
-                  <td className="px-4 py-2.5 font-medium">{m.label}</td>
+                <tr
+                  key={m.key}
+                  className="border-b border-black/5 last:border-0 hover:bg-stone-50"
+                >
+                  <td className="px-4 py-2.5 font-medium">
+                    <Link
+                      href={`/insights/month/${m.key}`}
+                      className="text-pink-ink hover:underline"
+                    >
+                      {m.label}
+                    </Link>
+                  </td>
                   <td className="px-3 py-2.5 text-right">{m.events}</td>
                   <td className="px-3 py-2.5 text-right">{m.checkIns}</td>
-                  <td className="px-3 py-2.5 text-right">{m.outreachCheckIns}</td>
+                  <td className="px-3 py-2.5 text-right">
+                    {m.outreachCheckIns}
+                  </td>
                   <td className="px-3 py-2.5 text-right">{m.people}</td>
                   <td className="px-4 py-2.5 text-right">{m.firstTimers}</td>
                 </tr>
@@ -122,19 +175,48 @@ export default async function InsightsPage() {
           </table>
         </div>
         <p className="mt-2 text-xs text-stone-500">
-          Outreach = check-ins at outreach events. People = different people that month. New = first ever event.
+          Tap a month for details. Outreach = check-ins at outreach events.
+          People = different people that month. New = first ever event.
         </p>
       </section>
     </div>
   );
 }
 
-function Stat({ value, label, accent }: { value: number; label: string; accent?: boolean }) {
+function Stat({
+  href,
+  value,
+  label,
+  accent,
+}: {
+  href: string;
+  value: number;
+  label: string;
+  accent?: boolean;
+}) {
   return (
-    <div className={`rounded-2xl p-4 ${accent ? "bg-navy text-white" : "bg-white shadow-sm ring-1 ring-black/5"}`}>
-      <p className={`text-3xl font-semibold tabular-nums ${accent ? "text-pink" : ""}`}>{value}</p>
-      <p className={`text-sm ${accent ? "text-white/75" : "text-stone-500"}`}>{label}</p>
-    </div>
+    <Link
+      href={href}
+      className={`group rounded-2xl p-4 transition-transform hover:-translate-y-0.5 ${
+        accent
+          ? "bg-navy text-white"
+          : "bg-white shadow-sm ring-1 ring-black/5 hover:ring-pink/60"
+      }`}
+    >
+      <p
+        className={`text-3xl font-semibold tabular-nums ${accent ? "text-pink" : ""}`}
+      >
+        {value}
+      </p>
+      <p
+        className={`flex items-center justify-between text-sm ${accent ? "text-white/75" : "text-stone-500"}`}
+      >
+        {label}
+        <span aria-hidden className="opacity-40 group-hover:opacity-100">
+          →
+        </span>
+      </p>
+    </Link>
   );
 }
 
@@ -158,7 +240,10 @@ function PeopleSection({
           {title} <span className="text-stone-400">· {list.length}</span>
         </h2>
         {list.length > 0 && (
-          <a href={`/insights/export?list=${list_id}`} className="shrink-0 text-sm font-medium text-pink-ink">
+          <a
+            href={`/insights/export?list=${list_id}`}
+            className="shrink-0 text-sm font-medium text-pink-ink"
+          >
             Download CSV
           </a>
         )}
@@ -170,17 +255,26 @@ function PeopleSection({
         <ul className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
           {list.slice(0, 25).map((p) => (
             <li key={p.id} className="border-b border-black/5 last:border-0">
-              <Link href={`/people/${p.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50">
+              <Link
+                href={`/people/${p.id}`}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50"
+              >
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{p.name}</p>
                   <p className="truncate text-sm text-stone-500">{p.detail}</p>
                 </div>
                 <div className="shrink-0 text-right text-xs text-stone-500">
                   <p>
-                    <span className="font-semibold text-stone-800">{p.events}</span> events
+                    <span className="font-semibold text-stone-800">
+                      {p.events}
+                    </span>{" "}
+                    events
                   </p>
                   <p>
-                    <span className="font-semibold text-stone-800">{p.outreach}</span> outreach
+                    <span className="font-semibold text-stone-800">
+                      {p.outreach}
+                    </span>{" "}
+                    outreach
                   </p>
                 </div>
               </Link>
@@ -189,7 +283,9 @@ function PeopleSection({
         </ul>
       )}
       {list.length > 25 && (
-        <p className="mt-2 text-xs text-stone-500">Showing 25 of {list.length}. Download the CSV for the full list.</p>
+        <p className="mt-2 text-xs text-stone-500">
+          Showing 25 of {list.length}. Download the CSV for the full list.
+        </p>
       )}
     </section>
   );

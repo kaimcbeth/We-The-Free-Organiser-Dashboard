@@ -16,7 +16,10 @@ type Me = {
 };
 
 export function ProfileForm({ me }: { me: Me }) {
-  const [state, action, pending] = useActionState<ProfileState, FormData>(updateMyProfile, {});
+  const [state, action, pending] = useActionState<ProfileState, FormData>(
+    updateMyProfile,
+    {},
+  );
   const [values, setValues] = useState({
     first_name: me.first_name,
     last_name: me.last_name ?? "",
@@ -29,12 +32,16 @@ export function ProfileForm({ me }: { me: Me }) {
     id: name,
     name,
     value: values[name],
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => setValues((v) => ({ ...v, [name]: e.target.value })),
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+      setValues((v) => ({ ...v, [name]: e.target.value })),
     className: inputClass,
   });
 
   return (
-    <form action={action} className="space-y-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+    <form
+      action={action}
+      className="space-y-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5"
+    >
       <input type="hidden" name="person_id" value={me.id} />
       <div className="grid grid-cols-2 gap-3">
         <Field label="First name" htmlFor="first_name">
@@ -63,7 +70,9 @@ export function ProfileForm({ me }: { me: Me }) {
       >
         {pending ? "Saving…" : "Save details"}
       </button>
-      {state.saved && !pending && <p className="text-sm text-stone-600">Saved.</p>}
+      {state.saved && !pending && (
+        <p className="text-sm text-stone-600">Saved.</p>
+      )}
       {state.error && <p className="text-sm text-red-700">{state.error}</p>}
     </form>
   );

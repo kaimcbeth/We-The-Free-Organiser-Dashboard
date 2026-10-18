@@ -44,7 +44,9 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
   const [{ data: me }, { data: organiser }] = await Promise.all([
     supabase
       .from("people")
-      .select("id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, photo_updated_at, team:teams(name)")
+      .select(
+        "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, photo_updated_at, team:teams(name)",
+      )
       .eq("user_id", user.id)
       .maybeSingle<Me>(),
     supabase.from("organisers").select("id").eq("id", user.id).maybeSingle(),
@@ -54,7 +56,10 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     <div className="flex items-center gap-1">
       <NotificationBell supabase={supabase} userId={user.id} />
       {organiser && (
-        <Link href="/" className="rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10">
+        <Link
+          href="/"
+          className="rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10"
+        >
           Organiser view
         </Link>
       )}
@@ -69,10 +74,13 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
   if (!me && organiser) {
     return (
       <AttendeeShell right={headerRight}>
-        <h1 className="text-2xl font-semibold tracking-tight">Set up your profile</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Set up your profile
+        </h1>
         <p className="mt-2 text-stone-600">
-          You&apos;re an organiser, but you don&apos;t have a member profile yet. Add one to put your photo in the
-          corner and show up in check-in lists like everyone else.
+          You&apos;re an organiser, but you don&apos;t have a member profile
+          yet. Add one to put your photo in the corner and show up in check-in
+          lists like everyone else.
         </p>
         <Link
           href={`/join/${DEFAULT_TEAM_SLUG}`}
@@ -87,18 +95,24 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
   if (!me) {
     return (
       <AttendeeShell right={headerRight}>
-        <h1 className="text-2xl font-semibold tracking-tight">You&apos;re logged in</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          You&apos;re logged in
+        </h1>
         <p className="mt-2 text-stone-600">
-          <span className="font-medium text-stone-900">{user.email}</span> isn&apos;t connected to a profile yet.
+          <span className="font-medium text-stone-900">{user.email}</span>{" "}
+          isn&apos;t connected to a profile yet.
         </p>
         <ul className="mt-4 space-y-2 text-stone-700">
           <li>
-            <span className="font-medium">Been to an event already?</span> Ask an organiser to show you your
-            connect QR code.
+            <span className="font-medium">Been to an event already?</span> Ask
+            an organiser to show you your connect QR code.
           </li>
           <li>
             <span className="font-medium">New to We The Free?</span>{" "}
-            <Link href={`/join/${DEFAULT_TEAM_SLUG}`} className="font-medium text-pink-ink">
+            <Link
+              href={`/join/${DEFAULT_TEAM_SLUG}`}
+              className="font-medium text-pink-ink"
+            >
               Join here
             </Link>
             .
@@ -110,7 +124,9 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
 
   const { data: rows } = await supabase
     .from("attendance")
-    .select("event:events(id, title, starts_at, event_type:event_types(name, counts_as_outreach))")
+    .select(
+      "event:events(id, title, starts_at, event_type:event_types(name, counts_as_outreach))",
+    )
     .eq("person_id", me.id)
     .returns<Attended[]>();
 
@@ -120,7 +136,9 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
   const photos = await signPhotos(supabase, [me]);
   const { data: buddy } = await supabase.rpc("my_buddy_dashboard");
-  const outreach = events.filter((e) => e.event_type?.counts_as_outreach).length + me.starting_outreach_count;
+  const outreach =
+    events.filter((e) => e.event_type?.counts_as_outreach).length +
+    me.starting_outreach_count;
 
   return (
     <AttendeeShell right={headerRight}>
@@ -143,28 +161,47 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
       <div className="mt-6 grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-navy p-4 text-white">
           <p className="text-3xl font-semibold tabular-nums">{events.length}</p>
-          <p className="text-sm text-white/75">{events.length === 1 ? "event" : "events"}</p>
+          <p className="text-sm text-white/75">
+            {events.length === 1 ? "event" : "events"}
+          </p>
         </div>
         <div className="rounded-2xl bg-navy p-4 text-white">
-          <p className="text-3xl font-semibold tabular-nums text-pink">{outreach}</p>
+          <p className="text-3xl font-semibold tabular-nums text-pink">
+            {outreach}
+          </p>
           <p className="text-sm text-white/75">outreach</p>
         </div>
       </div>
 
-      {buddy?.status === "ok" && <BuddySection data={buddy as BuddyDashboard} hasEmail={!!me.email} />}
+      {buddy?.status === "ok" && (
+        <BuddySection data={buddy as BuddyDashboard} hasEmail={!!me.email} />
+      )}
 
       <section className="mt-8">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">Your events</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+          Your events
+        </h2>
         {events.length === 0 ? (
-          <p className="text-sm text-stone-500">Your events will show here once an organiser checks you in.</p>
+          <p className="text-sm text-stone-500">
+            Your events will show here once an organiser checks you in.
+          </p>
         ) : (
           <ul className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
             {events.map((e) => (
-              <li key={e.id} className="flex items-center gap-4 border-b border-black/5 px-4 py-3 last:border-0">
-                <div className="w-16 shrink-0 text-sm font-medium text-stone-500">{formatEventDate(e.starts_at)}</div>
+              <li
+                key={e.id}
+                className="flex items-center gap-4 border-b border-black/5 px-4 py-3 last:border-0"
+              >
+                <div className="w-16 shrink-0 text-sm font-medium text-stone-500">
+                  {formatEventDate(e.starts_at)}
+                </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{e.title}</p>
-                  {e.event_type && <p className="truncate text-sm text-stone-500">{e.event_type.name}</p>}
+                  {e.event_type && (
+                    <p className="truncate text-sm text-stone-500">
+                      {e.event_type.name}
+                    </p>
+                  )}
                 </div>
               </li>
             ))}
@@ -173,7 +210,9 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
       </section>
 
       <section className="mt-8">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">Your details</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+          Your details
+        </h2>
         <ProfileForm me={me} />
       </section>
     </AttendeeShell>

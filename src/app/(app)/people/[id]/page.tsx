@@ -36,7 +36,9 @@ type Attended = {
   } | null;
 };
 
-export default async function PersonPage({ params }: PageProps<"/people/[id]">) {
+export default async function PersonPage({
+  params,
+}: PageProps<"/people/[id]">) {
   const { id } = await params;
   const { supabase, organiser } = await requireOrganiser();
 
@@ -52,7 +54,9 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
 
   const { data: rows } = await supabase
     .from("attendance")
-    .select("event:events(id, title, starts_at, event_type:event_types(name, counts_as_outreach))")
+    .select(
+      "event:events(id, title, starts_at, event_type:event_types(name, counts_as_outreach))",
+    )
     .eq("person_id", person.id)
     .returns<Attended[]>();
 
@@ -60,7 +64,9 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
     .map((r) => r.event)
     .filter((e): e is NonNullable<Attended["event"]> => !!e)
     .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
-  const outreach = events.filter((e) => e.event_type?.counts_as_outreach).length + person.starting_outreach_count;
+  const outreach =
+    events.filter((e) => e.event_type?.counts_as_outreach).length +
+    person.starting_outreach_count;
   const name = [person.first_name, person.last_name].filter(Boolean).join(" ");
   const photos = await signPhotos(supabase, [person]);
 
@@ -82,17 +88,34 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
       .is("ended_at", null),
   ]);
   const myPairing = (pairings ?? []).find((p) => p.newcomer_id === person.id);
-  const lookingAfterIds = (pairings ?? []).filter((p) => p.buddy_id === person.id).map((p) => p.newcomer_id);
+  const lookingAfterIds = (pairings ?? [])
+    .filter((p) => p.buddy_id === person.id)
+    .map((p) => p.newcomer_id);
   const ids = [...lookingAfterIds, ...(myPairing ? [myPairing.buddy_id] : [])];
   const { data: related } = ids.length
-    ? await supabase.from("people").select("id, first_name, last_name").in("id", ids)
-    : { data: [] as { id: string; first_name: string; last_name: string | null }[] };
+    ? await supabase
+        .from("people")
+        .select("id, first_name, last_name")
+        .in("id", ids)
+    : {
+        data: [] as {
+          id: string;
+          first_name: string;
+          last_name: string | null;
+        }[],
+      };
   const nameOf = new Map((related ?? []).map((p) => [p.id, fullName(p)]));
-  const buddyOptions = (buddies ?? []).map((b) => ({ id: b.id, name: fullName(b) }));
+  const buddyOptions = (buddies ?? []).map((b) => ({
+    id: b.id,
+    name: fullName(b),
+  }));
 
   return (
     <div>
-      <Link href="/people" className="text-sm text-stone-500 hover:text-stone-800">
+      <Link
+        href="/people"
+        className="text-sm text-stone-500 hover:text-stone-800"
+      >
         ← People
       </Link>
       <div className="mt-3">
@@ -100,14 +123,20 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
       </div>
       <h1 className="mt-4 text-2xl font-semibold tracking-tight">{name}</h1>
       <p className="mt-1 text-sm text-stone-500">
-        {[person.suburb, person.email, person.phone].filter(Boolean).join(" · ") ||
-          (person.user_id ? "No details added yet" : `${person.first_name} adds their own details when they connect`)}
+        {[person.suburb, person.email, person.phone]
+          .filter(Boolean)
+          .join(" · ") ||
+          (person.user_id
+            ? "No details added yet"
+            : `${person.first_name} adds their own details when they connect`)}
       </p>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
           <p className="text-3xl font-semibold tabular-nums">{events.length}</p>
-          <p className="text-sm text-stone-500">{events.length === 1 ? "event" : "events"}</p>
+          <p className="text-sm text-stone-500">
+            {events.length === 1 ? "event" : "events"}
+          </p>
         </div>
         <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
           <p className="text-3xl font-semibold tabular-nums">{outreach}</p>
@@ -116,12 +145,17 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
       </div>
 
       <div className="mt-4">
-        <AttendedBefore personId={person.id} initial={person.attended_before_app} />
+        <AttendedBefore
+          personId={person.id}
+          initial={person.attended_before_app}
+        />
       </div>
 
       <section className="mt-5 space-y-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
         <div>
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">Buddy</h2>
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
+            Buddy
+          </h2>
           <BuddyPicker
             key={myPairing?.id ?? "none"}
             newcomerId={person.id}
@@ -151,7 +185,10 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
               {lookingAfterIds.map((id, i) => (
                 <span key={id}>
                   {i > 0 && ", "}
-                  <Link href={`/people/${id}`} className="font-medium text-stone-900 hover:underline">
+                  <Link
+                    href={`/people/${id}`}
+                    className="font-medium text-stone-900 hover:underline"
+                  >
                     {nameOf.get(id) ?? "someone"}
                   </Link>
                 </span>
@@ -168,18 +205,27 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
             <p className="text-sm">
               <span className="font-medium">Account connected</span>
               <span className="text-stone-500">
-                {person.linked_at ? ` since ${formatEventDate(person.linked_at)}` : ""}
-                {person.consent_marketing ? " · happy to get texts and emails" : ""}
+                {person.linked_at
+                  ? ` since ${formatEventDate(person.linked_at)}`
+                  : ""}
+                {person.consent_marketing
+                  ? " · happy to get texts and emails"
+                  : ""}
               </span>
             </p>
           </div>
         ) : (
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <span className="h-2.5 w-2.5 rounded-full bg-stone-300" aria-hidden />
+              <span
+                className="h-2.5 w-2.5 rounded-full bg-stone-300"
+                aria-hidden
+              />
               <p className="text-sm">
                 <span className="font-medium">No account yet</span>
-                <span className="block text-stone-500">Show them a QR code to connect</span>
+                <span className="block text-stone-500">
+                  Show them a QR code to connect
+                </span>
               </p>
             </div>
             <InviteButton personId={person.id} firstName={person.first_name} />
@@ -188,18 +234,31 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
       </section>
 
       <section className="mt-8">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">Events</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+          Events
+        </h2>
         {events.length === 0 ? (
-          <p className="text-sm text-stone-500">Not checked in to any events yet.</p>
+          <p className="text-sm text-stone-500">
+            Not checked in to any events yet.
+          </p>
         ) : (
           <ul className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
             {events.map((e) => (
               <li key={e.id}>
-                <Link href={`/events/${e.id}`} className="flex items-center gap-4 border-b border-black/5 px-4 py-3 last:border-0 hover:bg-stone-50">
-                  <div className="w-16 shrink-0 text-sm font-medium text-stone-500">{formatEventDate(e.starts_at)}</div>
+                <Link
+                  href={`/events/${e.id}`}
+                  className="flex items-center gap-4 border-b border-black/5 px-4 py-3 last:border-0 hover:bg-stone-50"
+                >
+                  <div className="w-16 shrink-0 text-sm font-medium text-stone-500">
+                    {formatEventDate(e.starts_at)}
+                  </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{e.title}</p>
-                    {e.event_type && <p className="truncate text-sm text-stone-500">{e.event_type.name}</p>}
+                    {e.event_type && (
+                      <p className="truncate text-sm text-stone-500">
+                        {e.event_type.name}
+                      </p>
+                    )}
                   </div>
                 </Link>
               </li>
@@ -208,7 +267,11 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
         )}
       </section>
       <section className="mt-10 border-t border-black/10 pt-6">
-        <DeletePerson personId={person.id} name={person.first_name} events={events.length} />
+        <DeletePerson
+          personId={person.id}
+          name={person.first_name}
+          events={events.length}
+        />
       </section>
     </div>
   );

@@ -26,7 +26,9 @@ export function BuddySwitch({
 
   return (
     <div className="text-sm">
-      <label className={`flex items-center gap-3 ${disabled ? "" : "cursor-pointer"}`}>
+      <label
+        className={`flex items-center gap-3 ${disabled ? "" : "cursor-pointer"}`}
+      >
         <button
           type="button"
           role="switch"
@@ -34,7 +36,13 @@ export function BuddySwitch({
           disabled={disabled}
           onClick={() => {
             const next = !on;
-            if (!next && !confirm(`Remove ${firstName} as a buddy? Their current pairings will end.`)) return;
+            if (
+              !next &&
+              !confirm(
+                `Remove ${firstName} as a buddy? Their current pairings will end.`,
+              )
+            )
+              return;
             setOn(next);
             start(async () => {
               const r = await setIsBuddy(personId, next);
@@ -84,7 +92,8 @@ export function BuddyPicker({
   if (options.length === 0 && !current) {
     return (
       <p className="text-sm text-stone-500">
-        No approved buddies yet. Switch on “Approved buddy” on a trusted member&apos;s profile first.
+        No approved buddies yet. Switch on “Approved buddy” on a trusted
+        member&apos;s profile first.
       </p>
     );
   }
@@ -93,7 +102,10 @@ export function BuddyPicker({
     <div className="text-sm">
       {current && (
         <p className="mb-2 text-stone-600">
-          <Link href={`/people/${current.buddyId}`} className="font-medium text-stone-900 hover:underline">
+          <Link
+            href={`/people/${current.buddyId}`}
+            className="font-medium text-stone-900 hover:underline"
+          >
             {current.name}
           </Link>{" "}
           since {formatEventDate(current.since)}
@@ -137,7 +149,9 @@ export function BuddyPicker({
       </div>
       {saved && (
         <p className="mt-1 text-stone-600">
-          {value ? "Saved. Their buddy gets a reminder to invite them in a week." : "Buddy removed."}
+          {value
+            ? "Saved. Their buddy gets a reminder to invite them in a week."
+            : "Buddy removed."}
         </p>
       )}
       {error && <p className="mt-1 text-red-700">{error}</p>}

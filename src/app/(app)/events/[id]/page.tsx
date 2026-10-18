@@ -33,7 +33,7 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
 
   if (!event) notFound();
 
-  const [people, attendance, earlier, types, helper] = await Promise.all([
+  const [people, attendance, earlier, types, helper, likely] = await Promise.all([
     supabase
       .from("people")
       .select("id, first_name, last_name, photo_updated_at, attended_before_app")
@@ -57,6 +57,7 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase.rpc("event_likely_attendees", { p_event_id: id }),
   ]);
 
   if (people.error || attendance.error || earlier.error) return <LoadError what="this event's check-in list" />;
@@ -112,6 +113,7 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
         helperLink={helper.data ?? null}
         isOutreach={isOutreach}
         outreachBefore={outreachBefore}
+        likely={(likely.data as Record<string, number> | null) ?? {}}
       />
     </div>
   );

@@ -3,7 +3,15 @@
 import { useState, useTransition } from "react";
 import { deletePerson } from "@/app/actions";
 
-export function DeletePerson({ personId, name, events }: { personId: string; name: string; events: number }) {
+export function DeletePerson({
+  personId,
+  name,
+  events,
+}: {
+  personId: string;
+  name: string;
+  events: number;
+}) {
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
@@ -24,8 +32,10 @@ export function DeletePerson({ personId, name, events }: { personId: string; nam
       <p className="font-semibold text-red-900">Delete {name}?</p>
       <p className="mt-1 text-sm text-red-800">
         This removes them from the People list
-        {events > 0 ? ` and from the ${events} ${events === 1 ? "event" : "events"} they were checked in to` : ""}.
-        It can&apos;t be undone.
+        {events > 0
+          ? ` and from the ${events} ${events === 1 ? "event" : "events"} they were checked in to`
+          : ""}
+        . It can&apos;t be undone.
       </p>
       <div className="mt-3 flex gap-2">
         <button

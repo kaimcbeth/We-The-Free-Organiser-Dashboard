@@ -1,29 +1,51 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { InsightCheckIn, InsightEvent, InsightPerson } from "@/lib/insights";
+import type {
+  InsightCheckIn,
+  InsightEvent,
+  InsightPerson,
+} from "@/lib/insights";
 
 type AttendanceRow = {
   person_id: string;
-  event: { id: string; starts_at: string; team_id: string; event_type: { counts_as_outreach: boolean } | null } | null;
+  event: {
+    id: string;
+    starts_at: string;
+    team_id: string;
+    event_type: { counts_as_outreach: boolean } | null;
+  } | null;
 };
 
 // Loads everything the insights need for one team.
-export async function loadInsightData(supabase: SupabaseClient, teamId: string) {
+export async function loadInsightData(
+  supabase: SupabaseClient,
+  teamId: string,
+) {
   const [people, attendance, events] = await Promise.all([
     supabase
       .from("people")
-      .select("id, first_name, last_name, starting_outreach_count, attended_before_app")
+      .select(
+        "id, first_name, last_name, starting_outreach_count, attended_before_app",
+      )
       .eq("team_id", teamId)
       .returns<InsightPerson[]>(),
     supabase
       .from("attendance")
-      .select("person_id, event:events!inner(id, starts_at, team_id, event_type:event_types(counts_as_outreach))")
+      .select(
+        "person_id, event:events!inner(id, starts_at, team_id, event_type:event_types(counts_as_outreach))",
+      )
       .eq("event.team_id", teamId)
       .returns<AttendanceRow[]>(),
     supabase
       .from("events")
       .select("id, starts_at, event_type:event_types(counts_as_outreach)")
       .eq("team_id", teamId)
-      .returns<{ id: string; starts_at: string; event_type: { counts_as_outreach: boolean } | null }[]>(),
+      .returns<
+        {
+          id: string;
+          starts_at: string;
+          event_type: { counts_as_outreach: boolean } | null;
+        }[]
+      >(),
   ]);
 
   if (people.error || attendance.error || events.error) return null;

@@ -4,7 +4,13 @@ import { useState } from "react";
 import { Sheet } from "@/components/sheet";
 import { ConnectInvite } from "@/components/connect-invite";
 
-export function InviteButton({ personId, firstName }: { personId: string; firstName: string }) {
+export function InviteButton({
+  personId,
+  firstName,
+}: {
+  personId: string;
+  firstName: string;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <>

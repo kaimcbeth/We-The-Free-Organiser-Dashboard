@@ -16,9 +16,11 @@ const COLS: { key: SortKey; label: string; title: string }[] = [
 ];
 
 const shortDate = (iso: string) =>
-  new Intl.DateTimeFormat("en-AU", { timeZone: "Australia/Sydney", day: "numeric", month: "short" }).format(
-    new Date(iso),
-  );
+  new Intl.DateTimeFormat("en-AU", {
+    timeZone: "Australia/Sydney",
+    day: "numeric",
+    month: "short",
+  }).format(new Date(iso));
 
 // Everyone in the team: last event and how many events in the last 3/6/12 months.
 // Tap a column heading to sort by it.
@@ -29,11 +31,14 @@ export function EveryoneTable({ rows }: { rows: EveryoneRow[] }) {
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const list = q ? rows.filter((r) => r.name.toLowerCase().includes(q)) : [...rows];
+    const list = q
+      ? rows.filter((r) => r.name.toLowerCase().includes(q))
+      : [...rows];
     list.sort((a, b) => {
       let c: number;
       if (sort === "name") c = a.name.localeCompare(b.name);
-      else if (sort === "lastSeen") c = (a.lastSeen ?? "").localeCompare(b.lastSeen ?? "");
+      else if (sort === "lastSeen")
+        c = (a.lastSeen ?? "").localeCompare(b.lastSeen ?? "");
       else c = a[sort] - b[sort];
       if (c === 0) c = a.name.localeCompare(b.name) * (asc ? 1 : -1);
       return asc ? c : -c;
@@ -66,12 +71,19 @@ export function EveryoneTable({ rows }: { rows: EveryoneRow[] }) {
           <thead>
             <tr className="border-b border-black/5 text-left text-stone-500">
               <th className="sticky left-0 bg-white px-4 py-2.5 font-medium">
-                <button onClick={() => sortBy("name")} className="hover:text-navy">
+                <button
+                  onClick={() => sortBy("name")}
+                  className="hover:text-navy"
+                >
                   Name{arrow("name")}
                 </button>
               </th>
               {COLS.map((c) => (
-                <th key={c.key} className="px-3 py-2.5 text-right font-medium" title={c.title}>
+                <th
+                  key={c.key}
+                  className="px-3 py-2.5 text-right font-medium"
+                  title={c.title}
+                >
                   <button
                     onClick={() => sortBy(c.key)}
                     className={`hover:text-navy ${sort === c.key ? "text-navy" : ""}`}
@@ -85,17 +97,27 @@ export function EveryoneTable({ rows }: { rows: EveryoneRow[] }) {
           </thead>
           <tbody className="tabular-nums">
             {shown.map((r) => (
-              <tr key={r.id} className="border-b border-black/5 last:border-0 hover:bg-stone-50">
+              <tr
+                key={r.id}
+                className="border-b border-black/5 last:border-0 hover:bg-stone-50"
+              >
                 <td className="sticky left-0 bg-white px-4 py-2.5">
-                  <Link href={`/people/${r.id}`} className="font-medium hover:text-pink-ink">
+                  <Link
+                    href={`/people/${r.id}`}
+                    className="font-medium hover:text-pink-ink"
+                  >
                     {r.name}
                   </Link>
                 </td>
                 <td className="px-3 py-2.5 text-right text-stone-600">
                   {r.lastSeen ? (
                     <>
-                      <span className="text-stone-900">{shortDate(r.lastSeen)}</span>
-                      <span className="block text-xs text-stone-500">{r.lastAgo}</span>
+                      <span className="text-stone-900">
+                        {shortDate(r.lastSeen)}
+                      </span>
+                      <span className="block text-xs text-stone-500">
+                        {r.lastAgo}
+                      </span>
                     </>
                   ) : (
                     <span className="text-stone-400">Never</span>
@@ -109,12 +131,22 @@ export function EveryoneTable({ rows }: { rows: EveryoneRow[] }) {
             ))}
           </tbody>
         </table>
-        {shown.length === 0 && <p className="px-4 py-6 text-center text-sm text-stone-500">No one matches.</p>}
+        {shown.length === 0 && (
+          <p className="px-4 py-6 text-center text-sm text-stone-500">
+            No one matches.
+          </p>
+        )}
       </div>
     </div>
   );
 }
 
 function Count({ n }: { n: number }) {
-  return <td className={`px-3 py-2.5 text-right ${n === 0 ? "text-stone-300" : "font-medium"}`}>{n}</td>;
+  return (
+    <td
+      className={`px-3 py-2.5 text-right ${n === 0 ? "text-stone-300" : "font-medium"}`}
+    >
+      {n}
+    </td>
+  );
 }

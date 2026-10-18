@@ -12,6 +12,7 @@ export type HelperState = {
   returning: string[];
   is_outreach: boolean;
   outreach_before: Record<string, number>;
+  likely?: Record<string, number>;
 };
 
 export function HelperCheckIn({ token, state }: { token: string; state: HelperState }) {
@@ -68,6 +69,7 @@ export function HelperCheckIn({ token, state }: { token: string; state: HelperSt
       isOutreach={state.is_outreach}
       outreachBefore={state.outreach_before ?? {}}
       onMarkNotNew={onMarkNotNew}
+      likely={state.likely ?? {}}
     />
   );
 }
