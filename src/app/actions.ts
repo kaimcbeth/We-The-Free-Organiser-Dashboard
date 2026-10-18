@@ -3,7 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requireOrganiser } from "@/lib/organiser";
+import { cookies } from "next/headers";
+import {
+  getStaff,
+  requireOrganiser,
+  TEAM_COOKIE,
+  VIEW_AS_COOKIE,
+  type ViewRole,
+} from "@/lib/organiser";
 import { dayBoundsUtc, todayInTz, zonedToUtcIso } from "@/lib/time";
 
 export async function signOut() {
@@ -406,4 +413,68 @@ export async function setTeamWhatsapp(
   revalidatePath("/", "layout");
   const m = url.trim().match(/^https:\/\/chat\.whatsapp\.com\/[A-Za-z0-9]+/);
   return { url: m ? m[0] : null };
+}
+
+// Switch which team a God Mode / Regional Support Lead is looking at.
+export async function setActiveTeam(teamId: string): Promise<void> {
+  const { organiser } = await getStaff();
+  if (!organiser?.teams.some((t) => t.id === teamId)) return;
+  (await cookies()).set(TEAM_COOKIE, teamId, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+  });
+  revalidatePath("/", "layout");
+}
+
+// God Mode: preview the app as another role (null = back to God Mode).
+export async function setViewAs(role: ViewRole | null): Promise<void> {
+  const { organiser } = await getStaff();
+  if (organiser?.access !== "god") return;
+  const jar = await cookies();
+  if (!role || role === "god") jar.delete(VIEW_AS_COOKIE);
+  else
+    jar.set(VIEW_AS_COOKIE, role, {
+      path: "/",
+      maxAge: 60 * 60 * 12,
+      sameSite: "lax",
+    });
+  revalidatePath("/", "layout");
+  redirect(
+    role === "member" ? "/me" : role === "core_team" ? "/attendance" : "/",
+  );
+}
+
+const GRANT_ERRORS: Record<string, string> = {
+  no_account: "They need to connect their account first.",
+  self: "You can't change your own role.",
+  need_region: "Pick a region.",
+  not_allowed: "You can't give that role to this person.",
+  not_found: "Couldn't find that person.",
+  bad_role: "Unknown role.",
+};
+
+// Give someone a role (Core Team, Organiser or Regional Support Lead).
+export async function grantRole(
+  personId: string,
+  role: string,
+  regionId: string | null,
+): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  if (organiser.viewingAs)
+    return {
+      error: "You're previewing another role. Switch back to God Mode first.",
+    };
+  const { data, error } = await supabase.rpc("grant_role", {
+    p_person_id: personId,
+    p_role: role,
+    p_region_id: regionId,
+  });
+  if (error) return { error: "Couldn't save. Please try again." };
+  if (data !== "ok")
+    return {
+      error: GRANT_ERRORS[data as string] ?? "Couldn't save. Please try again.",
+    };
+  revalidatePath("/roles");
+  return {};
 }

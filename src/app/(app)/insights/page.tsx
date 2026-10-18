@@ -45,7 +45,8 @@ export default async function InsightsPage() {
         </div>
         <EveryoneTable rows={r.everyone} />
         <p className="mt-2 text-xs text-stone-500">
-          Tap a column heading to sort. Counts are events attended.
+          Tap a column heading to sort. Last event: cyan = last 2 weeks, yellow
+          = last 2 months, pink = quieter. Darker circles = more events.
         </p>
       </section>
 

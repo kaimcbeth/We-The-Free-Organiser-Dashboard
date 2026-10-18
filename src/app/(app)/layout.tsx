@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { requireOrganiser } from "@/lib/organiser";
+import { requireOrganiser, ROLE_LABEL } from "@/lib/organiser";
+import { StaffBar } from "@/components/staff-bar";
 import { signPhotos } from "@/lib/photos";
 import { Avatar } from "@/components/avatar";
 import { NavLinks } from "./nav-links";
 import { NotificationBell } from "@/components/notification-bell";
-
-const ROLE_LABEL = { admin: "Lead organiser", organiser: "Organiser" } as const;
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const { supabase, user, organiser } = await requireOrganiser();
@@ -45,7 +44,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
                   {name}
                 </span>
                 <span className="block truncate text-xs text-cyan">
-                  {ROLE_LABEL[organiser.role] ?? "Organiser"}
+                  {ROLE_LABEL[organiser.role]}
                 </span>
               </span>
               <Avatar
@@ -57,8 +56,15 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             </Link>
           </div>
         </div>
-        <NavLinks />
+        <NavLinks canManageRoles={organiser.role !== "core_team"} />
       </header>
+      <StaffBar
+        teams={organiser.teams.map((t) => ({ id: t.id, name: t.name }))}
+        teamId={organiser.team_id}
+        isGod={organiser.access === "god"}
+        viewingAs={organiser.viewingAs}
+      />
+
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-5">
         {children}
       </main>

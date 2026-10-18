@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { EveryoneRow } from "@/lib/insights";
 import { inputClass } from "@/components/form";
+import { Avatar } from "@/components/avatar";
 
 type SortKey = "name" | "lastSeen" | "m3" | "m6" | "m12" | "outreach";
 
@@ -69,11 +70,11 @@ export function EveryoneTable({ rows }: { rows: EveryoneRow[] }) {
       <div className="overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
         <table className="w-full min-w-[520px] text-sm">
           <thead>
-            <tr className="border-b border-black/5 text-left text-stone-500">
-              <th className="sticky left-0 bg-white px-4 py-2.5 font-medium">
+            <tr className="bg-navy text-left text-white/70">
+              <th className="sticky left-0 bg-navy px-4 py-3 font-medium">
                 <button
                   onClick={() => sortBy("name")}
-                  className="hover:text-navy"
+                  className={`hover:text-white ${sort === "name" ? "text-white" : ""}`}
                 >
                   Name{arrow("name")}
                 </button>
@@ -81,12 +82,12 @@ export function EveryoneTable({ rows }: { rows: EveryoneRow[] }) {
               {COLS.map((c) => (
                 <th
                   key={c.key}
-                  className="px-3 py-2.5 text-right font-medium"
+                  className="px-2 py-3 text-center font-medium"
                   title={c.title}
                 >
                   <button
                     onClick={() => sortBy(c.key)}
-                    className={`hover:text-navy ${sort === c.key ? "text-navy" : ""}`}
+                    className={`hover:text-white ${sort === c.key ? "font-semibold text-white" : ""}`}
                   >
                     {c.label}
                     {arrow(c.key)}
@@ -99,34 +100,24 @@ export function EveryoneTable({ rows }: { rows: EveryoneRow[] }) {
             {shown.map((r) => (
               <tr
                 key={r.id}
-                className="border-b border-black/5 last:border-0 hover:bg-stone-50"
+                className="group border-b border-black/5 last:border-0 odd:bg-white even:bg-stone-50"
               >
-                <td className="sticky left-0 bg-white px-4 py-2.5">
+                <td className="sticky left-0 bg-inherit px-4 py-2.5">
                   <Link
                     href={`/people/${r.id}`}
-                    className="font-medium hover:text-pink-ink"
+                    className="flex items-center gap-2.5 font-medium group-hover:text-pink-ink"
                   >
-                    {r.name}
+                    <Avatar name={r.name} url={null} size={28} />
+                    <span className="truncate">{r.name}</span>
                   </Link>
                 </td>
-                <td className="px-3 py-2.5 text-right text-stone-600">
-                  {r.lastSeen ? (
-                    <>
-                      <span className="text-stone-900">
-                        {shortDate(r.lastSeen)}
-                      </span>
-                      <span className="block text-xs text-stone-500">
-                        {r.lastAgo}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-stone-400">Never</span>
-                  )}
+                <td className="px-3 py-2.5 text-right">
+                  <LastSeen iso={r.lastSeen} ago={r.lastAgo} days={r.daysAgo} />
                 </td>
                 <Count n={r.m3} />
                 <Count n={r.m6} />
                 <Count n={r.m12} />
-                <Count n={r.outreach} />
+                <Count n={r.outreach} pink />
               </tr>
             ))}
           </tbody>
@@ -141,12 +132,59 @@ export function EveryoneTable({ rows }: { rows: EveryoneRow[] }) {
   );
 }
 
-function Count({ n }: { n: number }) {
+// Recency at a glance: cyan = came in the last 2 weeks, yellow = last 2 months,
+// pink = quiet for longer, grey = never.
+function LastSeen({
+  iso,
+  ago,
+  days,
+}: {
+  iso: string | null;
+  ago: string;
+  days: number | null;
+}) {
+  if (!iso || days === null) {
+    return <span className="text-stone-400">Never</span>;
+  }
+  const tone =
+    days <= 14
+      ? "bg-cyan/25 text-navy"
+      : days <= 60
+        ? "bg-yellow/40 text-navy"
+        : "bg-pink/20 text-pink-ink";
   return (
-    <td
-      className={`px-3 py-2.5 text-right ${n === 0 ? "text-stone-300" : "font-medium"}`}
+    <span
+      className={`inline-block rounded-lg px-2 py-1 text-right leading-tight ${tone}`}
     >
-      {n}
+      <span className="block font-medium">{shortDate(iso)}</span>
+      <span className="block text-xs opacity-75">{ago}</span>
+    </span>
+  );
+}
+
+// A count as a coloured pill: darker = more events.
+function Count({ n, pink }: { n: number; pink?: boolean }) {
+  const tone =
+    n === 0
+      ? "text-stone-300"
+      : pink
+        ? n >= 10
+          ? "bg-pink text-navy"
+          : n >= 3
+            ? "bg-pink/50 text-navy"
+            : "bg-pink/20 text-navy"
+        : n >= 6
+          ? "bg-navy text-white"
+          : n >= 3
+            ? "bg-cyan text-navy"
+            : "bg-cyan/30 text-navy";
+  return (
+    <td className="px-2 py-2.5 text-center">
+      <span
+        className={`inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 font-semibold ${tone}`}
+      >
+        {n === 0 ? "–" : n}
+      </span>
     </td>
   );
 }

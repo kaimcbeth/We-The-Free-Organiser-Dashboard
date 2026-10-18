@@ -95,6 +95,7 @@ export type EveryoneRow = {
   name: string;
   lastSeen: string | null;
   lastAgo: string;
+  daysAgo: number | null; // days since their last event
   m3: number;
   m6: number;
   m12: number;
@@ -168,6 +169,7 @@ export function computeInsights(
       name: b.name,
       lastSeen: b.lastSeen,
       lastAgo: b.lastSeen ? ago(b.lastSeen) : "Never",
+      daysAgo: b.lastSeen ? daysAgo(b.lastSeen) : null,
       m3: inWindow(list, 91, 0),
       m6: inWindow(list, 183, 0),
       m12: inWindow(list, 366, 0),

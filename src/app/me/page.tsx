@@ -10,6 +10,7 @@ import { PhotoPicker } from "@/components/photo-picker";
 import { signPhotos } from "@/lib/photos";
 import { NotificationBell } from "@/components/notification-bell";
 import { WhatsAppJoin } from "@/components/whatsapp";
+import { PreviewBanner } from "@/components/preview-banner";
 import { BuddySection, type BuddyDashboard } from "./buddy-section";
 
 type Me = {
@@ -50,7 +51,11 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
       )
       .eq("user_id", user.id)
       .maybeSingle<Me>(),
-    supabase.from("organisers").select("id").eq("id", user.id).maybeSingle(),
+    supabase
+      .from("organisers")
+      .select("id, access")
+      .eq("id", user.id)
+      .maybeSingle(),
   ]);
 
   const headerRight = (
@@ -61,7 +66,9 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
           href="/"
           className="rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10"
         >
-          Organiser view
+          {organiser.access === "core_team"
+            ? "Take attendance"
+            : "Organiser view"}
         </Link>
       )}
       <form action={signOut}>
@@ -143,6 +150,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
 
   return (
     <AttendeeShell right={headerRight}>
+      <PreviewBanner />
       {welcome && (
         <p className="mb-6 rounded-2xl bg-cyan/20 px-4 py-3 text-sm font-medium text-navy">
           You&apos;re connected. Welcome to We The Free!

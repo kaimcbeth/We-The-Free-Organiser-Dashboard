@@ -19,7 +19,11 @@ export default async function NotificationsPage() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(50),
-    supabase.from("organisers").select("id").eq("id", user.id).maybeSingle(),
+    supabase
+      .from("organisers")
+      .select("id, access")
+      .eq("id", user.id)
+      .maybeSingle(),
   ]);
   const unread = (items ?? []).some((n) => !n.read_at);
 
@@ -32,7 +36,9 @@ export default async function NotificationsPage() {
               href="/"
               className="rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10"
             >
-              Organiser view
+              {organiser.access === "core_team"
+                ? "Take attendance"
+                : "Organiser view"}
             </Link>
           )}
           <Link

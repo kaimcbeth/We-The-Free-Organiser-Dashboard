@@ -21,11 +21,21 @@ const LINKS = [
   },
 ];
 
-export function NavLinks() {
+export function NavLinks({ canManageRoles }: { canManageRoles: boolean }) {
   const path = usePathname();
+  const links = canManageRoles
+    ? [
+        ...LINKS,
+        {
+          href: "/roles",
+          label: "Roles",
+          match: (p: string) => p.startsWith("/roles"),
+        },
+      ]
+    : LINKS;
   return (
     <nav className="mx-auto flex max-w-2xl gap-1 px-4 pt-2">
-      {LINKS.map((l) => {
+      {links.map((l) => {
         const active = l.match(path);
         return (
           <Link
