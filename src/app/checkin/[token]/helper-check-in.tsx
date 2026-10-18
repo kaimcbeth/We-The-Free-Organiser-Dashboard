@@ -37,6 +37,18 @@ export function HelperCheckIn({ token, state }: { token: string; state: HelperSt
     [supabase, token],
   );
 
+  const onMarkNotNew = useCallback(
+    async (p: CheckInPerson) => {
+      const { data, error } = await supabase.rpc("helper_set_attended_before", {
+        p_token: token,
+        p_person_id: p.id,
+        p_value: true,
+      });
+      return !error && data === true;
+    },
+    [supabase, token],
+  );
+
   const poll = useCallback(async () => {
     const { data, error } = await supabase.rpc("helper_checkin_state", { p_token: token });
     const s = data as HelperState | null;
@@ -55,6 +67,7 @@ export function HelperCheckIn({ token, state }: { token: string; state: HelperSt
       stickyTopClass="top-0"
       isOutreach={state.is_outreach}
       outreachBefore={state.outreach_before ?? {}}
+      onMarkNotNew={onMarkNotNew}
     />
   );
 }

@@ -36,10 +36,10 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
   const [people, attendance, earlier, types, helper] = await Promise.all([
     supabase
       .from("people")
-      .select("id, first_name, last_name, photo_updated_at")
+      .select("id, first_name, last_name, photo_updated_at, attended_before_app")
       .eq("team_id", event.team_id)
       .order("first_name")
-      .returns<(Person & { photo_updated_at: string | null })[]>(),
+      .returns<(Person & { photo_updated_at: string | null; attended_before_app: boolean })[]>(),
     supabase.from("attendance").select("person_id").eq("event_id", event.id),
     // Everyone who came to any earlier event: used to spot first-timers.
     supabase
@@ -102,7 +102,12 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
         organiserId={organiser.id}
         initialPeople={people.data ?? []}
         initialCheckedIn={(attendance.data ?? []).map((a) => a.person_id)}
-        returningIds={[...new Set((earlier.data ?? []).map((a) => a.person_id))]}
+        returningIds={[
+          ...new Set([
+            ...(earlier.data ?? []).map((a) => a.person_id),
+            ...(people.data ?? []).filter((p) => p.attended_before_app).map((p) => p.id),
+          ]),
+        ]}
         photos={photos}
         helperLink={helper.data ?? null}
         isOutreach={isOutreach}

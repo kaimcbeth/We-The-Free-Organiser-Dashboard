@@ -31,6 +31,7 @@ export function CheckInList({
   stickyTopClass = "top-[92px]",
   isOutreach = false,
   outreachBefore = {},
+  onMarkNotNew,
 }: {
   initialPeople: CheckInPerson[];
   initialCheckedIn: string[];
@@ -45,8 +46,11 @@ export function CheckInList({
   stickyTopClass?: string;
   isOutreach?: boolean; // does this event count towards outreach milestones?
   outreachBefore?: Record<string, number>; // each person's outreach count not counting this event
+  onMarkNotNew?: (person: CheckInPerson) => Promise<boolean>; // tap "First event" to say they've been before
 }) {
-  const returning = useMemo(() => new Set(returningIds), [returningIds]);
+  // People marked "been before" on this screen, on top of those already known.
+  const [markedNotNew, setMarkedNotNew] = useState<Set<string>>(new Set());
+  const returning = useMemo(() => new Set([...returningIds, ...markedNotNew]), [returningIds, markedNotNew]);
   const [people, setPeople] = useState(() => [...initialPeople].sort(byName));
   const [checkedIn, setCheckedIn] = useState(() => new Set(initialCheckedIn));
   const [pending, setPending] = useState<Set<string>>(new Set());
@@ -125,6 +129,20 @@ export function CheckInList({
       setError(`Couldn't save ${person.first_name}. Check your connection and try again.`);
     }
     setBusy(person.id, false);
+  }
+
+  async function markNotNew(person: CheckInPerson) {
+    setError("");
+    setMarkedNotNew((prev) => new Set(prev).add(person.id));
+    const ok = await onMarkNotNew?.(person);
+    if (!ok) {
+      setMarkedNotNew((prev) => {
+        const next = new Set(prev);
+        next.delete(person.id);
+        return next;
+      });
+      setError(`Couldn't update ${person.first_name}. Please try again.`);
+    }
   }
 
   async function add(first: string, last: string) {
@@ -241,13 +259,16 @@ export function CheckInList({
             const here = checkedIn.has(p.id);
             const isNew = here && !returning.has(p.id);
             return (
-              <li key={p.id} className="border-b border-black/5 last:border-0">
+              <li
+                key={p.id}
+                className={`flex items-center border-b border-black/5 transition-colors last:border-0 ${
+                  here ? "bg-cyan/15" : "hover:bg-stone-50"
+                }`}
+              >
                 <button
                   onClick={() => toggle(p)}
                   aria-pressed={here}
-                  className={`flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors ${
-                    here ? "bg-cyan/15" : "hover:bg-stone-50"
-                  }`}
+                  className="flex min-w-0 flex-1 items-center gap-3 py-3.5 pl-4 pr-2 text-left"
                 >
                   <span
                     aria-hidden
@@ -268,12 +289,25 @@ export function CheckInList({
                       {ordinal(milestoneFor(p.id)!)} outreach
                     </span>
                   )}
-                  {isNew && (
-                    <span className="shrink-0 rounded-full bg-yellow px-2 py-0.5 text-xs font-semibold text-navy">
+                </button>
+                {isNew &&
+                  (onMarkNotNew ? (
+                    <button
+                      onClick={() => markNotNew(p)}
+                      aria-label={`${p.first_name} has been before: not a first-timer`}
+                      title="Been before? Tap to mark as not a first-timer"
+                      className="mr-3 flex shrink-0 items-center gap-1 rounded-full bg-yellow py-0.5 pl-2 pr-1.5 text-xs font-semibold text-navy hover:bg-yellow/70"
+                    >
+                      First event
+                      <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
+                        <path d="M6 6l8 8M14 6l-8 8" strokeLinecap="round" />
+                      </svg>
+                    </button>
+                  ) : (
+                    <span className="mr-4 shrink-0 rounded-full bg-yellow px-2 py-0.5 text-xs font-semibold text-navy">
                       First event
                     </span>
-                  )}
-                </button>
+                  ))}
               </li>
             );
           })}

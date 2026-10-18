@@ -216,3 +216,17 @@ export async function setStartingOutreach(personId: string, count: number): Prom
   revalidatePath("/insights");
   return {};
 }
+
+// "Came to events before the app": never shown or counted as a first-timer.
+export async function setAttendedBefore(personId: string, value: boolean): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  const { error } = await supabase
+    .from("people")
+    .update({ attended_before_app: value })
+    .eq("id", personId)
+    .eq("team_id", organiser.team_id);
+  if (error) return { error: "Couldn't save. Please try again." };
+  revalidatePath(`/people/${personId}`);
+  revalidatePath("/insights");
+  return {};
+}

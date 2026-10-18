@@ -65,6 +65,14 @@ export function CheckIn({
     [supabase, teamId, eventId, organiserId],
   );
 
+  const onMarkNotNew = useCallback(
+    async (p: Person) => {
+      const { error } = await supabase.from("people").update({ attended_before_app: true }).eq("id", p.id);
+      return !error;
+    },
+    [supabase],
+  );
+
   const poll = useCallback(async () => {
     const [people, attendance] = await Promise.all([
       supabase.from("people").select("id, first_name, last_name").eq("team_id", teamId),
@@ -86,6 +94,7 @@ export function CheckIn({
       poll={poll}
       isOutreach={isOutreach}
       outreachBefore={outreachBefore}
+      onMarkNotNew={onMarkNotNew}
       toolbarExtra={
         <>
           <button

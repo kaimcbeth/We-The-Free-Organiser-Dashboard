@@ -5,6 +5,7 @@ import { formatEventDate } from "@/lib/time";
 import { InviteButton } from "./invite-button";
 import { DeletePerson } from "./delete-person";
 import { StartingOutreach } from "./starting-outreach";
+import { AttendedBefore } from "./attended-before";
 import { Avatar } from "@/components/avatar";
 import { signPhotos } from "@/lib/photos";
 
@@ -22,6 +23,7 @@ type Person = {
   created_at: string;
   starting_outreach_count: number;
   photo_updated_at: string | null;
+  attended_before_app: boolean;
 };
 
 type Attended = {
@@ -40,7 +42,7 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
   const { data: person } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, suburb, email, phone, user_id, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at",
+      "id, first_name, last_name, suburb, email, phone, user_id, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app",
     )
     .eq("id", id)
     .eq("team_id", organiser.team_id)
@@ -86,7 +88,8 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
         </div>
       </div>
 
-      <div className="mt-3">
+      <div className="mt-4 space-y-3">
+        <AttendedBefore personId={person.id} initial={person.attended_before_app} />
         <StartingOutreach personId={person.id} initial={person.starting_outreach_count} />
       </div>
 

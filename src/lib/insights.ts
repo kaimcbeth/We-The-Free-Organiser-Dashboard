@@ -8,6 +8,7 @@ export type InsightPerson = {
   first_name: string;
   last_name: string | null;
   starting_outreach_count: number;
+  attended_before_app?: boolean; // came to events before the app: never a first-timer
 };
 
 export type InsightCheckIn = {
@@ -169,7 +170,7 @@ export function computeInsights(
       regulars.push({ ...b, detail: `${recent} events in the last 3 months` });
     }
 
-    if (list.length === 1 && b.lastSeen && daysAgo(b.lastSeen) > RULES.oneTimerMinAgeDays) {
+    if (!p.attended_before_app && list.length === 1 && b.lastSeen && daysAgo(b.lastSeen) > RULES.oneTimerMinAgeDays) {
       oneTimers.push({ ...b, detail: `Came once, ${ago(b.lastSeen)}` });
     }
 
@@ -203,7 +204,8 @@ export function computeInsights(
 
   // Monthly totals, last 6 months, newest first.
   const firstEver = new Map<string, string>();
-  for (const [id, list] of byPerson) if (list[0]) firstEver.set(id, list[0].event_id);
+  const beenBefore = new Set(people.filter((p) => p.attended_before_app).map((p) => p.id));
+  for (const [id, list] of byPerson) if (list[0] && !beenBefore.has(id)) firstEver.set(id, list[0].event_id);
 
   const months = new Map<string, MonthRow>();
   const nowKey = monthKey(new Date(now).toISOString());

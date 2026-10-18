@@ -11,7 +11,7 @@ export async function loadInsightData(supabase: SupabaseClient, teamId: string) 
   const [people, attendance, events] = await Promise.all([
     supabase
       .from("people")
-      .select("id, first_name, last_name, starting_outreach_count")
+      .select("id, first_name, last_name, starting_outreach_count, attended_before_app")
       .eq("team_id", teamId)
       .returns<InsightPerson[]>(),
     supabase
