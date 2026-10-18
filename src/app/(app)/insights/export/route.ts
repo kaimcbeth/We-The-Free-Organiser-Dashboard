@@ -12,6 +12,7 @@ const day = (iso: string | null) =>
   iso ? new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney" }).format(new Date(iso)) : "";
 
 const LISTS: Record<string, string> = {
+  everyone: "Everyone",
   regulars: "Regulars",
   "one-timers": "Came once",
   drifted: "Drifted off",
@@ -32,7 +33,12 @@ export async function GET(request: NextRequest) {
   const r = computeInsights(data.people, data.checkIns, data.events);
 
   let csv: string;
-  if (list === "monthly") {
+  if (list === "everyone") {
+    csv = toCsv([
+      ["Name", "Last event", "Events (3 months)", "Events (6 months)", "Events (12 months)", "Events (all time)", "Outreach events"],
+      ...r.everyone.map((p) => [p.name, day(p.lastSeen), p.m3, p.m6, p.m12, p.total, p.outreach]),
+    ]);
+  } else if (list === "monthly") {
     csv = toCsv([
       ["Month", "Events", "Check-ins", "Outreach check-ins", "People", "First-timers"],
       ...r.months.map((m) => [m.label, m.events, m.checkIns, m.outreachCheckIns, m.people, m.firstTimers]),

@@ -68,6 +68,19 @@ export type PersonInsight = {
   detail: string; // short reason shown in the list
 };
 
+// One row per person for the "Everyone" table.
+export type EveryoneRow = {
+  id: string;
+  name: string;
+  lastSeen: string | null;
+  lastAgo: string;
+  m3: number;
+  m6: number;
+  m12: number;
+  total: number;
+  outreach: number;
+};
+
 export type MonthRow = {
   key: string;
   label: string;
@@ -120,6 +133,24 @@ export function computeInsights(
       const d = daysAgo(c.starts_at);
       return d < fromDaysAgo && d >= toDaysAgo;
     }).length;
+
+  const everyone: EveryoneRow[] = people.map((p) => {
+    const b = base(p);
+    const list = byPerson.get(p.id) ?? [];
+    return {
+      id: p.id,
+      name: b.name,
+      lastSeen: b.lastSeen,
+      lastAgo: b.lastSeen ? ago(b.lastSeen) : "Never",
+      m3: inWindow(list, 91, 0),
+      m6: inWindow(list, 183, 0),
+      m12: inWindow(list, 366, 0),
+      total: list.length,
+      outreach: b.outreach,
+    };
+  });
+  // Most recently seen first; never-seen at the bottom.
+  everyone.sort((a, b) => (b.lastSeen ?? "").localeCompare(a.lastSeen ?? "") || a.name.localeCompare(b.name));
 
   const regulars: PersonInsight[] = [];
   const oneTimers: PersonInsight[] = [];
@@ -208,6 +239,7 @@ export function computeInsights(
   }
 
   return {
+    everyone,
     regulars,
     oneTimers,
     drifted,

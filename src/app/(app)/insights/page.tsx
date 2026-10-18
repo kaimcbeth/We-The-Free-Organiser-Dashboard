@@ -3,6 +3,7 @@ import { requireOrganiser } from "@/lib/organiser";
 import { loadInsightData } from "@/lib/insights-data";
 import { computeInsights, RULES, type PersonInsight } from "@/lib/insights";
 import { LoadError } from "@/components/load-error";
+import { EveryoneTable } from "./everyone-table";
 
 export default async function InsightsPage() {
   const { supabase, organiser } = await requireOrganiser();
@@ -27,6 +28,19 @@ export default async function InsightsPage() {
           </p>
         )}
       </div>
+
+      <section>
+        <div className="mb-3 flex items-baseline justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+            Everyone <span className="text-stone-400">· {r.everyone.length}</span>
+          </h2>
+          <a href="/insights/export?list=everyone" className="text-sm font-medium text-pink-ink">
+            Download CSV
+          </a>
+        </div>
+        <EveryoneTable rows={r.everyone} />
+        <p className="mt-2 text-xs text-stone-500">Tap a column heading to sort. Counts are events attended.</p>
+      </section>
 
       <section>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">{thisMonth.label}</h2>
