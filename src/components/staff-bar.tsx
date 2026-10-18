@@ -9,7 +9,7 @@ const VIEW_OPTIONS: { value: ViewRole; label: string }[] = [
   { value: "regional_lead", label: "Regional Support Lead" },
   { value: "organiser", label: "Organiser" },
   { value: "core_team", label: "Core Team" },
-  { value: "member", label: "Member" },
+  { value: "member", label: "Attendee" },
 ];
 
 // Thin bar under the header: team switcher (when there's more than one team)

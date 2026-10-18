@@ -1,9 +1,10 @@
 import { requireOrganiser } from "@/lib/organiser";
+import { GIVES, type Access } from "@/lib/roles";
 import { signPhotos } from "@/lib/photos";
 import { LoadError } from "@/components/load-error";
 import { PeopleList, type PersonRow } from "./people-list";
 
-type Row = Omit<PersonRow, "events" | "connected" | "photoUrl"> & {
+type Row = Omit<PersonRow, "events" | "connected" | "photoUrl" | "role"> & {
   user_id: string | null;
   photo_updated_at: string | null;
   attendance: { count: number }[];
@@ -26,11 +27,22 @@ export default async function PeoplePage({
 
   if (error) return <LoadError what="people" />;
 
+  const [{ data: roleRows }, { data: regions }] = await Promise.all([
+    supabase.rpc("list_roles"),
+    supabase.from("regions").select("id, name").order("sort_order"),
+  ]);
+  const roles = new Map(
+    (
+      (roleRows as { person_id: string | null; role: Access }[] | null) ?? []
+    ).map((r) => [r.person_id, r.role]),
+  );
+
   const photos = await signPhotos(supabase, data ?? []);
   const people: PersonRow[] = (data ?? []).map(
     ({ attendance, user_id, photo_updated_at, ...p }) => ({
       ...p,
       connected: !!user_id,
+      role: roles.get(p.id) ?? null,
       events: attendance[0]?.count ?? 0,
       photoUrl: photo_updated_at ? (photos[p.id] ?? null) : null,
     }),
@@ -49,7 +61,11 @@ export default async function PeoplePage({
           Person deleted.
         </p>
       )}
-      <PeopleList people={people} />
+      <PeopleList
+        people={people}
+        gives={GIVES[organiser.role]}
+        regions={regions ?? []}
+      />
     </div>
   );
 }

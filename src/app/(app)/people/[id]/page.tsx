@@ -8,6 +8,8 @@ import { AttendedBefore } from "./attended-before";
 import { BuddyPicker, BuddySwitch } from "./buddy-controls";
 import { Avatar } from "@/components/avatar";
 import { signPhotos } from "@/lib/photos";
+import { RolePicker } from "@/components/role-picker";
+import { GIVES, type Access } from "@/lib/roles";
 
 type Person = {
   id: string;
@@ -69,6 +71,14 @@ export default async function PersonPage({
     person.starting_outreach_count;
   const name = [person.first_name, person.last_name].filter(Boolean).join(" ");
   const photos = await signPhotos(supabase, [person]);
+  const [{ data: roleRows }, { data: regions }] = await Promise.all([
+    supabase.rpc("list_roles"),
+    supabase.from("regions").select("id, name").order("sort_order"),
+  ]);
+  const role =
+    (
+      (roleRows as { person_id: string | null; role: Access }[] | null) ?? []
+    ).find((r) => r.person_id === person.id)?.role ?? null;
 
   // Buddy info: this person's buddy, who they look after, and who could be their buddy.
   const fullName = (p: { first_name: string; last_name: string | null }) =>
@@ -121,7 +131,17 @@ export default async function PersonPage({
       <div className="mt-3">
         <Avatar name={name} url={photos[person.id] ?? null} size={72} />
       </div>
-      <h1 className="mt-4 text-2xl font-semibold tracking-tight">{name}</h1>
+      <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight">{name}</h1>
+        <RolePicker
+          personId={person.id}
+          firstName={person.first_name}
+          connected={!!person.user_id}
+          current={role}
+          gives={GIVES[organiser.role]}
+          regions={regions ?? []}
+        />
+      </div>
       <p className="mt-1 text-sm text-stone-500">
         {[person.suburb, person.email, person.phone]
           .filter(Boolean)

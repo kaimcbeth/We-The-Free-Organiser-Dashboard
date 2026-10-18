@@ -5,6 +5,8 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createPerson, type FormState } from "@/app/actions";
 import { Field, inputClass } from "@/components/form";
 import { Avatar } from "@/components/avatar";
+import { RolePicker } from "@/components/role-picker";
+import type { Access } from "@/lib/roles";
 
 export type PersonRow = {
   id: string;
@@ -16,9 +18,18 @@ export type PersonRow = {
   connected: boolean;
   photoUrl: string | null;
   events: number;
+  role: Access | null;
 };
 
-export function PeopleList({ people }: { people: PersonRow[] }) {
+export function PeopleList({
+  people,
+  gives,
+  regions,
+}: {
+  people: PersonRow[];
+  gives: Access[];
+  regions: { id: string; name: string }[];
+}) {
   const [query, setQuery] = useState("");
   const [adding, setAdding] = useState(false);
 
@@ -84,10 +95,13 @@ export function PeopleList({ people }: { people: PersonRow[] }) {
       ) : (
         <ul className="mt-4 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
           {visible.map((p) => (
-            <li key={p.id} className="border-b border-black/5 last:border-0">
+            <li
+              key={p.id}
+              className="flex items-center border-b border-black/5 last:border-0 hover:bg-stone-50"
+            >
               <Link
                 href={`/people/${p.id}`}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50"
+                className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 pr-2"
               >
                 <Avatar
                   name={[p.first_name, p.last_name].filter(Boolean).join(" ")}
@@ -112,7 +126,21 @@ export function PeopleList({ people }: { people: PersonRow[] }) {
                       "No details yet"}
                   </p>
                 </div>
-                <div className="shrink-0 text-right">
+              </Link>
+              <RolePicker
+                personId={p.id}
+                firstName={p.first_name}
+                connected={p.connected}
+                current={p.role}
+                gives={gives}
+                regions={regions}
+                compact
+              />
+              <Link
+                href={`/people/${p.id}`}
+                className="w-14 shrink-0 py-3 pr-4 text-right"
+              >
+                <div>
                   <p className="text-sm font-semibold tabular-nums">
                     {p.events}
                   </p>

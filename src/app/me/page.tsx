@@ -86,7 +86,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
           Set up your profile
         </h1>
         <p className="mt-2 text-stone-600">
-          You&apos;re an organiser, but you don&apos;t have a member profile
+          You&apos;re an organiser, but you don&apos;t have an attendee profile
           yet. Add one to put your photo in the corner and show up in check-in
           lists like everyone else.
         </p>
