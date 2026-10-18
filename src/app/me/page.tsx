@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+import { VIEW_AS_COOKIE } from "@/lib/organiser";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -58,15 +60,19 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
       .maybeSingle(),
   ]);
 
+  // Hidden while God Mode is previewing as an attendee.
+  const previewingAttendee =
+    (await cookies()).get(VIEW_AS_COOKIE)?.value === "member";
+  const staffLink = !!organiser && !previewingAttendee;
   const headerRight = (
     <div className="flex items-center gap-1">
       <NotificationBell supabase={supabase} userId={user.id} />
-      {organiser && (
+      {staffLink && (
         <Link
           href="/"
           className="rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10"
         >
-          {organiser.access === "core_team"
+          {organiser!.access === "core_team"
             ? "Take attendance"
             : "Organiser view"}
         </Link>
