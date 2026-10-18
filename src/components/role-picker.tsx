@@ -4,7 +4,14 @@ import { useState, useTransition } from "react";
 import { grantRole } from "@/app/actions";
 import { Sheet } from "@/components/sheet";
 import { RoleChip } from "@/components/role-chip";
-import { ROLE_LABEL, ROLE_RANK, type Access, type ViewRole } from "@/lib/roles";
+import {
+  ROLE_ACCENT,
+  ROLE_INFO,
+  ROLE_LABEL,
+  ROLE_RANK,
+  type Access,
+  type ViewRole,
+} from "@/lib/roles";
 
 // A person's role chip; tap it to give them a role (only roles below yours).
 export function RolePicker({
@@ -68,26 +75,81 @@ export function RolePicker({
             </p>
           ) : (
             <div className="space-y-3">
+              <p className="text-sm text-stone-600">
+                {role ? (
+                  <>
+                    {firstName} is currently{" "}
+                    <span className="font-medium text-stone-900">
+                      {ROLE_LABEL[role]}
+                    </span>
+                    .
+                  </>
+                ) : (
+                  <>
+                    Give {firstName} a role to let them help run things. Pick
+                    one:
+                  </>
+                )}
+              </p>
               <div className="space-y-2" role="radiogroup" aria-label="Role">
-                {gives.map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    role="radio"
-                    aria-checked={pick === r}
-                    onClick={() => setPick(r)}
-                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left ring-1 ${
-                      pick === r
-                        ? "bg-navy/5 ring-2 ring-navy"
-                        : "bg-white ring-stone-300 hover:bg-stone-50"
-                    }`}
-                  >
-                    <RoleChip role={r} />
-                    {role === r && (
-                      <span className="text-xs text-stone-500">Current</span>
-                    )}
-                  </button>
-                ))}
+                {gives.map((r) => {
+                  const info = ROLE_INFO[r];
+                  const selected = pick === r;
+                  return (
+                    <button
+                      key={r}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      onClick={() => setPick(r)}
+                      className={`w-full rounded-xl border-l-4 bg-white p-3 text-left ring-1 transition ${ROLE_ACCENT[r]} ${
+                        selected
+                          ? "ring-2 ring-navy"
+                          : "ring-stone-200 hover:ring-stone-300"
+                      }`}
+                    >
+                      <span className="flex items-center justify-between gap-2">
+                        <span className="flex items-center gap-2">
+                          <span
+                            aria-hidden
+                            className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
+                              selected ? "border-navy" : "border-stone-300"
+                            }`}
+                          >
+                            {selected && (
+                              <span className="h-2 w-2 rounded-full bg-navy" />
+                            )}
+                          </span>
+                          <span className="font-semibold">{ROLE_LABEL[r]}</span>
+                        </span>
+                        {role === r && (
+                          <span className="text-xs text-stone-500">
+                            Current
+                          </span>
+                        )}
+                      </span>
+                      <span className="mt-1 block text-sm text-stone-600">
+                        {info.summary}
+                      </span>
+                      <ul className="mt-1.5 space-y-0.5 text-sm text-stone-600">
+                        {info.can.map((c) => (
+                          <li key={c} className="flex gap-1.5">
+                            <span aria-hidden className="text-cyan">
+                              ✓
+                            </span>
+                            {c}
+                          </li>
+                        ))}
+                        {info.cannot && (
+                          <li className="flex gap-1.5 text-stone-500">
+                            <span aria-hidden>–</span>
+                            {info.cannot}
+                          </li>
+                        )}
+                      </ul>
+                    </button>
+                  );
+                })}
               </div>
               {pick === "regional_lead" && (
                 <select
