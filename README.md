@@ -11,8 +11,15 @@ Organisers tick off who turns up to each event, and see who has been to what.
   first-timer count, and a quick "new person" form that adds and checks in at once.
 - **People:** everyone in the team with their event count; add people with details.
 
-Coming next: QR sign-up form with consent, attendee accounts, and the daily
-event import from activism.wtf (Phase 2); insights and outreach milestones (Phase 3).
+Also built:
+- **Attendee accounts:** 6-digit email code login, sign-up page, personal
+  connect QR/links, and a "My profile" page. Organisers only enter names;
+  members add their own details and photo.
+- **Event import:** the `import-events` Supabase Edge Function reads each
+  team's activism.wtf calendar feed (`/teams/<slug>/events.ics`) at 6am and
+  2pm Sydney time, adding new events and updating changed ones.
+
+Coming next: insights and outreach milestones (Phase 3).
 
 ## How it fits together
 

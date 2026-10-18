@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
 import { formatEventDate, formatTimeRange } from "@/lib/time";
 import { CheckIn, type Person } from "./check-in";
+import { TypePicker } from "./type-picker";
 import { signPhotos } from "@/lib/photos";
 import { LoadError } from "@/components/load-error";
 
@@ -13,8 +14,9 @@ type EventDetail = {
   starts_at: string;
   ends_at: string | null;
   venue: string | null;
+  address: string | null;
   source_url: string | null;
-  event_type: { name: string } | null;
+  event_type_id: string | null;
 };
 
 export default async function EventCheckInPage({ params }: PageProps<"/events/[id]">) {
@@ -23,13 +25,13 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, team_id, title, starts_at, ends_at, venue, source_url, event_type:event_types(name)")
+    .select("id, team_id, title, starts_at, ends_at, venue, address, source_url, event_type_id")
     .eq("id", id)
     .maybeSingle<EventDetail>();
 
   if (!event) notFound();
 
-  const [people, attendance, earlier] = await Promise.all([
+  const [people, attendance, earlier, types] = await Promise.all([
     supabase
       .from("people")
       .select("id, first_name, last_name, suburb, photo_updated_at")
@@ -43,6 +45,7 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
       .select("person_id, events!inner(starts_at, team_id)")
       .eq("events.team_id", event.team_id)
       .lt("events.starts_at", event.starts_at),
+    supabase.from("event_types").select("id, name").order("sort_order"),
   ]);
 
   if (people.error || attendance.error || earlier.error) return <LoadError what="this event's check-in list" />;
@@ -56,14 +59,22 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
       <div className="mt-2">
         <p className="text-sm text-stone-500">
           {formatEventDate(event.starts_at)} · {formatTimeRange(event.starts_at, event.ends_at)}
-          {event.venue ? ` · ${event.venue}` : ""}
+          {event.venue || event.address ? ` · ${event.venue ?? event.address}` : ""}
         </p>
         <h1 className="mt-0.5 text-2xl font-semibold leading-tight tracking-tight">{event.title}</h1>
-        {event.event_type && (
-          <span className="mt-2 inline-block rounded-full bg-cyan/25 px-2.5 py-0.5 text-xs font-medium text-navy">
-            {event.event_type.name}
-          </span>
-        )}
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <TypePicker eventId={event.id} value={event.event_type_id} types={types.data ?? []} />
+          {event.source_url && (
+            <a
+              href={event.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-pink-ink hover:underline"
+            >
+              View on activism.wtf ↗
+            </a>
+          )}
+        </div>
       </div>
 
       <CheckIn

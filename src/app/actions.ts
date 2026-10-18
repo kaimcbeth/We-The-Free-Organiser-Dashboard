@@ -135,3 +135,17 @@ export async function deletePerson(personId: string): Promise<{ error?: string }
   revalidatePath("/");
   redirect("/people?deleted=1");
 }
+
+// Change an event's type (imports never overwrite this once set).
+export async function setEventType(eventId: string, eventTypeId: string | null): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  const { error } = await supabase
+    .from("events")
+    .update({ event_type_id: eventTypeId, updated_at: new Date().toISOString() })
+    .eq("id", eventId)
+    .eq("team_id", organiser.team_id);
+  if (error) return { error: "Couldn't change the type." };
+  revalidatePath(`/events/${eventId}`);
+  revalidatePath("/");
+  return {};
+}

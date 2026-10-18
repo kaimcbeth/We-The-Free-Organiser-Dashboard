@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { LoadError } from "@/components/load-error";
+import { ImportStatus } from "./import-status";
+import { describeImport } from "@/lib/import-status";
 import { requireOrganiser } from "@/lib/organiser";
 import { dayBoundsUtc, formatEventDate, formatTimeRange, todayInTz } from "@/lib/time";
 
@@ -9,6 +11,7 @@ type EventRow = {
   starts_at: string;
   ends_at: string | null;
   venue: string | null;
+  address: string | null;
   event_type: { name: string } | null;
   attendance: { count: number }[];
 };
@@ -17,9 +20,9 @@ export default async function EventsPage() {
   const { supabase, organiser } = await requireOrganiser();
   const { start: todayStart, end: todayEnd } = dayBoundsUtc(todayInTz());
 
-  const select = "id, title, starts_at, ends_at, venue, event_type:event_types(name), attendance(count)";
+  const select = "id, title, starts_at, ends_at, venue, address, event_type:event_types(name), attendance(count)";
 
-  const [today, upcoming, past] = await Promise.all([
+  const [today, upcoming, past, lastRun, lastOk] = await Promise.all([
     supabase
       .from("events")
       .select(select)
@@ -44,6 +47,21 @@ export default async function EventsPage() {
       .order("starts_at", { ascending: false })
       .limit(20)
       .returns<EventRow[]>(),
+    supabase
+      .from("import_runs")
+      .select("ran_at, ok, added, updated, message")
+      .eq("team_id", organiser.team_id)
+      .order("ran_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("import_runs")
+      .select("ran_at, ok, added, updated, message")
+      .eq("team_id", organiser.team_id)
+      .eq("ok", true)
+      .order("ran_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   if (today.error || upcoming.error || past.error) return <LoadError what="events" />;
@@ -61,6 +79,8 @@ export default async function EventsPage() {
         </Link>
       </div>
 
+      <ImportStatus {...describeImport(lastRun.data ?? null, lastOk.data ?? null)} />
+
       <section>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">Today</h2>
         {todays.length === 0 ? (
@@ -77,7 +97,7 @@ export default async function EventsPage() {
               >
                 <p className="text-sm text-cyan">
                   {formatTimeRange(e.starts_at, e.ends_at)}
-                  {e.venue ? ` · ${e.venue}` : ""}
+                  {e.venue || e.address ? ` · ${e.venue ?? e.address}` : ""}
                 </p>
                 <p className="mt-1 text-lg font-semibold leading-snug">{e.title}</p>
                 <div className="mt-4 flex items-center justify-between">
@@ -116,7 +136,7 @@ function EventList({ title, events, empty }: { title: string; events: EventRow[]
                   <p className="truncate font-medium">{e.title}</p>
                   <p className="truncate text-sm text-stone-500">
                     {e.event_type?.name ?? "No type"}
-                    {e.venue ? ` · ${e.venue}` : ""}
+                    {e.venue || e.address ? ` · ${e.venue ?? e.address}` : ""}
                   </p>
                 </div>
                 <div className="shrink-0 text-sm tabular-nums text-stone-500">{e.attendance[0]?.count ?? 0}</div>
