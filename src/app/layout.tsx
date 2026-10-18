@@ -6,7 +6,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "WTF Organiser",
   description: "Event check-in and attendance for We The Free organisers",
-  appleWebApp: { capable: true, title: "WTF Organiser", statusBarStyle: "default" },
+  appleWebApp: {
+    capable: true,
+    title: "WTF Organiser",
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {

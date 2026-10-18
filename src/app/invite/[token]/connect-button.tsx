@@ -3,8 +3,19 @@
 import { useActionState } from "react";
 import { claimInvite, type ClaimState } from "@/app/attendee-actions";
 
-export function ConnectButton({ token, firstName, email }: { token: string; firstName: string; email: string }) {
-  const [state, action, pending] = useActionState<ClaimState, FormData>(claimInvite, {});
+export function ConnectButton({
+  token,
+  firstName,
+  email,
+}: {
+  token: string;
+  firstName: string;
+  email: string;
+}) {
+  const [state, action, pending] = useActionState<ClaimState, FormData>(
+    claimInvite,
+    {},
+  );
   return (
     <form action={action} className="space-y-3">
       <input type="hidden" name="token" value={token} />

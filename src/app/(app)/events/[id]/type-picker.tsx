@@ -40,7 +40,12 @@ export function TypePicker({
           </option>
         ))}
       </select>
-      <svg viewBox="0 0 20 20" className="pointer-events-none absolute right-2 h-3 w-3 text-navy" fill="currentColor" aria-hidden>
+      <svg
+        viewBox="0 0 20 20"
+        className="pointer-events-none absolute right-2 h-3 w-3 text-navy"
+        fill="currentColor"
+        aria-hidden
+      >
         <path d="M5 7l5 6 5-6z" />
       </svg>
     </label>

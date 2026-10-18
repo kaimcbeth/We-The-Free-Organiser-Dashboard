@@ -5,8 +5,14 @@ import { createClient } from "@/lib/supabase/client";
 import { CheckInList, type CheckInPerson } from "@/components/check-in-list";
 
 export type HelperState = {
-  status: "ok" | "inactive";
-  event: { id: string; title: string; starts_at: string; ends_at: string | null; venue: string | null };
+  status: "ok" | "inactive" | "no_event";
+  event: {
+    id: string;
+    title: string;
+    starts_at: string;
+    ends_at: string | null;
+    venue: string | null;
+  };
   people: CheckInPerson[];
   checked_in: string[];
   returning: string[];
@@ -15,7 +21,13 @@ export type HelperState = {
   likely?: Record<string, number>;
 };
 
-export function HelperCheckIn({ token, state }: { token: string; state: HelperState }) {
+export function HelperCheckIn({
+  token,
+  state,
+}: {
+  token: string;
+  state: HelperState;
+}) {
   const supabase = useMemo(() => createClient(), []);
 
   const onToggle = useCallback(
@@ -32,7 +44,11 @@ export function HelperCheckIn({ token, state }: { token: string; state: HelperSt
 
   const onAdd = useCallback(
     async (first: string, last: string) => {
-      const { data, error } = await supabase.rpc("helper_add_person", { p_token: token, p_first: first, p_last: last });
+      const { data, error } = await supabase.rpc("helper_add_person", {
+        p_token: token,
+        p_first: first,
+        p_last: last,
+      });
       return error || !data ? null : (data as CheckInPerson);
     },
     [supabase, token],
@@ -51,7 +67,9 @@ export function HelperCheckIn({ token, state }: { token: string; state: HelperSt
   );
 
   const poll = useCallback(async () => {
-    const { data, error } = await supabase.rpc("helper_checkin_state", { p_token: token });
+    const { data, error } = await supabase.rpc("helper_checkin_state", {
+      p_token: token,
+    });
     const s = data as HelperState | null;
     if (error || !s || s.status !== "ok") return null;
     return { people: s.people, checkedIn: s.checked_in };

@@ -17,15 +17,22 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     ok = !error;
   } else if (tokenHash) {
-    const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type,
+    });
     ok = !error;
   }
 
   // Where they were heading before logging in (same site only).
-  const saved = decodeURIComponent(request.cookies.get("after_login")?.value ?? "/");
+  const saved = decodeURIComponent(
+    request.cookies.get("after_login")?.value ?? "/",
+  );
   const next = saved.startsWith("/") && !saved.startsWith("//") ? saved : "/";
 
-  const response = NextResponse.redirect(new URL(ok ? next : "/login?error=link", origin));
+  const response = NextResponse.redirect(
+    new URL(ok ? next : "/login?error=link", origin),
+  );
   response.cookies.delete("after_login");
   return response;
 }

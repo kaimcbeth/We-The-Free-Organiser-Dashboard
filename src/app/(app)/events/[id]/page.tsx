@@ -21,53 +21,72 @@ type EventDetail = {
   event_type_id: string | null;
 };
 
-export default async function EventCheckInPage({ params }: PageProps<"/events/[id]">) {
+export default async function EventCheckInPage({
+  params,
+}: PageProps<"/events/[id]">) {
   const { id } = await params;
   const { supabase, organiser } = await requireOrganiser();
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, team_id, title, starts_at, ends_at, venue, address, source_url, event_type_id")
+    .select(
+      "id, team_id, title, starts_at, ends_at, venue, address, source_url, event_type_id",
+    )
     .eq("id", id)
     .maybeSingle<EventDetail>();
 
   if (!event) notFound();
 
-  const [people, attendance, earlier, types, helper, likely] = await Promise.all([
-    supabase
-      .from("people")
-      .select("id, first_name, last_name, photo_updated_at, attended_before_app")
-      .eq("team_id", event.team_id)
-      .order("first_name")
-      .returns<(Person & { photo_updated_at: string | null; attended_before_app: boolean })[]>(),
-    supabase.from("attendance").select("person_id").eq("event_id", event.id),
-    // Everyone who came to any earlier event: used to spot first-timers.
-    supabase
-      .from("attendance")
-      .select("person_id, events!inner(starts_at, team_id)")
-      .eq("events.team_id", event.team_id)
-      .lt("events.starts_at", event.starts_at),
-    supabase.from("event_types").select("id, name, counts_as_outreach").order("sort_order"),
-    supabase
-      .from("checkin_links")
-      .select("token, expires_at")
-      .eq("event_id", event.id)
-      .is("revoked_at", null)
-      .gt("expires_at", nowIso())
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase.rpc("event_likely_attendees", { p_event_id: id }),
-  ]);
+  const [people, attendance, earlier, types, helper, likely] =
+    await Promise.all([
+      supabase
+        .from("people")
+        .select(
+          "id, first_name, last_name, photo_updated_at, attended_before_app",
+        )
+        .eq("team_id", event.team_id)
+        .order("first_name")
+        .returns<
+          (Person & {
+            photo_updated_at: string | null;
+            attended_before_app: boolean;
+          })[]
+        >(),
+      supabase.from("attendance").select("person_id").eq("event_id", event.id),
+      // Everyone who came to any earlier event: used to spot first-timers.
+      supabase
+        .from("attendance")
+        .select("person_id, events!inner(starts_at, team_id)")
+        .eq("events.team_id", event.team_id)
+        .lt("events.starts_at", event.starts_at),
+      supabase
+        .from("event_types")
+        .select("id, name, counts_as_outreach")
+        .order("sort_order"),
+      supabase
+        .from("checkin_links")
+        .select("token, expires_at")
+        .eq("event_id", event.id)
+        .is("revoked_at", null)
+        .gt("expires_at", nowIso())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase.rpc("event_likely_attendees", { p_event_id: id }),
+    ]);
 
-  if (people.error || attendance.error || earlier.error) return <LoadError what="this event's check-in list" />;
+  if (people.error || attendance.error || earlier.error)
+    return <LoadError what="this event's check-in list" />;
   const [photos, insightData] = await Promise.all([
     signPhotos(supabase, people.data ?? []),
     loadInsightData(supabase, event.team_id),
   ]);
-  const isOutreach = !!types.data?.find((t) => t.id === event.event_type_id)?.counts_as_outreach;
+  const isOutreach = !!types.data?.find((t) => t.id === event.event_type_id)
+    ?.counts_as_outreach;
   const outreachBefore = insightData
-    ? Object.fromEntries(outreachCounts(insightData.people, insightData.checkIns, event.id))
+    ? Object.fromEntries(
+        outreachCounts(insightData.people, insightData.checkIns, event.id),
+      )
     : {};
 
   return (
@@ -77,12 +96,21 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
       </Link>
       <div className="mt-2">
         <p className="text-sm text-stone-500">
-          {formatEventDate(event.starts_at)} · {formatTimeRange(event.starts_at, event.ends_at)}
-          {event.venue || event.address ? ` · ${event.venue ?? event.address}` : ""}
+          {formatEventDate(event.starts_at)} ·{" "}
+          {formatTimeRange(event.starts_at, event.ends_at)}
+          {event.venue || event.address
+            ? ` · ${event.venue ?? event.address}`
+            : ""}
         </p>
-        <h1 className="mt-0.5 text-2xl font-semibold leading-tight tracking-tight">{event.title}</h1>
+        <h1 className="mt-0.5 text-2xl font-semibold leading-tight tracking-tight">
+          {event.title}
+        </h1>
         <div className="mt-2 flex flex-wrap items-center gap-3">
-          <TypePicker eventId={event.id} value={event.event_type_id} types={types.data ?? []} />
+          <TypePicker
+            eventId={event.id}
+            value={event.event_type_id}
+            types={types.data ?? []}
+          />
           {event.source_url && (
             <a
               href={event.source_url}
@@ -106,7 +134,9 @@ export default async function EventCheckInPage({ params }: PageProps<"/events/[i
         returningIds={[
           ...new Set([
             ...(earlier.data ?? []).map((a) => a.person_id),
-            ...(people.data ?? []).filter((p) => p.attended_before_app).map((p) => p.id),
+            ...(people.data ?? [])
+              .filter((p) => p.attended_before_app)
+              .map((p) => p.id),
           ]),
         ]}
         photos={photos}

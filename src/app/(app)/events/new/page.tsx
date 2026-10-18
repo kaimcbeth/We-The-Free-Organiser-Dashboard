@@ -5,7 +5,10 @@ import { NewEventForm } from "./new-event-form";
 
 export default async function NewEventPage() {
   const { supabase } = await requireOrganiser();
-  const { data: types } = await supabase.from("event_types").select("id, name").order("sort_order");
+  const { data: types } = await supabase
+    .from("event_types")
+    .select("id, name")
+    .order("sort_order");
 
   return (
     <div>

@@ -4,9 +4,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
-  { href: "/", label: "Events", match: (p: string) => p === "/" || p.startsWith("/events") },
-  { href: "/people", label: "People", match: (p: string) => p.startsWith("/people") },
-  { href: "/insights", label: "Insights", match: (p: string) => p.startsWith("/insights") },
+  {
+    href: "/",
+    label: "Events",
+    match: (p: string) => p === "/" || p.startsWith("/events"),
+  },
+  {
+    href: "/people",
+    label: "People",
+    match: (p: string) => p.startsWith("/people"),
+  },
+  {
+    href: "/insights",
+    label: "Insights",
+    match: (p: string) => p.startsWith("/insights"),
+  },
 ];
 
 export function NavLinks() {
@@ -20,7 +32,9 @@ export function NavLinks() {
             key={l.href}
             href={l.href}
             className={`border-b-2 px-3 pb-2.5 pt-1 text-sm font-medium ${
-              active ? "border-pink text-white" : "border-transparent text-white/65 hover:text-white"
+              active
+                ? "border-pink text-white"
+                : "border-transparent text-white/65 hover:text-white"
             }`}
           >
             {l.label}

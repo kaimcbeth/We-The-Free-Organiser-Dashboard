@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 // "Synced from activism.wtf 2 hrs ago · Import now", with a warning if the import is failing.
-export function ImportStatus({ text, warning }: { text: string; warning: boolean }) {
+export function ImportStatus({
+  text,
+  warning,
+}: {
+  text: string;
+  warning: boolean;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
@@ -13,7 +19,8 @@ export function ImportStatus({ text, warning }: { text: string; warning: boolean
   async function importNow() {
     setBusy(true);
     setNote("");
-    const { data, error } = await createClient().functions.invoke("import-events");
+    const { data, error } =
+      await createClient().functions.invoke("import-events");
     setBusy(false);
     if (error) {
       setNote("Import didn't work. Try again in a minute.");
@@ -22,7 +29,12 @@ export function ImportStatus({ text, warning }: { text: string; warning: boolean
     } else {
       const r = data?.results?.[0];
       if (r && !r.ok) setNote(`Import failed: ${r.message}`);
-      else if (r) setNote(r.added || r.updated ? `${r.added} new, ${r.updated} updated.` : "Everything's up to date.");
+      else if (r)
+        setNote(
+          r.added || r.updated
+            ? `${r.added} new, ${r.updated} updated.`
+            : "Everything's up to date.",
+        );
     }
     router.refresh();
   }
@@ -30,7 +42,9 @@ export function ImportStatus({ text, warning }: { text: string; warning: boolean
   return (
     <div
       className={`flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-sm ${
-        warning ? "bg-yellow/30 ring-1 ring-yellow" : "bg-white ring-1 ring-black/5"
+        warning
+          ? "bg-yellow/30 ring-1 ring-yellow"
+          : "bg-white ring-1 ring-black/5"
       }`}
     >
       <p className="min-w-0 text-stone-600">

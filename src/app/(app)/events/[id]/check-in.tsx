@@ -41,13 +41,25 @@ export function CheckIn({
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [justAdded, setJustAdded] = useState<Person | null>(null);
-  const [sheet, setSheet] = useState<null | "connect" | "signup" | "helper">(null);
+  const [sheet, setSheet] = useState<null | "connect" | "signup" | "helper">(
+    null,
+  );
 
   const onToggle = useCallback(
     async (p: Person, here: boolean) => {
       const { error } = here
-        ? await supabase.from("attendance").upsert({ event_id: eventId, person_id: p.id, checked_in_by: organiserId })
-        : await supabase.from("attendance").delete().eq("event_id", eventId).eq("person_id", p.id);
+        ? await supabase
+            .from("attendance")
+            .upsert({
+              event_id: eventId,
+              person_id: p.id,
+              checked_in_by: organiserId,
+            })
+        : await supabase
+            .from("attendance")
+            .delete()
+            .eq("event_id", eventId)
+            .eq("person_id", p.id);
       return !error;
     },
     [supabase, eventId, organiserId],
@@ -57,11 +69,22 @@ export function CheckIn({
     async (first: string, last: string) => {
       const { data, error } = await supabase
         .from("people")
-        .insert({ team_id: teamId, first_name: first, last_name: last || null, added_via: "host" })
+        .insert({
+          team_id: teamId,
+          first_name: first,
+          last_name: last || null,
+          added_via: "host",
+        })
         .select("id, first_name, last_name")
         .single<Person>();
       if (error || !data) return null;
-      await supabase.from("attendance").insert({ event_id: eventId, person_id: data.id, checked_in_by: organiserId });
+      await supabase
+        .from("attendance")
+        .insert({
+          event_id: eventId,
+          person_id: data.id,
+          checked_in_by: organiserId,
+        });
       return data;
     },
     [supabase, teamId, eventId, organiserId],
@@ -69,7 +92,10 @@ export function CheckIn({
 
   const onMarkNotNew = useCallback(
     async (p: Person) => {
-      const { error } = await supabase.from("people").update({ attended_before_app: true }).eq("id", p.id);
+      const { error } = await supabase
+        .from("people")
+        .update({ attended_before_app: true })
+        .eq("id", p.id);
       return !error;
     },
     [supabase],
@@ -77,11 +103,17 @@ export function CheckIn({
 
   const poll = useCallback(async () => {
     const [people, attendance] = await Promise.all([
-      supabase.from("people").select("id, first_name, last_name").eq("team_id", teamId),
+      supabase
+        .from("people")
+        .select("id, first_name, last_name")
+        .eq("team_id", teamId),
       supabase.from("attendance").select("person_id").eq("event_id", eventId),
     ]);
     if (people.error || attendance.error) return null;
-    return { people: people.data as Person[], checkedIn: attendance.data.map((a) => a.person_id as string) };
+    return {
+      people: people.data as Person[],
+      checkedIn: attendance.data.map((a) => a.person_id as string),
+    };
   }, [supabase, teamId, eventId]);
 
   return (
@@ -118,8 +150,8 @@ export function CheckIn({
       {justAdded && (
         <div className="mb-4 flex items-center gap-3 rounded-2xl bg-navy p-4 text-white">
           <p className="min-w-0 flex-1 text-sm">
-            <span className="font-semibold">{justAdded.first_name}</span> added and checked in. Want them to connect
-            an account?
+            <span className="font-semibold">{justAdded.first_name}</span> added
+            and checked in. Want them to connect an account?
           </p>
           <button
             onClick={() => setSheet("connect")}
@@ -138,16 +170,23 @@ export function CheckIn({
       )}
 
       {sheet === "connect" && justAdded && (
-        <Sheet title={`Connect ${justAdded.first_name}`} onClose={() => setSheet(null)}>
-          <ConnectInvite personId={justAdded.id} firstName={justAdded.first_name} />
+        <Sheet
+          title={`Connect ${justAdded.first_name}`}
+          onClose={() => setSheet(null)}
+        >
+          <ConnectInvite
+            personId={justAdded.id}
+            firstName={justAdded.first_name}
+          />
         </Sheet>
       )}
 
       {sheet === "signup" && (
         <Sheet title="Sign-up QR" onClose={() => setSheet(null)}>
           <p className="mb-4 text-sm text-stone-600">
-            For anyone who hasn&apos;t been added yet. They scan it, sign up, and appear in your list. If you&apos;ve
-            already added them, use their own connect QR from the People page instead.
+            For anyone who hasn&apos;t been added yet. They scan it, sign up,
+            and appear in your list. If you&apos;ve already added them, use
+            their own connect QR from the People page instead.
           </p>
           <ShareLink
             url={`${window.location.origin}/join/${teamSlug}`}

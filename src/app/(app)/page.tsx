@@ -1,9 +1,16 @@
 import Link from "next/link";
 import { LoadError } from "@/components/load-error";
 import { ImportStatus } from "./import-status";
+import { TeamLinkButton } from "./team-link";
 import { describeImport } from "@/lib/import-status";
 import { requireOrganiser } from "@/lib/organiser";
-import { dayBoundsUtc, formatEventDate, formatTimeRange, todayInTz } from "@/lib/time";
+import {
+  dayBoundsUtc,
+  formatEventDate,
+  formatTimeRange,
+  nowIso,
+  todayInTz,
+} from "@/lib/time";
 
 type EventRow = {
   id: string;
@@ -20,9 +27,10 @@ export default async function EventsPage() {
   const { supabase, organiser } = await requireOrganiser();
   const { start: todayStart, end: todayEnd } = dayBoundsUtc(todayInTz());
 
-  const select = "id, title, starts_at, ends_at, venue, address, event_type:event_types(name), attendance(count)";
+  const select =
+    "id, title, starts_at, ends_at, venue, address, event_type:event_types(name), attendance(count)";
 
-  const [today, upcoming, past, lastRun, lastOk] = await Promise.all([
+  const [today, upcoming, past, lastRun, lastOk, teamLink] = await Promise.all([
     supabase
       .from("events")
       .select(select)
@@ -62,27 +70,44 @@ export default async function EventsPage() {
       .order("ran_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("checkin_links")
+      .select("token, expires_at")
+      .eq("team_id", organiser.team_id)
+      .is("revoked_at", null)
+      .gt("expires_at", nowIso())
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
-  if (today.error || upcoming.error || past.error) return <LoadError what="events" />;
+  if (today.error || upcoming.error || past.error)
+    return <LoadError what="events" />;
   const todays = today.data ?? [];
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Events</h1>
-        <Link
-          href="/events/new"
-          className="rounded-xl bg-pink px-4 py-2.5 text-sm font-semibold text-navy hover:bg-pink-strong"
-        >
-          Add event
-        </Link>
+        <div className="flex gap-2">
+          <TeamLinkButton initial={teamLink.data ?? null} />
+          <Link
+            href="/events/new"
+            className="rounded-xl bg-pink px-4 py-2.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+          >
+            Add event
+          </Link>
+        </div>
       </div>
 
-      <ImportStatus {...describeImport(lastRun.data ?? null, lastOk.data ?? null)} />
+      <ImportStatus
+        {...describeImport(lastRun.data ?? null, lastOk.data ?? null)}
+      />
 
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">Today</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+          Today
+        </h2>
         {todays.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-stone-300 px-4 py-6 text-center text-sm text-stone-500">
             No events today.
@@ -99,11 +124,15 @@ export default async function EventsPage() {
                   {formatTimeRange(e.starts_at, e.ends_at)}
                   {e.venue || e.address ? ` · ${e.venue ?? e.address}` : ""}
                 </p>
-                <p className="mt-1 text-lg font-semibold leading-snug">{e.title}</p>
+                <p className="mt-1 text-lg font-semibold leading-snug">
+                  {e.title}
+                </p>
                 <div className="mt-4 flex items-center justify-between">
-                  <span className="text-sm text-white/80">{e.attendance[0]?.count ?? 0} checked in</span>
+                  <span className="text-sm text-white/80">
+                    {e.attendance[0]?.count ?? 0} here
+                  </span>
                   <span className="rounded-lg bg-pink px-3 py-1.5 text-sm font-semibold text-navy">
-                    Check in →
+                    Take attendance →
                   </span>
                 </div>
               </Link>
@@ -112,23 +141,44 @@ export default async function EventsPage() {
         )}
       </section>
 
-      <EventList title="Upcoming" events={upcoming.data ?? []} empty="Nothing scheduled yet." />
-      <EventList title="Past" events={past.data ?? []} empty="No past events yet." />
+      <EventList
+        title="Upcoming"
+        events={upcoming.data ?? []}
+        empty="Nothing scheduled yet."
+      />
+      <EventList
+        title="Past"
+        events={past.data ?? []}
+        empty="No past events yet."
+      />
     </div>
   );
 }
 
-function EventList({ title, events, empty }: { title: string; events: EventRow[]; empty: string }) {
+function EventList({
+  title,
+  events,
+  empty,
+}: {
+  title: string;
+  events: EventRow[];
+  empty: string;
+}) {
   return (
     <section>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">{title}</h2>
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+        {title}
+      </h2>
       {events.length === 0 ? (
         <p className="text-sm text-stone-500">{empty}</p>
       ) : (
         <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
           {events.map((e) => (
             <li key={e.id}>
-              <Link href={`/events/${e.id}`} className="flex items-center gap-4 px-4 py-3.5 hover:bg-stone-50">
+              <Link
+                href={`/events/${e.id}`}
+                className="flex items-center gap-4 px-4 py-3.5 hover:bg-stone-50"
+              >
                 <div className="w-16 shrink-0 text-sm font-medium text-stone-500">
                   {formatEventDate(e.starts_at)}
                 </div>
@@ -139,7 +189,9 @@ function EventList({ title, events, empty }: { title: string; events: EventRow[]
                     {e.venue || e.address ? ` · ${e.venue ?? e.address}` : ""}
                   </p>
                 </div>
-                <div className="shrink-0 text-sm tabular-nums text-stone-500">{e.attendance[0]?.count ?? 0}</div>
+                <div className="shrink-0 text-sm tabular-nums text-stone-500">
+                  {e.attendance[0]?.count ?? 0}
+                </div>
               </Link>
             </li>
           ))}

@@ -26,7 +26,11 @@ export function PeopleList({ people }: { people: PersonRow[] }) {
     const q = query.trim().toLowerCase();
     if (!q) return people;
     return people.filter((p) =>
-      [p.first_name, p.last_name, p.suburb, p.email].filter(Boolean).join(" ").toLowerCase().includes(q),
+      [p.first_name, p.last_name, p.suburb, p.email]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(q),
     );
   }, [people, query]);
 
@@ -67,7 +71,10 @@ export function PeopleList({ people }: { people: PersonRow[] }) {
             <>
               No one matches “{query}”.{" "}
               {!adding && (
-                <button onClick={() => setAdding(true)} className="font-semibold text-pink-ink">
+                <button
+                  onClick={() => setAdding(true)}
+                  className="font-semibold text-pink-ink"
+                >
                   Add them
                 </button>
               )}
@@ -78,24 +85,40 @@ export function PeopleList({ people }: { people: PersonRow[] }) {
         <ul className="mt-4 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
           {visible.map((p) => (
             <li key={p.id} className="border-b border-black/5 last:border-0">
-              <Link href={`/people/${p.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50">
-                <Avatar name={[p.first_name, p.last_name].filter(Boolean).join(" ")} url={p.photoUrl} size={40} />
+              <Link
+                href={`/people/${p.id}`}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50"
+              >
+                <Avatar
+                  name={[p.first_name, p.last_name].filter(Boolean).join(" ")}
+                  url={p.photoUrl}
+                  size={40}
+                />
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-2 truncate font-medium">
                     {[p.first_name, p.last_name].filter(Boolean).join(" ")}
                     <span
                       className={`h-2 w-2 shrink-0 rounded-full ${p.connected ? "bg-cyan" : "bg-stone-300"}`}
-                      title={p.connected ? "Account connected" : "No account yet"}
-                      aria-label={p.connected ? "Account connected" : "No account yet"}
+                      title={
+                        p.connected ? "Account connected" : "No account yet"
+                      }
+                      aria-label={
+                        p.connected ? "Account connected" : "No account yet"
+                      }
                     />
                   </p>
                   <p className="truncate text-sm text-stone-500">
-                    {[p.suburb, p.email, p.phone].filter(Boolean).join(" · ") || "No details yet"}
+                    {[p.suburb, p.email, p.phone].filter(Boolean).join(" · ") ||
+                      "No details yet"}
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="text-sm font-semibold tabular-nums">{p.events}</p>
-                  <p className="text-xs text-stone-500">{p.events === 1 ? "event" : "events"}</p>
+                  <p className="text-sm font-semibold tabular-nums">
+                    {p.events}
+                  </p>
+                  <p className="text-xs text-stone-500">
+                    {p.events === 1 ? "event" : "events"}
+                  </p>
                 </div>
               </Link>
             </li>
@@ -113,15 +136,21 @@ function splitName(full: string) {
   return { first, last: rest.join(" ") };
 }
 
-function AddPersonForm({ onDone, initialName = "" }: { onDone: () => void; initialName?: string }) {
+function AddPersonForm({
+  onDone,
+  initialName = "",
+}: {
+  onDone: () => void;
+  initialName?: string;
+}) {
   const [names] = useState(() => splitName(initialName));
-  const [state, action, pending] = useActionState<FormState & { ok?: boolean }, FormData>(
-    async (prev, formData) => {
-      const result = await createPerson(prev, formData);
-      return result.error ? result : { ok: true };
-    },
-    {},
-  );
+  const [state, action, pending] = useActionState<
+    FormState & { ok?: boolean },
+    FormData
+  >(async (prev, formData) => {
+    const result = await createPerson(prev, formData);
+    return result.error ? result : { ok: true };
+  }, {});
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -132,7 +161,11 @@ function AddPersonForm({ onDone, initialName = "" }: { onDone: () => void; initi
   }, [state, onDone]);
 
   return (
-    <form ref={formRef} action={action} className="mt-4 space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-2 ring-pink/60">
+    <form
+      ref={formRef}
+      action={action}
+      className="mt-4 space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-2 ring-pink/60"
+    >
       <div className="grid grid-cols-2 gap-3">
         <Field label="First name" htmlFor="first_name">
           <input
@@ -145,11 +178,17 @@ function AddPersonForm({ onDone, initialName = "" }: { onDone: () => void; initi
           />
         </Field>
         <Field label="Last name" htmlFor="last_name">
-          <input id="last_name" name="last_name" defaultValue={names.last} className={inputClass} />
+          <input
+            id="last_name"
+            name="last_name"
+            defaultValue={names.last}
+            className={inputClass}
+          />
         </Field>
       </div>
       <p className="text-xs text-stone-500">
-        Just a name. They add their own details and photo when they connect their account.
+        Just a name. They add their own details and photo when they connect
+        their account.
       </p>
       {state.error && <p className="text-sm text-red-700">{state.error}</p>}
       <button

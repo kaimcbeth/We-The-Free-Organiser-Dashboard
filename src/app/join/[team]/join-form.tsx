@@ -6,8 +6,16 @@ import { Field, inputClass } from "@/components/form";
 import { ConsentCheckbox } from "@/components/consent-checkbox";
 
 export function JoinForm({ team, email }: { team: string; email: string }) {
-  const [state, action, pending] = useActionState<JoinState, FormData>(joinTeam, {});
-  const [values, setValues] = useState({ first_name: "", last_name: "", suburb: "", phone: "" });
+  const [state, action, pending] = useActionState<JoinState, FormData>(
+    joinTeam,
+    {},
+  );
+  const [values, setValues] = useState({
+    first_name: "",
+    last_name: "",
+    suburb: "",
+    phone: "",
+  });
   const [consent, setConsent] = useState(false);
   const [forceNew, setForceNew] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -26,7 +34,11 @@ export function JoinForm({ team, email }: { team: string; email: string }) {
   return (
     <form ref={formRef} action={action} className="mt-6 space-y-4">
       <input type="hidden" name="team" value={team} />
-      <input type="hidden" name="force_new" value={forceNew ? "true" : "false"} />
+      <input
+        type="hidden"
+        name="force_new"
+        value={forceNew ? "true" : "false"}
+      />
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="First name" htmlFor="first_name">
@@ -52,9 +64,10 @@ export function JoinForm({ team, email }: { team: string; email: string }) {
           <p className="font-semibold">Have you been to an event already?</p>
           <p className="mt-1 text-sm text-stone-700">
             An organiser has already added{" "}
-            <span className="font-medium">{state.namesTaken.join(", ")}</span>. If that&apos;s you, ask an
-            organiser to show you your <span className="font-medium">connect QR code</span> so your events come
-            with you.
+            <span className="font-medium">{state.namesTaken.join(", ")}</span>.
+            If that&apos;s you, ask an organiser to show you your{" "}
+            <span className="font-medium">connect QR code</span> so your events
+            come with you.
           </p>
           <button
             type="button"

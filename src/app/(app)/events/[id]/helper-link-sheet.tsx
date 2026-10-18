@@ -1,11 +1,21 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createHelperLink, revokeHelperLinks, type HelperLink } from "@/app/actions";
+import {
+  createHelperLink,
+  revokeHelperLinks,
+  type HelperLink,
+} from "@/app/actions";
 import { ShareLink } from "@/components/share-link";
 import { formatEventDate, formatTime } from "@/lib/time";
 
-export function HelperLinkSheet({ eventId, initial }: { eventId: string; initial: HelperLink | null }) {
+export function HelperLinkSheet({
+  eventId,
+  initial,
+}: {
+  eventId: string;
+  initial: HelperLink | null;
+}) {
   const [link, setLink] = useState<HelperLink | null>(initial);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
@@ -14,14 +24,23 @@ export function HelperLinkSheet({ eventId, initial }: { eventId: string; initial
     return (
       <div className="space-y-4">
         <p className="text-sm text-stone-600">
-          Let someone else do check-in, like a volunteer at the door. They scan a QR code and can tick people in
-          straight away, with no login.
+          Let someone else do check-in, like a volunteer at the door. They scan
+          a QR code and can tick people in straight away, with no login.
         </p>
         <ul className="space-y-1.5 text-sm text-stone-600">
-          <li>• Works for this event only, and stops a few hours after it ends</li>
-          <li>• They see names only: no photos, contact details or other pages</li>
+          <li>
+            • Works for this event only, and stops a few hours after it ends
+          </li>
+          <li>
+            • They see names only: no photos, contact details or other pages
+          </li>
           <li>• You can turn it off any time</li>
         </ul>
+        <p className="rounded-xl bg-white px-3 py-2 text-sm text-stone-600 ring-1 ring-black/5">
+          Same helper every week? Use{" "}
+          <span className="font-medium text-stone-900">Helper QR</span> on the
+          Events page instead: one QR that always opens that day&apos;s event.
+        </p>
         <button
           disabled={pending}
           onClick={() =>

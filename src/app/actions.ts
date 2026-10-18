@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireOrganiser } from "@/lib/organiser";
-import { zonedToUtcIso } from "@/lib/time";
+import { dayBoundsUtc, todayInTz, zonedToUtcIso } from "@/lib/time";
 
 export async function signOut() {
   const supabase = await createClient();
@@ -15,7 +15,10 @@ export async function signOut() {
 export type FormState = { error?: string };
 
 // Add an event by hand (the automatic import from activism.wtf comes in Phase 2).
-export async function createEvent(_prev: FormState, formData: FormData): Promise<FormState> {
+export async function createEvent(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
   const { supabase, organiser } = await requireOrganiser();
 
   const title = String(formData.get("title") ?? "").trim();
@@ -26,11 +29,13 @@ export async function createEvent(_prev: FormState, formData: FormData): Promise
   const venue = String(formData.get("venue") ?? "").trim() || null;
   const address = String(formData.get("address") ?? "").trim() || null;
 
-  if (!title || !date || !start) return { error: "Please add a title, date and start time." };
+  if (!title || !date || !start)
+    return { error: "Please add a title, date and start time." };
 
   const startsAt = zonedToUtcIso(date, start);
   const endsAt = end ? zonedToUtcIso(date, end) : null;
-  if (endsAt && endsAt <= startsAt) return { error: "The end time needs to be after the start time." };
+  if (endsAt && endsAt <= startsAt)
+    return { error: "The end time needs to be after the start time." };
 
   const { data, error } = await supabase
     .from("events")
@@ -55,7 +60,10 @@ export async function createEvent(_prev: FormState, formData: FormData): Promise
 
 // Add a person from the People page. Organisers only enter a name;
 // members add their own details when they connect their account.
-export async function createPerson(_prev: FormState, formData: FormData): Promise<FormState> {
+export async function createPerson(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
   const { supabase, organiser } = await requireOrganiser();
 
   const firstName = String(formData.get("first_name") ?? "").trim();
@@ -107,13 +115,16 @@ export async function createInvite(personId: string): Promise<InviteResult> {
     .insert({ person_id: personId, created_by: organiser.id })
     .select("token")
     .single();
-  if (error || !data) return { error: "Couldn't create an invite. Please try again." };
+  if (error || !data)
+    return { error: "Couldn't create an invite. Please try again." };
   return { token: data.token };
 }
 
 // Remove a person and everything linked to them (check-ins, invites, photo).
 // Their login (if they had one) stays, but is no longer connected to anything.
-export async function deletePerson(personId: string): Promise<{ error?: string }> {
+export async function deletePerson(
+  personId: string,
+): Promise<{ error?: string }> {
   const { supabase, organiser } = await requireOrganiser();
 
   const { data: person } = await supabase
@@ -128,7 +139,11 @@ export async function deletePerson(personId: string): Promise<{ error?: string }
     await supabase.storage.from("avatars").remove([`${personId}.jpg`]);
   }
 
-  const { error } = await supabase.from("people").delete().eq("id", personId).eq("team_id", organiser.team_id);
+  const { error } = await supabase
+    .from("people")
+    .delete()
+    .eq("id", personId)
+    .eq("team_id", organiser.team_id);
   if (error) return { error: "Couldn't delete this person. Please try again." };
 
   revalidatePath("/people");
@@ -137,11 +152,17 @@ export async function deletePerson(personId: string): Promise<{ error?: string }
 }
 
 // Change an event's type (imports never overwrite this once set).
-export async function setEventType(eventId: string, eventTypeId: string | null): Promise<{ error?: string }> {
+export async function setEventType(
+  eventId: string,
+  eventTypeId: string | null,
+): Promise<{ error?: string }> {
   const { supabase, organiser } = await requireOrganiser();
   const { error } = await supabase
     .from("events")
-    .update({ event_type_id: eventTypeId, updated_at: new Date().toISOString() })
+    .update({
+      event_type_id: eventTypeId,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", eventId)
     .eq("team_id", organiser.team_id);
   if (error) return { error: "Couldn't change the type." };
@@ -154,7 +175,9 @@ export type HelperLink = { token: string; expires_at: string };
 
 // Make (or reuse) a no-login check-in link for one event, for a helper at the door.
 // It stops working 6 hours after the event ends.
-export async function createHelperLink(eventId: string): Promise<{ link?: HelperLink; error?: string }> {
+export async function createHelperLink(
+  eventId: string,
+): Promise<{ link?: HelperLink; error?: string }> {
   const { supabase, organiser } = await requireOrganiser();
 
   const { data: event } = await supabase
@@ -176,20 +199,31 @@ export async function createHelperLink(eventId: string): Promise<{ link?: Helper
     .maybeSingle();
   if (existing) return { link: existing };
 
-  const end = event.ends_at ? Date.parse(event.ends_at) : Date.parse(event.starts_at) + 4 * 3600e3;
-  const expires = new Date(Math.max(end + 6 * 3600e3, Date.now() + 2 * 3600e3)).toISOString();
+  const end = event.ends_at
+    ? Date.parse(event.ends_at)
+    : Date.parse(event.starts_at) + 4 * 3600e3;
+  const expires = new Date(
+    Math.max(end + 6 * 3600e3, Date.now() + 2 * 3600e3),
+  ).toISOString();
 
   const { data, error } = await supabase
     .from("checkin_links")
-    .insert({ event_id: eventId, created_by: organiser.id, expires_at: expires })
+    .insert({
+      event_id: eventId,
+      created_by: organiser.id,
+      expires_at: expires,
+    })
     .select("token, expires_at")
     .single();
-  if (error || !data) return { error: "Couldn't create a link. Please try again." };
+  if (error || !data)
+    return { error: "Couldn't create a link. Please try again." };
   return { link: data };
 }
 
 // Turn off every helper link for an event.
-export async function revokeHelperLinks(eventId: string): Promise<{ error?: string }> {
+export async function revokeHelperLinks(
+  eventId: string,
+): Promise<{ error?: string }> {
   const { supabase } = await requireOrganiser();
   const { error } = await supabase
     .from("checkin_links")
@@ -202,7 +236,10 @@ export async function revokeHelperLinks(eventId: string): Promise<{ error?: stri
 }
 
 // "Came to events before the app": never shown or counted as a first-timer.
-export async function setAttendedBefore(personId: string, value: boolean): Promise<{ error?: string }> {
+export async function setAttendedBefore(
+  personId: string,
+  value: boolean,
+): Promise<{ error?: string }> {
   const { supabase, organiser } = await requireOrganiser();
   const { error } = await supabase
     .from("people")
@@ -217,7 +254,10 @@ export async function setAttendedBefore(personId: string, value: boolean): Promi
 
 // Approve (or remove) someone as a buddy. Only people with a connected account
 // can be buddies, because the reminders go to their login.
-export async function setIsBuddy(personId: string, value: boolean): Promise<{ error?: string }> {
+export async function setIsBuddy(
+  personId: string,
+  value: boolean,
+): Promise<{ error?: string }> {
   const { supabase, organiser } = await requireOrganiser();
   const { data: person } = await supabase
     .from("people")
@@ -226,9 +266,13 @@ export async function setIsBuddy(personId: string, value: boolean): Promise<{ er
     .eq("team_id", organiser.team_id)
     .maybeSingle();
   if (!person) return { error: "Couldn't find that person." };
-  if (value && !person.user_id) return { error: "They need to connect their account first." };
+  if (value && !person.user_id)
+    return { error: "They need to connect their account first." };
 
-  const { error } = await supabase.from("people").update({ is_buddy: value }).eq("id", personId);
+  const { error } = await supabase
+    .from("people")
+    .update({ is_buddy: value })
+    .eq("id", personId);
   if (error) return { error: "Couldn't save. Please try again." };
 
   // No longer a buddy: end the pairings they had.
@@ -244,7 +288,10 @@ export async function setIsBuddy(personId: string, value: boolean): Promise<{ er
 }
 
 // Give a newcomer a buddy (or change / remove it). buddyId null = no buddy.
-export async function assignBuddy(newcomerId: string, buddyId: string | null): Promise<{ error?: string }> {
+export async function assignBuddy(
+  newcomerId: string,
+  buddyId: string | null,
+): Promise<{ error?: string }> {
   const { supabase, organiser } = await requireOrganiser();
 
   if (buddyId) {
@@ -254,8 +301,10 @@ export async function assignBuddy(newcomerId: string, buddyId: string | null): P
       .eq("id", buddyId)
       .eq("team_id", organiser.team_id)
       .maybeSingle();
-    if (!buddy?.is_buddy) return { error: "That person isn't an approved buddy." };
-    if (buddyId === newcomerId) return { error: "Someone can't be their own buddy." };
+    if (!buddy?.is_buddy)
+      return { error: "That person isn't an approved buddy." };
+    if (buddyId === newcomerId)
+      return { error: "Someone can't be their own buddy." };
   }
 
   const { data: current } = await supabase
@@ -287,5 +336,54 @@ export async function assignBuddy(newcomerId: string, buddyId: string | null): P
 
   revalidatePath(`/people/${newcomerId}`);
   if (buddyId) revalidatePath(`/people/${buddyId}`);
+  return {};
+}
+
+export type TeamLink = { token: string; expires_at: string };
+
+// One attendance link for the whole team: always opens whatever event is on
+// today, so helpers never pick an event. "today" ends at midnight tonight.
+export async function createTeamLink(
+  length: "today" | "month" | "3months",
+): Promise<{ link?: TeamLink; error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  const expires =
+    length === "today"
+      ? dayBoundsUtc(todayInTz()).end
+      : new Date(
+          Date.now() + (length === "month" ? 31 : 92) * 864e5,
+        ).toISOString();
+
+  // Replace any team link that's still on, so there's only ever one.
+  await supabase
+    .from("checkin_links")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("team_id", organiser.team_id)
+    .is("revoked_at", null);
+
+  const { data, error } = await supabase
+    .from("checkin_links")
+    .insert({
+      team_id: organiser.team_id,
+      created_by: organiser.id,
+      expires_at: expires,
+    })
+    .select("token, expires_at")
+    .single();
+  if (error || !data)
+    return { error: "Couldn't create a link. Please try again." };
+  revalidatePath("/");
+  return { link: data };
+}
+
+export async function revokeTeamLinks(): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  const { error } = await supabase
+    .from("checkin_links")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("team_id", organiser.team_id)
+    .is("revoked_at", null);
+  if (error) return { error: "Couldn't turn off the link. Please try again." };
+  revalidatePath("/");
   return {};
 }
