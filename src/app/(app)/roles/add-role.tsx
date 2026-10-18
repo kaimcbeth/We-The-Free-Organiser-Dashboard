@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { grantRole } from "@/app/actions";
-import { ROLE_LABEL, type Access } from "@/lib/roles";
+import { addAsLabel, ROLE_LABEL, type Access } from "@/lib/roles";
 import { inputClass } from "@/components/form";
 import type { Candidate } from "./page";
 
@@ -159,7 +159,7 @@ export function AddRole({
         {pending
           ? "Saving…"
           : person
-            ? `Make ${person.name.split(" ")[0]} ${ROLE_LABEL[role]}`
+            ? addAsLabel(person.name.split(" ")[0], role)
             : "Pick someone first"}
       </button>
       {msg && (

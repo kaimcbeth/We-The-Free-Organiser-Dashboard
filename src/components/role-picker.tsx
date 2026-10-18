@@ -5,6 +5,7 @@ import { grantRole } from "@/app/actions";
 import { Sheet } from "@/components/sheet";
 import { RoleChip } from "@/components/role-chip";
 import {
+  addAsLabel,
   ROLE_ACCENT,
   ROLE_INFO,
   ROLE_LABEL,
@@ -189,7 +190,7 @@ export function RolePicker({
                 }
                 className="w-full rounded-xl bg-pink px-4 py-2.5 font-semibold text-navy hover:bg-pink-strong disabled:opacity-40"
               >
-                {pending ? "Saving…" : `Make ${firstName} ${ROLE_LABEL[pick]}`}
+                {pending ? "Saving…" : addAsLabel(firstName, pick)}
               </button>
               {error && <p className="text-sm text-red-700">{error}</p>}
               {role && (

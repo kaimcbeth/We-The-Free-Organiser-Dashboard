@@ -79,3 +79,10 @@ export const ROLE_ACCENT: Record<ViewRole, string> = {
   core_team: "border-yellow",
   member: "border-stone-300",
 };
+
+// "Add Sarah as a Core Team member", "Add Sarah as an Organiser".
+export function addAsLabel(name: string, role: Access): string {
+  if (role === "core_team") return `Add ${name} as a Core Team member`;
+  if (role === "organiser") return `Add ${name} as an Organiser`;
+  return `Add ${name} as a ${ROLE_LABEL[role]}`;
+}
