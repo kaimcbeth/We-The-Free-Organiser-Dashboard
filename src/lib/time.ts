@@ -91,3 +91,20 @@ export function formatTimeRange(
 export function nowIso(): string {
   return new Date().toISOString();
 }
+
+// An instant's date in the team's time zone, as "YYYY-MM-DD".
+export function dateInTz(iso: string, timeZone = TEAM_TZ): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date(iso));
+}
+
+// "Tomorrow", "In 3 days", "Next Wednesday"-style countdown to an event.
+export function daysUntilLabel(iso: string, timeZone = TEAM_TZ): string {
+  const days = Math.round(
+    (Date.parse(dateInTz(iso, timeZone) + "T12:00:00Z") -
+      Date.parse(todayInTz(timeZone) + "T12:00:00Z")) /
+      864e5,
+  );
+  if (days <= 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  return `In ${days} days`;
+}

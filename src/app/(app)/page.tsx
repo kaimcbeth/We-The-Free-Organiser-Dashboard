@@ -6,6 +6,7 @@ import { describeImport } from "@/lib/import-status";
 import { requireOrganiser } from "@/lib/organiser";
 import {
   dayBoundsUtc,
+  daysUntilLabel,
   formatEventDate,
   formatTimeRange,
   nowIso,
@@ -84,6 +85,7 @@ export default async function EventsPage() {
   if (today.error || upcoming.error || past.error)
     return <LoadError what="events" />;
   const todays = today.data ?? [];
+  const next = upcoming.data?.[0] ?? null;
 
   return (
     <div className="space-y-8">
@@ -141,10 +143,13 @@ export default async function EventsPage() {
         )}
       </section>
 
+      {next && <NextUp event={next} />}
+
       <EventList
         title="Upcoming"
         events={upcoming.data ?? []}
         empty="Nothing scheduled yet."
+        nextId={next?.id}
       />
       <EventList
         title="Past"
@@ -155,14 +160,48 @@ export default async function EventsPage() {
   );
 }
 
+// The next event after today, shown big so it's easy to find.
+function NextUp({ event: e }: { event: EventRow }) {
+  return (
+    <section>
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+        Next up
+      </h2>
+      <Link
+        href={`/events/${e.id}`}
+        className="block rounded-2xl bg-white p-5 shadow-sm ring-2 ring-pink transition-transform hover:-translate-y-0.5"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-sm font-medium text-pink-ink">
+            {formatEventDate(e.starts_at)} ·{" "}
+            {formatTimeRange(e.starts_at, e.ends_at)}
+          </p>
+          <span className="shrink-0 rounded-full bg-yellow px-2.5 py-0.5 text-xs font-semibold text-navy">
+            {daysUntilLabel(e.starts_at)}
+          </span>
+        </div>
+        <p className="mt-1 text-lg font-semibold leading-snug">{e.title}</p>
+        <p className="mt-0.5 text-sm text-stone-500">
+          {[e.event_type?.name, e.venue ?? e.address]
+            .filter(Boolean)
+            .join(" · ") || "No details yet"}
+        </p>
+        <p className="mt-3 text-sm font-semibold text-navy">Open event →</p>
+      </Link>
+    </section>
+  );
+}
+
 function EventList({
   title,
   events,
   empty,
+  nextId,
 }: {
   title: string;
   events: EventRow[];
   empty: string;
+  nextId?: string;
 }) {
   return (
     <section>
@@ -177,13 +216,20 @@ function EventList({
             <li key={e.id}>
               <Link
                 href={`/events/${e.id}`}
-                className="flex items-center gap-4 px-4 py-3.5 hover:bg-stone-50"
+                className={`flex items-center gap-4 px-4 py-3.5 hover:bg-stone-50 ${e.id === nextId ? "bg-pink/5" : ""}`}
               >
                 <div className="w-16 shrink-0 text-sm font-medium text-stone-500">
                   {formatEventDate(e.starts_at)}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{e.title}</p>
+                  <p className="flex items-center gap-2 font-medium">
+                    <span className="truncate">{e.title}</span>
+                    {e.id === nextId && (
+                      <span className="shrink-0 rounded-full bg-pink px-2 py-0.5 text-xs font-semibold text-navy">
+                        Next
+                      </span>
+                    )}
+                  </p>
                   <p className="truncate text-sm text-stone-500">
                     {e.event_type?.name ?? "No type"}
                     {e.venue || e.address ? ` · ${e.venue ?? e.address}` : ""}
