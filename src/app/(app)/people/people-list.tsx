@@ -52,6 +52,13 @@ export function PeopleList({
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            // Enter with no matches opens "Add person" with the name filled in.
+            if (e.key === "Enter" && query.trim() && visible.length === 0) {
+              e.preventDefault();
+              setAdding(true);
+            }
+          }}
           placeholder="Search name, suburb or email"
           aria-label="Search people"
           className={inputClass}

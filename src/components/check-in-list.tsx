@@ -218,6 +218,18 @@ export function CheckInList({
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            // Enter: no match -> add them as a new person; exactly one match -> tick them in.
+            if (e.key !== "Enter" || !query.trim()) return;
+            e.preventDefault();
+            if (visible.length === 0) setAdding(true);
+            else if (visible.length === 1) {
+              const p = visible[0];
+              if (!checkedIn.has(p.id)) toggle(p);
+              setQuery("");
+            }
+          }}
+          enterKeyHint="go"
           placeholder="Search by name"
           className={inputClass}
           aria-label="Search people"
