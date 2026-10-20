@@ -33,26 +33,6 @@ export default async function InsightsPage() {
       <section>
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-            Everyone{" "}
-            <span className="text-stone-400">· {r.everyone.length}</span>
-          </h2>
-          <a
-            href="/insights/export?list=everyone"
-            className="text-sm font-medium text-pink-ink"
-          >
-            Download CSV
-          </a>
-        </div>
-        <EveryoneTable rows={r.everyone} tz={organiser.team.timezone} />
-        <p className="mt-2 text-xs text-stone-500">
-          Tap a column heading to sort. Last event: cyan = last 2 weeks, yellow
-          = last 2 months, pink = quieter. Darker circles = more events.
-        </p>
-      </section>
-
-      <section>
-        <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
             {thisMonth.label}
           </h2>
           <Link
@@ -85,6 +65,26 @@ export default async function InsightsPage() {
             accent
           />
         </div>
+      </section>
+
+      <section>
+        <div className="mb-3 flex items-baseline justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+            Everyone{" "}
+            <span className="text-stone-400">· {r.everyone.length}</span>
+          </h2>
+          <a
+            href="/insights/export?list=everyone"
+            className="text-sm font-medium text-pink-ink"
+          >
+            Download CSV
+          </a>
+        </div>
+        <EveryoneTable rows={r.everyone} tz={organiser.team.timezone} />
+        <p className="mt-2 text-xs text-stone-500">
+          Tap a column heading to sort. Last event: cyan = last 2 weeks, yellow
+          = last 2 months, pink = quieter. Darker circles = more events.
+        </p>
       </section>
 
       <PeopleSection

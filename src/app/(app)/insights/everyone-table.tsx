@@ -169,8 +169,10 @@ function LastSeen({
     <span
       className={`inline-block rounded-lg px-2 py-1 text-right leading-tight ${tone}`}
     >
-      <span className="block font-medium">{shortDate(iso, tz)}</span>
-      <span className="block text-xs opacity-75">{ago}</span>
+      <span className="block font-semibold">
+        {ago.charAt(0).toUpperCase() + ago.slice(1)}
+      </span>
+      <span className="block text-xs opacity-75">{shortDate(iso, tz)}</span>
     </span>
   );
 }
