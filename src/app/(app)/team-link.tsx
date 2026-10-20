@@ -13,7 +13,13 @@ const LENGTHS = [
 ] as const;
 
 // "Attendance QR": one link a helper keeps that always opens today's event.
-export function TeamLinkButton({ initial }: { initial: TeamLink | null }) {
+export function TeamLinkButton({
+  initial,
+  tz,
+}: {
+  initial: TeamLink | null;
+  tz: string;
+}) {
   const [open, setOpen] = useState(false);
   const [link, setLink] = useState<TeamLink | null>(initial);
   const [length, setLength] =
@@ -90,8 +96,8 @@ export function TeamLinkButton({ initial }: { initial: TeamLink | null }) {
               <p className="text-sm text-stone-600">
                 Opens whatever event is on that day. Works until{" "}
                 <span className="font-medium text-stone-900">
-                  {formatTime(link.expires_at)}{" "}
-                  {formatEventDate(link.expires_at)}
+                  {formatTime(link.expires_at, tz)}{" "}
+                  {formatEventDate(link.expires_at, tz)}
                 </span>
                 .
               </p>

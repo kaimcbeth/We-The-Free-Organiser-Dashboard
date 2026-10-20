@@ -92,7 +92,10 @@ export default async function EventsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Events</h1>
         <div className="flex gap-2">
-          <TeamLinkButton initial={teamLink.data ?? null} />
+          <TeamLinkButton
+            initial={teamLink.data ?? null}
+            tz={organiser.team.timezone}
+          />
           <Link
             href="/events/new"
             className="rounded-xl bg-pink px-4 py-2.5 text-sm font-semibold text-navy hover:bg-pink-strong"

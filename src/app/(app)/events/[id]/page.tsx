@@ -129,6 +129,7 @@ export default async function EventCheckInPage({
         teamId={event.team_id}
         teamSlug={organiser.team?.slug ?? ""}
         whatsappUrl={organiser.team?.whatsapp_url ?? null}
+        tz={organiser.team.timezone}
         organiserId={organiser.id}
         initialPeople={people.data ?? []}
         initialCheckedIn={(attendance.data ?? []).map((a) => a.person_id)}

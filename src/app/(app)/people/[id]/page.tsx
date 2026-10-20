@@ -179,6 +179,7 @@ export default async function PersonPage({
           <BuddyPicker
             key={myPairing?.id ?? "none"}
             newcomerId={person.id}
+            tz={organiser.team.timezone}
             current={
               myPairing
                 ? {

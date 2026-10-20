@@ -1,3 +1,4 @@
+import { currentTz } from "@/lib/time";
 import type { NextRequest } from "next/server";
 import { requireOrganiser } from "@/lib/organiser";
 import { loadInsightData } from "@/lib/insights-data";
@@ -11,7 +12,7 @@ const toCsv = (rows: (string | number | null)[][]) =>
   rows.map((r) => r.map(cell).join(",")).join("\r\n");
 const day = (iso: string | null) =>
   iso
-    ? new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney" }).format(
+    ? new Intl.DateTimeFormat("en-CA", { timeZone: currentTz() }).format(
         new Date(iso),
       )
     : "";

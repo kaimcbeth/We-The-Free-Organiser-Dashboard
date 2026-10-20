@@ -8,7 +8,6 @@ import {
   formatEventDate,
   formatTime,
   nowIso,
-  TEAM_TZ,
   todayInTz,
   zonedToUtcIso,
 } from "@/lib/time";
@@ -35,8 +34,8 @@ export default async function MonthPage({
   if (!isMonthKey(month)) notFound();
   const { supabase, organiser } = await requireOrganiser();
 
-  const start = zonedToUtcIso(`${month}-01`, "00:00", TEAM_TZ);
-  const end = zonedToUtcIso(`${shiftMonth(month, 1)}-01`, "00:00", TEAM_TZ);
+  const start = zonedToUtcIso(`${month}-01`, "00:00");
+  const end = zonedToUtcIso(`${shiftMonth(month, 1)}-01`, "00:00");
   const [data, { data: events, error }] = await Promise.all([
     loadInsightData(supabase, organiser.team_id),
     supabase

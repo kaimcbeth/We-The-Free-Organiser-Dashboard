@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/actions";
 import { AttendeeShell } from "@/components/attendee-shell";
 import { DEFAULT_TEAM_SLUG } from "@/lib/teams";
-import { formatEventDate } from "@/lib/time";
+import { DEFAULT_TZ, formatEventDate, setRequestTz } from "@/lib/time";
 import { ProfileForm } from "./profile-form";
 import { PhotoPicker } from "@/components/photo-picker";
 import { signPhotos } from "@/lib/photos";
@@ -25,7 +25,7 @@ type Me = {
   consent_marketing: boolean;
   starting_outreach_count: number;
   photo_updated_at: string | null;
-  team: { name: string; whatsapp_url: string | null } | null;
+  team: { name: string; whatsapp_url: string | null; timezone: string } | null;
 };
 
 type Attended = {
@@ -49,7 +49,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     supabase
       .from("people")
       .select(
-        "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, photo_updated_at, team:teams(name, whatsapp_url)",
+        "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, photo_updated_at, team:teams(name, whatsapp_url, timezone)",
       )
       .eq("user_id", user.id)
       .maybeSingle<Me>(),
@@ -59,6 +59,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
       .eq("id", user.id)
       .maybeSingle(),
   ]);
+  setRequestTz(me?.team?.timezone);
 
   // Hidden while God Mode is previewing as an attendee.
   const previewingAttendee =
@@ -195,7 +196,11 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
       </div>
 
       {buddy?.status === "ok" && (
-        <BuddySection data={buddy as BuddyDashboard} hasEmail={!!me.email} />
+        <BuddySection
+          data={buddy as BuddyDashboard}
+          hasEmail={!!me.email}
+          tz={me.team?.timezone ?? DEFAULT_TZ}
+        />
       )}
 
       <section className="mt-8">

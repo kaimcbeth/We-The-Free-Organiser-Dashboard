@@ -50,9 +50,9 @@ export type BuddyDashboard = {
 const full = (p: { first_name: string; last_name: string | null }) =>
   [p.first_name, p.last_name].filter(Boolean).join(" ");
 
-function inviteText(first: string, e: Upcoming) {
+function inviteText(first: string, e: Upcoming, tz: string) {
   const where = e.venue ? ` at ${e.venue}` : "";
-  return `Hey ${first}! We've got ${e.title}${where} on ${formatEventDate(e.starts_at)}, ${formatTime(e.starts_at)}. Want to come along?${
+  return `Hey ${first}! We've got ${e.title}${where} on ${formatEventDate(e.starts_at, tz)}, ${formatTime(e.starts_at, tz)}. Want to come along?${
     e.url ? ` ${e.url}` : ""
   }`;
 }
@@ -60,9 +60,11 @@ function inviteText(first: string, e: Upcoming) {
 export function BuddySection({
   data,
   hasEmail,
+  tz,
 }: {
   data: BuddyDashboard;
   hasEmail: boolean;
+  tz: string; // the team's time zone
 }) {
   if (!data.is_buddy && data.pairs.length === 0) return null;
 
@@ -79,6 +81,7 @@ export function BuddySection({
         <ul className="space-y-3">
           {data.pairs.map((p) => (
             <PairCard
+              tz={tz}
               key={p.pairing_id}
               pair={p}
               upcoming={data.upcoming_events}
@@ -87,7 +90,7 @@ export function BuddySection({
         </ul>
       )}
 
-      {data.is_buddy && <Available people={data.available} />}
+      {data.is_buddy && <Available tz={tz} people={data.available} />}
       {data.is_buddy && (
         <ReminderSetting initial={data.notify_channel} hasEmail={hasEmail} />
       )}
@@ -95,7 +98,15 @@ export function BuddySection({
   );
 }
 
-function PairCard({ pair, upcoming }: { pair: Pair; upcoming: Upcoming[] }) {
+function PairCard({
+  pair,
+  upcoming,
+  tz,
+}: {
+  pair: Pair;
+  upcoming: Upcoming[];
+  tz: string;
+}) {
   const n = pair.newcomer;
   const [now] = useState(nowIso);
   const due = pair.prompts.find(
@@ -110,7 +121,7 @@ function PairCard({ pair, upcoming }: { pair: Pair; upcoming: Upcoming[] }) {
   const [pick, setPick] = useState(upcoming[0]?.id ?? "");
   const [copied, setCopied] = useState(false);
   const event = upcoming.find((e) => e.id === pick);
-  const text = event ? inviteText(n.first_name, event) : "";
+  const text = event ? inviteText(n.first_name, event, tz) : "";
 
   async function share() {
     if (!text) return;
@@ -135,10 +146,10 @@ function PairCard({ pair, upcoming }: { pair: Pair; upcoming: Upcoming[] }) {
     <li className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
       <p className="font-medium">{full(n)}</p>
       <p className="text-sm text-stone-500">
-        Buddies since {formatEventDate(pair.since)} · {pair.events}{" "}
+        Buddies since {formatEventDate(pair.since, tz)} · {pair.events}{" "}
         {pair.events === 1 ? "event" : "events"}
         {pair.last_seen
-          ? ` · last seen ${formatEventDate(pair.last_seen)}`
+          ? ` · last seen ${formatEventDate(pair.last_seen, tz)}`
           : ""}
       </p>
 
@@ -161,7 +172,7 @@ function PairCard({ pair, upcoming }: { pair: Pair; upcoming: Upcoming[] }) {
               >
                 {upcoming.map((e) => (
                   <option key={e.id} value={e.id}>
-                    {formatEventDate(e.starts_at)}: {e.title}
+                    {formatEventDate(e.starts_at, tz)}: {e.title}
                   </option>
                 ))}
               </select>
@@ -203,14 +214,14 @@ function PairCard({ pair, upcoming }: { pair: Pair; upcoming: Upcoming[] }) {
       ) : later ? (
         <p className="mt-2 text-sm text-stone-500">
           We&apos;ll remind you to invite {n.first_name} to an event on{" "}
-          {formatEventDate(later.due_at)}.
+          {formatEventDate(later.due_at, tz)}.
         </p>
       ) : null}
     </li>
   );
 }
 
-function Available({ people }: { people: Available[] }) {
+function Available({ people, tz }: { people: Available[]; tz: string }) {
   const [claimed, setClaimed] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
@@ -234,7 +245,7 @@ function Available({ people }: { people: Available[] }) {
                 <p className="truncate font-medium">{full(p)}</p>
                 <p className="truncate text-sm text-stone-500">
                   First came to {p.first_event_title},{" "}
-                  {formatEventDate(p.first_event_at)}
+                  {formatEventDate(p.first_event_at, tz)}
                 </p>
               </div>
               <button

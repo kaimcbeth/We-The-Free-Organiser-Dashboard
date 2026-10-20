@@ -12,9 +12,11 @@ import { formatEventDate, formatTime } from "@/lib/time";
 export function HelperLinkSheet({
   eventId,
   initial,
+  tz,
 }: {
   eventId: string;
   initial: HelperLink | null;
+  tz: string;
 }) {
   const [link, setLink] = useState<HelperLink | null>(initial);
   const [error, setError] = useState("");
@@ -64,7 +66,8 @@ export function HelperLinkSheet({
       <p className="text-sm text-stone-600">
         Anyone who scans this can check people in for this event, until{" "}
         <span className="font-medium text-stone-900">
-          {formatTime(link.expires_at)} {formatEventDate(link.expires_at)}
+          {formatTime(link.expires_at, tz)}{" "}
+          {formatEventDate(link.expires_at, tz)}
         </span>
         .
       </p>

@@ -43,7 +43,7 @@ export default async function InsightsPage() {
             Download CSV
           </a>
         </div>
-        <EveryoneTable rows={r.everyone} />
+        <EveryoneTable rows={r.everyone} tz={organiser.team.timezone} />
         <p className="mt-2 text-xs text-stone-500">
           Tap a column heading to sort. Last event: cyan = last 2 weeks, yellow
           = last 2 months, pink = quieter. Darker circles = more events.

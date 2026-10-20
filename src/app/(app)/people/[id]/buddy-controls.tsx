@@ -79,7 +79,9 @@ export function BuddyPicker({
   newcomerId,
   current,
   options,
+  tz,
 }: {
+  tz: string;
   newcomerId: string;
   current: { buddyId: string; name: string; since: string; via: string } | null;
   options: Option[];
@@ -108,7 +110,7 @@ export function BuddyPicker({
           >
             {current.name}
           </Link>{" "}
-          since {formatEventDate(current.since)}
+          since {formatEventDate(current.since, tz)}
           {current.via === "claimed" ? " (they offered)" : ""}
         </p>
       )}

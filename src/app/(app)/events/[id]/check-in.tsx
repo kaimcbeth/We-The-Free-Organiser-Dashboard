@@ -27,6 +27,7 @@ export function CheckIn({
   outreachBefore,
   likely,
   whatsappUrl,
+  tz,
 }: {
   eventId: string;
   teamId: string;
@@ -41,6 +42,7 @@ export function CheckIn({
   outreachBefore: Record<string, number>;
   likely: Record<string, number>;
   whatsappUrl: string | null;
+  tz: string;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [justAdded, setJustAdded] = useState<Person | null>(null);
@@ -216,7 +218,7 @@ export function CheckIn({
 
       {sheet === "helper" && (
         <Sheet title="Share check-in" onClose={() => setSheet(null)}>
-          <HelperLinkSheet eventId={eventId} initial={helperLink} />
+          <HelperLinkSheet eventId={eventId} initial={helperLink} tz={tz} />
         </Sheet>
       )}
     </CheckInList>

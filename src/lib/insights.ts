@@ -1,7 +1,7 @@
 // Insights worked out from check-ins. Pure functions (no database calls),
 // so they're easy to test.
 
-import { TEAM_TZ } from "@/lib/time";
+import { currentTz } from "@/lib/time";
 
 export type InsightPerson = {
   id: string;
@@ -65,7 +65,7 @@ export function outreachCounts(
 
 const monthKey = (iso: string) =>
   new Intl.DateTimeFormat("en-CA", {
-    timeZone: TEAM_TZ,
+    timeZone: currentTz(),
     year: "numeric",
     month: "2-digit",
   })

@@ -22,9 +22,9 @@ type DuePrompt = {
   } | null;
 };
 
-const when = (iso: string) =>
+const when = (iso: string, timeZone: string) =>
   new Intl.DateTimeFormat("en-AU", {
-    timeZone: "Australia/Sydney",
+    timeZone,
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -48,18 +48,25 @@ Deno.serve(async () => {
   if (error) return Response.json({ error: error.message }, { status: 500 });
 
   // Next upcoming event per team, to suggest in the invite.
-  const nextEvent = new Map<string, { title: string; starts_at: string; venue: string | null } | null>();
+  const nextEvent = new Map<string, { title: string; starts_at: string; venue: string | null; tz: string } | null>();
   async function nextFor(teamId: string) {
     if (!nextEvent.has(teamId)) {
       const { data } = await supabase
         .from("events")
-        .select("title, starts_at, venue, address")
+        .select("title, starts_at, venue, address, team:teams(timezone)")
         .eq("team_id", teamId)
         .gt("starts_at", new Date().toISOString())
         .order("starts_at")
         .limit(1)
         .maybeSingle();
-      nextEvent.set(teamId, data ? { title: data.title, starts_at: data.starts_at, venue: data.venue ?? data.address } : null);
+      nextEvent.set(teamId, data
+          ? {
+              title: data.title,
+              starts_at: data.starts_at,
+              venue: data.venue ?? data.address,
+              tz: (data.team as unknown as { timezone: string } | null)?.timezone ?? "Australia/Sydney",
+            }
+          : null);
     }
     return nextEvent.get(teamId)!;
   }
@@ -117,7 +124,7 @@ Deno.serve(async () => {
     const next = await nextFor(pairing.team_id);
     const title = `Invite ${newcomer} to an upcoming event`;
     const body = next
-      ? `It's been a week since you became ${newcomer}'s buddy. How about ${next.title}${next.venue ? ` at ${next.venue}` : ""}, ${when(next.starts_at)}?`
+      ? `It's been a week since you became ${newcomer}'s buddy. How about ${next.title}${next.venue ? ` at ${next.venue}` : ""}, ${when(next.starts_at, next.tz)}?`
       : `It's been a week since you became ${newcomer}'s buddy. Send them a friendly invite to the next event.`;
     const url = "/me#buddies";
 

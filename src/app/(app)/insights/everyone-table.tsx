@@ -16,16 +16,22 @@ const COLS: { key: SortKey; label: string; title: string }[] = [
   { key: "outreach", label: "Outreach", title: "Outreach events, all time" },
 ];
 
-const shortDate = (iso: string) =>
+const shortDate = (iso: string, tz: string) =>
   new Intl.DateTimeFormat("en-AU", {
-    timeZone: "Australia/Sydney",
+    timeZone: tz,
     day: "numeric",
     month: "short",
   }).format(new Date(iso));
 
 // Everyone in the team: last event and how many events in the last 3/6/12 months.
 // Tap a column heading to sort by it.
-export function EveryoneTable({ rows }: { rows: EveryoneRow[] }) {
+export function EveryoneTable({
+  rows,
+  tz,
+}: {
+  rows: EveryoneRow[];
+  tz: string;
+}) {
   const [sort, setSort] = useState<SortKey>("lastSeen");
   const [asc, setAsc] = useState(false);
   const [query, setQuery] = useState("");
@@ -112,7 +118,12 @@ export function EveryoneTable({ rows }: { rows: EveryoneRow[] }) {
                   </Link>
                 </td>
                 <td className="px-3 py-2.5 text-right">
-                  <LastSeen iso={r.lastSeen} ago={r.lastAgo} days={r.daysAgo} />
+                  <LastSeen
+                    tz={tz}
+                    iso={r.lastSeen}
+                    ago={r.lastAgo}
+                    days={r.daysAgo}
+                  />
                 </td>
                 <Count n={r.m3} />
                 <Count n={r.m6} />
@@ -138,7 +149,9 @@ function LastSeen({
   iso,
   ago,
   days,
+  tz,
 }: {
+  tz: string;
   iso: string | null;
   ago: string;
   days: number | null;
@@ -156,7 +169,7 @@ function LastSeen({
     <span
       className={`inline-block rounded-lg px-2 py-1 text-right leading-tight ${tone}`}
     >
-      <span className="block font-medium">{shortDate(iso)}</span>
+      <span className="block font-medium">{shortDate(iso, tz)}</span>
       <span className="block text-xs opacity-75">{ago}</span>
     </span>
   );

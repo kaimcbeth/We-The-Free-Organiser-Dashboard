@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { setRequestTz } from "@/lib/time";
 
 import type { Access, ViewRole } from "@/lib/roles";
 import { ROLE_LABEL } from "@/lib/roles";
@@ -13,6 +14,7 @@ export type Team = {
   slug: string;
   whatsapp_url: string | null;
   region_id: string | null;
+  timezone: string;
 };
 
 export type Organiser = {
@@ -56,7 +58,7 @@ export async function getStaff() {
 
   const { data: allTeams } = await supabase
     .from("teams")
-    .select("id, name, slug, whatsapp_url, region_id")
+    .select("id, name, slug, whatsapp_url, region_id, timezone")
     .order("name")
     .returns<Team[]>();
   let teams = allTeams ?? [];
@@ -72,6 +74,8 @@ export async function getStaff() {
     teams.find((t) => t.id === wanted) ??
     teams.find((t) => t.id === row.team_id) ??
     teams[0];
+
+  setRequestTz(team.timezone);
 
   const asCookie = jar.get(VIEW_AS_COOKIE)?.value as ViewRole | undefined;
   const viewingAs =

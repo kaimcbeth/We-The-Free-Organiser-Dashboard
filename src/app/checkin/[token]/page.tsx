@@ -1,6 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { AttendeeShell } from "@/components/attendee-shell";
-import { formatEventDate, formatTime, formatTimeRange } from "@/lib/time";
+import {
+  formatEventDate,
+  formatTime,
+  formatTimeRange,
+  setRequestTz,
+} from "@/lib/time";
 import { HelperCheckIn, type HelperState } from "./helper-check-in";
 
 // No-login check-in screen for a helper at the door (shared by an organiser).
@@ -13,6 +18,7 @@ export default async function HelperCheckInPage({
     p_token: token,
   });
   const state = data as HelperState | null;
+  setRequestTz((state as { timezone?: string } | null)?.timezone);
 
   if (state?.status === "no_event") {
     const next = (
