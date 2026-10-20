@@ -161,7 +161,7 @@ export function CalendarView({
                   className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${othersToggle.on ? "left-3.5" : "left-0.5"}`}
                 />
               </span>
-              See other teams&apos; events
+              See other teams&apos; events in your region
             </Link>
           )}
           {regions.length > 0 && (
