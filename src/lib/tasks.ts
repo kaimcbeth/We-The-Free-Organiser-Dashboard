@@ -44,6 +44,7 @@ export async function loadTeamTasks(supabase: SupabaseClient, teamId: string) {
       .select(SELECT)
       .eq("team_id", teamId)
       .is("done_at", null)
+      .is("dismissed_at", null)
       .order("due_at")
       .returns<Raw[]>(),
     supabase
