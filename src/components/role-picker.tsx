@@ -41,7 +41,7 @@ export function RolePicker({
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
 
-  const shown: ViewRole = role ?? "member";
+  const shown: ViewRole = role ?? (connected ? "member" : "attendee");
   // Can't change someone at or above the highest role you can give.
   const canChange =
     gives.length > 0 && (!role || ROLE_RANK[role] <= ROLE_RANK[gives[0]]);

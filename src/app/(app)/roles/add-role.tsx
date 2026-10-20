@@ -60,8 +60,8 @@ export function AddRole({
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search attendees by name"
-            aria-label="Search attendees"
+            placeholder="Search members by name"
+            aria-label="Search members"
             className={inputClass}
           />
           {query.trim() && (

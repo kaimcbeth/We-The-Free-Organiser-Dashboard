@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { setRequestTz } from "@/lib/time";
 
 import type { Access, ViewRole } from "@/lib/roles";
-import { ROLE_LABEL } from "@/lib/roles";
+import { ROLE_LABEL, ROLE_RANK } from "@/lib/roles";
 export { ROLE_LABEL, ROLE_RANK } from "@/lib/roles";
 export type { Access, ViewRole } from "@/lib/roles";
 
@@ -106,7 +106,7 @@ export async function getStaff() {
 export async function requireOrganiser() {
   const { supabase, user, organiser } = await getStaff();
   if (!user) redirect("/login");
-  if (!organiser || organiser.role === "member") redirect("/me");
+  if (!organiser || ROLE_RANK[organiser.role] <= 0) redirect("/me");
   if (organiser.role === "core_team") redirect("/attendance");
   return { supabase, user, organiser };
 }
@@ -115,6 +115,6 @@ export async function requireOrganiser() {
 export async function requireCore() {
   const { supabase, user, organiser } = await getStaff();
   if (!user) redirect("/login");
-  if (!organiser || organiser.role === "member") redirect("/me");
+  if (!organiser || ROLE_RANK[organiser.role] <= 0) redirect("/me");
   return { supabase, user, organiser };
 }

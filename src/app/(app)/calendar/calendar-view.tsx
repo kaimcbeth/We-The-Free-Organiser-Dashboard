@@ -139,8 +139,8 @@ export function CalendarView({
           <p className="text-sm font-medium text-pink-ink">
             {nearby
               ? nearby.mode === "team"
-                ? "Your team"
-                : "Your team and nearby"
+                ? "Your community"
+                : "Your community and nearby"
               : regionName}
           </p>
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -223,7 +223,7 @@ export function CalendarView({
               <button
                 onClick={() => solo(t.id)}
                 aria-pressed={only}
-                title={only ? "Show all teams" : `Show only ${t.name}`}
+                title={only ? "Show all communities" : `Show only ${t.name}`}
                 className="flex items-center gap-1.5 py-1 pl-3 pr-1 text-sm font-medium"
               >
                 <span
@@ -347,7 +347,7 @@ export function CalendarView({
         {(openDay ? [[openDay, byDay.get(openDay) ?? []] as const] : inMonth)
           .length === 0 ? (
           <p className="rounded-2xl border border-dashed border-stone-300 px-4 py-6 text-center text-sm text-stone-500">
-            No events this month yet. Teams&apos; events appear here once
+            No events this month yet. Communities&apos; events appear here once
             they&apos;re on activism.wtf.
           </p>
         ) : (
@@ -409,7 +409,7 @@ export function CalendarView({
           </div>
         )}
         <p className="mt-3 text-xs text-stone-500">
-          Times are each team&apos;s local time.
+          Times are each community&apos;s local time.
         </p>
       </section>
     </div>

@@ -31,7 +31,7 @@ export function WhatsAppJoin({ url }: { url: string }) {
       <span className="min-w-0 flex-1">
         Join our WhatsApp community
         <span className="block text-sm font-normal text-navy/75">
-          Event updates and chat with the team
+          Event updates and chat with the community
         </span>
       </span>
       <span aria-hidden>↗</span>

@@ -6,6 +6,8 @@ const STYLE: Record<ViewRole, string> = {
   organiser: "bg-cyan text-navy",
   core_team: "bg-yellow text-navy",
   member: "bg-stone-300/60 text-stone-700",
+  new_member: "bg-stone-300/60 text-stone-700",
+  attendee: "bg-white text-stone-500 ring-1 ring-stone-300",
 };
 
 export function RoleChip({ role }: { role: ViewRole }) {

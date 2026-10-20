@@ -54,7 +54,7 @@ export default async function PeoplePage({
       <h1 className="text-2xl font-semibold tracking-tight">People</h1>
       <p className="mt-1 text-sm text-stone-500">
         {people.length} {people.length === 1 ? "person" : "people"} in{" "}
-        {organiser.team?.name ?? "your team"} · {connected} with an account
+        {organiser.team?.name ?? "your community"} · {connected} with an account
       </p>
       {deleted && (
         <p className="mt-4 rounded-2xl bg-cyan/20 px-4 py-3 text-sm font-medium text-navy">

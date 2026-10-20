@@ -35,7 +35,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
               We The Free
             </span>
             <span className="block truncate text-sm font-medium text-white">
-              {organiser.team?.name ?? "Your team"}
+              {organiser.team?.name ?? "Your community"}
             </span>
           </Link>
           <div className="flex min-w-0 items-center gap-1">

@@ -25,7 +25,7 @@ export default async function CoreAttendancePage({
           Can&apos;t open this event
         </h1>
         <p className="mt-2 text-stone-600">
-          It may be for another team. Ask an organiser if you think this is
+          It may be for another community. Ask an organiser if you think this is
           wrong.
         </p>
       </div>

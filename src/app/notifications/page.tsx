@@ -28,8 +28,9 @@ export default async function NotificationsPage() {
       .maybeSingle(),
   ]);
   // Hidden while God Mode is previewing as an attendee.
-  const previewingAttendee =
-    (await cookies()).get(VIEW_AS_COOKIE)?.value === "member";
+  const previewingAttendee = ["member", "new_member"].includes(
+    (await cookies()).get(VIEW_AS_COOKIE)?.value ?? "",
+  );
   const staffLink = !!organiser && !previewingAttendee;
   const unread = (items ?? []).some((n) => !n.read_at);
 

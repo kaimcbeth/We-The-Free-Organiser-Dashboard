@@ -9,7 +9,8 @@ const VIEW_OPTIONS: { value: ViewRole; label: string }[] = [
   { value: "regional_lead", label: "Regional Support Lead" },
   { value: "organiser", label: "Organiser" },
   { value: "core_team", label: "Core Team" },
-  { value: "member", label: "Attendee" },
+  { value: "member", label: "Member" },
+  { value: "new_member", label: "New member (tutorial)" },
 ];
 
 // Thin bar under the header: team switcher (when there's more than one team)
@@ -35,7 +36,7 @@ export function StaffBar({
       <div className="mx-auto flex max-w-2xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-1.5 text-xs">
         {teams.length > 1 && (
           <label className="flex items-center gap-1.5">
-            <span className="opacity-75">Team</span>
+            <span className="opacity-75">Community</span>
             <select
               value={teamId}
               disabled={pending}

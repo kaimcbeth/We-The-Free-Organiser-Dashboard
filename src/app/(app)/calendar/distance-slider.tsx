@@ -116,7 +116,7 @@ export function DistanceSlider({
     const count = nearby.teams.filter(include).length;
     const label =
       pos === 0
-        ? "Just your team"
+        ? "Just your community"
         : pos === 50
           ? `Your region (${nearby.regionName})`
           : pos === 100
@@ -158,13 +158,16 @@ export function DistanceSlider({
   return (
     <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-sm font-semibold">See other teams&apos; events</p>
+        <p className="text-sm font-semibold">
+          See other communities&apos; events
+        </p>
         <p className="text-sm">
           <span className="font-semibold text-navy">{view.label}</span>
           {pos > 0 && (
             <span className="text-stone-500">
               {" "}
-              · {view.count} other {view.count === 1 ? "team" : "teams"}
+              · {view.count} other{" "}
+              {view.count === 1 ? "community" : "communities"}
             </span>
           )}
         </p>
@@ -180,12 +183,12 @@ export function DistanceSlider({
           if (Math.abs(v - 50) <= 2) v = 50; // snap to "your region"
           change(v);
         }}
-        aria-label="How far away to show other teams' events"
+        aria-label="How far away to show other communities' events"
         aria-valuetext={view.label}
         className="mt-3 w-full accent-pink"
       />
       <div className="mt-1 flex justify-between text-xs text-stone-500">
-        <span>Your team</span>
+        <span>Your community</span>
         <span>{nearby.regionName}</span>
         <span>Everywhere</span>
       </div>

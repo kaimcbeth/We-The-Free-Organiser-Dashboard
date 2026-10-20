@@ -29,9 +29,9 @@ const GIVES: Record<Access, Access[]> = {
 
 const WHAT: Record<Access, string> = {
   god: "Everything, everywhere. Adds Regional Support Leads.",
-  regional_lead: "Every team in their region. Adds Organisers.",
-  organiser: "Runs one team: events, people, insights. Adds Core Team.",
-  core_team: "Takes attendance for their team (names only).",
+  regional_lead: "Every community in their region. Adds Organisers.",
+  organiser: "Runs one community: events, people, insights. Adds Core Team.",
+  core_team: "Takes attendance for their community (names only).",
 };
 
 export default async function RolesPage() {

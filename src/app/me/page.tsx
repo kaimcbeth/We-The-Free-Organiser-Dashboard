@@ -15,6 +15,7 @@ import { WhatsAppJoin } from "@/components/whatsapp";
 import { PreviewBanner } from "@/components/preview-banner";
 import { TaskCard } from "@/components/task-card";
 import { loadMyTasks } from "@/lib/tasks";
+import { MemberTutorial, ReplayTour } from "./member-tutorial";
 import { BuddySection, type BuddyDashboard } from "./buddy-section";
 
 type Me = {
@@ -27,7 +28,13 @@ type Me = {
   consent_marketing: boolean;
   starting_outreach_count: number;
   photo_updated_at: string | null;
-  team: { name: string; whatsapp_url: string | null; timezone: string } | null;
+  tutorial_done_at: string | null;
+  team: {
+    name: string;
+    whatsapp_url: string | null;
+    timezone: string;
+    activism_team_url: string | null;
+  } | null;
 };
 
 type Attended = {
@@ -51,7 +58,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     supabase
       .from("people")
       .select(
-        "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, photo_updated_at, team:teams(name, whatsapp_url, timezone)",
+        "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, photo_updated_at, tutorial_done_at, team:teams(name, whatsapp_url, timezone, activism_team_url)",
       )
       .eq("user_id", user.id)
       .maybeSingle<Me>(),
@@ -64,8 +71,10 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
   setRequestTz(me?.team?.timezone);
 
   // Hidden while God Mode is previewing as an attendee.
-  const previewingAttendee =
-    (await cookies()).get(VIEW_AS_COOKIE)?.value === "member";
+  const viewAs = (await cookies()).get(VIEW_AS_COOKIE)?.value ?? "";
+  const previewingAttendee = ["member", "new_member"].includes(viewAs);
+  // God Mode "View as New member" runs the tour every time (and saves nothing).
+  const previewNewMember = viewAs === "new_member" && !!organiser;
   const staffLink = !!organiser && !previewingAttendee;
   const headerRight = (
     <div className="flex items-center gap-1">
@@ -95,7 +104,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
           Set up your profile
         </h1>
         <p className="mt-2 text-stone-600">
-          You&apos;re an organiser, but you don&apos;t have an attendee profile
+          You&apos;re an organiser, but you don&apos;t have a member profile
           yet. Add one to put your photo in the corner and show up in check-in
           lists like everyone else.
         </p>
@@ -267,6 +276,21 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
         </h2>
         <ProfileForm me={me} />
       </section>
+
+      <div className="mt-10 text-center">
+        <ReplayTour />
+      </div>
+      <MemberTutorial
+        firstName={me.first_name}
+        teamName={(me.team?.name ?? "").replace(
+          /, (Australia|New Zealand)$/,
+          "",
+        )}
+        whatsappUrl={me.team?.whatsapp_url ?? null}
+        teamUrl={me.team?.activism_team_url ?? null}
+        autoOpen={previewNewMember || !me.tutorial_done_at}
+        preview={previewNewMember}
+      />
     </AttendeeShell>
   );
 }

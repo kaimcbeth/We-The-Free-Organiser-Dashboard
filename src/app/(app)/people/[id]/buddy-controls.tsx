@@ -95,7 +95,7 @@ export function BuddyPicker({
     return (
       <p className="text-sm text-stone-500">
         No approved buddies yet. Switch on “Approved buddy” on a trusted
-        attendee&apos;s profile first.
+        member&apos;s profile first.
       </p>
     );
   }

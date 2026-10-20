@@ -441,7 +441,11 @@ export async function setViewAs(role: ViewRole | null): Promise<void> {
     });
   revalidatePath("/", "layout");
   redirect(
-    role === "member" ? "/me" : role === "core_team" ? "/attendance" : "/",
+    role === "member" || role === "new_member"
+      ? "/me"
+      : role === "core_team"
+        ? "/attendance"
+        : "/",
   );
 }
 

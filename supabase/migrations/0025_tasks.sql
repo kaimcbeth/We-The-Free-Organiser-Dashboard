@@ -112,3 +112,8 @@ $$;
 
 revoke execute on function public.assign_task(uuid, uuid) from public, anon;
 grant execute on function public.assign_task(uuid, uuid) to authenticated;
+
+-- Renamed (passive: whoever posts them, the task just gets ticked off).
+update task_kinds set title = 'Event photos posted',
+  description = 'The best photos from the event are up for the team, e.g. in the WhatsApp community. Tick it off once they''re posted, whoever posted them.'
+where kind = 'post_photos';
