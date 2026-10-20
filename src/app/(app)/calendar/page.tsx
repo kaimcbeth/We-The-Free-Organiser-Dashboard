@@ -44,7 +44,20 @@ export default async function CalendarPage({
       ? sp.m
       : todayInTz().slice(0, 7);
   const regionParam = typeof sp.region === "string" ? sp.region : "";
-  const showOthers = sp.others === "1";
+  // Organisers: how far out to show other teams' events (the distance slider).
+  const nearRaw =
+    typeof sp.near === "string"
+      ? sp.near
+      : sp.others === "1"
+        ? "region"
+        : "team";
+  const nearKm = Number(nearRaw);
+  const near: { mode: "team" | "region" | "all" | "km"; km: number | null } =
+    nearRaw === "region" || nearRaw === "all"
+      ? { mode: nearRaw, km: null }
+      : Number.isFinite(nearKm) && nearKm > 0
+        ? { mode: "km", km: nearKm }
+        : { mode: "team", km: null };
 
   const { data: regions } = await supabase
     .from("regions")
@@ -59,9 +72,7 @@ export default async function CalendarPage({
         : organiser.team.region_id
       : regionParam || null;
   const teamsInView = isOrganiser
-    ? organiser.access === "god" && showOthers
-      ? organiser.teams.filter((t) => t.region_id === regionId) // God Mode previewing
-      : [organiser.team]
+    ? [organiser.team]
     : organiser.teams.filter((t) => !regionId || t.region_id === regionId);
 
   const teams: CalTeam[] = teamsInView.map((t, i) => ({
@@ -112,15 +123,34 @@ export default async function CalendarPage({
     here: (e.attendance as unknown as { count: number }[])[0]?.count ?? 0,
   }));
 
-  // Organisers who switched on "See other teams' events": read-only events
-  // from the rest of their region, linking out to activism.wtf.
-  if (isOrganiser && showOthers && organiser.access === "organiser") {
-    const { data: region } = await supabase.rpc("region_calendar", {
+  // Organisers: other teams' events (read-only, linking out to activism.wtf),
+  // as far out as the distance slider says.
+  let nearby: {
+    id: string;
+    name: string;
+    km: number | null;
+    in_region: boolean;
+    lat: number | null;
+    lng: number | null;
+  }[] = [];
+  if (isOrganiser) {
+    const { data: rpc } = await supabase.rpc("nearby_calendar", {
+      p_team_id: organiser.team_id,
       p_from: startPad,
       p_to: endPad,
+      p_mode: near.mode === "team" ? "km" : near.mode,
+      p_km: near.mode === "team" ? 0 : near.km,
     });
-    const r = region as {
-      teams: { id: string; name: string; timezone: string }[];
+    const r = rpc as {
+      teams: {
+        id: string;
+        name: string;
+        timezone: string;
+        in_region: boolean;
+        km: number | null;
+        lat: number | null;
+        lng: number | null;
+      }[];
       events: {
         id: string;
         team_id: string;
@@ -132,8 +162,17 @@ export default async function CalendarPage({
         url: string | null;
       }[];
     } | null;
+    nearby = (r?.teams ?? []).map((t) => ({
+      id: t.id,
+      name: t.name.replace(/, (Australia|New Zealand)$/, ""),
+      km: t.km,
+      in_region: t.in_region,
+      lat: t.lat,
+      lng: t.lng,
+    }));
+    const shown = new Set((r?.events ?? []).map((e) => e.team_id));
     for (const t of r?.teams ?? []) {
-      if (teams.some((x) => x.id === t.id)) continue;
+      if (t.id === organiser.team_id || !shown.has(t.id)) continue;
       teams.push({
         id: t.id,
         name: t.name.replace(/, (Australia|New Zealand)$/, ""),
@@ -171,11 +210,15 @@ export default async function CalendarPage({
       regionId={regionId ?? ""}
       regionName={regionName}
       today={todayInTz("Australia/Sydney")}
-      othersToggle={
+      nearby={
         isOrganiser
           ? {
-              on: showOthers,
-              href: `/calendar?m=${month}${showOthers ? "" : "&others=1"}`,
+              teams: nearby,
+              mode: near.mode,
+              km: near.km,
+              regionName:
+                regions?.find((r) => r.id === organiser.team.region_id)?.name ??
+                "Your region",
             }
           : null
       }
