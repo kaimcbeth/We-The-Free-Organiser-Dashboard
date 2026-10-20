@@ -101,6 +101,17 @@ export function CalendarView({
   const query = (m: string) =>
     `/calendar?m=${m}${regionId ? `&region=${regionId}` : ""}`;
 
+  // Tap a team: show only that team (tap it again to show everyone).
+  function solo(id: string) {
+    const onlyThis = hidden.size === teams.length - 1 && !hidden.has(id);
+    setHidden(
+      onlyThis
+        ? new Set()
+        : new Set(teams.filter((t) => t.id !== id).map((t) => t.id)),
+    );
+  }
+
+  // The small × / + on a team: hide or show just that one.
   function toggle(id: string) {
     setHidden((h) => {
       const n = new Set(h);
@@ -171,27 +182,47 @@ export function CalendarView({
         </div>
       </div>
 
-      {/* Team key: tap to hide or show a team */}
+      {/* Team key: tap a team to see only it; the small × hides just that team */}
       <div className="mt-4 flex flex-wrap gap-2">
         {teams.map((t) => {
           const off = hidden.has(t.id);
+          const only = !off && hidden.size === teams.length - 1;
           return (
-            <button
+            <span
               key={t.id}
-              onClick={() => toggle(t.id)}
-              aria-pressed={!off}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ring-1 transition ${
-                off
-                  ? "bg-white text-stone-400 ring-stone-200 line-through"
-                  : "bg-white text-navy ring-stone-300"
+              className={`flex items-center rounded-full ring-1 transition ${
+                only
+                  ? "bg-navy text-white ring-navy"
+                  : off
+                    ? "bg-white text-stone-400 ring-stone-200"
+                    : "bg-white text-navy ring-stone-300"
               }`}
             >
-              <span
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ background: off ? "#cfd3df" : t.colour }}
-              />
-              {t.name}
-            </button>
+              <button
+                onClick={() => solo(t.id)}
+                aria-pressed={only}
+                title={only ? "Show all teams" : `Show only ${t.name}`}
+                className="flex items-center gap-1.5 py-1 pl-3 pr-1 text-sm font-medium"
+              >
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ background: off ? "#cfd3df" : t.colour }}
+                />
+                <span className={off ? "line-through" : ""}>{t.name}</span>
+              </button>
+              <button
+                onClick={() => toggle(t.id)}
+                aria-label={off ? `Show ${t.name}` : `Hide ${t.name}`}
+                title={off ? `Show ${t.name}` : `Hide ${t.name}`}
+                className={`mr-1 flex h-5 w-5 items-center justify-center rounded-full text-xs leading-none ${
+                  only
+                    ? "text-white/50 hover:bg-white/15 hover:text-white"
+                    : "text-stone-300 hover:bg-stone-100 hover:text-stone-600"
+                }`}
+              >
+                {off ? "+" : "×"}
+              </button>
+            </span>
           );
         })}
         {hidden.size > 0 && (
