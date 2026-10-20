@@ -13,6 +13,8 @@ import { signPhotos } from "@/lib/photos";
 import { NotificationBell } from "@/components/notification-bell";
 import { WhatsAppJoin } from "@/components/whatsapp";
 import { PreviewBanner } from "@/components/preview-banner";
+import { TaskCard } from "@/components/task-card";
+import { loadMyTasks } from "@/lib/tasks";
 import { BuddySection, type BuddyDashboard } from "./buddy-section";
 
 type Me = {
@@ -150,7 +152,12 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     .filter((e): e is NonNullable<Attended["event"]> => !!e)
     .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
   const photos = await signPhotos(supabase, [me]);
-  const { data: buddy } = await supabase.rpc("my_buddy_dashboard");
+  const [{ data: buddy }, myTasks] = await Promise.all([
+    supabase.rpc("my_buddy_dashboard"),
+    loadMyTasks(supabase, me.id),
+  ]);
+  // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
+  const now = Date.now();
   const outreach =
     events.filter((e) => e.event_type?.counts_as_outreach).length +
     me.starting_outreach_count;
@@ -194,6 +201,25 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
           <p className="text-sm text-white/75">outreach</p>
         </div>
       </div>
+
+      {myTasks.length > 0 && (
+        <section id="tasks" className="mt-8 scroll-mt-4">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+            Your tasks
+          </h2>
+          <ul className="space-y-3">
+            {myTasks.map((t) => (
+              <TaskCard
+                key={t.id}
+                task={t}
+                tz={me.team?.timezone ?? DEFAULT_TZ}
+                now={now}
+                whatsappUrl={me.team?.whatsapp_url ?? null}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
 
       {buddy?.status === "ok" && (
         <BuddySection

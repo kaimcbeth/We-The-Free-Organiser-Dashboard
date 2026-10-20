@@ -16,6 +16,11 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     .eq("user_id", user.id)
     .maybeSingle();
   const photos = me ? await signPhotos(supabase, [me]) : {};
+  const { count: openTasks } = await supabase
+    .from("tasks")
+    .select("id", { count: "exact", head: true })
+    .eq("team_id", organiser.team_id)
+    .is("done_at", null);
   const name = me
     ? [me.first_name, me.last_name].filter(Boolean).join(" ")
     : organiser.name;
@@ -59,6 +64,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         <NavLinks
           canManageRoles={organiser.role !== "core_team"}
           showCalendar={organiser.role !== "core_team"}
+          openTasks={openTasks ?? 0}
         />
       </header>
       <StaffBar

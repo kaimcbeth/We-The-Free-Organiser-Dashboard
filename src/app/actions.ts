@@ -478,3 +478,34 @@ export async function grantRole(
   revalidatePath("/roles");
   return {};
 }
+
+// Tasks: assign to someone on the team (null = anyone), and tick off.
+export async function assignTask(
+  taskId: string,
+  personId: string | null,
+): Promise<{ error?: string }> {
+  const { supabase } = await requireOrganiser();
+  const { data, error } = await supabase.rpc("assign_task", {
+    p_task_id: taskId,
+    p_person_id: personId,
+  });
+  if (error || data !== "ok")
+    return { error: "Couldn't assign that. Please try again." };
+  revalidatePath("/tasks");
+  return {};
+}
+
+export async function setTaskDone(
+  taskId: string,
+  done: boolean,
+): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("complete_my_task", {
+    p_task_id: taskId,
+    p_done: done,
+  });
+  if (error || !data) return { error: "Couldn't save. Please try again." };
+  revalidatePath("/tasks");
+  revalidatePath("/me");
+  return {};
+}

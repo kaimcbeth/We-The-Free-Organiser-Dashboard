@@ -149,6 +149,8 @@ export function DistanceSlider({
             : next === 100
               ? "all"
               : String(roundKm(kmAt(next, regionKm, maxKm)));
+      // Remember it for next time.
+      document.cookie = `calendar_near=${near}; path=/; max-age=31536000; samesite=lax`;
       router.replace(`/calendar?m=${month}&near=${near}`, { scroll: false });
     }, 350);
   }

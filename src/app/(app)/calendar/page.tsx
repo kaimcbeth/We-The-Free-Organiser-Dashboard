@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
 import { LoadError } from "@/components/load-error";
@@ -45,12 +46,14 @@ export default async function CalendarPage({
       : todayInTz().slice(0, 7);
   const regionParam = typeof sp.region === "string" ? sp.region : "";
   // Organisers: how far out to show other teams' events (the distance slider).
+  // Where the slider was left last time, unless the link says otherwise.
+  const savedNear = (await cookies()).get("calendar_near")?.value;
   const nearRaw =
     typeof sp.near === "string"
       ? sp.near
       : sp.others === "1"
         ? "region"
-        : "team";
+        : (savedNear ?? "team");
   const nearKm = Number(nearRaw);
   const near: { mode: "team" | "region" | "all" | "km"; km: number | null } =
     nearRaw === "region" || nearRaw === "all"
