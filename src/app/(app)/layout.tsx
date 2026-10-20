@@ -58,9 +58,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         </div>
         <NavLinks
           canManageRoles={organiser.role !== "core_team"}
-          showCalendar={
-            organiser.role === "god" || organiser.role === "regional_lead"
-          }
+          showCalendar={organiser.role !== "core_team"}
         />
       </header>
       <StaffBar

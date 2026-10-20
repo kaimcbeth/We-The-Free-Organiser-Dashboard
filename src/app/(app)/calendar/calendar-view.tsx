@@ -15,6 +15,7 @@ export type CalEvent = {
   venue: string | null;
   type: string | null;
   here: number;
+  externalUrl?: string; // another team's event (organiser view): open on activism.wtf
 };
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -65,6 +66,7 @@ export function CalendarView({
   regionId,
   regionName,
   today,
+  othersToggle = null,
 }: {
   month: string;
   prev: string;
@@ -75,6 +77,7 @@ export function CalendarView({
   regionId: string;
   regionName: string;
   today: string;
+  othersToggle?: { on: boolean; href: string } | null; // organisers: show other teams in the region
 }) {
   const router = useRouter();
   const [hidden, setHidden] = useState<Set<string>>(new Set());
@@ -99,7 +102,7 @@ export function CalendarView({
     .sort(([a], [b]) => a.localeCompare(b));
   const total = inMonth.reduce((n, [, list]) => n + list.length, 0);
   const query = (m: string) =>
-    `/calendar?m=${m}${regionId ? `&region=${regionId}` : ""}`;
+    `/calendar?m=${m}${regionId && regions.length ? `&region=${regionId}` : ""}${othersToggle?.on ? "&others=1" : ""}`;
 
   // Tap a team: show only that team (tap it again to show everyone).
   function solo(id: string) {
@@ -121,14 +124,20 @@ export function CalendarView({
     });
   }
 
+  // Your own team's events open the attendance page; other teams' events
+  // (organiser view) open on activism.wtf.
   const eventHref = (e: CalEvent) =>
-    `/calendar/go?event=${e.id}&team=${e.teamId}`;
+    e.externalUrl !== undefined
+      ? e.externalUrl || "https://activism.wtf/events"
+      : `/calendar/go?event=${e.id}&team=${e.teamId}`;
 
   return (
     <div className="relative left-1/2 w-screen max-w-6xl -translate-x-1/2 px-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-pink-ink">{regionName}</p>
+          <p className="text-sm font-medium text-pink-ink">
+            {othersToggle && !othersToggle.on ? "Your team" : regionName}
+          </p>
           <h1 className="text-2xl font-semibold tracking-tight">
             {monthLabel(month)}
           </h1>
@@ -137,7 +146,24 @@ export function CalendarView({
             {teams.length - hidden.size} of {teams.length} teams
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {othersToggle && (
+            <Link
+              href={othersToggle.href}
+              role="switch"
+              aria-checked={othersToggle.on}
+              className="flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-medium ring-1 ring-stone-300 hover:bg-stone-50"
+            >
+              <span
+                className={`relative h-5 w-8 rounded-full transition-colors ${othersToggle.on ? "bg-cyan" : "bg-stone-300"}`}
+              >
+                <span
+                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${othersToggle.on ? "left-3.5" : "left-0.5"}`}
+                />
+              </span>
+              See other teams&apos; events
+            </Link>
+          )}
           {regions.length > 0 && (
             <select
               value={regionId}
@@ -347,6 +373,9 @@ export function CalendarView({
                       <li key={e.id}>
                         <a
                           href={eventHref(e)}
+                          {...(e.externalUrl !== undefined
+                            ? { target: "_blank", rel: "noopener noreferrer" }
+                            : {})}
                           className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50"
                         >
                           <span

@@ -30,7 +30,12 @@ export default async function CalendarPage({
   searchParams,
 }: PageProps<"/calendar">) {
   const { supabase, organiser } = await requireOrganiser();
-  if (organiser.role !== "god" && organiser.role !== "regional_lead")
+  const isOrganiser = organiser.role === "organiser";
+  if (
+    !isOrganiser &&
+    organiser.role !== "god" &&
+    organiser.role !== "regional_lead"
+  )
     redirect("/");
 
   const sp = await searchParams;
@@ -39,21 +44,25 @@ export default async function CalendarPage({
       ? sp.m
       : todayInTz().slice(0, 7);
   const regionParam = typeof sp.region === "string" ? sp.region : "";
+  const showOthers = sp.others === "1";
 
   const { data: regions } = await supabase
     .from("regions")
     .select("id, name")
     .order("sort_order");
   // God Mode can pick a region; a Regional Support Lead sees theirs.
+  // Organisers: their own team (other teams in the region are added below).
   const regionId =
-    organiser.role === "regional_lead"
+    organiser.role === "regional_lead" || isOrganiser
       ? organiser.access === "regional_lead"
         ? organiser.region_id
         : organiser.team.region_id
       : regionParam || null;
-  const teamsInView = organiser.teams.filter(
-    (t) => !regionId || t.region_id === regionId,
-  );
+  const teamsInView = isOrganiser
+    ? organiser.access === "god" && showOthers
+      ? organiser.teams.filter((t) => t.region_id === regionId) // God Mode previewing
+      : [organiser.team]
+    : organiser.teams.filter((t) => !regionId || t.region_id === regionId);
 
   const teams: CalTeam[] = teamsInView.map((t, i) => ({
     id: t.id,
@@ -103,6 +112,51 @@ export default async function CalendarPage({
     here: (e.attendance as unknown as { count: number }[])[0]?.count ?? 0,
   }));
 
+  // Organisers who switched on "See other teams' events": read-only events
+  // from the rest of their region, linking out to activism.wtf.
+  if (isOrganiser && showOthers && organiser.access === "organiser") {
+    const { data: region } = await supabase.rpc("region_calendar", {
+      p_from: startPad,
+      p_to: endPad,
+    });
+    const r = region as {
+      teams: { id: string; name: string; timezone: string }[];
+      events: {
+        id: string;
+        team_id: string;
+        title: string;
+        starts_at: string;
+        ends_at: string | null;
+        venue: string | null;
+        type: string | null;
+        url: string | null;
+      }[];
+    } | null;
+    for (const t of r?.teams ?? []) {
+      if (teams.some((x) => x.id === t.id)) continue;
+      teams.push({
+        id: t.id,
+        name: t.name.replace(/, (Australia|New Zealand)$/, ""),
+        colour: COLOURS[teams.length % COLOURS.length],
+        tz: t.timezone,
+      });
+    }
+    for (const e of r?.events ?? []) {
+      if (e.team_id === organiser.team_id) continue;
+      events.push({
+        id: e.id,
+        teamId: e.team_id,
+        title: e.title,
+        startsAt: e.starts_at,
+        endsAt: e.ends_at,
+        venue: e.venue,
+        type: e.type,
+        here: 0,
+        externalUrl: e.url ?? "",
+      });
+    }
+  }
+
   const regionName =
     regions?.find((r) => r.id === regionId)?.name ?? "All regions";
 
@@ -117,6 +171,14 @@ export default async function CalendarPage({
       regionId={regionId ?? ""}
       regionName={regionName}
       today={todayInTz("Australia/Sydney")}
+      othersToggle={
+        isOrganiser
+          ? {
+              on: showOthers,
+              href: `/calendar?m=${month}${showOthers ? "" : "&others=1"}`,
+            }
+          : null
+      }
     />
   );
 }
