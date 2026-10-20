@@ -260,7 +260,7 @@ export function CalendarView({
                         }}
                         title={`${team?.name}: ${e.title}`}
                       >
-                        {formatTime(e.startsAt, team?.tz)} {team?.name}
+                        {e.type ?? e.title}
                       </span>
                     );
                   })}
