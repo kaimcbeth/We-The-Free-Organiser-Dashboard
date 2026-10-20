@@ -31,7 +31,12 @@ export default async function JoinPage({ params }: PageProps<"/join/[team]">) {
           <p className="mt-2 text-stone-600">
             A few details so organisers know who you are.
           </p>
-          <JoinForm team={team} email={user.email ?? ""} />
+          <JoinForm
+            team={team}
+            email={user.email ?? ""}
+            firstName={String(user.user_metadata?.given_name ?? "")}
+            lastName={String(user.user_metadata?.family_name ?? "")}
+          />
         </>
       ) : (
         <>

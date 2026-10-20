@@ -5,14 +5,24 @@ import { joinTeam, type JoinState } from "@/app/attendee-actions";
 import { Field, inputClass } from "@/components/form";
 import { ConsentCheckbox } from "@/components/consent-checkbox";
 
-export function JoinForm({ team, email }: { team: string; email: string }) {
+export function JoinForm({
+  team,
+  email,
+  firstName = "",
+  lastName = "",
+}: {
+  team: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+}) {
   const [state, action, pending] = useActionState<JoinState, FormData>(
     joinTeam,
     {},
   );
   const [values, setValues] = useState({
-    first_name: "",
-    last_name: "",
+    first_name: firstName,
+    last_name: lastName,
     suburb: "",
     phone: "",
   });
