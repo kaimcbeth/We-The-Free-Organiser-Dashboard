@@ -56,7 +56,12 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             </Link>
           </div>
         </div>
-        <NavLinks canManageRoles={organiser.role !== "core_team"} />
+        <NavLinks
+          canManageRoles={organiser.role !== "core_team"}
+          showCalendar={
+            organiser.role === "god" || organiser.role === "regional_lead"
+          }
+        />
       </header>
       <StaffBar
         teams={organiser.teams.map((t) => ({ id: t.id, name: t.name }))}

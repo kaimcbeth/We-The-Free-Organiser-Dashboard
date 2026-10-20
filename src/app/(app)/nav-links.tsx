@@ -21,18 +21,35 @@ const LINKS = [
   },
 ];
 
-export function NavLinks({ canManageRoles }: { canManageRoles: boolean }) {
+export function NavLinks({
+  canManageRoles,
+  showCalendar,
+}: {
+  canManageRoles: boolean;
+  showCalendar: boolean;
+}) {
   const path = usePathname();
+  const base = showCalendar
+    ? [
+        LINKS[0],
+        {
+          href: "/calendar",
+          label: "Calendar",
+          match: (p: string) => p.startsWith("/calendar"),
+        },
+        ...LINKS.slice(1),
+      ]
+    : LINKS;
   const links = canManageRoles
     ? [
-        ...LINKS,
+        ...base,
         {
           href: "/roles",
           label: "Roles",
           match: (p: string) => p.startsWith("/roles"),
         },
       ]
-    : LINKS;
+    : base;
   return (
     <nav className="mx-auto flex max-w-2xl gap-1 px-4 pt-2">
       {links.map((l) => {
