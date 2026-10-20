@@ -509,3 +509,16 @@ export async function setTaskDone(
   revalidatePath("/me");
   return {};
 }
+
+// Remove a task (the × on a task card). Organisers only.
+export async function dismissTask(taskId: string): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  const { error } = await supabase
+    .from("tasks")
+    .update({ dismissed_at: new Date().toISOString() })
+    .eq("id", taskId)
+    .eq("team_id", organiser.team_id);
+  if (error) return { error: "Couldn't remove that task. Please try again." };
+  revalidatePath("/tasks", "layout");
+  return {};
+}

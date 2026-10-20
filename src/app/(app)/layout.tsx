@@ -20,7 +20,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     .from("tasks")
     .select("id", { count: "exact", head: true })
     .eq("team_id", organiser.team_id)
-    .is("done_at", null);
+    .is("done_at", null)
+    .is("dismissed_at", null);
   const name = me
     ? [me.first_name, me.last_name].filter(Boolean).join(" ")
     : organiser.name;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { assignTask, setTaskDone } from "@/app/actions";
+import { assignTask, dismissTask, setTaskDone } from "@/app/actions";
 import { formatEventDate } from "@/lib/time";
 
 export type TaskRow = {
@@ -48,13 +48,45 @@ export function TaskCard({
   const [assignee, setAssignee] = useState(task.assignedTo ?? "");
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
+  const [removed, setRemoved] = useState(false);
   const due = dueLabel(task.dueAt, now);
+  if (removed) return null;
 
   return (
     <li
-      className={`rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 transition ${done ? "opacity-60" : ""}`}
+      className={`relative rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 transition ${done ? "opacity-60" : ""}`}
     >
-      <div className="flex items-start gap-3">
+      {people && (
+        <button
+          type="button"
+          aria-label="Remove task"
+          title="Remove task"
+          disabled={pending}
+          onClick={() =>
+            start(async () => {
+              setRemoved(true);
+              const r = await dismissTask(task.id);
+              if (r.error) {
+                setRemoved(false);
+                setError(r.error);
+              }
+            })
+          }
+          className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full text-stone-300 hover:bg-stone-100 hover:text-stone-600"
+        >
+          <svg
+            viewBox="0 0 20 20"
+            className="h-3.5 w-3.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            aria-hidden
+          >
+            <path d="M6 6l8 8M14 6l-8 8" strokeLinecap="round" />
+          </svg>
+        </button>
+      )}
+      <div className="flex items-start gap-3 pr-6">
         <button
           type="button"
           role="checkbox"

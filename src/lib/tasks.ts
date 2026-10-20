@@ -50,6 +50,7 @@ export async function loadTeamTasks(supabase: SupabaseClient, teamId: string) {
       .from("tasks")
       .select(SELECT)
       .eq("team_id", teamId)
+      .is("dismissed_at", null)
       .gte("done_at", since)
       .order("done_at", { ascending: false })
       .returns<Raw[]>(),
@@ -68,6 +69,7 @@ export async function loadMyTasks(supabase: SupabaseClient, personId: string) {
     .select(SELECT)
     .eq("assigned_to", personId)
     .is("done_at", null)
+    .is("dismissed_at", null)
     .order("due_at")
     .returns<Raw[]>();
   return (data ?? []).map(toRow);
