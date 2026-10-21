@@ -1,6 +1,6 @@
-// Turns due buddy prompts into notifications. Runs every hour (pg_cron).
+// Turns due New member support prompts into notifications. Runs every hour (pg_cron).
 // Always adds an in-app notification (the bell); also sends an email or a
-// phone notification if the buddy chose one.
+// phone notification if the supporter chose one.
 //
 // Email needs these Edge Function secrets (Google Workspace via an app password):
 //   SMTP_USER, SMTP_PASS, and optionally SMTP_FROM ("We The Free <x@activism.wtf>")
@@ -114,10 +114,10 @@ Deno.serve(async () => {
     const newcomer = pairing?.newcomer?.first_name ?? "your newcomer";
     const result: Record<string, unknown> = { prompt: p.id };
 
-    // Pairing ended or buddy has no login: nothing to send, just close it off.
+    // Pairing ended or supporter has no login: nothing to send, just close it off.
     if (!pairing || pairing.ended_at || !buddy?.user_id) {
       await supabase.from("buddy_prompts").update({ notified_at: new Date().toISOString() }).eq("id", p.id);
-      results.push({ ...result, skipped: "no active buddy login" });
+      results.push({ ...result, skipped: "no active supporter login" });
       continue;
     }
 
