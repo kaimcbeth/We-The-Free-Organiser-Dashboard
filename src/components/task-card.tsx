@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { assignTask, dismissTask, setTaskDone } from "@/app/actions";
 import { formatEventDate } from "@/lib/time";
+import { Sheet } from "@/components/sheet";
+import { inputClass } from "@/components/form";
 
 export type TaskRow = {
   id: string;
@@ -54,6 +56,22 @@ export function TaskCard({
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
   const [removed, setRemoved] = useState(false);
+  const [delegating, setDelegating] = useState(false);
+  const [search, setSearch] = useState("");
+
+  function delegate(personId: string) {
+    setDelegating(false);
+    setSearch("");
+    const before = assignee;
+    setAssignee(personId);
+    start(async () => {
+      const r = await assignTask(task.id, personId || null);
+      if (r.error) {
+        setAssignee(before);
+        setError(r.error);
+      } else setError("");
+    });
+  }
   const due = dueLabel(task.dueAt, now);
   if (removed) return null;
 
@@ -170,38 +188,87 @@ export function TaskCard({
                   Open WhatsApp ↗
                 </a>
               )}
-              {people && (
-                <select
-                  value={assignee}
-                  disabled={pending}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setAssignee(v);
-                    start(async () => {
-                      const r = await assignTask(task.id, v || null);
-                      if (r.error) setError(r.error);
-                      else setError("");
-                    });
-                  }}
-                  aria-label="Assigned to"
-                  className="rounded-xl border border-stone-300 bg-white px-2.5 py-1.5 text-sm"
-                >
-                  <option value="">Any organiser</option>
-                  {people.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              )}
+              {people &&
+                (assignee ? (
+                  <span className="flex items-center gap-1.5 rounded-xl bg-navy/5 py-1.5 pl-3 pr-1.5 text-sm">
+                    Delegated to{" "}
+                    <span className="font-semibold text-navy">
+                      {people.find((p) => p.id === assignee)?.name ?? "someone"}
+                    </span>
+                    <button
+                      onClick={() => setDelegating(true)}
+                      className="rounded-lg px-1.5 py-0.5 text-xs font-medium text-pink-ink hover:bg-white"
+                    >
+                      Change
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => setDelegating(true)}
+                    className="rounded-xl px-3 py-1.5 text-sm font-semibold text-navy ring-1 ring-stone-300 hover:bg-stone-50"
+                  >
+                    Delegate…
+                  </button>
+                ))}
               {!people && task.assigneeName && (
-                <span className="text-sm text-stone-500">Assigned to you</span>
+                <span className="text-sm text-stone-500">Delegated to you</span>
               )}
             </div>
           )}
           {error && <p className="mt-1 text-sm text-red-700">{error}</p>}
         </div>
       </div>
+      {delegating && people && (
+        <Sheet title="Delegate this task" onClose={() => setDelegating(false)}>
+          <p className="mb-3 text-sm text-stone-600">
+            <span className="font-medium text-stone-900">{task.title}</span>
+            {task.eventTitle ? ` for ${task.eventTitle}` : ""}. They&apos;ll get
+            a notification and see it on their page.
+          </p>
+          <input
+            type="search"
+            autoFocus
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search members"
+            aria-label="Search members"
+            className={inputClass}
+          />
+          <ul className="mt-3 max-h-72 divide-y divide-black/5 overflow-y-auto rounded-2xl bg-white ring-1 ring-black/5">
+            {people
+              .filter((p) =>
+                p.name.toLowerCase().includes(search.trim().toLowerCase()),
+              )
+              .map((p) => (
+                <li key={p.id}>
+                  <button
+                    onClick={() => delegate(p.id)}
+                    className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-stone-50"
+                  >
+                    <span className="font-medium">{p.name}</span>
+                    {p.id === assignee && (
+                      <span className="text-xs text-stone-500">Current</span>
+                    )}
+                  </button>
+                </li>
+              ))}
+          </ul>
+          {people.length === 0 && (
+            <p className="mt-3 text-sm text-stone-500">
+              No members yet. People can be delegated tasks once they&apos;ve
+              made an account.
+            </p>
+          )}
+          {assignee && (
+            <button
+              onClick={() => delegate("")}
+              className="mt-3 w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-stone-600 ring-1 ring-stone-300 hover:bg-stone-50"
+            >
+              Take it back (any organiser)
+            </button>
+          )}
+        </Sheet>
+      )}
     </li>
   );
 }
