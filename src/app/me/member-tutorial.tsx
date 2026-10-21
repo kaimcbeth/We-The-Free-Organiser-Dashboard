@@ -72,7 +72,7 @@ export function MemberTutorial({
             icon: "💬",
             tone: "bg-[#25D366]",
             title: "Join the community",
-            body: "Most of the chat happens in our WhatsApp community: event updates, carpools and getting to know everyone.",
+            body: "Most of the chat happens in our WhatsApp community: event updates, discussions about animal rights and activism, and getting to know everyone.",
             extra: (
               <a
                 href={whatsappUrl}
