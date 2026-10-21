@@ -7,20 +7,25 @@ type Raw = {
   done_at: string | null;
   assigned_to: string | null;
   kind: {
+    kind: string;
+    sort_order: number;
     title: string;
     description: string | null;
     estimate_minutes: number;
   } | null;
-  event: { title: string; starts_at: string } | null;
+  event: { id: string; title: string; starts_at: string } | null;
   assignee: { first_name: string; last_name: string | null } | null;
 };
 
 const SELECT =
-  "id, due_at, done_at, assigned_to, kind:task_kinds(title, description, estimate_minutes), event:events(title, starts_at), assignee:people!tasks_assigned_to_fkey(first_name, last_name)";
+  "id, due_at, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes), event:events(id, title, starts_at), assignee:people!tasks_assigned_to_fkey(first_name, last_name)";
 
 function toRow(t: Raw): TaskRow {
   return {
     id: t.id,
+    kind: t.kind?.kind ?? "",
+    sortOrder: t.kind?.sort_order ?? 0,
+    eventId: t.event?.id ?? null,
     title: t.kind?.title ?? "Task",
     description: t.kind?.description ?? null,
     estimateMinutes: t.kind?.estimate_minutes ?? 5,

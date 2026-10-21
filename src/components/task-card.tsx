@@ -6,6 +6,9 @@ import { formatEventDate } from "@/lib/time";
 
 export type TaskRow = {
   id: string;
+  kind: string;
+  sortOrder: number;
+  eventId: string | null;
   title: string;
   description: string | null;
   estimateMinutes: number;
@@ -37,12 +40,14 @@ export function TaskCard({
   now,
   people,
   whatsappUrl,
+  hideEvent = false,
 }: {
   task: TaskRow;
   tz: string;
   now: number;
   people?: { id: string; name: string }[]; // organisers: who it can be assigned to
   whatsappUrl: string | null;
+  hideEvent?: boolean; // when shown under the event's own heading
 }) {
   const [done, setDone] = useState(!!task.doneAt);
   const [assignee, setAssignee] = useState(task.assignedTo ?? "");
@@ -143,7 +148,7 @@ export function TaskCard({
               </span>
             )}
           </div>
-          {task.eventTitle && (
+          {task.eventTitle && !hideEvent && (
             <p className="text-sm text-stone-500">
               {task.eventTitle}
               {task.eventAt ? `, ${formatEventDate(task.eventAt, tz)}` : ""}
@@ -155,7 +160,7 @@ export function TaskCard({
 
           {!done && (
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              {whatsappUrl && (
+              {whatsappUrl && task.kind === "post_photos" && (
                 <a
                   href={whatsappUrl}
                   target="_blank"

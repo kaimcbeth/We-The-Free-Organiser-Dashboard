@@ -2,6 +2,7 @@ import { requireOrganiser } from "@/lib/organiser";
 import { LoadError } from "@/components/load-error";
 import { TaskCard } from "@/components/task-card";
 import { loadTeamTasks } from "@/lib/tasks";
+import { formatEventDate } from "@/lib/time";
 
 export default async function TasksPage() {
   const { supabase, organiser } = await requireOrganiser();
@@ -23,6 +24,30 @@ export default async function TasksPage() {
     name: [p.first_name, p.last_name].filter(Boolean).join(" "),
   }));
   const minutes = tasks.open.reduce((n, t) => n + t.estimateMinutes, 0);
+
+  // Open tasks grouped by event: the event due soonest first, then the
+  // tasks in their usual order (WhatsApp, Facebook, Instagram…).
+  const byEvent = new Map<
+    string,
+    { key: string; title: string; at: string | null; tasks: typeof tasks.open }
+  >();
+  for (const t of tasks.open) {
+    const key = t.eventId ?? "other";
+    const g = byEvent.get(key) ?? {
+      key,
+      title: t.eventTitle ?? "Other tasks",
+      at: t.eventAt,
+      tasks: [],
+    };
+    g.tasks.push(t);
+    byEvent.set(key, g);
+  }
+  const groups = [...byEvent.values()]
+    .map((g) => ({
+      ...g,
+      tasks: g.tasks.sort((a, b) => a.sortOrder - b.sortOrder),
+    }))
+    .sort((a, b) => (a.at ?? "").localeCompare(b.at ?? ""));
   const common = {
     tz: organiser.team.timezone,
     now,
@@ -41,18 +66,30 @@ export default async function TasksPage() {
         </p>
       </div>
 
-      {tasks.open.length > 0 && (
-        <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
-            To do
-          </h2>
+      {groups.map((g) => (
+        <section key={g.key}>
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <h2 className="min-w-0 truncate font-semibold">
+              {g.title}
+              {g.at && (
+                <span className="font-normal text-stone-500">
+                  {" "}
+                  · {formatEventDate(g.at)}
+                </span>
+              )}
+            </h2>
+            <span className="shrink-0 text-xs text-stone-500">
+              {g.tasks.length} to do · ~
+              {g.tasks.reduce((n, t) => n + t.estimateMinutes, 0)} min
+            </span>
+          </div>
           <ul className="space-y-3">
-            {tasks.open.map((t) => (
-              <TaskCard key={t.id} task={t} {...common} />
+            {g.tasks.map((t) => (
+              <TaskCard key={t.id} task={t} {...common} hideEvent />
             ))}
           </ul>
         </section>
-      )}
+      ))}
 
       {tasks.done.length > 0 && (
         <section>
