@@ -230,9 +230,9 @@ export function TaskCard({
                 ) : (
                   <button
                     onClick={() => setDelegating(true)}
-                    className="rounded-xl px-3 py-1.5 text-sm font-semibold text-navy ring-1 ring-stone-300 hover:bg-stone-50"
+                    className="rounded-lg px-1.5 py-1 text-sm font-medium text-stone-500 hover:bg-stone-100 hover:text-navy"
                   >
-                    Delegate…
+                    Delegate
                   </button>
                 ))}
               {!people && task.assigneeName && (
