@@ -20,9 +20,9 @@ export default async function TestAccountsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Test Person</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Test account</h1>
         <p className="mt-1 text-sm text-stone-500">
-          Every community has a hidden Test Person. Only God Mode can see them.
+          Every community has a hidden test account, Fergus. Only God Mode can see them.
           To everyone else they don&apos;t exist. Delegate to them, tick them
           in, make them a buddy, then sign in as them to see exactly what they
           see.
