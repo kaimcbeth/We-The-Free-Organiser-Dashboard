@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useTransition } from "react";
 import { setActiveTeam, setViewAs } from "@/app/actions";
 import type { ViewRole } from "@/lib/roles";
@@ -76,6 +77,14 @@ export function StaffBar({
               ))}
             </select>
           </label>
+        )}
+        {isGod && !viewingAs && (
+          <Link
+            href="/test-accounts"
+            className="ml-auto rounded-md px-1.5 py-0.5 font-medium opacity-75 hover:bg-white/10 hover:opacity-100"
+          >
+            Test accounts
+          </Link>
         )}
         {viewingAs && (
           <button
