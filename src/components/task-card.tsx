@@ -19,6 +19,7 @@ export type TaskRow = {
   title: string;
   description: string | null;
   estimateMinutes: number;
+  estimateLabel: string; // e.g. "5" or "5–10"
   dueAt: string;
   doneAt: string | null;
   eventTitle: string | null;
@@ -179,7 +180,7 @@ export function TaskCard({
               {task.title}
             </p>
             <span className="rounded-full bg-navy/5 px-2 py-0.5 text-xs font-semibold text-navy">
-              ~{task.estimateMinutes} min
+              ~{task.estimateLabel} min
             </span>
             {!done && (
               <span

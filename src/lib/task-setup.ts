@@ -3,7 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export type SetupKind = {
   kind: string;
   title: string;
-  estimate: number;
+  estimate: number; // minutes per event (middle of a range)
+  label: string; // e.g. "5" or "5–10"
   when: "before" | "after";
   custom: boolean; // made by this community's organisers
 };
@@ -25,7 +26,9 @@ export async function loadTaskSetup(
   const [kinds, settings, events] = await Promise.all([
     supabase
       .from("task_kinds")
-      .select("kind, title, estimate_minutes, anchor, team_id")
+      .select(
+        "kind, title, estimate_minutes, estimate_max_minutes, anchor, team_id",
+      )
       .is("archived_at", null)
       .or(`team_id.is.null,team_id.eq.${teamId}`)
       .order("sort_order"),
@@ -44,7 +47,12 @@ export async function loadTaskSetup(
   const all: SetupKind[] = (kinds.data ?? []).map((k) => ({
     kind: k.kind,
     title: k.title,
-    estimate: k.estimate_minutes,
+    estimate: Math.ceil(
+      (k.estimate_minutes + (k.estimate_max_minutes ?? k.estimate_minutes)) / 2,
+    ),
+    label: k.estimate_max_minutes
+      ? `${k.estimate_minutes}–${k.estimate_max_minutes}`
+      : String(k.estimate_minutes),
     when: k.anchor === "start" ? "before" : "after",
     custom: !!k.team_id,
   }));

@@ -173,7 +173,7 @@ export function TaskChooser({
                                 {k.title}
                               </span>
                               <span className="block text-xs text-stone-500">
-                                ~{k.estimate} min per event · ~
+                                ~{k.label} min per event · ~
                                 {fmt(k.estimate * setup.eventsPerWeek)} a week
                               </span>
                             </span>
@@ -230,6 +230,7 @@ export function TaskChooser({
                           kind: r.kind!,
                           title: draft.title.trim(),
                           estimate: draft.minutes,
+                          label: String(draft.minutes),
                           when: draft.when,
                           custom: true,
                         },

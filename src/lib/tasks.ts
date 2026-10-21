@@ -12,13 +12,14 @@ type Raw = {
     title: string;
     description: string | null;
     estimate_minutes: number;
+    estimate_max_minutes: number | null;
   } | null;
   event: { id: string; title: string; starts_at: string } | null;
   assignee: { first_name: string; last_name: string | null } | null;
 };
 
 const SELECT =
-  "id, due_at, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes), event:events(id, title, starts_at), assignee:people!tasks_assigned_to_fkey(first_name, last_name)";
+  "id, due_at, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes), event:events(id, title, starts_at), assignee:people!tasks_assigned_to_fkey(first_name, last_name)";
 
 function toRow(t: Raw): TaskRow {
   return {
@@ -28,7 +29,15 @@ function toRow(t: Raw): TaskRow {
     eventId: t.event?.id ?? null,
     title: t.kind?.title ?? "Task",
     description: t.kind?.description ?? null,
-    estimateMinutes: t.kind?.estimate_minutes ?? 5,
+    // Ranges ("5–10 min") count as their middle for totals.
+    estimateMinutes: Math.ceil(
+      ((t.kind?.estimate_minutes ?? 5) +
+        (t.kind?.estimate_max_minutes ?? t.kind?.estimate_minutes ?? 5)) /
+        2,
+    ),
+    estimateLabel: t.kind?.estimate_max_minutes
+      ? `${t.kind.estimate_minutes}–${t.kind.estimate_max_minutes}`
+      : String(t.kind?.estimate_minutes ?? 5),
     dueAt: t.due_at,
     doneAt: t.done_at,
     eventTitle: t.event?.title ?? null,
