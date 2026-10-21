@@ -10,6 +10,10 @@ import {
 import { formatEventDate } from "@/lib/time";
 import { Sheet } from "@/components/sheet";
 import { inputClass } from "@/components/form";
+import {
+  FacebookEventButton,
+  type FbEventDetails,
+} from "@/components/facebook-event";
 
 export type TaskRow = {
   id: string;
@@ -26,6 +30,7 @@ export type TaskRow = {
   doneAt: string | null;
   eventTitle: string | null;
   eventAt: string | null;
+  fbEvent?: FbEventDetails | null; // "Facebook event created" tasks
   assignedTo: string | null;
   assigneeName: string | null;
 };
@@ -231,6 +236,9 @@ export function TaskCard({
                 >
                   Take attendance →
                 </a>
+              )}
+              {task.fbEvent && (
+                <FacebookEventButton event={task.fbEvent} tz={tz} />
               )}
               {whatsappUrl &&
                 (task.kind === "post_photos" ||

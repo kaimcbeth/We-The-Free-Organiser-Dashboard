@@ -18,6 +18,11 @@ type Raw = {
     id: string;
     title: string;
     starts_at: string;
+    ends_at: string | null;
+    venue: string | null;
+    address: string | null;
+    description: string | null;
+    source_url: string | null;
     event_type_id: string | null;
     event_type: { name: string } | null;
   } | null;
@@ -25,7 +30,7 @@ type Raw = {
 };
 
 const SELECT =
-  "id, due_at, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes), event:events(id, title, starts_at, event_type_id, event_type:event_types(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name)";
+  "id, due_at, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, event_type_id, event_type:event_types(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name)";
 
 function toRow(t: Raw): TaskRow {
   return {
@@ -50,6 +55,18 @@ function toRow(t: Raw): TaskRow {
     doneAt: t.done_at,
     eventTitle: t.event?.title ?? null,
     eventAt: t.event?.starts_at ?? null,
+    fbEvent:
+      t.kind?.kind === "facebook_event" && t.event
+        ? {
+            title: t.event.title,
+            startsAt: t.event.starts_at,
+            endsAt: t.event.ends_at,
+            venue: t.event.venue,
+            address: t.event.address,
+            description: t.event.description,
+            url: t.event.source_url,
+          }
+        : null,
     assignedTo: t.assigned_to,
     assigneeName: t.assignee
       ? [t.assignee.first_name, t.assignee.last_name].filter(Boolean).join(" ")

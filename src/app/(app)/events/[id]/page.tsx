@@ -8,6 +8,7 @@ import { signPhotos } from "@/lib/photos";
 import { LoadError } from "@/components/load-error";
 import { loadInsightData } from "@/lib/insights-data";
 import { outreachCounts } from "@/lib/insights";
+import { FacebookEventButton } from "@/components/facebook-event";
 
 type EventDetail = {
   id: string;
@@ -18,6 +19,7 @@ type EventDetail = {
   venue: string | null;
   address: string | null;
   source_url: string | null;
+  description: string | null;
   event_type_id: string | null;
 };
 
@@ -30,7 +32,7 @@ export default async function EventCheckInPage({
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, team_id, title, starts_at, ends_at, venue, address, source_url, event_type_id",
+      "id, team_id, title, starts_at, ends_at, venue, address, source_url, description, event_type_id",
     )
     .eq("id", id)
     .maybeSingle<EventDetail>();
@@ -120,6 +122,21 @@ export default async function EventCheckInPage({
             >
               View on activism.wtf ↗
             </a>
+          )}
+          {event.starts_at > nowIso() && (
+            <FacebookEventButton
+              tz={organiser.team.timezone}
+              className="text-xs font-medium text-[#1877F2] hover:underline"
+              event={{
+                title: event.title,
+                startsAt: event.starts_at,
+                endsAt: event.ends_at,
+                venue: event.venue,
+                address: event.address,
+                description: event.description,
+                url: event.source_url,
+              }}
+            />
           )}
         </div>
       </div>

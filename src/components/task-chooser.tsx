@@ -57,9 +57,11 @@ export function TaskChooser({
     // Suggest the most useful tasks first.
     const PRIORITY = [
       "take_attendance",
+      "take_photos",
       "promote_whatsapp",
       "post_photos",
       "promote_facebook_groups",
+      "facebook_event",
       "instagram_stories",
       "promote_instagram",
       "post_photos_instagram",
