@@ -22,8 +22,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   const tourSetup = organiser.showTour
     ? await loadTaskSetup(supabase, organiser.team_id)
     : null;
-  // Tasks badge: with "All communities", the Regional Support Lead's own
-  // check-ins; otherwise the community's tasks (check-ins only for RSL/God).
+  // Tasks badge: Regional Support Leads (and "All communities") count only
+  // their own tasks; everyone else the community's tasks.
   const regionalStaff =
     organiser.role === "god" || organiser.role === "regional_lead";
   let countQuery = supabase
@@ -40,7 +40,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     )
     .is("done_at", null)
     .is("dismissed_at", null);
-  if (organiser.allCommunities)
+  if (organiser.allCommunities || organiser.role === "regional_lead")
     countQuery = countQuery.eq("kind.audience", "regional");
   else if (!regionalStaff)
     countQuery = countQuery.eq("kind.audience", "community");

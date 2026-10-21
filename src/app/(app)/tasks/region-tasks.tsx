@@ -10,14 +10,17 @@ import { ConnectIdeas } from "@/components/connect-ideas";
 const short = (name: string) =>
   name.replace(/, (Australia|New Zealand|Canada)$/, "");
 
-// Tasks with "All communities": the Regional Support Lead's own check-ins for
-// every community, then how each community is going with its own tasks.
+// Regional Support Lead tasks (e.g. monthly check-ins) for the chosen
+// communities. God Mode with "All communities" also sees how each community
+// is going with its own tasks.
 export async function RegionTasks({
   supabase,
   teams,
+  showCommunities,
 }: {
   supabase: SupabaseClient;
   teams: Team[];
+  showCommunities: boolean; // God Mode: also how each community's own tasks are going
 }) {
   const ids = teams.map((t) => t.id);
   const [tasks, connect] = await Promise.all([
@@ -49,7 +52,7 @@ export async function RegionTasks({
         <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
         <p className="mt-1 text-sm text-stone-500">
           {checkIns.length === 0
-            ? "All your check-ins are done this month."
+            ? "All your Regional Support Lead tasks are done."
             : `${checkIns.length} check-in${checkIns.length === 1 ? "" : "s"} to do this month`}
         </p>
       </div>
@@ -82,31 +85,33 @@ export async function RegionTasks({
         </section>
       )}
 
-      <section>
-        <h2 className="mb-1 font-semibold">Communities&apos; own tasks</h2>
-        <p className="mb-3 text-sm text-stone-500">
-          Pick a community above to see or help with its tasks.
-        </p>
-        <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-          {summary.map((s) => (
-            <li
-              key={s.team.id}
-              className="flex items-center justify-between gap-3 px-4 py-3"
-            >
-              <span className="font-medium">{short(s.team.name)}</span>
-              <span className="flex items-center gap-2 text-sm text-stone-500">
-                {s.today > 0 && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ef4444]/10 px-2 py-0.5 text-xs font-semibold text-[#b91c1c]">
-                    <span className="h-2 w-2 rounded-full bg-[#ef4444]" />
-                    {s.today} do today
-                  </span>
-                )}
-                {s.open === 0 ? "All done" : `${s.open} open`}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {showCommunities && (
+        <section>
+          <h2 className="mb-1 font-semibold">Communities&apos; own tasks</h2>
+          <p className="mb-3 text-sm text-stone-500">
+            Pick a community above to see or help with its tasks.
+          </p>
+          <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+            {summary.map((s) => (
+              <li
+                key={s.team.id}
+                className="flex items-center justify-between gap-3 px-4 py-3"
+              >
+                <span className="font-medium">{short(s.team.name)}</span>
+                <span className="flex items-center gap-2 text-sm text-stone-500">
+                  {s.today > 0 && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ef4444]/10 px-2 py-0.5 text-xs font-semibold text-[#b91c1c]">
+                      <span className="h-2 w-2 rounded-full bg-[#ef4444]" />
+                      {s.today} do today
+                    </span>
+                  )}
+                  {s.open === 0 ? "All done" : `${s.open} open`}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {doneCheckIns.length > 0 && (
         <section>

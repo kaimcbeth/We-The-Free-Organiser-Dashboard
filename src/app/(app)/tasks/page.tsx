@@ -14,8 +14,16 @@ export default async function TasksPage() {
   const { supabase, organiser } = await requireOrganiser();
   const regionalStaff =
     organiser.role === "god" || organiser.role === "regional_lead";
-  if (organiser.allCommunities)
-    return <RegionTasks supabase={supabase} teams={organiser.teams} />;
+  // Regional Support Leads only get their own tasks (the communities' tasks
+  // are for the communities). God Mode sees both.
+  if (organiser.role === "regional_lead" || organiser.allCommunities)
+    return (
+      <RegionTasks
+        supabase={supabase}
+        teams={organiser.allCommunities ? organiser.teams : [organiser.team]}
+        showCommunities={organiser.role === "god"}
+      />
+    );
   const [tasks, { data: people }, setup, connect] = await Promise.all([
     loadTeamTasks(supabase, organiser.team_id, { regional: regionalStaff }),
     supabase
