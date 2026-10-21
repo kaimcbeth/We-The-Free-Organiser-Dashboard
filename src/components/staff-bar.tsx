@@ -6,14 +6,17 @@ import { setActiveTeam, setViewAs } from "@/app/actions";
 import type { ViewRole } from "@/lib/roles";
 import { signInAsTestPerson } from "@/lib/test-login";
 
-const VIEW_OPTIONS: { value: ViewRole | "new_organiser"; label: string }[] = [
+type ViewOption = { value: ViewRole | "new_organiser"; label: string };
+const ROLE_OPTIONS: ViewOption[] = [
   { value: "god", label: "God Mode" },
   { value: "regional_lead", label: "Regional Support Lead" },
   { value: "organiser", label: "Organiser" },
-  { value: "new_organiser", label: "New organiser (tutorial)" },
   { value: "core_team", label: "Core Team" },
   { value: "member", label: "Member" },
-  { value: "new_member", label: "New member (tutorial)" },
+];
+const TUTORIAL_OPTIONS: ViewOption[] = [
+  { value: "new_organiser", label: "New organiser" },
+  { value: "new_member", label: "New member" },
 ];
 
 // Thin bar under the header: team switcher (when there's more than one team)
@@ -83,15 +86,25 @@ export function StaffBar({
               }}
               className={`rounded-md px-1.5 py-0.5 font-medium ${viewingAs ? "bg-navy/10" : "bg-white/15"}`}
             >
-              {VIEW_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value} className="text-navy">
-                  {o.label}
+              <optgroup label="Roles">
+                {ROLE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value} className="text-navy">
+                    {o.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Tutorials">
+                {TUTORIAL_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value} className="text-navy">
+                    {o.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Test account">
+                <option value="fergus" className="text-navy">
+                  Fergus
                 </option>
-              ))}
-              <option disabled>──────────</option>
-              <option value="fergus" className="text-navy">
-                Fergus (Test Account)
-              </option>
+              </optgroup>
             </select>
             {switching && <span className="opacity-75">Switching…</span>}
             {error && <span className="font-semibold">{error}</span>}
