@@ -22,10 +22,10 @@ export default async function TestAccountsPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Test account</h1>
         <p className="mt-1 text-sm text-stone-500">
-          Every community has a hidden test account, Fergus. Only God Mode can see them.
-          To everyone else they don&apos;t exist. Delegate to them, tick them
-          in, make them a buddy, then sign in as them to see exactly what they
-          see.
+          Every community has a hidden test account, Fergus. Only God Mode can
+          see them. To everyone else they don&apos;t exist. Delegate to them,
+          tick them in, make them a buddy, then sign in as them to see exactly
+          what they see.
         </p>
       </div>
 

@@ -601,3 +601,37 @@ export async function setTestRole(
   revalidatePath("/test-accounts");
   return {};
 }
+
+// Organisers' own tasks, made for every event in their community.
+export async function addCustomTask(
+  title: string,
+  minutes: number,
+  when: "before" | "after",
+  days: number,
+): Promise<{ kind?: string; error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  if (!title.trim()) return { error: "Give the task a name." };
+  const { data, error } = await supabase.rpc("add_custom_task", {
+    p_team_id: organiser.team_id,
+    p_title: title.trim(),
+    p_minutes: minutes,
+    p_when: when,
+    p_days: days,
+  });
+  if (error || !data)
+    return { error: "Couldn't add the task. Please try again." };
+  revalidatePath("/tasks");
+  return { kind: data as string };
+}
+
+export async function removeCustomTask(
+  kind: string,
+): Promise<{ error?: string }> {
+  const { supabase } = await requireOrganiser();
+  const { data, error } = await supabase.rpc("remove_custom_task", {
+    p_kind: kind,
+  });
+  if (error || !data) return { error: "Couldn't remove it. Please try again." };
+  revalidatePath("/tasks");
+  return {};
+}

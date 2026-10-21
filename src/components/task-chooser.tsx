@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { saveTeamTasks } from "@/app/actions";
-import type { TaskSetup } from "@/lib/task-setup";
+import { addCustomTask, removeCustomTask, saveTeamTasks } from "@/app/actions";
+import type { SetupKind, TaskSetup } from "@/lib/task-setup";
+import { inputClass } from "@/components/form";
 
 const BUDGETS = [
   { minutes: 15, label: "15 min" },
@@ -31,11 +32,18 @@ export function TaskChooser({
   );
   const [budget, setBudget] = useState<number | null>(null);
   const [on, setOn] = useState<Set<string>>(new Set(setup.enabled));
+  const [kinds, setKinds] = useState<SetupKind[]>(setup.kinds);
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState({
+    title: "",
+    minutes: 10,
+    when: "after" as "before" | "after",
+    days: 2,
+  });
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
   const perWeek = (kind: string) =>
-    (setup.kinds.find((k) => k.kind === kind)?.estimate ?? 0) *
-    setup.eventsPerWeek;
+    (kinds.find((k) => k.kind === kind)?.estimate ?? 0) * setup.eventsPerWeek;
   const total = [...on].reduce((n, k) => n + perWeek(k), 0);
 
   function pickBudget(minutes: number) {
@@ -43,7 +51,7 @@ export function TaskChooser({
     // Suggest tasks in their usual order until the time runs out (always at least one).
     const next = new Set<string>();
     let used = 0;
-    for (const k of setup.kinds) {
+    for (const k of kinds) {
       const cost = k.estimate * setup.eventsPerWeek;
       if (next.size === 0 || used + cost <= minutes) {
         next.add(k.kind);
@@ -126,44 +134,201 @@ export function TaskChooser({
                 : "Switch on the tasks you want after each event."}{" "}
               You can change this any time from the Tasks page.
             </p>
-            <ul className="mt-4 space-y-2">
-              {setup.kinds.map((k) => {
-                const checked = on.has(k.kind);
-                return (
-                  <li key={k.kind}>
-                    <button
-                      role="switch"
-                      aria-checked={checked}
-                      onClick={() => toggle(k.kind)}
-                      className={`flex w-full items-center gap-3 rounded-2xl p-3 text-left ring-1 transition ${
-                        checked
-                          ? "bg-white ring-2 ring-cyan"
-                          : "bg-white/60 ring-stone-200"
-                      }`}
-                    >
-                      <span
-                        className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${checked ? "bg-cyan" : "bg-stone-300"}`}
-                      >
-                        <span
-                          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${checked ? "left-[18px]" : "left-0.5"}`}
-                        />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span
-                          className={`block font-medium ${checked ? "" : "text-stone-500"}`}
-                        >
-                          {k.title}
-                        </span>
-                        <span className="block text-xs text-stone-500">
-                          ~{k.estimate} min per event · ~
-                          {fmt(k.estimate * setup.eventsPerWeek)} a week
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            {(["before", "after"] as const).map((when) => {
+              const list = kinds.filter((k) => k.when === when);
+              if (list.length === 0) return null;
+              return (
+                <div key={when} className="mt-4">
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">
+                    {when === "before"
+                      ? "Before each event"
+                      : "After each event"}
+                  </h3>
+                  <ul className="space-y-2">
+                    {list.map((k) => {
+                      const checked = on.has(k.kind);
+                      return (
+                        <li key={k.kind} className="relative">
+                          <button
+                            role="switch"
+                            aria-checked={checked}
+                            onClick={() => toggle(k.kind)}
+                            className={`flex w-full items-center gap-3 rounded-2xl p-3 text-left ring-1 transition ${
+                              checked
+                                ? "bg-white ring-2 ring-cyan"
+                                : "bg-white/60 ring-stone-200"
+                            }`}
+                          >
+                            <span
+                              className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${checked ? "bg-cyan" : "bg-stone-300"}`}
+                            >
+                              <span
+                                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${checked ? "left-[18px]" : "left-0.5"}`}
+                              />
+                            </span>
+                            <span className="min-w-0 flex-1 pr-14">
+                              <span
+                                className={`block font-medium ${checked ? "" : "text-stone-500"}`}
+                              >
+                                {k.title}
+                              </span>
+                              <span className="block text-xs text-stone-500">
+                                ~{k.estimate} min per event · ~
+                                {fmt(k.estimate * setup.eventsPerWeek)} a week
+                              </span>
+                            </span>
+                          </button>
+                          {k.custom && (
+                            <button
+                              onClick={() =>
+                                start(async () => {
+                                  const r = await removeCustomTask(k.kind);
+                                  if (r.error) setError(r.error);
+                                  else {
+                                    setKinds((all) =>
+                                      all.filter((x) => x.kind !== k.kind),
+                                    );
+                                    setOn((o) => {
+                                      const n = new Set(o);
+                                      n.delete(k.kind);
+                                      return n;
+                                    });
+                                  }
+                                })
+                              }
+                              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-1.5 py-1 text-xs font-medium text-stone-400 hover:bg-stone-100 hover:text-stone-700"
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              );
+            })}
+
+            {adding ? (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  start(async () => {
+                    const r = await addCustomTask(
+                      draft.title,
+                      draft.minutes,
+                      draft.when,
+                      draft.days,
+                    );
+                    if (r.error || !r.kind)
+                      setError(r.error ?? "Couldn't add the task.");
+                    else {
+                      setError("");
+                      setKinds((all) => [
+                        ...all,
+                        {
+                          kind: r.kind!,
+                          title: draft.title.trim(),
+                          estimate: draft.minutes,
+                          when: draft.when,
+                          custom: true,
+                        },
+                      ]);
+                      setOn((o) => new Set(o).add(r.kind!));
+                      setDraft({
+                        title: "",
+                        minutes: 10,
+                        when: "after",
+                        days: 2,
+                      });
+                      setAdding(false);
+                    }
+                  });
+                }}
+                className="mt-4 space-y-3 rounded-2xl bg-white p-4 ring-2 ring-pink/60"
+              >
+                <p className="font-semibold">Your own task</p>
+                <input
+                  autoFocus
+                  required
+                  value={draft.title}
+                  onChange={(e) =>
+                    setDraft({ ...draft, title: e.target.value })
+                  }
+                  placeholder="e.g. Thank-you message sent to volunteers"
+                  aria-label="Task name"
+                  maxLength={80}
+                  className={inputClass}
+                />
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="text-stone-600">Takes about</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={600}
+                    value={draft.minutes}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        minutes: Number(e.target.value) || 1,
+                      })
+                    }
+                    aria-label="Minutes"
+                    className="w-16 rounded-lg border border-stone-300 bg-white px-2 py-1"
+                  />
+                  <span className="text-stone-600">min, due</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={30}
+                    value={draft.days}
+                    onChange={(e) =>
+                      setDraft({ ...draft, days: Number(e.target.value) || 0 })
+                    }
+                    aria-label="Days"
+                    className="w-14 rounded-lg border border-stone-300 bg-white px-2 py-1"
+                  />
+                  <span className="text-stone-600">days</span>
+                  <select
+                    value={draft.when}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        when: e.target.value as "before" | "after",
+                      })
+                    }
+                    aria-label="Before or after"
+                    className="rounded-lg border border-stone-300 bg-white px-2 py-1"
+                  >
+                    <option value="before">before</option>
+                    <option value="after">after</option>
+                  </select>
+                  <span className="text-stone-600">each event</span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    disabled={pending}
+                    className="flex-1 rounded-xl bg-navy px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                  >
+                    Add task
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAdding(false)}
+                    className="rounded-xl px-4 py-2 text-sm text-stone-600 hover:bg-black/5"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button
+                onClick={() => setAdding(true)}
+                className="mt-3 text-sm font-semibold text-pink-ink hover:underline"
+              >
+                + Add your own task
+              </button>
+            )}
             <div className="mt-4 rounded-2xl bg-navy p-4 text-white">
               <p className="text-sm text-white/75">About</p>
               <p className="text-2xl font-semibold">

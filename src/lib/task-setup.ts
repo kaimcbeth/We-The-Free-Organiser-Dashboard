@@ -1,14 +1,22 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+export type SetupKind = {
+  kind: string;
+  title: string;
+  estimate: number;
+  when: "before" | "after";
+  custom: boolean; // made by this community's organisers
+};
+
 export type TaskSetup = {
-  kinds: { kind: string; title: string; estimate: number }[];
+  kinds: SetupKind[];
   enabled: string[]; // kinds switched on for this community
   configured: boolean; // has an organiser chosen yet?
   eventsPerWeek: number;
   delegates: Record<string, string>; // kind -> person who gets it every time
 };
 
-// Which follow-up tasks a community has switched on, and how often it runs events.
+// Which tasks a community has switched on, and how often it runs events.
 export async function loadTaskSetup(
   supabase: SupabaseClient,
   teamId: string,
@@ -17,7 +25,9 @@ export async function loadTaskSetup(
   const [kinds, settings, events] = await Promise.all([
     supabase
       .from("task_kinds")
-      .select("kind, title, estimate_minutes")
+      .select("kind, title, estimate_minutes, anchor, team_id")
+      .is("archived_at", null)
+      .or(`team_id.is.null,team_id.eq.${teamId}`)
       .order("sort_order"),
     supabase
       .from("team_task_kinds")
@@ -31,21 +41,23 @@ export async function loadTaskSetup(
       .lt("starts_at", new Date(now + 28 * 864e5).toISOString()),
   ]);
   const rows = settings.data ?? [];
-  const all = (kinds.data ?? []).map((k) => ({
+  const all: SetupKind[] = (kinds.data ?? []).map((k) => ({
     kind: k.kind,
     title: k.title,
     estimate: k.estimate_minutes,
+    when: k.anchor === "start" ? "before" : "after",
+    custom: !!k.team_id,
   }));
   const off = new Set(rows.filter((r) => !r.enabled).map((r) => r.kind));
   return {
     kinds: all,
     enabled: all.filter((k) => !off.has(k.kind)).map((k) => k.kind),
     configured: rows.length > 0,
+    eventsPerWeek: Math.max(1, Math.round(((events.count ?? 0) / 8) * 2) / 2),
     delegates: Object.fromEntries(
       rows
         .filter((r) => r.delegate_to)
         .map((r) => [r.kind, r.delegate_to as string]),
     ),
-    eventsPerWeek: Math.max(1, Math.round(((events.count ?? 0) / 8) * 2) / 2),
   };
 }
