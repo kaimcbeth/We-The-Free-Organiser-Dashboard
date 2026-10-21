@@ -1,0 +1,9 @@
+-- (Applied as regional_connect_task.)
+-- Regional Support Lead tasks: task_kinds.audience ('community' | 'regional');
+-- regional tasks are hidden from community organisers (tasks policy).
+-- tasks.period + unique (team_id, kind, period) for monthly tasks.
+-- "Organisers checked in with": one per community per month, made by
+-- private.create_monthly_tasks() (cron 'monthly-tasks', hourly at :20), due the
+-- 15th (or 3 days out when made late in the month).
+-- public.community_organisers(team_ids): organisers' names and contact details
+-- for Regional Support Leads / God.

@@ -3,6 +3,7 @@ import type { TaskRow } from "@/components/task-card";
 
 type Raw = {
   id: string;
+  team_id: string;
   due_at: string;
   done_at: string | null;
   assigned_to: string | null;
@@ -13,6 +14,7 @@ type Raw = {
     description: string | null;
     estimate_minutes: number;
     estimate_max_minutes: number | null;
+    audience: string;
   } | null;
   event: {
     id: string;
@@ -30,11 +32,13 @@ type Raw = {
 };
 
 const SELECT =
-  "id, due_at, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, event_type_id, event_type:event_types(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name)";
+  "id, team_id, due_at, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes, audience), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, event_type_id, event_type:event_types(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name)";
 
 function toRow(t: Raw): TaskRow {
   return {
     id: t.id,
+    teamId: t.team_id,
+    regional: t.kind?.audience === "regional",
     kind: t.kind?.kind ?? "",
     sortOrder: t.kind?.sort_order ?? 0,
     eventId: t.event?.id ?? null,
@@ -74,14 +78,20 @@ function toRow(t: Raw): TaskRow {
   };
 }
 
-// A team's open tasks (soonest due first) and the last fortnight's done ones.
-export async function loadTeamTasks(supabase: SupabaseClient, teamId: string) {
+// A team's (or several teams') open tasks, soonest due first, and the last
+// fortnight's done ones. Regional Support Lead tasks only when asked for.
+export async function loadTeamTasks(
+  supabase: SupabaseClient,
+  teamIds: string | string[],
+  { regional = false }: { regional?: boolean } = {},
+) {
+  const ids = Array.isArray(teamIds) ? teamIds : [teamIds];
   const since = new Date(Date.now() - 14 * 864e5).toISOString();
   const [open, done] = await Promise.all([
     supabase
       .from("tasks")
       .select(SELECT)
-      .eq("team_id", teamId)
+      .in("team_id", ids)
       .is("done_at", null)
       .is("dismissed_at", null)
       .order("due_at")
@@ -89,16 +99,17 @@ export async function loadTeamTasks(supabase: SupabaseClient, teamId: string) {
     supabase
       .from("tasks")
       .select(SELECT)
-      .eq("team_id", teamId)
+      .in("team_id", ids)
       .is("dismissed_at", null)
       .gte("done_at", since)
       .order("done_at", { ascending: false })
       .returns<Raw[]>(),
   ]);
   if (open.error || done.error) return null;
+  const keep = (t: TaskRow) => regional || !t.regional;
   return {
-    open: (open.data ?? []).map(toRow),
-    done: (done.data ?? []).map(toRow),
+    open: (open.data ?? []).map(toRow).filter(keep),
+    done: (done.data ?? []).map(toRow).filter(keep),
   };
 }
 

@@ -6,11 +6,18 @@ import { loadTaskSetup } from "@/lib/task-setup";
 import { ChooseTasks } from "./choose-tasks";
 import { RemoveEventTasks } from "./remove-event-tasks";
 import { formatEventDate } from "@/lib/time";
+import { loadConnectContext } from "@/lib/connect";
+import { ConnectIdeas } from "@/components/connect-ideas";
+import { RegionTasks } from "./region-tasks";
 
 export default async function TasksPage() {
   const { supabase, organiser } = await requireOrganiser();
-  const [tasks, { data: people }, setup] = await Promise.all([
-    loadTeamTasks(supabase, organiser.team_id),
+  const regionalStaff =
+    organiser.role === "god" || organiser.role === "regional_lead";
+  if (organiser.allCommunities)
+    return <RegionTasks supabase={supabase} teams={organiser.teams} />;
+  const [tasks, { data: people }, setup, connect] = await Promise.all([
+    loadTeamTasks(supabase, organiser.team_id, { regional: regionalStaff }),
     supabase
       .from("people")
       .select("id, first_name, last_name")
@@ -18,6 +25,9 @@ export default async function TasksPage() {
       .not("user_id", "is", null)
       .order("first_name"),
     loadTaskSetup(supabase, organiser.team_id),
+    regionalStaff
+      ? loadConnectContext(supabase, [organiser.team])
+      : Promise.resolve(null),
   ]);
   if (!tasks) return <LoadError what="tasks" />;
 
@@ -28,6 +38,8 @@ export default async function TasksPage() {
     name: [p.first_name, p.last_name].filter(Boolean).join(" "),
   }));
   const minutes = tasks.open.reduce((n, t) => n + t.estimateMinutes, 0);
+  // Regional Support Lead check-ins sit on their own, above the community's tasks.
+  const checkIns = tasks.open.filter((t) => t.regional);
 
   // Open tasks grouped by event: the event due soonest first, then the
   // tasks in their usual order (WhatsApp, Facebook, Instagram…).
@@ -35,7 +47,7 @@ export default async function TasksPage() {
     string,
     { key: string; title: string; at: string | null; tasks: typeof tasks.open }
   >();
-  for (const t of tasks.open) {
+  for (const t of tasks.open.filter((t) => !t.regional)) {
     const key = t.eventId ?? "other";
     const g = byEvent.get(key) ?? {
       key,
@@ -79,6 +91,30 @@ export default async function TasksPage() {
           />
         </div>
       </div>
+
+      {checkIns.length > 0 && (
+        <section>
+          <h2 className="mb-3 font-semibold">
+            For you as Regional Support Lead
+          </h2>
+          <ul className="space-y-3">
+            {checkIns.map((t) => (
+              <TaskCard
+                key={t.id}
+                task={t}
+                tz={common.tz}
+                now={now}
+                whatsappUrl={null}
+                extra={
+                  connect?.[t.teamId] && (
+                    <ConnectIdeas ctx={connect[t.teamId]} />
+                  )
+                }
+              />
+            ))}
+          </ul>
+        </section>
+      )}
 
       {groups.map((g) => (
         <section key={g.key}>

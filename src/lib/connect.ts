@@ -1,0 +1,166 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Team } from "@/lib/organiser";
+import { formatEventDate } from "@/lib/time";
+
+export type ConnectOrganiser = {
+  name: string;
+  firstName: string;
+  whatsapp: string | null; // wa.me link
+  email: string | null;
+};
+export type ConnectIdea = {
+  label: string; // "Movie Challenge, Sat 18 Oct · 14 came"
+  note: string | null; // "First Workshop in a while"
+  eventId: string;
+};
+export type ConnectContext = {
+  organisers: ConnectOrganiser[];
+  recent: ConnectIdea[];
+  upcoming: ConnectIdea[];
+  quiet: boolean; // nothing in the last month and nothing coming up
+  message: string; // a suggested opener
+};
+
+type Ev = {
+  id: string;
+  team_id: string;
+  title: string;
+  starts_at: string;
+  event_type_id: string | null;
+  event_type: { name: string; counts_as_outreach: boolean } | null;
+  attendance: { count: number }[];
+};
+
+const RARE_DAYS = 60;
+
+// Phone numbers are stored as typed (0412 345 678); WhatsApp needs the country code.
+function waLink(phone: string | null, tz: string) {
+  if (!phone) return null;
+  let digits = phone.replace(/[^\d+]/g, "");
+  if (digits.startsWith("+")) digits = digits.slice(1);
+  else if (digits.startsWith("0")) {
+    const cc = tz.startsWith("Australia/")
+      ? "61"
+      : tz === "Pacific/Auckland"
+        ? "64"
+        : tz.startsWith("America/")
+          ? "1"
+          : "";
+    if (!cc) return null;
+    digits = cc + digits.slice(1);
+  }
+  return digits.length >= 8 ? `https://wa.me/${digits}` : null;
+}
+
+// What a Regional Support Lead could ask each community's organisers about:
+// events in the last 10 days, events in the next 3 weeks, and anything they
+// haven't run in a while.
+export async function loadConnectContext(
+  supabase: SupabaseClient,
+  teams: Team[],
+): Promise<Record<string, ConnectContext>> {
+  const ids = teams.map((t) => t.id);
+  const now = Date.now();
+  const from = new Date(now - (RARE_DAYS + 30) * 864e5).toISOString();
+  const to = new Date(now + 21 * 864e5).toISOString();
+
+  const [{ data: events }, { data: orgs }] = await Promise.all([
+    supabase
+      .from("events")
+      .select(
+        "id, team_id, title, starts_at, event_type_id, event_type:event_types(name, counts_as_outreach), attendance(count)",
+      )
+      .in("team_id", ids)
+      .gte("starts_at", from)
+      .lte("starts_at", to)
+      .order("starts_at")
+      .returns<Ev[]>(),
+    supabase.rpc("community_organisers", { p_team_ids: ids }),
+  ]);
+
+  const out: Record<string, ConnectContext> = {};
+  for (const team of teams) {
+    const tz = team.timezone;
+    const evs = (events ?? []).filter((e) => e.team_id === team.id);
+    // Not run this type in the RARE_DAYS before it (or never in the window).
+    const rare = (e: Ev) =>
+      !!e.event_type_id &&
+      !evs.some(
+        (o) =>
+          o.id !== e.id &&
+          o.event_type_id === e.event_type_id &&
+          o.starts_at < e.starts_at &&
+          Date.parse(e.starts_at) - Date.parse(o.starts_at) < RARE_DAYS * 864e5,
+      );
+    const idea = (e: Ev, past: boolean): ConnectIdea => {
+      const n = e.attendance[0]?.count ?? 0;
+      return {
+        eventId: e.id,
+        label: `${e.title}, ${formatEventDate(e.starts_at, tz)}${past ? (n ? ` · ${n} came` : " · no attendance taken") : ""}`,
+        note: rare(e)
+          ? `First ${e.event_type?.name ?? "one"} in a while`
+          : e.event_type?.counts_as_outreach
+            ? "Outreach"
+            : null,
+      };
+    };
+    const recentEvs = evs.filter(
+      (e) =>
+        Date.parse(e.starts_at) <= now &&
+        Date.parse(e.starts_at) > now - 10 * 864e5,
+    );
+    const upcomingEvs = evs.filter((e) => Date.parse(e.starts_at) > now);
+    const lastMonth = evs.filter(
+      (e) =>
+        Date.parse(e.starts_at) <= now &&
+        Date.parse(e.starts_at) > now - 30 * 864e5,
+    );
+
+    const organisers: ConnectOrganiser[] = (
+      (orgs ?? []) as {
+        team_id: string;
+        name: string;
+        first_name: string;
+        phone: string | null;
+        email: string | null;
+      }[]
+    )
+      .filter((o) => o.team_id === team.id)
+      .map((o) => ({
+        name: o.name,
+        firstName: o.first_name,
+        whatsapp: waLink(o.phone, tz),
+        email: o.email,
+      }));
+
+    // Opener: something special first, then outreach, then anything recent,
+    // then what's coming up, then a plain hello.
+    const hi = `Hey ${organisers.map((o) => o.firstName).join(" & ") || "there"}!`;
+    const pickRecent =
+      [...recentEvs].reverse().find(rare) ??
+      [...recentEvs].reverse().find((e) => e.event_type?.counts_as_outreach) ??
+      recentEvs[recentEvs.length - 1];
+    const pickUpcoming =
+      upcomingEvs.find(rare) ??
+      upcomingEvs.find((e) => e.event_type?.counts_as_outreach) ??
+      upcomingEvs[0];
+    let message: string;
+    if (pickRecent) {
+      const n = pickRecent.attendance[0]?.count ?? 0;
+      message = `${hi} How did ${pickRecent.title} go${n ? `? Saw ${n} people came along 🙌` : "?"} Anything I can help with?`;
+    } else if (pickUpcoming) {
+      message = `${hi} How's ${pickUpcoming.title} on ${formatEventDate(pickUpcoming.starts_at, tz)} shaping up? Anything I can help with?`;
+    } else {
+      message = `${hi} Just checking in, how are things going in ${team.name.replace(/, .*$/, "")}? Anything I can help with?`;
+    }
+
+    out[team.id] = {
+      organisers,
+      recent: recentEvs.map((e) => idea(e, true)).reverse(),
+      upcoming: upcomingEvs.slice(0, 4).map((e) => idea(e, false)),
+      quiet: lastMonth.length === 0 && upcomingEvs.length === 0,
+      message,
+    };
+  }
+  return out;
+}

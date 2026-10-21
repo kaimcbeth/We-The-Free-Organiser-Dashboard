@@ -17,6 +17,9 @@ import {
 
 export type TaskRow = {
   id: string;
+  teamId: string;
+  regional: boolean; // a Regional Support Lead task
+
   kind: string;
   sortOrder: number;
   eventId: string | null;
@@ -67,6 +70,7 @@ export function TaskCard({
   whatsappUrl,
   hideEvent = false,
   standing = {},
+  extra,
 }: {
   task: TaskRow;
   tz: string;
@@ -75,6 +79,7 @@ export function TaskCard({
   whatsappUrl: string | null;
   hideEvent?: boolean; // when shown under the event's own heading
   standing?: Record<string, string>; // kind -> standing delegate (person id)
+  extra?: React.ReactNode; // shown under the description (e.g. check-in ideas)
 }) {
   const [done, setDone] = useState(!!task.doneAt);
   const [assignee, setAssignee] = useState(task.assignedTo ?? "");
@@ -226,6 +231,7 @@ export function TaskCard({
           {task.description && !done && (
             <p className="mt-1 text-sm text-stone-600">{task.description}</p>
           )}
+          {extra && !done && <div className="mt-3">{extra}</div>}
 
           {!done && (
             <div className="mt-3 flex flex-wrap items-center gap-2">

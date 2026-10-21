@@ -22,12 +22,29 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   const tourSetup = organiser.showTour
     ? await loadTaskSetup(supabase, organiser.team_id)
     : null;
-  const { count: openTasks } = await supabase
+  // Tasks badge: with "All communities", the Regional Support Lead's own
+  // check-ins; otherwise the community's tasks (check-ins only for RSL/God).
+  const regionalStaff =
+    organiser.role === "god" || organiser.role === "regional_lead";
+  let countQuery = supabase
     .from("tasks")
-    .select("id", { count: "exact", head: true })
-    .eq("team_id", organiser.team_id)
+    .select("id, kind:task_kinds!inner(audience)", {
+      count: "exact",
+      head: true,
+    })
+    .in(
+      "team_id",
+      organiser.allCommunities
+        ? organiser.teams.map((t) => t.id)
+        : [organiser.team_id],
+    )
     .is("done_at", null)
     .is("dismissed_at", null);
+  if (organiser.allCommunities)
+    countQuery = countQuery.eq("kind.audience", "regional");
+  else if (!regionalStaff)
+    countQuery = countQuery.eq("kind.audience", "community");
+  const { count: openTasks } = await countQuery;
   const name = me
     ? [me.first_name, me.last_name].filter(Boolean).join(" ")
     : organiser.name;

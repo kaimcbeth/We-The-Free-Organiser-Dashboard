@@ -31,6 +31,7 @@ export async function loadTaskSetup(
         "kind, title, blurb, estimate_minutes, estimate_max_minutes, anchor, due_after_hours, team_id",
       )
       .is("archived_at", null)
+      .eq("audience", "community")
       .or(`team_id.is.null,team_id.eq.${teamId}`)
       .order("sort_order"),
     supabase
