@@ -26,11 +26,13 @@ export function NavLinks({
   showCalendar,
   openTasks = 0,
   isGod = false,
+  whatsNew = false,
 }: {
   canManageRoles: boolean;
   showCalendar: boolean;
   openTasks?: number;
   isGod?: boolean;
+  whatsNew?: boolean; // something new since they last looked
 }) {
   const path = usePathname();
   const base = [
@@ -62,6 +64,11 @@ export function NavLinks({
         },
       ]
     : base;
+  links.push({
+    href: "/whats-new",
+    label: "What's new",
+    match: (p: string) => p.startsWith("/whats-new"),
+  });
   if (isGod)
     links.push({
       href: "/facebook-groups",
@@ -83,6 +90,12 @@ export function NavLinks({
             }`}
           >
             {l.label}
+            {l.href === "/whats-new" && whatsNew && (
+              <span
+                aria-label="New"
+                className="ml-1 inline-block h-2 w-2 rounded-full bg-pink align-middle"
+              />
+            )}
             {l.href === "/tasks" && openTasks > 0 && (
               <span className="ml-1.5 rounded-full bg-pink px-1.5 py-0.5 text-[10px] font-bold text-navy">
                 {openTasks}

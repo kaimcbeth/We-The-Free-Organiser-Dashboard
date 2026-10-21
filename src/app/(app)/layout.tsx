@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { LATEST_CHANGE } from "@/lib/changelog";
 import { requireOrganiser, ROLE_LABEL } from "@/lib/organiser";
 import { StaffBar } from "@/components/staff-bar";
 import { signPhotos } from "@/lib/photos";
@@ -90,6 +92,9 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
           showCalendar={organiser.role !== "core_team"}
           openTasks={openTasks ?? 0}
           isGod={organiser.role === "god"}
+          whatsNew={
+            (await cookies()).get("whats_new_seen")?.value !== LATEST_CHANGE
+          }
         />
       </header>
       <StaffBar
