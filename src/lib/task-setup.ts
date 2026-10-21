@@ -5,7 +5,7 @@ export type SetupKind = {
   title: string;
   estimate: number; // minutes per event (middle of a range)
   label: string; // e.g. "5" or "5–10"
-  when: "before" | "after";
+  when: "before" | "during" | "after";
   custom: boolean; // made by this community's organisers
 };
 
