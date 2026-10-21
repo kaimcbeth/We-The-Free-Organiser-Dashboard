@@ -567,3 +567,20 @@ export async function setStandingDelegate(
   revalidatePath("/tasks");
   return {};
 }
+
+// Remove every open task for one event (e.g. it was cancelled).
+export async function dismissEventTasks(
+  eventId: string,
+): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  const { error } = await supabase
+    .from("tasks")
+    .update({ dismissed_at: new Date().toISOString() })
+    .eq("event_id", eventId)
+    .eq("team_id", organiser.team_id)
+    .is("done_at", null)
+    .is("dismissed_at", null);
+  if (error) return { error: "Couldn't remove those tasks. Please try again." };
+  revalidatePath("/tasks", "layout");
+  return {};
+}

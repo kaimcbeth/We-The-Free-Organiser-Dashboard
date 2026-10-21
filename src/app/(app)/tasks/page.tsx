@@ -4,6 +4,7 @@ import { TaskCard } from "@/components/task-card";
 import { loadTeamTasks } from "@/lib/tasks";
 import { loadTaskSetup } from "@/lib/task-setup";
 import { ChooseTasks } from "./choose-tasks";
+import { RemoveEventTasks } from "./remove-event-tasks";
 import { formatEventDate } from "@/lib/time";
 
 export default async function TasksPage() {
@@ -81,7 +82,7 @@ export default async function TasksPage() {
 
       {groups.map((g) => (
         <section key={g.key}>
-          <div className="mb-3 flex items-baseline justify-between gap-3">
+          <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="min-w-0 truncate font-semibold">
               {g.title}
               {g.at && (
@@ -91,10 +92,13 @@ export default async function TasksPage() {
                 </span>
               )}
             </h2>
-            <span className="shrink-0 text-xs text-stone-500">
+            <span className="ml-auto shrink-0 text-xs text-stone-500">
               {g.tasks.length} to do · ~
               {g.tasks.reduce((n, t) => n + t.estimateMinutes, 0)} min
             </span>
+            {g.key !== "other" && (
+              <RemoveEventTasks eventId={g.key} count={g.tasks.length} />
+            )}
           </div>
           <ul className="space-y-3">
             {g.tasks.map((t) => (
