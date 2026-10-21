@@ -5,6 +5,7 @@ export type SetupKind = {
   title: string;
   estimate: number; // minutes per event (middle of a range)
   label: string; // e.g. "5" or "5–10"
+  blurb: string | null; // very short description
   when: "before" | "during" | "after";
   custom: boolean; // made by this community's organisers
 };
@@ -27,7 +28,7 @@ export async function loadTaskSetup(
     supabase
       .from("task_kinds")
       .select(
-        "kind, title, estimate_minutes, estimate_max_minutes, anchor, due_after_hours, team_id",
+        "kind, title, blurb, estimate_minutes, estimate_max_minutes, anchor, due_after_hours, team_id",
       )
       .is("archived_at", null)
       .or(`team_id.is.null,team_id.eq.${teamId}`)
@@ -64,6 +65,7 @@ export async function loadTaskSetup(
           ? "during"
           : "before",
     custom: !!k.team_id,
+    blurb: k.blurb ?? null,
   }));
   const off = new Set(rows.filter((r) => !r.enabled).map((r) => r.kind));
   return {

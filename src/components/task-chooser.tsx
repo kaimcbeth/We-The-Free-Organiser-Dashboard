@@ -33,6 +33,9 @@ export function TaskChooser({
   const [budget, setBudget] = useState<number | null>(null);
   const [on, setOn] = useState<Set<string>>(new Set(setup.enabled));
   const [kinds, setKinds] = useState<SetupKind[]>(setup.kinds);
+  // The tasks shown up front (the suggestion); everything else sits under "More tasks".
+  const [featured, setFeatured] = useState<Set<string>>(new Set(setup.enabled));
+  const [showMore, setShowMore] = useState(false);
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState({
     title: "",
@@ -51,7 +54,20 @@ export function TaskChooser({
     // Suggest tasks in their usual order until the time runs out (always at least one).
     const next = new Set<string>();
     let used = 0;
-    for (const k of kinds) {
+    // Suggest the most useful tasks first.
+    const PRIORITY = [
+      "take_attendance",
+      "promote_whatsapp",
+      "post_photos",
+      "promote_facebook_groups",
+      "instagram_stories",
+      "promote_instagram",
+      "post_photos_instagram",
+      "post_photos_facebook",
+    ];
+    const rank = (kind: string) =>
+      PRIORITY.includes(kind) ? PRIORITY.indexOf(kind) : PRIORITY.length;
+    for (const k of [...kinds].sort((a, b) => rank(a.kind) - rank(b.kind))) {
       const cost = k.estimate * setup.eventsPerWeek;
       if (next.size === 0 || used + cost <= minutes) {
         next.add(k.kind);
@@ -59,6 +75,7 @@ export function TaskChooser({
       }
     }
     setOn(next);
+    setFeatured(new Set(next));
     setStep("pick");
   }
 
@@ -81,9 +98,7 @@ export function TaskChooser({
       >
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold tracking-tight">
-            {step === "time"
-              ? "How much time do you have?"
-              : "Your follow-up tasks"}
+            {step === "time" ? "How much time do you have?" : "Your tasks"}
           </h2>
           <button
             onClick={() => onClose(false)}
@@ -96,7 +111,7 @@ export function TaskChooser({
         {step === "time" ? (
           <>
             <p className="mt-2 text-stone-600">
-              After each event, a few quick follow-up tasks can appear for you.{" "}
+              Around each event, a few quick tasks can appear for you.{" "}
               {communityName} runs about{" "}
               <span className="font-semibold text-navy">
                 {setup.eventsPerWeek} event
@@ -120,7 +135,10 @@ export function TaskChooser({
               ))}
             </div>
             <button
-              onClick={() => setStep("pick")}
+              onClick={() => {
+                setFeatured(new Set(on));
+                setStep("pick");
+              }}
               className="mt-4 text-sm font-medium text-pink-ink"
             >
               Just let me pick
@@ -130,86 +148,107 @@ export function TaskChooser({
           <>
             <p className="mt-2 text-sm text-stone-600">
               {budget
-                ? `Here's what fits in about ${fmt(budget)} a week. Switch any on or off.`
-                : "Switch on the tasks you want after each event."}{" "}
-              You can change this any time from the Tasks page.
+                ? `Suggested for about ${fmt(budget)} a week.`
+                : "Switch on the tasks you want."}{" "}
+              Change it any time.
             </p>
-            {(["before", "during", "after"] as const).map((when) => {
-              const list = kinds.filter((k) => k.when === when);
-              if (list.length === 0) return null;
-              return (
-                <div key={when} className="mt-4">
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">
-                    {when === "before"
-                      ? "Before each event"
-                      : when === "during"
-                        ? "At each event"
-                        : "After each event"}
-                  </h3>
-                  <ul className="space-y-2">
-                    {list.map((k) => {
-                      const checked = on.has(k.kind);
-                      return (
-                        <li key={k.kind} className="relative">
-                          <button
-                            role="switch"
-                            aria-checked={checked}
-                            onClick={() => toggle(k.kind)}
-                            className={`flex w-full items-center gap-3 rounded-2xl p-3 text-left ring-1 transition ${
-                              checked
-                                ? "bg-white ring-2 ring-cyan"
-                                : "bg-white/60 ring-stone-200"
-                            }`}
-                          >
-                            <span
-                              className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${checked ? "bg-cyan" : "bg-stone-300"}`}
-                            >
-                              <span
-                                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${checked ? "left-[18px]" : "left-0.5"}`}
-                              />
-                            </span>
-                            <span className="min-w-0 flex-1 pr-14">
-                              <span
-                                className={`block font-medium ${checked ? "" : "text-stone-500"}`}
-                              >
-                                {k.title}
-                              </span>
-                              <span className="block text-xs text-stone-500">
-                                ~{k.label} min per event · ~
-                                {fmt(k.estimate * setup.eventsPerWeek)} a week
-                              </span>
-                            </span>
-                          </button>
-                          {k.custom && (
-                            <button
-                              onClick={() =>
-                                start(async () => {
-                                  const r = await removeCustomTask(k.kind);
-                                  if (r.error) setError(r.error);
-                                  else {
-                                    setKinds((all) =>
-                                      all.filter((x) => x.kind !== k.kind),
-                                    );
-                                    setOn((o) => {
-                                      const n = new Set(o);
-                                      n.delete(k.kind);
-                                      return n;
-                                    });
-                                  }
-                                })
-                              }
-                              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-1.5 py-1 text-xs font-medium text-stone-400 hover:bg-stone-100 hover:text-stone-700"
-                            >
-                              Remove
-                            </button>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
+            {(() => {
+              const WHEN = {
+                before: "Before",
+                during: "On the day",
+                after: "After",
+              } as const;
+              const row = (k: SetupKind) => {
+                const checked = on.has(k.kind);
+                return (
+                  <li key={k.kind} className="relative">
+                    <button
+                      role="switch"
+                      aria-checked={checked}
+                      onClick={() => toggle(k.kind)}
+                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left ring-1 transition ${
+                        checked
+                          ? "bg-white ring-cyan"
+                          : "bg-white/60 ring-stone-200"
+                      }`}
+                    >
+                      <span
+                        className={`relative h-5 w-8 shrink-0 rounded-full transition-colors ${checked ? "bg-cyan" : "bg-stone-300"}`}
+                      >
+                        <span
+                          className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${checked ? "left-3.5" : "left-0.5"}`}
+                        />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span
+                          className={`block text-sm font-medium leading-snug ${checked ? "" : "text-stone-500"}`}
+                        >
+                          {k.title}
+                        </span>
+                        <span className="block text-xs text-stone-500">
+                          <span className="font-medium text-stone-600">
+                            {WHEN[k.when]}
+                          </span>
+                          {k.blurb ? ` · ${k.blurb}` : ""}
+                        </span>
+                      </span>
+                      <span
+                        className={`shrink-0 text-xs font-semibold text-stone-500 ${k.custom ? "pr-14" : ""}`}
+                      >
+                        {k.label}m
+                      </span>
+                    </button>
+                    {k.custom && (
+                      <button
+                        onClick={() =>
+                          start(async () => {
+                            const r = await removeCustomTask(k.kind);
+                            if (r.error) setError(r.error);
+                            else {
+                              setKinds((all) =>
+                                all.filter((x) => x.kind !== k.kind),
+                              );
+                              setOn((o) => {
+                                const n = new Set(o);
+                                n.delete(k.kind);
+                                return n;
+                              });
+                            }
+                          })
+                        }
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-1.5 py-1 text-xs font-medium text-stone-400 hover:bg-stone-100 hover:text-stone-700"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </li>
+                );
+              };
+              const order = { before: 0, during: 1, after: 2 };
+              const sorted = [...kinds].sort(
+                (a, b) => order[a.when] - order[b.when],
               );
-            })}
+              const main = sorted.filter((k) => featured.has(k.kind));
+              const more = sorted.filter((k) => !featured.has(k.kind));
+              return (
+                <>
+                  <ul className="mt-4 space-y-2">{main.map(row)}</ul>
+                  {more.length > 0 && (
+                    <div className="mt-3">
+                      <button
+                        onClick={() => setShowMore((v) => !v)}
+                        className="text-sm font-semibold text-pink-ink hover:underline"
+                      >
+                        {showMore ? "Hide" : "More tasks"} ({more.length})
+                      </button>
+                      {showMore && (
+                        <ul className="mt-2 space-y-2">{more.map(row)}</ul>
+                      )}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
 
             {adding ? (
               <form
@@ -233,11 +272,13 @@ export function TaskChooser({
                           title: draft.title.trim(),
                           estimate: draft.minutes,
                           label: String(draft.minutes),
+                          blurb: null,
                           when: draft.when,
                           custom: true,
                         },
                       ]);
                       setOn((o) => new Set(o).add(r.kind!));
+                      setFeatured((f) => new Set(f).add(r.kind!));
                       setDraft({
                         title: "",
                         minutes: 10,
@@ -332,7 +373,7 @@ export function TaskChooser({
                 + Add your own task
               </button>
             )}
-            <div className="mt-4 rounded-2xl bg-navy p-4 text-white">
+            <div className="mt-4 flex items-baseline justify-between rounded-2xl bg-navy px-4 py-3 text-white">
               <p className="text-sm text-white/75">About</p>
               <p className="text-2xl font-semibold">
                 {fmt(total)}{" "}
