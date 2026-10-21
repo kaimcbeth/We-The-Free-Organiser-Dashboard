@@ -287,7 +287,6 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
           "",
         )}
         whatsappUrl={me.team?.whatsapp_url ?? null}
-        teamUrl={me.team?.activism_team_url ?? null}
         autoOpen={previewNewMember || !me.tutorial_done_at}
         preview={previewNewMember}
       />

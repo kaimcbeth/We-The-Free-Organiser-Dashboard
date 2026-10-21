@@ -17,14 +17,12 @@ export function MemberTutorial({
   firstName,
   teamName,
   whatsappUrl,
-  teamUrl,
   autoOpen,
   preview,
 }: {
   firstName: string;
   teamName: string;
   whatsappUrl: string | null;
-  teamUrl: string | null;
   autoOpen: boolean;
   preview: boolean; // God Mode preview: don't save anything
 }) {
@@ -97,16 +95,6 @@ export function MemberTutorial({
       tone: "bg-yellow",
       title: "You're all set",
       body: "See you at the next event! You can replay this tour any time from the bottom of your page.",
-      extra: teamUrl ? (
-        <a
-          href={teamUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-4 inline-block text-sm font-semibold text-pink-ink"
-        >
-          See upcoming events on activism.wtf ↗
-        </a>
-      ) : undefined,
     },
   ];
 
