@@ -1,15 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import type { ConnectContext, ConnectIdea } from "@/lib/connect";
 
-// Inside a "Organisers checked in with" task: who to message, what to ask
-// about, and a suggested opener to copy.
+// Inside an "Organisers checked in with" task: who to message and some ideas
+// of what to ask about.
 export function ConnectIdeas({ ctx }: { ctx: ConnectContext }) {
-  const [message, setMessage] = useState(ctx.message);
-  const [copied, setCopied] = useState(false);
-
   return (
     <div className="space-y-3 rounded-xl bg-stone-50 p-3 ring-1 ring-black/5">
       <div>
@@ -30,7 +26,7 @@ export function ConnectIdeas({ ctx }: { ctx: ConnectContext }) {
                 <span className="font-medium">{o.name}</span>
                 {o.whatsapp && (
                   <a
-                    href={`${o.whatsapp}?text=${encodeURIComponent(message)}`}
+                    href={o.whatsapp}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="rounded-md bg-[#25D366] px-2 py-0.5 text-xs font-semibold text-navy"
@@ -40,7 +36,7 @@ export function ConnectIdeas({ ctx }: { ctx: ConnectContext }) {
                 )}
                 {o.email && (
                   <a
-                    href={`mailto:${o.email}?body=${encodeURIComponent(message)}`}
+                    href={`mailto:${o.email}`}
                     className="rounded-md px-2 py-0.5 text-xs font-semibold text-pink-ink hover:bg-stone-100"
                   >
                     Email
@@ -60,37 +56,6 @@ export function ConnectIdeas({ ctx }: { ctx: ConnectContext }) {
       )}
       <Ideas title="Recent events" ideas={ctx.recent} />
       <Ideas title="Coming up" ideas={ctx.upcoming} />
-
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-          Suggested message
-        </p>
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          rows={3}
-          className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-2.5 py-1.5 text-sm"
-        />
-        <button
-          type="button"
-          onClick={async () => {
-            try {
-              await navigator.clipboard.writeText(message);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 1500);
-            } catch {
-              /* clipboard blocked: the text can still be selected */
-            }
-          }}
-          className={`mt-1 rounded-lg px-2.5 py-1 text-xs font-semibold ring-1 ${
-            copied
-              ? "bg-cyan text-navy ring-cyan"
-              : "bg-white text-navy ring-stone-300 hover:bg-stone-100"
-          }`}
-        >
-          {copied ? "Copied" : "Copy message"}
-        </button>
-      </div>
     </div>
   );
 }

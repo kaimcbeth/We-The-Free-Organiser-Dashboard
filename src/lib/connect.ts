@@ -18,7 +18,6 @@ export type ConnectContext = {
   recent: ConnectIdea[];
   upcoming: ConnectIdea[];
   quiet: boolean; // nothing in the last month and nothing coming up
-  message: string; // a suggested opener
 };
 
 type Ev = {
@@ -133,33 +132,11 @@ export async function loadConnectContext(
         email: o.email,
       }));
 
-    // Opener: something special first, then outreach, then anything recent,
-    // then what's coming up, then a plain hello.
-    const hi = `Hey ${organisers.map((o) => o.firstName).join(" & ") || "there"}!`;
-    const pickRecent =
-      [...recentEvs].reverse().find(rare) ??
-      [...recentEvs].reverse().find((e) => e.event_type?.counts_as_outreach) ??
-      recentEvs[recentEvs.length - 1];
-    const pickUpcoming =
-      upcomingEvs.find(rare) ??
-      upcomingEvs.find((e) => e.event_type?.counts_as_outreach) ??
-      upcomingEvs[0];
-    let message: string;
-    if (pickRecent) {
-      const n = pickRecent.attendance[0]?.count ?? 0;
-      message = `${hi} How did ${pickRecent.title} go${n ? `? Saw ${n} people came along 🙌` : "?"} Anything I can help with?`;
-    } else if (pickUpcoming) {
-      message = `${hi} How's ${pickUpcoming.title} on ${formatEventDate(pickUpcoming.starts_at, tz)} shaping up? Anything I can help with?`;
-    } else {
-      message = `${hi} Just checking in, how are things going in ${team.name.replace(/, .*$/, "")}? Anything I can help with?`;
-    }
-
     out[team.id] = {
       organisers,
       recent: recentEvs.map((e) => idea(e, true)).reverse(),
       upcoming: upcomingEvs.slice(0, 4).map((e) => idea(e, false)),
       quiet: lastMonth.length === 0 && upcomingEvs.length === 0,
-      message,
     };
   }
   return out;
