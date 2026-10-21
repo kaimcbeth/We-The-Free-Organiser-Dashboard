@@ -14,7 +14,7 @@ export type TaskSetup = {
   enabled: string[]; // kinds switched on for this community
   configured: boolean; // has an organiser chosen yet?
   eventsPerWeek: number;
-  delegates: Record<string, string>; // kind -> person who gets it every time
+  delegates: Record<string, string>; // "kind|eventTypeId" -> person who gets it every time
 };
 
 // Which tasks a community has switched on, and how often it runs events.
@@ -23,18 +23,22 @@ export async function loadTaskSetup(
   teamId: string,
 ): Promise<TaskSetup> {
   const now = Date.now();
-  const [kinds, settings, events] = await Promise.all([
+  const [kinds, settings, delegates, events] = await Promise.all([
     supabase
       .from("task_kinds")
       .select(
-        "kind, title, estimate_minutes, estimate_max_minutes, anchor, team_id",
+        "kind, title, estimate_minutes, estimate_max_minutes, anchor, due_after_hours, team_id",
       )
       .is("archived_at", null)
       .or(`team_id.is.null,team_id.eq.${teamId}`)
       .order("sort_order"),
     supabase
       .from("team_task_kinds")
-      .select("kind, enabled, delegate_to")
+      .select("kind, enabled")
+      .eq("team_id", teamId),
+    supabase
+      .from("task_delegates")
+      .select("kind, event_type_id, person_id")
       .eq("team_id", teamId),
     supabase
       .from("events")
@@ -53,7 +57,12 @@ export async function loadTaskSetup(
     label: k.estimate_max_minutes
       ? `${k.estimate_minutes}–${k.estimate_max_minutes}`
       : String(k.estimate_minutes),
-    when: k.anchor === "start" ? "before" : "after",
+    when:
+      k.anchor === "end"
+        ? "after"
+        : k.due_after_hours > 0
+          ? "during"
+          : "before",
     custom: !!k.team_id,
   }));
   const off = new Set(rows.filter((r) => !r.enabled).map((r) => r.kind));
@@ -63,9 +72,12 @@ export async function loadTaskSetup(
     configured: rows.length > 0,
     eventsPerWeek: Math.max(1, Math.round(((events.count ?? 0) / 8) * 2) / 2),
     delegates: Object.fromEntries(
-      rows
-        .filter((r) => r.delegate_to)
-        .map((r) => [r.kind, r.delegate_to as string]),
+      (delegates.data ?? [])
+        .filter((d) => d.person_id)
+        .map((d) => [
+          `${d.kind}|${d.event_type_id ?? ""}`,
+          d.person_id as string,
+        ]),
     ),
   };
 }

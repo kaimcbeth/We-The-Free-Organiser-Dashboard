@@ -16,6 +16,8 @@ export type TaskRow = {
   kind: string;
   sortOrder: number;
   eventId: string | null;
+  eventTypeId: string | null;
+  eventTypeName: string | null;
   title: string;
   description: string | null;
   estimateMinutes: number;
@@ -64,10 +66,12 @@ export function TaskCard({
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
   const [removed, setRemoved] = useState(false);
+  // "Every time" delegation is per kind of task and per event type.
+  const standingKey = `${task.kind}|${task.eventTypeId ?? ""}`;
   const [delegating, setDelegating] = useState(false);
   const [search, setSearch] = useState("");
-  const [always, setAlways] = useState(standing[task.kind] ?? "");
-  const [everyTime, setEveryTime] = useState(!!standing[task.kind]);
+  const [always, setAlways] = useState(standing[standingKey] ?? "");
+  const [everyTime, setEveryTime] = useState(!!standing[standingKey]);
 
   function delegate(personId: string, clearStanding = false) {
     setDelegating(false);
@@ -82,7 +86,11 @@ export function TaskCard({
     if (standingChange !== null) setAlways(standingChange);
     start(async () => {
       if (standingChange !== null) {
-        const s = await setStandingDelegate(task.kind, standingChange || null);
+        const s = await setStandingDelegate(
+          task.kind,
+          task.eventTypeId,
+          standingChange || null,
+        );
         if (s.error) {
           setAlways(beforeAlways);
           setError(s.error);
@@ -202,6 +210,14 @@ export function TaskCard({
 
           {!done && (
             <div className="mt-3 flex flex-wrap items-center gap-2">
+              {task.kind === "take_attendance" && task.eventId && (
+                <a
+                  href={`/events/${task.eventId}`}
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                >
+                  Take attendance →
+                </a>
+              )}
               {whatsappUrl &&
                 (task.kind === "post_photos" ||
                   task.kind === "promote_whatsapp") && (
@@ -263,7 +279,7 @@ export function TaskCard({
               {
                 v: true,
                 label: "Every time",
-                hint: `All future “${task.title}” tasks`,
+                hint: `All future “${task.title}” tasks${task.eventTypeName ? ` for ${task.eventTypeName} events` : ""}`,
               },
             ].map((o) => (
               <button

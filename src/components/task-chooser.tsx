@@ -134,7 +134,7 @@ export function TaskChooser({
                 : "Switch on the tasks you want after each event."}{" "}
               You can change this any time from the Tasks page.
             </p>
-            {(["before", "after"] as const).map((when) => {
+            {(["before", "during", "after"] as const).map((when) => {
               const list = kinds.filter((k) => k.when === when);
               if (list.length === 0) return null;
               return (
@@ -142,7 +142,9 @@ export function TaskChooser({
                   <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">
                     {when === "before"
                       ? "Before each event"
-                      : "After each event"}
+                      : when === "during"
+                        ? "At each event"
+                        : "After each event"}
                   </h3>
                   <ul className="space-y-2">
                     {list.map((k) => {

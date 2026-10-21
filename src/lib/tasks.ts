@@ -14,12 +14,18 @@ type Raw = {
     estimate_minutes: number;
     estimate_max_minutes: number | null;
   } | null;
-  event: { id: string; title: string; starts_at: string } | null;
+  event: {
+    id: string;
+    title: string;
+    starts_at: string;
+    event_type_id: string | null;
+    event_type: { name: string } | null;
+  } | null;
   assignee: { first_name: string; last_name: string | null } | null;
 };
 
 const SELECT =
-  "id, due_at, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes), event:events(id, title, starts_at), assignee:people!tasks_assigned_to_fkey(first_name, last_name)";
+  "id, due_at, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes), event:events(id, title, starts_at, event_type_id, event_type:event_types(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name)";
 
 function toRow(t: Raw): TaskRow {
   return {
@@ -27,6 +33,8 @@ function toRow(t: Raw): TaskRow {
     kind: t.kind?.kind ?? "",
     sortOrder: t.kind?.sort_order ?? 0,
     eventId: t.event?.id ?? null,
+    eventTypeId: t.event?.event_type_id ?? null,
+    eventTypeName: t.event?.event_type?.name ?? null,
     title: t.kind?.title ?? "Task",
     description: t.kind?.description ?? null,
     // Ranges ("5–10 min") count as their middle for totals.
