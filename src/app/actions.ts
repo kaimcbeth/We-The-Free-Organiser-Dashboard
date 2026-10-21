@@ -428,7 +428,9 @@ export async function setActiveTeam(teamId: string): Promise<void> {
 }
 
 // God Mode: preview the app as another role (null = back to God Mode).
-export async function setViewAs(role: ViewRole | null): Promise<void> {
+export async function setViewAs(
+  role: ViewRole | "new_organiser" | null,
+): Promise<void> {
   const { organiser } = await getStaff();
   if (organiser?.access !== "god") return;
   const jar = await cookies();
@@ -525,4 +527,26 @@ export async function dismissTask(taskId: string): Promise<{ error?: string }> {
   if (error) return { error: "Couldn't remove that task. Please try again." };
   revalidatePath("/tasks", "layout");
   return {};
+}
+
+// Which follow-up tasks are made after each event in this community.
+export async function saveTeamTasks(
+  kinds: string[],
+): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  if (organiser.viewingAs) return {}; // God Mode preview: don't change anything
+  const { data, error } = await supabase.rpc("set_team_tasks", {
+    p_team_id: organiser.team_id,
+    p_kinds: kinds,
+  });
+  if (error || !data) return { error: "Couldn't save. Please try again." };
+  revalidatePath("/tasks");
+  return {};
+}
+
+export async function finishOrganiserTour(): Promise<void> {
+  const { supabase, organiser } = await requireOrganiser();
+  if (organiser.tourPreview) return;
+  await supabase.rpc("finish_organiser_tutorial");
+  revalidatePath("/", "layout");
 }

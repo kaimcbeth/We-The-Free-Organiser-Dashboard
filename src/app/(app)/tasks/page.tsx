@@ -2,11 +2,13 @@ import { requireOrganiser } from "@/lib/organiser";
 import { LoadError } from "@/components/load-error";
 import { TaskCard } from "@/components/task-card";
 import { loadTeamTasks } from "@/lib/tasks";
+import { loadTaskSetup } from "@/lib/task-setup";
+import { ChooseTasks } from "./choose-tasks";
 import { formatEventDate } from "@/lib/time";
 
 export default async function TasksPage() {
   const { supabase, organiser } = await requireOrganiser();
-  const [tasks, { data: people }] = await Promise.all([
+  const [tasks, { data: people }, setup] = await Promise.all([
     loadTeamTasks(supabase, organiser.team_id),
     supabase
       .from("people")
@@ -14,6 +16,7 @@ export default async function TasksPage() {
       .eq("team_id", organiser.team_id)
       .not("user_id", "is", null)
       .order("first_name"),
+    loadTaskSetup(supabase, organiser.team_id),
   ]);
   if (!tasks) return <LoadError what="tasks" />;
 
@@ -64,6 +67,15 @@ export default async function TasksPage() {
             ? "All done. New tasks appear here after each event."
             : `${tasks.open.length} to do · about ${minutes} min in total`}
         </p>
+        <div className="mt-3">
+          <ChooseTasks
+            setup={setup}
+            communityName={organiser.team.name.replace(
+              /, (Australia|New Zealand)$/,
+              "",
+            )}
+          />
+        </div>
       </div>
 
       {groups.map((g) => (

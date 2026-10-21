@@ -4,10 +4,11 @@ import { useTransition } from "react";
 import { setActiveTeam, setViewAs } from "@/app/actions";
 import type { ViewRole } from "@/lib/roles";
 
-const VIEW_OPTIONS: { value: ViewRole; label: string }[] = [
+const VIEW_OPTIONS: { value: ViewRole | "new_organiser"; label: string }[] = [
   { value: "god", label: "God Mode" },
   { value: "regional_lead", label: "Regional Support Lead" },
   { value: "organiser", label: "Organiser" },
+  { value: "new_organiser", label: "New organiser (tutorial)" },
   { value: "core_team", label: "Core Team" },
   { value: "member", label: "Member" },
   { value: "new_member", label: "New member (tutorial)" },
@@ -20,11 +21,13 @@ export function StaffBar({
   teamId,
   isGod,
   viewingAs,
+  viewValue,
 }: {
   teams: { id: string; name: string }[];
   teamId: string;
   isGod: boolean;
   viewingAs: ViewRole | null;
+  viewValue?: string | null;
 }) {
   const [pending, start] = useTransition();
   if (teams.length < 2 && !isGod) return null;
@@ -57,10 +60,12 @@ export function StaffBar({
               {viewingAs ? "Previewing as" : "View as"}
             </span>
             <select
-              value={viewingAs ?? "god"}
+              value={viewValue ?? "god"}
               disabled={pending}
               onChange={(e) =>
-                start(() => setViewAs(e.target.value as ViewRole))
+                start(() =>
+                  setViewAs(e.target.value as ViewRole | "new_organiser"),
+                )
               }
               className={`rounded-md px-1.5 py-0.5 font-medium ${viewingAs ? "bg-navy/10" : "bg-white/15"}`}
             >

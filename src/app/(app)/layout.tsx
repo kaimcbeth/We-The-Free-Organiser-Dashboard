@@ -4,6 +4,8 @@ import { StaffBar } from "@/components/staff-bar";
 import { signPhotos } from "@/lib/photos";
 import { Avatar } from "@/components/avatar";
 import { NavLinks } from "./nav-links";
+import { OrganiserTour } from "./organiser-tour";
+import { loadTaskSetup } from "@/lib/task-setup";
 import { NotificationBell } from "@/components/notification-bell";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
@@ -16,6 +18,9 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     .eq("user_id", user.id)
     .maybeSingle();
   const photos = me ? await signPhotos(supabase, [me]) : {};
+  const tourSetup = organiser.showTour
+    ? await loadTaskSetup(supabase, organiser.team_id)
+    : null;
   const { count: openTasks } = await supabase
     .from("tasks")
     .select("id", { count: "exact", head: true })
@@ -73,8 +78,20 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         teamId={organiser.team_id}
         isGod={organiser.access === "god"}
         viewingAs={organiser.viewingAs}
+        viewValue={organiser.viewValue}
       />
 
+      {tourSetup && (
+        <OrganiserTour
+          key={organiser.tourPreview ? "preview" : "tour"}
+          firstName={(me?.first_name ?? organiser.name).split(" ")[0]}
+          communityName={organiser.team.name.replace(
+            /, (Australia|New Zealand)$/,
+            "",
+          )}
+          setup={tourSetup}
+        />
+      )}
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-5">
         {children}
       </main>

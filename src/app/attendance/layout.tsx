@@ -40,6 +40,7 @@ export default async function AttendanceLayout({
         teamId={organiser.team_id}
         isGod={organiser.access === "god"}
         viewingAs={organiser.viewingAs}
+        viewValue={organiser.viewValue}
       />
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-5">
         {children}

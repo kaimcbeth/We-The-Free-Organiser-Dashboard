@@ -24,6 +24,9 @@ export type Organiser = {
   access: Access; // their real role
   role: ViewRole; // the role the app is shown as (differs only in God Mode "view as")
   viewingAs: ViewRole | null;
+  viewValue: string | null; // what the "View as" menu shows (incl. "new_organiser")
+  showTour: boolean; // run the organiser welcome tour on this page load
+  tourPreview: boolean; // God Mode "View as New organiser": tour every time, nothing saved
   region_id: string | null;
   team_id: string; // the team being looked at
   team: Team;
@@ -44,7 +47,7 @@ export async function getStaff() {
 
   const { data: row } = await supabase
     .from("organisers")
-    .select("id, team_id, region_id, name, email, access")
+    .select("id, team_id, region_id, name, email, access, tutorial_done_at")
     .eq("id", user.id)
     .maybeSingle<{
       id: string;
@@ -53,6 +56,7 @@ export async function getStaff() {
       name: string;
       email: string;
       access: Access;
+      tutorial_done_at: string | null;
     }>();
   if (!row) return { supabase, user, organiser: null };
 
@@ -77,7 +81,10 @@ export async function getStaff() {
 
   setRequestTz(team.timezone);
 
-  const asCookie = jar.get(VIEW_AS_COOKIE)?.value as ViewRole | undefined;
+  const rawAs = jar.get(VIEW_AS_COOKIE)?.value;
+  // "New organiser" previews the organiser view with the welcome tour.
+  const tourPreview = row.access === "god" && rawAs === "new_organiser";
+  const asCookie = (tourPreview ? "organiser" : rawAs) as ViewRole | undefined;
   const viewingAs =
     row.access === "god" &&
     asCookie &&
@@ -93,6 +100,10 @@ export async function getStaff() {
     access: row.access,
     role: viewingAs ?? row.access,
     viewingAs,
+    viewValue: tourPreview ? "new_organiser" : viewingAs,
+    tourPreview,
+    showTour:
+      tourPreview || (row.access === "organiser" && !row.tutorial_done_at),
     region_id: row.region_id,
     team_id: team.id,
     team,
