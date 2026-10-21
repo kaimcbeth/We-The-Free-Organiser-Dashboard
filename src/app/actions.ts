@@ -585,25 +585,19 @@ export async function dismissEventTasks(
   return {};
 }
 
-// God Mode: make a test account in the community being viewed.
-export async function createTestAccount(
-  first: string,
-  last: string,
+// God Mode: change the hidden test person's role.
+export async function setTestRole(
+  personId: string,
   role: "member" | "core_team" | "organiser" | "regional_lead",
 ): Promise<{ error?: string }> {
   const { supabase, organiser } = await requireOrganiser();
   if (organiser.access !== "god") return { error: "God Mode only." };
-  if (!first.trim()) return { error: "Add a first name." };
-  const { error } = await supabase.rpc("create_test_account", {
-    p_first: first.trim(),
-    p_last: last.trim(),
-    p_team_id: organiser.team_id,
-    p_role: role === "member" ? null : role,
-    p_region_id: null,
+  const { data, error } = await supabase.rpc("set_test_role", {
+    p_person_id: personId,
+    p_role: role,
   });
-  if (error)
-    return { error: "Couldn't make the test account. Please try again." };
+  if (error || data !== "ok")
+    return { error: "Couldn't change the role. Please try again." };
   revalidatePath("/test-accounts");
-  revalidatePath("/people");
   return {};
 }

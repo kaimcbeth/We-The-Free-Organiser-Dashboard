@@ -1,54 +1,29 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createTestAccount } from "@/app/actions";
+import { setTestRole } from "@/app/actions";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { inputClass } from "@/components/form";
 import { ROLE_LABEL, type ViewRole } from "@/lib/roles";
 
 const ROLES = ["member", "core_team", "organiser", "regional_lead"] as const;
 
-export function NewTestAccount({ communityName }: { communityName: string }) {
-  const [first, setFirst] = useState("");
-  const [last, setLast] = useState("");
-  const [role, setRole] = useState<(typeof ROLES)[number]>("member");
-  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+// One tap to change the test person's role (their tours reset each time).
+export function TestRole({
+  personId,
+  current,
+}: {
+  personId: string;
+  current: ViewRole;
+}) {
+  const router = useRouter();
+  const [role, setRole] = useState(current);
+  const [error, setError] = useState("");
   const [pending, start] = useTransition();
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        start(async () => {
-          const r = await createTestAccount(first, last, role);
-          if (r.error) setMsg({ ok: false, text: r.error });
-          else {
-            setMsg({ ok: true, text: `${first} is ready.` });
-            setFirst("");
-            setLast("");
-          }
-        });
-      }}
-      className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
-    >
-      <h2 className="font-semibold">New test account in {communityName}</h2>
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          value={first}
-          onChange={(e) => setFirst(e.target.value)}
-          placeholder="First name"
-          aria-label="First name"
-          required
-          className={inputClass}
-        />
-        <input
-          value={last}
-          onChange={(e) => setLast(e.target.value)}
-          placeholder="Last name (e.g. Test)"
-          aria-label="Last name"
-          className={inputClass}
-        />
-      </div>
+    <div>
+      <p className="mb-2 text-sm font-medium">Role</p>
       <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Role">
         {ROLES.map((r) => (
           <button
@@ -56,8 +31,22 @@ export function NewTestAccount({ communityName }: { communityName: string }) {
             type="button"
             role="radio"
             aria-checked={role === r}
-            onClick={() => setRole(r)}
-            className={`rounded-xl px-3 py-1.5 text-sm font-semibold ring-1 ${
+            disabled={pending}
+            onClick={() =>
+              start(async () => {
+                const before = role;
+                setRole(r);
+                const res = await setTestRole(personId, r);
+                if (res.error) {
+                  setRole(before);
+                  setError(res.error);
+                } else {
+                  setError("");
+                  router.refresh();
+                }
+              })
+            }
+            className={`rounded-xl px-3 py-1.5 text-sm font-semibold ring-1 disabled:opacity-60 ${
               role === r
                 ? "bg-navy text-white ring-navy"
                 : "bg-white text-navy ring-stone-300 hover:bg-stone-50"
@@ -67,18 +56,12 @@ export function NewTestAccount({ communityName }: { communityName: string }) {
           </button>
         ))}
       </div>
-      <button
-        disabled={pending}
-        className="w-full rounded-xl bg-pink px-4 py-2.5 font-semibold text-navy hover:bg-pink-strong disabled:opacity-60"
-      >
-        {pending ? "Making…" : "Make test account"}
-      </button>
-      {msg && (
-        <p className={`text-sm ${msg.ok ? "text-stone-700" : "text-red-700"}`}>
-          {msg.text}
-        </p>
-      )}
-    </form>
+      <p className="mt-2 text-xs text-stone-500">
+        Changing the role also resets their welcome tour, so you can see it
+        again.
+      </p>
+      {error && <p className="mt-1 text-sm text-red-700">{error}</p>}
+    </div>
   );
 }
 
