@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { setTestRole } from "@/app/actions";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { signInAsTestPerson } from "@/lib/test-login";
 import { ROLE_LABEL, type ViewRole } from "@/lib/roles";
 
 const ROLES = ["member", "core_team", "organiser", "regional_lead"] as const;
@@ -65,10 +65,7 @@ export function TestRole({
   );
 }
 
-export const GOD_RETURN_KEY = "wtf-god-session";
-
-// Switch this browser to the test account (God Mode's own session is kept so
-// the "Back to God Mode" bar can switch back).
+// Switch this browser to the test account.
 export function SignInAs({
   personId,
   name,
@@ -84,47 +81,11 @@ export function SignInAs({
   async function go() {
     setBusy(true);
     setError("");
-    const supabase = createClient();
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session) {
+    const err = await signInAsTestPerson({ personId, role });
+    if (err) {
       setBusy(false);
-      setError("Please sign in again first.");
-      return;
+      setError(err);
     }
-    const { data, error } = await supabase.functions.invoke("test-login", {
-      body: { personId },
-    });
-    if (error || !data?.token_hash) {
-      setBusy(false);
-      setError("Couldn't sign in as them.");
-      return;
-    }
-    try {
-      localStorage.setItem(
-        GOD_RETURN_KEY,
-        JSON.stringify({
-          access_token: session.access_token,
-          refresh_token: session.refresh_token,
-        }),
-      );
-    } catch {
-      /* without storage, "Back to God Mode" will ask you to sign in again */
-    }
-    // Leave any "View as" preview behind.
-    document.cookie = "view_as=; path=/; max-age=0";
-    const { error: verifyError } = await supabase.auth.verifyOtp({
-      token_hash: data.token_hash,
-      type: "magiclink",
-    });
-    if (verifyError) {
-      setBusy(false);
-      setError("Couldn't sign in as them.");
-      return;
-    }
-    window.location.href =
-      role === "member" ? "/me" : role === "core_team" ? "/attendance" : "/";
   }
 
   return (

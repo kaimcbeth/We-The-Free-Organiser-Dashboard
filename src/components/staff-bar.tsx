@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { setActiveTeam, setViewAs } from "@/app/actions";
 import type { ViewRole } from "@/lib/roles";
+import { signInAsTestPerson } from "@/lib/test-login";
 
 const VIEW_OPTIONS: { value: ViewRole | "new_organiser"; label: string }[] = [
   { value: "god", label: "God Mode" },
@@ -31,6 +32,8 @@ export function StaffBar({
   viewValue?: string | null;
 }) {
   const [pending, start] = useTransition();
+  const [switching, setSwitching] = useState(false);
+  const [error, setError] = useState("");
   if (teams.length < 2 && !isGod) return null;
 
   return (
@@ -62,12 +65,22 @@ export function StaffBar({
             </span>
             <select
               value={viewValue ?? "god"}
-              disabled={pending}
-              onChange={(e) =>
-                start(() =>
-                  setViewAs(e.target.value as ViewRole | "new_organiser"),
-                )
-              }
+              disabled={pending || switching}
+              onChange={async (e) => {
+                const v = e.target.value;
+                if (v === "fergus") {
+                  // Really signs in as this community's test account.
+                  setSwitching(true);
+                  setError("");
+                  const err = await signInAsTestPerson({ teamId });
+                  if (err) {
+                    setSwitching(false);
+                    setError(err);
+                  }
+                  return;
+                }
+                start(() => setViewAs(v as ViewRole | "new_organiser"));
+              }}
               className={`rounded-md px-1.5 py-0.5 font-medium ${viewingAs ? "bg-navy/10" : "bg-white/15"}`}
             >
               {VIEW_OPTIONS.map((o) => (
@@ -75,7 +88,13 @@ export function StaffBar({
                   {o.label}
                 </option>
               ))}
+              <option disabled>──────────</option>
+              <option value="fergus" className="text-navy">
+                Fergus (Test Account)
+              </option>
             </select>
+            {switching && <span className="opacity-75">Switching…</span>}
+            {error && <span className="font-semibold">{error}</span>}
           </label>
         )}
         {isGod && !viewingAs && (

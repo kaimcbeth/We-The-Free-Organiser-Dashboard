@@ -64,7 +64,7 @@ export function BuddySwitch({
           Approved buddy
           <span className="block text-xs text-stone-500">
             {connected
-              ? "Can look after newcomers and gets reminders to reach out"
+              ? "Can connect with and support newcomers, and gets reminders to reach out"
               : `${firstName} needs to connect their account first`}
           </span>
         </span>

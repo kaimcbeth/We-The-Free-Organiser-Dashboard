@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-const GOD_RETURN_KEY = "wtf-god-session";
+import { GOD_RETURN_KEY } from "@/lib/test-login";
 
 // A bar at the bottom of every page while you're signed in as a test account,
 // with a one-tap way back to God Mode.

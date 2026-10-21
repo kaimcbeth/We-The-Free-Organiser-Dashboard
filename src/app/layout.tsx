@@ -5,11 +5,12 @@ import "./globals.css";
 import { TestAccountBar } from "@/components/test-account-bar";
 
 export const metadata: Metadata = {
-  title: "WTF Organiser",
-  description: "Event check-in and attendance for We The Free organisers",
+  title: "Movement Hub",
+  description:
+    "We The Free Movement Hub: events, attendance and tasks for our communities",
   appleWebApp: {
     capable: true,
-    title: "WTF Organiser",
+    title: "Movement Hub",
     statusBarStyle: "default",
   },
 };

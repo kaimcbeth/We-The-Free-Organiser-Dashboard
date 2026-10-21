@@ -37,7 +37,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 pt-3">
           <Link href="/" className="min-w-0 leading-tight">
             <span className="block text-xs font-bold uppercase tracking-wider text-pink">
-              We The Free
+              Movement Hub
             </span>
             <span className="block truncate text-sm font-medium text-white">
               {organiser.team?.name ?? "Your community"}

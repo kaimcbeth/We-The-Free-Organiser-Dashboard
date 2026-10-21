@@ -11,7 +11,7 @@ export function AttendeeShell({
       <header className="bg-navy text-white">
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
           <span className="text-sm font-bold uppercase tracking-wider text-pink">
-            We The Free
+            Movement Hub
           </span>
           {right}
         </div>

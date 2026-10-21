@@ -7,7 +7,7 @@ export default function LoginPage() {
     <main className="flex flex-1 items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
         <p className="text-sm font-semibold uppercase tracking-wide text-pink-ink">
-          We The Free
+          We The Free Movement Hub
         </p>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight">Log in</h1>
         <div className="mt-8">
