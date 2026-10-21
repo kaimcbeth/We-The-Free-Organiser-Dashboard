@@ -536,7 +536,11 @@ export async function dismissTask(taskId: string): Promise<{ error?: string }> {
     .from("tasks")
     .update({ dismissed_at: new Date().toISOString() })
     .eq("id", taskId)
-    .eq("team_id", organiser.team_id);
+    // Any of their communities (Regional Support Leads work across several).
+    .in(
+      "team_id",
+      organiser.teams.map((t) => t.id),
+    );
   if (error) return { error: "Couldn't remove that task. Please try again." };
   revalidatePath("/tasks", "layout");
   return {};

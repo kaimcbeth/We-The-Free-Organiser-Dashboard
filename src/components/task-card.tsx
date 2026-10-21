@@ -71,6 +71,7 @@ export function TaskCard({
   hideEvent = false,
   standing = {},
   extra,
+  removable = false,
 }: {
   task: TaskRow;
   tz: string;
@@ -80,6 +81,7 @@ export function TaskCard({
   hideEvent?: boolean; // when shown under the event's own heading
   standing?: Record<string, string>; // kind -> standing delegate (person id)
   extra?: React.ReactNode; // shown under the description (e.g. check-in ideas)
+  removable?: boolean; // show the × even without delegating (Regional Support Lead tasks)
 }) {
   const [done, setDone] = useState(!!task.doneAt);
   const [assignee, setAssignee] = useState(task.assignedTo ?? "");
@@ -131,7 +133,7 @@ export function TaskCard({
     <li
       className={`relative rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 transition ${done ? "opacity-60" : ""}`}
     >
-      {people && (
+      {(people || removable) && (
         <button
           type="button"
           aria-label="Remove task"

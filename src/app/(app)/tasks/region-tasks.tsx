@@ -73,6 +73,7 @@ export async function RegionTasks({
                   tz={team?.timezone ?? "Australia/Sydney"}
                   now={now}
                   whatsappUrl={null}
+                  removable
                   extra={
                     connect[t.teamId] && (
                       <ConnectIdeas ctx={connect[t.teamId]} />

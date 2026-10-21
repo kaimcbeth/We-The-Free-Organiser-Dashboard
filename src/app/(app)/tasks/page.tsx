@@ -113,6 +113,7 @@ export default async function TasksPage() {
                 tz={common.tz}
                 now={now}
                 whatsappUrl={null}
+                removable
                 extra={
                   connect?.[t.teamId] && (
                     <ConnectIdeas ctx={connect[t.teamId]} />
