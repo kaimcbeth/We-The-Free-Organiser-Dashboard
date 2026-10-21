@@ -40,7 +40,12 @@ const short = (name: string) =>
 function nameFromLink(link: string) {
   const m = link.match(/facebook\.com\/groups\/([^/?#]+)/i);
   if (!m) return "";
-  const slug = decodeURIComponent(m[1]);
+  let slug = m[1];
+  try {
+    slug = decodeURIComponent(slug);
+  } catch {
+    /* odd characters: use it as it is */
+  }
   if (/^\d+$/.test(slug)) return "";
   return slug
     .replace(/[._-]+/g, " ")
