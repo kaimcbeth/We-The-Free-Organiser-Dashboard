@@ -58,7 +58,7 @@ export function MemberTutorial({
       icon: "📅",
       tone: "bg-yellow",
       title: "Your events and milestones",
-      body: "Every event you come to shows up on this page, with your outreach count. We celebrate every 10th outreach event!",
+      body: "Every event you come to shows up on this page, so you can look back on everything you've been part of. It also helps us notice and celebrate your milestones along the way.",
     },
     {
       icon: "🙂",
