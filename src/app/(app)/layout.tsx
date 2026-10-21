@@ -71,6 +71,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
           canManageRoles={organiser.role !== "core_team"}
           showCalendar={organiser.role !== "core_team"}
           openTasks={openTasks ?? 0}
+          isGod={organiser.role === "god"}
         />
       </header>
       <StaffBar

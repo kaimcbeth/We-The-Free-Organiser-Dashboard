@@ -25,10 +25,12 @@ export function NavLinks({
   canManageRoles,
   showCalendar,
   openTasks = 0,
+  isGod = false,
 }: {
   canManageRoles: boolean;
   showCalendar: boolean;
   openTasks?: number;
+  isGod?: boolean;
 }) {
   const path = usePathname();
   const base = [
@@ -60,6 +62,12 @@ export function NavLinks({
         },
       ]
     : base;
+  if (isGod)
+    links.push({
+      href: "/facebook-groups",
+      label: "FB groups",
+      match: (p: string) => p.startsWith("/facebook-groups"),
+    });
   return (
     <nav className="mx-auto flex max-w-2xl gap-1 overflow-x-auto whitespace-nowrap px-4 pt-2 [scrollbar-width:none]">
       {links.map((l) => {
