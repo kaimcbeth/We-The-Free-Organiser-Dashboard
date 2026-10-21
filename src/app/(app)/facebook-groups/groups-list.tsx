@@ -34,6 +34,21 @@ const catOf = (v: string) =>
 const short = (name: string) =>
   name.replace(/, (Australia|New Zealand|Canada)$/, "");
 
+// Facebook won't show group pages to apps (it asks them to log in), so the
+// best guess is the link itself: /groups/vegans.of.sydney -> "Vegans Of Sydney".
+// Number-only links (/groups/123456) give nothing.
+function nameFromLink(link: string) {
+  const m = link.match(/facebook\.com\/groups\/([^/?#]+)/i);
+  if (!m) return "";
+  const slug = decodeURIComponent(m[1]);
+  if (/^\d+$/.test(slug)) return "";
+  return slug
+    .replace(/[._-]+/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 const fmtMembers = (n: number) =>
   n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : String(n);
 
@@ -275,7 +290,19 @@ function GroupSheet({
           <input
             autoFocus={!g.id}
             value={g.url}
-            onChange={(e) => setG({ ...g, url: e.target.value })}
+            onChange={(e) => {
+              const url = e.target.value;
+              // Fill in the name from the link unless one's been typed.
+              const guess = nameFromLink(url);
+              setG({
+                ...g,
+                url,
+                name:
+                  guess && (!g.name || g.name === nameFromLink(g.url))
+                    ? guess
+                    : g.name,
+              });
+            }}
             placeholder="https://www.facebook.com/groups/…"
             className={inputClass}
           />
