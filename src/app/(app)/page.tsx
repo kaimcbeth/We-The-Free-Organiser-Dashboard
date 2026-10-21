@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { LoadError } from "@/components/load-error";
 import { ImportStatus } from "./import-status";
 import { TeamLinkButton } from "./team-link";
@@ -27,6 +29,9 @@ type EventRow = {
 
 export default async function EventsPage() {
   const { supabase, organiser } = await requireOrganiser();
+  // Last time they chose the calendar view.
+  if ((await cookies()).get("events_view")?.value === "calendar")
+    redirect("/calendar");
   if (organiser.allCommunities)
     return <RegionEvents supabase={supabase} teams={organiser.teams} />;
   const { start: todayStart, end: todayEnd } = dayBoundsUtc(todayInTz());

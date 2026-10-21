@@ -15,6 +15,14 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "The Calendar is now part of Events: switch between List and Calendar at the top. It remembers which one you used last.",
+      },
+      {
+        level: "organiser",
+        text: "What's new: this page, with the latest changes to the Movement Hub.",
+      },
+      {
+        level: "organiser",
         text: "You can give someone a role before they've connected their account. It shows as “pending” and starts as soon as they connect.",
       },
       {

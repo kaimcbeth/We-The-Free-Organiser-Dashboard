@@ -6,6 +6,7 @@ import { StaffBar } from "@/components/staff-bar";
 import { signPhotos } from "@/lib/photos";
 import { Avatar } from "@/components/avatar";
 import { NavLinks } from "./nav-links";
+import { EventsViewSwitch } from "./events-view-switch";
 import { AllCommunitiesNotice } from "./all-communities-notice";
 import { OrganiserTour } from "./organiser-tour";
 import { loadTaskSetup } from "@/lib/task-setup";
@@ -89,7 +90,6 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         </div>
         <NavLinks
           canManageRoles={organiser.role !== "core_team"}
-          showCalendar={organiser.role !== "core_team"}
           openTasks={openTasks ?? 0}
           isGod={organiser.role === "god"}
           whatsNew={
@@ -124,6 +124,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         />
       )}
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-5">
+        <EventsViewSwitch />
         {children}
       </main>
     </div>

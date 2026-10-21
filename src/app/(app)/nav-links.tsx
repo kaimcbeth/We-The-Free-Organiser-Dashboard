@@ -7,7 +7,8 @@ const LINKS = [
   {
     href: "/",
     label: "Events",
-    match: (p: string) => p === "/" || p.startsWith("/events"),
+    match: (p: string) =>
+      p === "/" || p.startsWith("/events") || p.startsWith("/calendar"),
   },
   {
     href: "/people",
@@ -23,33 +24,20 @@ const LINKS = [
 
 export function NavLinks({
   canManageRoles,
-  showCalendar,
   openTasks = 0,
   isGod = false,
   whatsNew = false,
 }: {
   canManageRoles: boolean;
-  showCalendar: boolean;
   openTasks?: number;
   isGod?: boolean;
   whatsNew?: boolean; // something new since they last looked
 }) {
   const path = usePathname();
-  const base = [
-    ...(showCalendar
-      ? [
-          LINKS[0],
-          {
-            href: "/calendar",
-            label: "Calendar",
-            match: (p: string) => p.startsWith("/calendar"),
-          },
-          ...LINKS.slice(1),
-        ]
-      : LINKS),
-  ];
+  // Calendar lives inside Events (List | Calendar switch on the page).
+  const base = [...LINKS];
   // Tasks sits right after Events (and Calendar).
-  base.splice(showCalendar ? 2 : 1, 0, {
+  base.splice(1, 0, {
     href: "/tasks",
     label: "Tasks",
     match: (p: string) => p.startsWith("/tasks"),
