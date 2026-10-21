@@ -32,16 +32,26 @@ export type TaskRow = {
 
 // "Due today", "Due tomorrow", "2 days overdue"...
 function dueLabel(dueAt: string, now: number) {
-  const days = Math.floor((Date.parse(dueAt) - now) / 864e5);
-  if (days < 0)
+  // Traffic lights, never "overdue": red = do today, orange = in the next
+  // few days, yellow = sometime this week.
+  const hours = (Date.parse(dueAt) - now) / 36e5;
+  if (hours <= 24)
     return {
-      text: `${-days} day${days === -1 ? "" : "s"} overdue`,
-      tone: "bg-pink/20 text-pink-ink",
+      text: "Do today",
+      dot: "bg-[#ef4444]",
+      tone: "bg-[#ef4444]/10 text-[#b91c1c]",
     };
-  if (days === 0) return { text: "Due today", tone: "bg-yellow/50 text-navy" };
-  if (days === 1)
-    return { text: "Due tomorrow", tone: "bg-yellow/30 text-navy" };
-  return { text: `Due in ${days} days`, tone: "bg-cyan/20 text-navy" };
+  if (hours <= 72)
+    return {
+      text: "Next few days",
+      dot: "bg-[#f97316]",
+      tone: "bg-[#f97316]/10 text-[#c2410c]",
+    };
+  return {
+    text: "This week",
+    dot: "bg-yellow",
+    tone: "bg-yellow/25 text-navy",
+  };
 }
 
 export function TaskCard({
@@ -192,8 +202,12 @@ export function TaskCard({
             </span>
             {!done && (
               <span
-                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${due.tone}`}
+                className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold ${due.tone}`}
               >
+                <span
+                  aria-hidden
+                  className={`h-2 w-2 rounded-full ${due.dot}`}
+                />
                 {due.text}
               </span>
             )}
