@@ -41,6 +41,10 @@ export default async function AttendanceLayout({
         isGod={organiser.access === "god"}
         viewingAs={organiser.viewingAs}
         viewValue={organiser.viewValue}
+        allowAll={
+          organiser.role === "god" || organiser.role === "regional_lead"
+        }
+        allCommunities={organiser.allCommunities}
       />
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-5">
         {children}

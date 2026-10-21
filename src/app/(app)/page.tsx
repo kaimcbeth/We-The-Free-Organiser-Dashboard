@@ -4,6 +4,7 @@ import { ImportStatus } from "./import-status";
 import { TeamLinkButton } from "./team-link";
 import { describeImport } from "@/lib/import-status";
 import { requireOrganiser } from "@/lib/organiser";
+import { RegionEvents } from "./region-events";
 import {
   dayBoundsUtc,
   daysUntilLabel,
@@ -26,6 +27,8 @@ type EventRow = {
 
 export default async function EventsPage() {
   const { supabase, organiser } = await requireOrganiser();
+  if (organiser.allCommunities)
+    return <RegionEvents supabase={supabase} teams={organiser.teams} />;
   const { start: todayStart, end: todayEnd } = dayBoundsUtc(todayInTz());
 
   const select =

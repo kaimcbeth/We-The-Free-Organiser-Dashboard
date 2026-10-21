@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
-import { formatEventDate, formatTimeRange, nowIso } from "@/lib/time";
+import {
+  formatEventDate,
+  formatTimeRange,
+  nowIso,
+  setRequestTz,
+} from "@/lib/time";
 import { CheckIn, type Person } from "./check-in";
 import { TypePicker } from "./type-picker";
 import { signPhotos } from "@/lib/photos";
@@ -38,6 +43,10 @@ export default async function EventCheckInPage({
     .maybeSingle<EventDetail>();
 
   if (!event) notFound();
+  // Opened from "All communities" or the calendar: show it as its own community.
+  const team =
+    organiser.teams.find((t) => t.id === event.team_id) ?? organiser.team;
+  setRequestTz(team.timezone);
 
   const [people, attendance, earlier, types, helper, likely] =
     await Promise.all([
@@ -125,7 +134,7 @@ export default async function EventCheckInPage({
           )}
           {event.starts_at > nowIso() && (
             <FacebookEventButton
-              tz={organiser.team.timezone}
+              tz={team.timezone}
               className="text-xs font-medium text-[#1877F2] hover:underline"
               event={{
                 title: event.title,
@@ -144,9 +153,9 @@ export default async function EventCheckInPage({
       <CheckIn
         eventId={event.id}
         teamId={event.team_id}
-        teamSlug={organiser.team?.slug ?? ""}
-        whatsappUrl={organiser.team?.whatsapp_url ?? null}
-        tz={organiser.team.timezone}
+        teamSlug={team.slug ?? ""}
+        whatsappUrl={team.whatsapp_url ?? null}
+        tz={team.timezone}
         organiserId={organiser.id}
         initialPeople={people.data ?? []}
         initialCheckedIn={(attendance.data ?? []).map((a) => a.person_id)}

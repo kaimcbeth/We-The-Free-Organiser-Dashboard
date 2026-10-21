@@ -4,6 +4,7 @@ import { StaffBar } from "@/components/staff-bar";
 import { signPhotos } from "@/lib/photos";
 import { Avatar } from "@/components/avatar";
 import { NavLinks } from "./nav-links";
+import { AllCommunitiesNotice } from "./all-communities-notice";
 import { OrganiserTour } from "./organiser-tour";
 import { loadTaskSetup } from "@/lib/task-setup";
 import { NotificationBell } from "@/components/notification-bell";
@@ -80,7 +81,14 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         isGod={organiser.access === "god"}
         viewingAs={organiser.viewingAs}
         viewValue={organiser.viewValue}
+        allowAll={
+          organiser.role === "god" || organiser.role === "regional_lead"
+        }
+        allCommunities={organiser.allCommunities}
       />
+      {organiser.allCommunities && (
+        <AllCommunitiesNotice teamName={organiser.team.name} />
+      )}
 
       {tourSetup && (
         <OrganiserTour

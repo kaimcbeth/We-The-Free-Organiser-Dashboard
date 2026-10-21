@@ -27,9 +27,13 @@ export function StaffBar({
   isGod,
   viewingAs,
   viewValue,
+  allowAll = false,
+  allCommunities = false,
 }: {
   teams: { id: string; name: string }[];
   teamId: string;
+  allowAll?: boolean; // offer "All communities" (Regional Support Lead / God)
+  allCommunities?: boolean;
   isGod: boolean;
   viewingAs: ViewRole | null;
   viewValue?: string | null;
@@ -48,11 +52,16 @@ export function StaffBar({
           <label className="flex items-center gap-1.5">
             <span className="opacity-75">Community</span>
             <select
-              value={teamId}
+              value={allCommunities ? "all" : teamId}
               disabled={pending}
               onChange={(e) => start(() => setActiveTeam(e.target.value))}
               className="rounded-md bg-white/15 px-1.5 py-0.5 font-medium"
             >
+              {allowAll && (
+                <option value="all" className="text-navy">
+                  All communities
+                </option>
+              )}
               {teams.map((t) => (
                 <option key={t.id} value={t.id} className="text-navy">
                   {t.name}

@@ -28,10 +28,15 @@ export type Organiser = {
   showTour: boolean; // run the organiser welcome tour on this page load
   tourPreview: boolean; // God Mode "View as New organiser": tour every time, nothing saved
   region_id: string | null;
-  team_id: string; // the team being looked at
+  team_id: string; // the team being looked at (with "All communities", a stand-in)
   team: Team;
   teams: Team[]; // every team they can switch between
+  allCommunities: boolean; // "All communities" picked (Regional Support Lead / God)
 };
+
+// Set when "All communities" is picked; the team cookie keeps the last single
+// community, used by pages that only work one community at a time.
+export const ALL_COOKIE = "all_communities";
 
 export const TEAM_COOKIE = "active_team";
 export const VIEW_AS_COOKIE = "view_as";
@@ -74,12 +79,6 @@ export async function getStaff() {
 
   const jar = await cookies();
   const wanted = jar.get(TEAM_COOKIE)?.value;
-  const team =
-    teams.find((t) => t.id === wanted) ??
-    teams.find((t) => t.id === row.team_id) ??
-    teams[0];
-
-  setRequestTz(team.timezone);
 
   const rawAs = jar.get(VIEW_AS_COOKIE)?.value;
   // "New organiser" previews the organiser view with the welcome tour.
@@ -92,13 +91,30 @@ export async function getStaff() {
     asCookie !== "god"
       ? asCookie
       : null;
+  const role: ViewRole = viewingAs ?? row.access;
+
+  let team =
+    teams.find((t) => t.id === wanted) ??
+    teams.find((t) => t.id === row.team_id) ??
+    teams[0];
+  // Previewing as a Regional Support Lead: just that region's communities.
+  if (viewingAs === "regional_lead")
+    teams = teams.filter((t) => t.region_id === team.region_id);
+  // "All communities" is for people who look after more than one.
+  const allCommunities =
+    jar.get(ALL_COOKIE)?.value === "1" &&
+    teams.length > 1 &&
+    (role === "god" || role === "regional_lead");
+  if (!teams.includes(team)) team = teams[0];
+
+  setRequestTz(team.timezone);
 
   const organiser: Organiser = {
     id: row.id,
     name: row.name,
     email: row.email,
     access: row.access,
-    role: viewingAs ?? row.access,
+    role,
     viewingAs,
     viewValue: tourPreview ? "new_organiser" : viewingAs,
     tourPreview,
@@ -108,6 +124,7 @@ export async function getStaff() {
     team_id: team.id,
     team,
     teams,
+    allCommunities,
   };
   return { supabase, user, organiser };
 }

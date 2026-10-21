@@ -8,6 +8,7 @@ import {
   getStaff,
   requireOrganiser,
   TEAM_COOKIE,
+  ALL_COOKIE,
   VIEW_AS_COOKIE,
   type ViewRole,
 } from "@/lib/organiser";
@@ -422,12 +423,20 @@ export async function setTeamWhatsapp(
 // Switch which team a God Mode / Regional Support Lead is looking at.
 export async function setActiveTeam(teamId: string): Promise<void> {
   const { organiser } = await getStaff();
-  if (!organiser?.teams.some((t) => t.id === teamId)) return;
-  (await cookies()).set(TEAM_COOKIE, teamId, {
+  if (!organiser) return;
+  const jar = await cookies();
+  const opts = {
     path: "/",
     maxAge: 60 * 60 * 24 * 365,
-    sameSite: "lax",
-  });
+    sameSite: "lax" as const,
+  };
+  if (teamId === "all") {
+    jar.set(ALL_COOKIE, "1", opts);
+  } else {
+    if (!organiser.teams.some((t) => t.id === teamId)) return;
+    jar.set(TEAM_COOKIE, teamId, opts);
+    jar.delete(ALL_COOKIE);
+  }
   revalidatePath("/", "layout");
 }
 
