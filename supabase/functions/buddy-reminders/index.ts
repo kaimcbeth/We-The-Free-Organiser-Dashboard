@@ -124,8 +124,8 @@ Deno.serve(async () => {
     const next = await nextFor(pairing.team_id);
     const title = `Invite ${newcomer} to an upcoming event`;
     const body = next
-      ? `It's been a week since you became ${newcomer}'s buddy. How about ${next.title}${next.venue ? ` at ${next.venue}` : ""}, ${when(next.starts_at, next.tz)}?`
-      : `It's been a week since you became ${newcomer}'s buddy. Send them a friendly invite to the next event.`;
+      ? `It's been a week since you started supporting ${newcomer}. How about ${next.title}${next.venue ? ` at ${next.venue}` : ""}, ${when(next.starts_at, next.tz)}?`
+      : `It's been a week since you started supporting ${newcomer}. Send them a friendly invite to the next event.`;
     const url = "/me#buddies";
 
     await supabase.from("notifications").insert({ user_id: buddy.user_id, kind: "buddy_invite", title, body, url });
@@ -140,7 +140,7 @@ Deno.serve(async () => {
             to: buddy.email,
             subject: title,
             text: `Hi ${buddy.first_name},\n\n${body}\n\nOpen the app: ${APP_URL}${url}\n\nWe The Free`,
-            html: `<p>Hi ${buddy.first_name},</p><p>${body}</p><p><a href="${APP_URL}${url}">Open your buddy list</a></p><p>We The Free</p>`,
+            html: `<p>Hi ${buddy.first_name},</p><p>${body}</p><p><a href="${APP_URL}${url}">Open your new members</a></p><p>We The Free</p>`,
           });
           result.email = "sent";
         } else result.email = "email sender not set up";

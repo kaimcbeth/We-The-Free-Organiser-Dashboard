@@ -309,9 +309,9 @@ export async function assignBuddy(
       .eq("team_id", organiser.team_id)
       .maybeSingle();
     if (!buddy?.is_buddy)
-      return { error: "That person isn't an approved buddy." };
+      return { error: "That person isn't on New member support." };
     if (buddyId === newcomerId)
-      return { error: "Someone can't be their own buddy." };
+      return { error: "Someone can't support themselves." };
   }
 
   const { data: current } = await supabase
@@ -327,7 +327,10 @@ export async function assignBuddy(
       .from("buddy_pairings")
       .update({ ended_at: new Date().toISOString() })
       .eq("id", current.id);
-    if (error) return { error: "Couldn't change the buddy. Please try again." };
+    if (error)
+      return {
+        error: "Couldn't change their support person. Please try again.",
+      };
   }
 
   if (buddyId) {
@@ -338,7 +341,8 @@ export async function assignBuddy(
       via: "organiser",
       created_by: organiser.id,
     });
-    if (error) return { error: "Couldn't save the buddy. Please try again." };
+    if (error)
+      return { error: "Couldn't save their support person. Please try again." };
   }
 
   revalidatePath(`/people/${newcomerId}`);

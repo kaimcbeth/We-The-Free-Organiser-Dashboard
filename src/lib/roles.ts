@@ -64,7 +64,7 @@ export const ROLE_INFO: Record<
     can: [
       "Events, attendance, people and insights for the community",
       "Sees attendees' contact details",
-      "Gives Core Team roles and manages buddies",
+      "Gives Core Team roles and manages New member support",
     ],
   },
   core_team: {

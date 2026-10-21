@@ -71,7 +71,7 @@ export function BuddySection({
   return (
     <section id="buddies" className="mt-8 scroll-mt-4">
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
-        Your buddies
+        New member support
       </h2>
       {data.pairs.length === 0 ? (
         <p className="text-sm text-stone-500">
@@ -146,7 +146,7 @@ function PairCard({
     <li className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
       <p className="font-medium">{full(n)}</p>
       <p className="text-sm text-stone-500">
-        Buddies since {formatEventDate(pair.since, tz)} · {pair.events}{" "}
+        Supporting since {formatEventDate(pair.since, tz)} · {pair.events}{" "}
         {pair.events === 1 ? "event" : "events"}
         {pair.last_seen
           ? ` · last seen ${formatEventDate(pair.last_seen, tz)}`
@@ -229,10 +229,10 @@ function Available({ people, tz }: { people: Available[]; tz: string }) {
 
   return (
     <div className="mt-6">
-      <h3 className="mb-2 font-semibold">Newcomers looking for a buddy</h3>
+      <h3 className="mb-2 font-semibold">New members needing support</h3>
       {list.length === 0 ? (
         <p className="text-sm text-stone-500">
-          Everyone new has a buddy right now.
+          Every new member has support right now.
         </p>
       ) : (
         <ul className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
@@ -263,7 +263,7 @@ function Available({ people, tz }: { people: Available[]; tz: string }) {
                 }
                 className="shrink-0 rounded-xl bg-pink px-3 py-2 text-sm font-semibold text-navy hover:bg-pink-strong disabled:opacity-60"
               >
-                I&apos;ll be their buddy
+                I&apos;ll support them
               </button>
             </li>
           ))}

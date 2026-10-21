@@ -13,9 +13,11 @@ export async function claimNewcomer(
   });
   if (error) return { error: "Couldn't save. Please try again." };
   if (data === "taken")
-    return { error: "Someone else just became their buddy." };
+    return { error: "Someone else just started supporting them." };
   if (data === "not_a_buddy")
-    return { error: "Only approved buddies can do this. Ask an organiser." };
+    return {
+      error: "Only people on New member support can do this. Ask an organiser.",
+    };
   if (data !== "ok") return { error: "Couldn't find that person." };
   revalidatePath("/me");
   return {};

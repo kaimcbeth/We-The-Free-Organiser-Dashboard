@@ -7,7 +7,7 @@ import { formatEventDate } from "@/lib/time";
 
 type Option = { id: string; name: string };
 
-// Buddy role switch: "Approved buddy" (only for people with an account).
+// Buddy role switch: "New member support" (only for people with an account).
 export function BuddySwitch({
   personId,
   initial,
@@ -39,7 +39,7 @@ export function BuddySwitch({
             if (
               !next &&
               !confirm(
-                `Remove ${firstName} as a buddy? Their current pairings will end.`,
+                `Take ${firstName} off New member support? The new members they're supporting will need someone else.`,
               )
             )
               return;
@@ -61,7 +61,7 @@ export function BuddySwitch({
           />
         </button>
         <span className="text-stone-600">
-          Approved buddy
+          New member support
           <span className="block text-xs text-stone-500">
             {connected
               ? "Can connect with and support newcomers, and gets reminders to reach out"
@@ -94,8 +94,8 @@ export function BuddyPicker({
   if (options.length === 0 && !current) {
     return (
       <p className="text-sm text-stone-500">
-        No approved buddies yet. Switch on “Approved buddy” on a trusted
-        member&apos;s profile first.
+        No one is on New member support yet. Switch on “New member support” on a
+        trusted member&apos;s profile first.
       </p>
     );
   }
@@ -121,10 +121,10 @@ export function BuddyPicker({
             setValue(e.target.value);
             setSaved(false);
           }}
-          aria-label="Buddy"
+          aria-label="New member support"
           className="min-w-0 flex-1 rounded-xl border border-stone-300 bg-white px-3 py-2"
         >
-          <option value="">No buddy</option>
+          <option value="">No one yet</option>
           {options.map((o) => (
             <option key={o.id} value={o.id}>
               {o.name}
@@ -152,8 +152,8 @@ export function BuddyPicker({
       {saved && (
         <p className="mt-1 text-stone-600">
           {value
-            ? "Saved. Their buddy gets a reminder to invite them in a week."
-            : "Buddy removed."}
+            ? "Saved. Their support person gets a reminder to invite them in a week."
+            : "Support person removed."}
         </p>
       )}
       {error && <p className="mt-1 text-red-700">{error}</p>}

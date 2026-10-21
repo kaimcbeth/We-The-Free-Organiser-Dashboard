@@ -59,7 +59,7 @@ export function OrganiserTour({
       icon: "🤝",
       tone: "bg-yellow",
       title: "Build your crew",
-      body: "On Roles, add Core Team members to help take attendance. On someone's profile, approve them as a buddy to welcome newcomers.",
+      body: "On Roles, add Core Team members to help take attendance. On someone's profile, switch on New member support so they can welcome newcomers.",
     },
     {
       icon: "📝",

@@ -61,7 +61,7 @@ export default async function NotificationsPage() {
       {unread && <MarkRead />}
       {!items?.length ? (
         <p className="mt-6 text-sm text-stone-500">
-          Nothing yet. Buddy reminders will show up here.
+          Nothing yet. New member support reminders will show up here.
         </p>
       ) : (
         <ul className="mt-5 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
