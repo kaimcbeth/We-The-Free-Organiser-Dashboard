@@ -10,12 +10,21 @@ const STYLE: Record<ViewRole, string> = {
   attendee: "bg-white text-stone-500 ring-1 ring-stone-300",
 };
 
-export function RoleChip({ role }: { role: ViewRole }) {
+// pending: given before they connected their account (starts when they do).
+export function RoleChip({
+  role,
+  pending = false,
+}: {
+  role: ViewRole;
+  pending?: boolean;
+}) {
   return (
     <span
-      className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${STYLE[role]}`}
+      title={pending ? "Starts when they connect their account" : undefined}
+      className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${STYLE[role]} ${pending ? "opacity-60 outline-1 outline-dashed outline-offset-1 outline-navy/40" : ""}`}
     >
       {ROLE_LABEL[role]}
+      {pending ? " · pending" : ""}
     </span>
   );
 }

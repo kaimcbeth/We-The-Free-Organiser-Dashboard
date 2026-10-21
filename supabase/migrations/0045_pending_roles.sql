@@ -1,0 +1,7 @@
+-- (Applied as pending_roles, clear_pending_role, pending_roles_no_double_member.)
+-- Roles can be given before someone connects: people.pending_role /
+-- pending_region_id; grant_role stores them when there's no account yet;
+-- trigger people_apply_pending_role (before insert/update of user_id) turns it
+-- into an organisers row when they connect. ensure_organiser_member skips while
+-- that link is happening (wtf.linking_user) so no duplicate person is made.
+-- clear_pending_role(person) takes a waiting role back.

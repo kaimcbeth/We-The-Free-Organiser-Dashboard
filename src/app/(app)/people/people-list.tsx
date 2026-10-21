@@ -16,6 +16,7 @@ export type PersonRow = {
   email: string | null;
   phone: string | null;
   connected: boolean;
+  rolePending: boolean;
   photoUrl: string | null;
   events: number;
   role: Access | null;
@@ -139,6 +140,7 @@ export function PeopleList({
                 firstName={p.first_name}
                 connected={p.connected}
                 current={p.role}
+                pending={p.rolePending}
                 gives={gives}
                 regions={regions}
                 compact

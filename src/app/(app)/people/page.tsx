@@ -4,8 +4,12 @@ import { signPhotos } from "@/lib/photos";
 import { LoadError } from "@/components/load-error";
 import { PeopleList, type PersonRow } from "./people-list";
 
-type Row = Omit<PersonRow, "events" | "connected" | "photoUrl" | "role"> & {
+type Row = Omit<
+  PersonRow,
+  "events" | "connected" | "photoUrl" | "role" | "rolePending"
+> & {
   user_id: string | null;
+  pending_role: Access | null;
   photo_updated_at: string | null;
   attendance: { count: number }[];
 };
@@ -19,7 +23,7 @@ export default async function PeoplePage({
   const { data, error } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, suburb, email, phone, user_id, photo_updated_at, attendance(count)",
+      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, photo_updated_at, attendance(count)",
     )
     .eq("team_id", organiser.team_id)
     .order("first_name")
@@ -39,10 +43,11 @@ export default async function PeoplePage({
 
   const photos = await signPhotos(supabase, data ?? []);
   const people: PersonRow[] = (data ?? []).map(
-    ({ attendance, user_id, photo_updated_at, ...p }) => ({
+    ({ attendance, user_id, photo_updated_at, pending_role, ...p }) => ({
       ...p,
       connected: !!user_id,
-      role: roles.get(p.id) ?? null,
+      role: roles.get(p.id) ?? pending_role ?? null,
+      rolePending: !roles.get(p.id) && !!pending_role,
       events: attendance[0]?.count ?? 0,
       photoUrl: photo_updated_at ? (photos[p.id] ?? null) : null,
     }),

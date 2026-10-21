@@ -9,6 +9,7 @@ import { BuddyPicker, BuddySwitch } from "./buddy-controls";
 import { Avatar } from "@/components/avatar";
 import { signPhotos } from "@/lib/photos";
 import { RolePicker } from "@/components/role-picker";
+import { PhoneField } from "./phone-field";
 import { GIVES, type Access } from "@/lib/roles";
 
 type Person = {
@@ -19,6 +20,7 @@ type Person = {
   email: string | null;
   phone: string | null;
   user_id: string | null;
+  pending_role: Access | null;
   linked_at: string | null;
   consent_marketing: boolean;
   added_via: string;
@@ -47,7 +49,7 @@ export default async function PersonPage({
   const { data: person } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, suburb, email, phone, user_id, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, is_buddy",
+      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, is_buddy",
     )
     .eq("id", id)
     .eq("team_id", organiser.team_id)
@@ -75,10 +77,11 @@ export default async function PersonPage({
     supabase.rpc("list_roles"),
     supabase.from("regions").select("id, name").order("sort_order"),
   ]);
-  const role =
+  const realRole =
     ((roleRows as { person_id: string | null; role: Access }[] | null) ?? [])
       .filter((r) => organiser.role === "god" || r.role !== "god")
       .find((r) => r.person_id === person.id)?.role ?? null;
+  const role = realRole ?? person.pending_role;
 
   // Buddy info: this person's buddy, who they look after, and who could be their buddy.
   const fullName = (p: { first_name: string; last_name: string | null }) =>
@@ -138,10 +141,14 @@ export default async function PersonPage({
           firstName={person.first_name}
           connected={!!person.user_id}
           current={role}
+          pending={!realRole && !!person.pending_role}
           gives={GIVES[organiser.role]}
           regions={regions ?? []}
         />
       </div>
+      {role && role !== "god" && (
+        <PhoneField personId={person.id} initial={person.phone ?? ""} />
+      )}
       <p className="mt-1 text-sm text-stone-500">
         {[person.suburb, person.email, person.phone]
           .filter(Boolean)

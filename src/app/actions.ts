@@ -465,13 +465,47 @@ export async function setViewAs(
 }
 
 const GRANT_ERRORS: Record<string, string> = {
-  no_account: "They need to connect their account first.",
   self: "You can't change your own role.",
   need_region: "Pick a region.",
   not_allowed: "You can't give that role to this person.",
   not_found: "Couldn't find that person.",
   bad_role: "Unknown role.",
 };
+
+// Take back a role that's waiting for someone to connect their account.
+export async function clearPendingRole(
+  personId: string,
+): Promise<{ error?: string }> {
+  const { supabase } = await requireOrganiser();
+  const { data, error } = await supabase.rpc("clear_pending_role", {
+    p_person_id: personId,
+  });
+  if (error || data !== "ok")
+    return { error: "Couldn't change that. Please try again." };
+  revalidatePath("/people", "layout");
+  return {};
+}
+
+// A person's WhatsApp number, added by an organiser (e.g. for someone given a
+// role before they've connected, so their Regional Support Lead can reach them).
+export async function setPersonPhone(
+  personId: string,
+  phone: string,
+): Promise<{ error?: string }> {
+  const { supabase } = await requireOrganiser();
+  const clean = phone.trim();
+  if (clean && clean.replace(/\D/g, "").length < 8)
+    return { error: "That number looks too short." };
+  const { data, error } = await supabase
+    .from("people")
+    .update({ phone: clean || null })
+    .eq("id", personId)
+    .select("id");
+  if (error || !data?.length)
+    return { error: "Couldn't save the number. Please try again." };
+  revalidatePath(`/people/${personId}`);
+  return {};
+}
 
 // Give someone a role (Core Team, Organiser or Regional Support Lead).
 export async function grantRole(
@@ -495,6 +529,7 @@ export async function grantRole(
       error: GRANT_ERRORS[data as string] ?? "Couldn't save. Please try again.",
     };
   revalidatePath("/roles");
+  revalidatePath("/people", "layout");
   return {};
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { grantRole } from "@/app/actions";
+import { clearPendingRole, grantRole } from "@/app/actions";
 import { Sheet } from "@/components/sheet";
 import { RoleChip } from "@/components/role-chip";
 import {
@@ -23,6 +23,7 @@ export function RolePicker({
   gives,
   regions,
   compact,
+  pending: startsPending = false,
 }: {
   personId: string;
   firstName: string;
@@ -31,9 +32,11 @@ export function RolePicker({
   gives: Access[]; // roles the viewer can hand out
   regions: { id: string; name: string }[];
   compact?: boolean;
+  pending?: boolean; // the role waits until they connect their account
 }) {
   const [open, setOpen] = useState(false);
   const [role, setRole] = useState<Access | null>(current);
+  const [isPending, setIsPending] = useState(startsPending && !!current);
   const [pick, setPick] = useState<Access>(
     current && gives.includes(current) ? current : gives[gives.length - 1],
   );
@@ -46,9 +49,7 @@ export function RolePicker({
   const canChange =
     gives.length > 0 && (!role || ROLE_RANK[role] <= ROLE_RANK[gives[0]]);
 
-  // In lists, plain attendees without an account show nothing (they can't have a role yet).
-  if (compact && !role && !connected) return null;
-  if (!canChange) return <RoleChip role={shown} />;
+  if (!canChange) return <RoleChip role={shown} pending={isPending} />;
 
   return (
     <>
@@ -63,21 +64,24 @@ export function RolePicker({
             + Role
           </span>
         ) : (
-          <RoleChip role={shown} />
+          <RoleChip role={shown} pending={isPending} />
         )}
         {!compact && <span className="text-xs text-stone-400">▾</span>}
       </button>
       {open && (
         <Sheet title={`${firstName}'s role`} onClose={() => setOpen(false)}>
-          {!connected ? (
-            <p className="text-sm text-stone-600">
-              {firstName} needs to connect their account before they can have a
-              role. Open their profile and show them their connect QR.
-            </p>
-          ) : (
+          {
             <div className="space-y-3">
               <p className="text-sm text-stone-600">
-                {role ? (
+                {role && isPending ? (
+                  <>
+                    {firstName} will be{" "}
+                    <span className="font-medium text-stone-900">
+                      {ROLE_LABEL[role]}
+                    </span>{" "}
+                    as soon as they connect their account.
+                  </>
+                ) : role ? (
                   <>
                     {firstName} is currently{" "}
                     <span className="font-medium text-stone-900">
@@ -184,6 +188,7 @@ export function RolePicker({
                     else {
                       setError("");
                       setRole(pick);
+                      setIsPending(!connected);
                       setOpen(false);
                     }
                   })
@@ -192,14 +197,40 @@ export function RolePicker({
               >
                 {pending ? "Saving…" : addAsLabel(firstName, pick)}
               </button>
+              {!connected && (
+                <p className="text-xs text-stone-500">
+                  {firstName} hasn&apos;t connected their account yet. The role
+                  starts as soon as they do.
+                </p>
+              )}
               {error && <p className="text-sm text-red-700">{error}</p>}
-              {role && (
+              {role && isPending && (
+                <button
+                  disabled={pending}
+                  onClick={() =>
+                    start(async () => {
+                      const r = await clearPendingRole(personId);
+                      if (r.error) setError(r.error);
+                      else {
+                        setError("");
+                        setRole(null);
+                        setIsPending(false);
+                        setOpen(false);
+                      }
+                    })
+                  }
+                  className="w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-stone-600 ring-1 ring-stone-300 hover:bg-stone-50"
+                >
+                  Don&apos;t give {firstName} a role
+                </button>
+              )}
+              {role && !isPending && (
                 <p className="text-xs text-stone-500">
                   Taking a role away completely is coming soon.
                 </p>
               )}
             </div>
-          )}
+          }
         </Sheet>
       )}
     </>
