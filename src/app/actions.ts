@@ -550,3 +550,20 @@ export async function finishOrganiserTour(): Promise<void> {
   await supabase.rpc("finish_organiser_tutorial");
   revalidatePath("/", "layout");
 }
+
+// "Every time": future tasks of this kind go straight to this person (null = stop).
+export async function setStandingDelegate(
+  kind: string,
+  personId: string | null,
+): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  const { data, error } = await supabase.rpc("set_task_delegate", {
+    p_team_id: organiser.team_id,
+    p_kind: kind,
+    p_person_id: personId,
+  });
+  if (error || data !== "ok")
+    return { error: "Couldn't save. Please try again." };
+  revalidatePath("/tasks");
+  return {};
+}

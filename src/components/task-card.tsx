@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { assignTask, dismissTask, setTaskDone } from "@/app/actions";
+import {
+  assignTask,
+  dismissTask,
+  setStandingDelegate,
+  setTaskDone,
+} from "@/app/actions";
 import { formatEventDate } from "@/lib/time";
 import { Sheet } from "@/components/sheet";
 import { inputClass } from "@/components/form";
@@ -43,6 +48,7 @@ export function TaskCard({
   people,
   whatsappUrl,
   hideEvent = false,
+  standing = {},
 }: {
   task: TaskRow;
   tz: string;
@@ -50,6 +56,7 @@ export function TaskCard({
   people?: { id: string; name: string }[]; // organisers: who it can be assigned to
   whatsappUrl: string | null;
   hideEvent?: boolean; // when shown under the event's own heading
+  standing?: Record<string, string>; // kind -> standing delegate (person id)
 }) {
   const [done, setDone] = useState(!!task.doneAt);
   const [assignee, setAssignee] = useState(task.assignedTo ?? "");
@@ -58,13 +65,29 @@ export function TaskCard({
   const [removed, setRemoved] = useState(false);
   const [delegating, setDelegating] = useState(false);
   const [search, setSearch] = useState("");
+  const [always, setAlways] = useState(standing[task.kind] ?? "");
+  const [everyTime, setEveryTime] = useState(!!standing[task.kind]);
 
-  function delegate(personId: string) {
+  function delegate(personId: string, clearStanding = false) {
     setDelegating(false);
     setSearch("");
     const before = assignee;
+    const beforeAlways = always;
     setAssignee(personId);
+    // "Every time" sets the standing delegate for this kind of task;
+    // "Take it back" clears it. "Just this once" leaves it alone.
+    const standingChange =
+      everyTime && personId ? personId : clearStanding ? "" : null;
+    if (standingChange !== null) setAlways(standingChange);
     start(async () => {
+      if (standingChange !== null) {
+        const s = await setStandingDelegate(task.kind, standingChange || null);
+        if (s.error) {
+          setAlways(beforeAlways);
+          setError(s.error);
+          return;
+        }
+      }
       const r = await assignTask(task.id, personId || null);
       if (r.error) {
         setAssignee(before);
@@ -191,7 +214,9 @@ export function TaskCard({
               {people &&
                 (assignee ? (
                   <span className="flex items-center gap-1.5 rounded-xl bg-navy/5 py-1.5 pl-3 pr-1.5 text-sm">
-                    Delegated to{" "}
+                    {always === assignee
+                      ? "Always delegated to"
+                      : "Delegated to"}{" "}
                     <span className="font-semibold text-navy">
                       {people.find((p) => p.id === assignee)?.name ?? "someone"}
                     </span>
@@ -225,6 +250,39 @@ export function TaskCard({
             {task.eventTitle ? ` for ${task.eventTitle}` : ""}. They&apos;ll get
             a notification and see it on their page.
           </p>
+          <div
+            className="mb-3 grid grid-cols-2 gap-2"
+            role="radiogroup"
+            aria-label="How often"
+          >
+            {[
+              { v: false, label: "Just this once", hint: "Only this task" },
+              {
+                v: true,
+                label: "Every time",
+                hint: `All future “${task.title}” tasks`,
+              },
+            ].map((o) => (
+              <button
+                key={String(o.v)}
+                role="radio"
+                aria-checked={everyTime === o.v}
+                onClick={() => setEveryTime(o.v)}
+                className={`rounded-xl p-3 text-left ring-1 ${
+                  everyTime === o.v
+                    ? "bg-navy text-white ring-navy"
+                    : "bg-white text-navy ring-stone-300"
+                }`}
+              >
+                <span className="block text-sm font-semibold">{o.label}</span>
+                <span
+                  className={`block text-xs ${everyTime === o.v ? "text-white/70" : "text-stone-500"}`}
+                >
+                  {o.hint}
+                </span>
+              </button>
+            ))}
+          </div>
           <input
             type="search"
             autoFocus
@@ -261,10 +319,15 @@ export function TaskCard({
           )}
           {assignee && (
             <button
-              onClick={() => delegate("")}
+              onClick={() => {
+                setEveryTime(false);
+                delegate("", !!always);
+              }}
               className="mt-3 w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-stone-600 ring-1 ring-stone-300 hover:bg-stone-50"
             >
-              Take it back (any organiser)
+              {always
+                ? "Take it back and stop delegating every time"
+                : "Take it back (any organiser)"}
             </button>
           )}
         </Sheet>

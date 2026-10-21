@@ -94,7 +94,8 @@ export function TaskChooser({
                 {setup.eventsPerWeek} event
                 {setup.eventsPerWeek === 1 ? "" : "s"} a week
               </span>
-              . Roughly how much time can you give these each week?
+              . Roughly how much time can you give these tasks each week, not
+              counting the events themselves?
             </p>
             <div className="mt-5 grid grid-cols-2 gap-2">
               {BUDGETS.map((b) => (

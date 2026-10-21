@@ -5,6 +5,7 @@ export type TaskSetup = {
   enabled: string[]; // kinds switched on for this community
   configured: boolean; // has an organiser chosen yet?
   eventsPerWeek: number;
+  delegates: Record<string, string>; // kind -> person who gets it every time
 };
 
 // Which follow-up tasks a community has switched on, and how often it runs events.
@@ -20,7 +21,7 @@ export async function loadTaskSetup(
       .order("sort_order"),
     supabase
       .from("team_task_kinds")
-      .select("kind, enabled")
+      .select("kind, enabled, delegate_to")
       .eq("team_id", teamId),
     supabase
       .from("events")
@@ -40,6 +41,11 @@ export async function loadTaskSetup(
     kinds: all,
     enabled: all.filter((k) => !off.has(k.kind)).map((k) => k.kind),
     configured: rows.length > 0,
+    delegates: Object.fromEntries(
+      rows
+        .filter((r) => r.delegate_to)
+        .map((r) => [r.kind, r.delegate_to as string]),
+    ),
     eventsPerWeek: Math.max(1, Math.round(((events.count ?? 0) / 8) * 2) / 2),
   };
 }

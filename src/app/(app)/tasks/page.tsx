@@ -54,6 +54,7 @@ export default async function TasksPage() {
   const common = {
     tz: organiser.team.timezone,
     now,
+    standing: setup.delegates,
     people: assignable,
     whatsappUrl: organiser.team.whatsapp_url,
   };
