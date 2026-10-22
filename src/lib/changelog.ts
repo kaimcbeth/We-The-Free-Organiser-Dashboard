@@ -14,6 +14,10 @@ export const CHANGELOG: Release[] = [
     title: "Core Team lead roles",
     changes: [
       {
+        level: "regional_lead",
+        text: "Insights with “All communities” compares every community: check-ins and the trend, first-timers, events with attendance taken, organisers, Core Team and accounts, and whether each has started using the Movement Hub.",
+      },
+      {
         level: "organiser",
         text: "Core Team members now take ownership of an area: Community Lead, Events Lead or Promo Lead (or more than one). Pick it when you give someone the Core Team role, or tap their role chip to change it.",
       },

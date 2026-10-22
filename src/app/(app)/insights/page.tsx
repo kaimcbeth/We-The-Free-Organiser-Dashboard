@@ -4,9 +4,12 @@ import { loadInsightData } from "@/lib/insights-data";
 import { computeInsights, RULES, type PersonInsight } from "@/lib/insights";
 import { LoadError } from "@/components/load-error";
 import { EveryoneTable } from "./everyone-table";
+import { RegionInsights } from "./region-insights";
 
 export default async function InsightsPage() {
   const { supabase, organiser } = await requireOrganiser();
+  if (organiser.allCommunities)
+    return <RegionInsights supabase={supabase} teams={organiser.teams} />;
   const data = await loadInsightData(supabase, organiser.team_id);
   if (!data) return <LoadError what="insights" />;
 

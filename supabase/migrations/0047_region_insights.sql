@@ -1,0 +1,4 @@
+-- (Applied as region_insights.) public.region_insights(team_ids): per-community
+-- activity for the last 30 days (check-ins and the 30 days before, first-timers,
+-- events and how many had attendance, organisers / pending roles / Core Team /
+-- accounts, tasks done, last attendance, last import). Regional staff only.
