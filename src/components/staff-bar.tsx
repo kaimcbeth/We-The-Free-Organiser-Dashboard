@@ -6,16 +6,20 @@ import { setActiveTeam, setViewAs } from "@/app/actions";
 import type { ViewRole } from "@/lib/roles";
 import { signInAsTestPerson } from "@/lib/test-login";
 
-type ViewOption = { value: ViewRole | "new_organiser"; label: string };
+type ViewOption = {
+  value: ViewRole | "new_organiser" | "new_core_team";
+  label: string;
+};
 const ROLE_OPTIONS: ViewOption[] = [
   { value: "god", label: "God Mode" },
   { value: "regional_lead", label: "Regional Support Lead" },
   { value: "organiser", label: "Organiser" },
-  { value: "core_team", label: "Core Team" },
+  { value: "core_team", label: "Core Team member" },
   { value: "member", label: "Member" },
 ];
 const TUTORIAL_OPTIONS: ViewOption[] = [
   { value: "new_organiser", label: "New organiser" },
+  { value: "new_core_team", label: "New Core Team member" },
   { value: "new_member", label: "New member" },
 ];
 
@@ -91,7 +95,9 @@ export function StaffBar({
                   }
                   return;
                 }
-                start(() => setViewAs(v as ViewRole | "new_organiser"));
+                start(() =>
+                  setViewAs(v as ViewRole | "new_organiser" | "new_core_team"),
+                );
               }}
               className={`rounded-md px-1.5 py-0.5 font-medium ${viewingAs ? "bg-navy/10" : "bg-white/15"}`}
             >
@@ -102,7 +108,7 @@ export function StaffBar({
                   </option>
                 ))}
               </optgroup>
-              <optgroup label="Tutorials">
+              <optgroup label="Tutorials and setup">
                 {TUTORIAL_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value} className="text-navy">
                     {o.label}

@@ -1,0 +1,13 @@
+-- (Applied as core_team_roles, core_team_task_generation, core_team_rpcs_basic,
+-- core_team_soft_end, core_team_generators_has_owner.)
+-- Core Team lead roles: person_core_roles (person, team, core_role, ended_at).
+-- task_kinds.core_role (community_lead | events_lead | promo_lead), schedule
+-- ('event' | 'weekly' | 'monthly') + schedule_weekday / schedule_day.
+-- task_owners (team, kind, owner, helper, ended_at): the Core Team member who
+-- owns a task every time, and the helper they've handed it to.
+-- people.away_until: their tasks go to the organisers until then.
+-- private.task_assignee(): organiser's per-event-type delegate > helper > owner
+-- (unless away) > nobody (organisers). Used by create_event_tasks and
+-- create_monthly_tasks (which now also makes weekly/monthly community tasks).
+-- RPCs: set_core_roles, choose_core_tasks, set_task_helper, set_away_until,
+-- my_core_setup. Ending a role or task sets ended_at (no deletes).

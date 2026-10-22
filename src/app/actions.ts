@@ -6,12 +6,14 @@ import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import {
   getStaff,
+  requireCore,
   requireOrganiser,
   TEAM_COOKIE,
   ALL_COOKIE,
   VIEW_AS_COOKIE,
   type ViewRole,
 } from "@/lib/organiser";
+import { GIVES, type Access } from "@/lib/roles";
 import { dayBoundsUtc, todayInTz, zonedToUtcIso } from "@/lib/time";
 
 export async function signOut() {
@@ -442,7 +444,7 @@ export async function setActiveTeam(teamId: string): Promise<void> {
 
 // God Mode: preview the app as another role (null = back to God Mode).
 export async function setViewAs(
-  role: ViewRole | "new_organiser" | null,
+  role: ViewRole | "new_organiser" | "new_core_team" | null,
 ): Promise<void> {
   const { organiser } = await getStaff();
   if (organiser?.access !== "god") return;
@@ -460,7 +462,9 @@ export async function setViewAs(
       ? "/me"
       : role === "core_team"
         ? "/attendance"
-        : "/",
+        : role === "new_core_team"
+          ? "/attendance/tasks"
+          : "/",
   );
 }
 
@@ -514,9 +518,10 @@ export async function grantRole(
   regionId: string | null,
 ): Promise<{ error?: string }> {
   const { supabase, organiser } = await requireOrganiser();
-  if (organiser.viewingAs)
+  // Previewing: allowed when the previewed role could give this role too.
+  if (organiser.viewingAs && !GIVES[organiser.role].includes(role as Access))
     return {
-      error: "You're previewing another role. Switch back to God Mode first.",
+      error: `A ${organiser.role === "regional_lead" ? "Regional Support Lead" : "role you're previewing"} can't give that role.`,
     };
   const { data, error } = await supabase.rpc("grant_role", {
     p_person_id: personId,
@@ -687,5 +692,70 @@ export async function removeCustomTask(
   });
   if (error || !data) return { error: "Couldn't remove it. Please try again." };
   revalidatePath("/tasks");
+  return {};
+}
+
+// ---- Core Team ----
+
+// Organisers: which lead roles a Core Team member has.
+export async function setCoreRoles(
+  personId: string,
+  roles: string[],
+): Promise<{ error?: string }> {
+  const { supabase } = await requireOrganiser();
+  const { data, error } = await supabase.rpc("set_core_roles", {
+    p_person_id: personId,
+    p_roles: roles,
+  });
+  if (error || data !== "ok")
+    return { error: "Couldn't save their lead roles. Please try again." };
+  revalidatePath("/people", "layout");
+  return {};
+}
+
+// A Core Team member picks the tasks they'll look after.
+export async function chooseCoreTasks(
+  kinds: string[],
+): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireCore();
+  if (organiser.viewingAs) return {};
+  const { data, error } = await supabase.rpc("choose_core_tasks", {
+    p_kinds: kinds,
+  });
+  if (error || data !== "ok")
+    return { error: "Couldn't save your tasks. Please try again." };
+  revalidatePath("/attendance", "layout");
+  return {};
+}
+
+// Hand one of your tasks to a helper (null = do it yourself).
+export async function setTaskHelper(
+  kind: string,
+  helperId: string | null,
+): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireCore();
+  if (organiser.viewingAs) return {};
+  const { data, error } = await supabase.rpc("set_task_helper", {
+    p_team_id: organiser.team_id,
+    p_kind: kind,
+    p_helper_id: helperId,
+  });
+  if (error || data !== "ok")
+    return { error: "Couldn't save that. Please try again." };
+  revalidatePath("/attendance", "layout");
+  return {};
+}
+
+// "I'm away until…" (null = I'm back).
+export async function setAwayUntil(
+  until: string | null,
+): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireCore();
+  if (organiser.viewingAs) return {};
+  const { error } = await supabase.rpc("set_away_until", {
+    p_until: until,
+  });
+  if (error) return { error: "Couldn't save that. Please try again." };
+  revalidatePath("/attendance", "layout");
   return {};
 }

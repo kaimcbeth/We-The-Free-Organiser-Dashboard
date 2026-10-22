@@ -14,9 +14,11 @@ const STYLE: Record<ViewRole, string> = {
 export function RoleChip({
   role,
   pending = false,
+  detail,
 }: {
   role: ViewRole;
   pending?: boolean;
+  detail?: string; // e.g. "Promo Lead" for Core Team
 }) {
   return (
     <span
@@ -24,6 +26,7 @@ export function RoleChip({
       className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${STYLE[role]} ${pending ? "opacity-60 outline-1 outline-dashed outline-offset-1 outline-navy/40" : ""}`}
     >
       {ROLE_LABEL[role]}
+      {detail ? ` · ${detail}` : ""}
       {pending ? " · pending" : ""}
     </span>
   );

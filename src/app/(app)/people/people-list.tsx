@@ -6,7 +6,7 @@ import { createPerson, type FormState } from "@/app/actions";
 import { Field, inputClass } from "@/components/form";
 import { Avatar } from "@/components/avatar";
 import { RolePicker } from "@/components/role-picker";
-import type { Access } from "@/lib/roles";
+import type { Access, CoreRole } from "@/lib/roles";
 
 export type PersonRow = {
   id: string;
@@ -17,6 +17,7 @@ export type PersonRow = {
   phone: string | null;
   connected: boolean;
   rolePending: boolean;
+  leads: CoreRole[];
   photoUrl: string | null;
   events: number;
   role: Access | null;
@@ -141,6 +142,7 @@ export function PeopleList({
                 connected={p.connected}
                 current={p.role}
                 pending={p.rolePending}
+                leads={p.leads}
                 gives={gives}
                 regions={regions}
                 compact

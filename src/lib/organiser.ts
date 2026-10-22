@@ -27,6 +27,7 @@ export type Organiser = {
   viewValue: string | null; // what the "View as" menu shows (incl. "new_organiser")
   showTour: boolean; // run the organiser welcome tour on this page load
   tourPreview: boolean; // God Mode "View as New organiser": tour every time, nothing saved
+  coreSetupPreview: boolean; // God Mode "View as New Core Team member": setup, nothing saved
   region_id: string | null;
   team_id: string; // the team being looked at (with "All communities", a stand-in)
   team: Team;
@@ -83,7 +84,10 @@ export async function getStaff() {
   const rawAs = jar.get(VIEW_AS_COOKIE)?.value;
   // "New organiser" previews the organiser view with the welcome tour.
   const tourPreview = row.access === "god" && rawAs === "new_organiser";
-  const asCookie = (tourPreview ? "organiser" : rawAs) as ViewRole | undefined;
+  const coreSetupPreview = row.access === "god" && rawAs === "new_core_team";
+  const asCookie = (
+    tourPreview ? "organiser" : coreSetupPreview ? "core_team" : rawAs
+  ) as ViewRole | undefined;
   const viewingAs =
     row.access === "god" &&
     asCookie &&
@@ -116,8 +120,13 @@ export async function getStaff() {
     access: row.access,
     role,
     viewingAs,
-    viewValue: tourPreview ? "new_organiser" : viewingAs,
+    viewValue: tourPreview
+      ? "new_organiser"
+      : coreSetupPreview
+        ? "new_core_team"
+        : viewingAs,
     tourPreview,
+    coreSetupPreview,
     showTour:
       tourPreview || (row.access === "organiser" && !row.tutorial_done_at),
     region_id: row.region_id,

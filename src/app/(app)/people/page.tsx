@@ -1,12 +1,12 @@
 import { requireOrganiser } from "@/lib/organiser";
-import { GIVES, type Access } from "@/lib/roles";
+import { GIVES, type Access, type CoreRole } from "@/lib/roles";
 import { signPhotos } from "@/lib/photos";
 import { LoadError } from "@/components/load-error";
 import { PeopleList, type PersonRow } from "./people-list";
 
 type Row = Omit<
   PersonRow,
-  "events" | "connected" | "photoUrl" | "role" | "rolePending"
+  "events" | "connected" | "photoUrl" | "role" | "rolePending" | "leads"
 > & {
   user_id: string | null;
   pending_role: Access | null;
@@ -31,10 +31,22 @@ export default async function PeoplePage({
 
   if (error) return <LoadError what="people" />;
 
-  const [{ data: roleRows }, { data: regions }] = await Promise.all([
-    supabase.rpc("list_roles"),
-    supabase.from("regions").select("id, name").order("sort_order"),
-  ]);
+  const [{ data: roleRows }, { data: regions }, { data: leadRows }] =
+    await Promise.all([
+      supabase.rpc("list_roles"),
+      supabase.from("regions").select("id, name").order("sort_order"),
+      supabase
+        .from("person_core_roles")
+        .select("person_id, core_role")
+        .eq("team_id", organiser.team_id)
+        .is("ended_at", null),
+    ]);
+  const leads = new Map<string, CoreRole[]>();
+  for (const r of (leadRows ?? []) as {
+    person_id: string;
+    core_role: CoreRole;
+  }[])
+    leads.set(r.person_id, [...(leads.get(r.person_id) ?? []), r.core_role]);
   const roles = new Map(
     ((roleRows as { person_id: string | null; role: Access }[] | null) ?? [])
       .filter((r) => organiser.role === "god" || r.role !== "god")
@@ -48,6 +60,7 @@ export default async function PeoplePage({
       connected: !!user_id,
       role: roles.get(p.id) ?? pending_role ?? null,
       rolePending: !roles.get(p.id) && !!pending_role,
+      leads: leads.get(p.id) ?? [],
       events: attendance[0]?.count ?? 0,
       photoUrl: photo_updated_at ? (photos[p.id] ?? null) : null,
     }),

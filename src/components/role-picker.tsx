@@ -1,11 +1,15 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { clearPendingRole, grantRole } from "@/app/actions";
+import { clearPendingRole, grantRole, setCoreRoles } from "@/app/actions";
 import { Sheet } from "@/components/sheet";
 import { RoleChip } from "@/components/role-chip";
 import {
   addAsLabel,
+  CORE_ROLE_BLURB,
+  CORE_ROLE_LABEL,
+  CORE_ROLES,
+  type CoreRole,
   ROLE_ACCENT,
   ROLE_INFO,
   ROLE_LABEL,
@@ -24,6 +28,7 @@ export function RolePicker({
   regions,
   compact,
   pending: startsPending = false,
+  leads = [],
 }: {
   personId: string;
   firstName: string;
@@ -33,6 +38,7 @@ export function RolePicker({
   regions: { id: string; name: string }[];
   compact?: boolean;
   pending?: boolean; // the role waits until they connect their account
+  leads?: CoreRole[]; // Core Team lead roles
 }) {
   const [open, setOpen] = useState(false);
   const [role, setRole] = useState<Access | null>(current);
@@ -41,6 +47,15 @@ export function RolePicker({
     current && gives.includes(current) ? current : gives[gives.length - 1],
   );
   const [region, setRegion] = useState("");
+  const [savedLeads, setSavedLeads] = useState<CoreRole[]>(leads);
+  const [leadPick, setLeadPick] = useState<Set<CoreRole>>(new Set(leads));
+  const leadsChanged =
+    leadPick.size !== savedLeads.length ||
+    savedLeads.some((l) => !leadPick.has(l));
+  const detail =
+    role === "core_team" && savedLeads.length
+      ? savedLeads.map((l) => CORE_ROLE_LABEL[l]).join(" & ")
+      : undefined;
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
 
@@ -49,7 +64,8 @@ export function RolePicker({
   const canChange =
     gives.length > 0 && (!role || ROLE_RANK[role] <= ROLE_RANK[gives[0]]);
 
-  if (!canChange) return <RoleChip role={shown} pending={isPending} />;
+  if (!canChange)
+    return <RoleChip role={shown} pending={isPending} detail={detail} />;
 
   return (
     <>
@@ -64,7 +80,7 @@ export function RolePicker({
             + Role
           </span>
         ) : (
-          <RoleChip role={shown} pending={isPending} />
+          <RoleChip role={shown} pending={isPending} detail={detail} />
         )}
         {!compact && <span className="text-xs text-stone-400">▾</span>}
       </button>
@@ -171,31 +187,79 @@ export function RolePicker({
                   ))}
                 </select>
               )}
+              {pick === "core_team" && (
+                <fieldset className="space-y-2">
+                  <legend className="mb-1 text-sm font-medium">
+                    Which area will {firstName} look after?
+                  </legend>
+                  {CORE_ROLES.map((l) => (
+                    <label
+                      key={l}
+                      className="flex cursor-pointer items-start gap-2.5 rounded-xl bg-white p-2.5 ring-1 ring-stone-200 hover:ring-stone-300"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={leadPick.has(l)}
+                        onChange={() => {
+                          const next = new Set(leadPick);
+                          if (next.has(l)) next.delete(l);
+                          else next.add(l);
+                          setLeadPick(next);
+                        }}
+                        className="mt-1 h-4 w-4"
+                      />
+                      <span>
+                        <span className="block text-sm font-semibold">
+                          {CORE_ROLE_LABEL[l]}
+                        </span>
+                        <span className="block text-xs text-stone-500">
+                          {CORE_ROLE_BLURB[l]}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                  <p className="text-xs text-stone-500">
+                    {firstName} then picks the tasks they&apos;ll look after.
+                  </p>
+                </fieldset>
+              )}
               <button
                 disabled={
                   pending ||
-                  (pick === role && pick !== "regional_lead") ||
-                  (pick === "regional_lead" && !region)
+                  (pick === role &&
+                    pick !== "regional_lead" &&
+                    !(pick === "core_team" && leadsChanged)) ||
+                  (pick === "regional_lead" && !region) ||
+                  (pick === "core_team" && leadPick.size === 0)
                 }
                 onClick={() =>
                   start(async () => {
-                    const r = await grantRole(
-                      personId,
-                      pick,
-                      pick === "regional_lead" ? region : null,
-                    );
-                    if (r.error) setError(r.error);
-                    else {
-                      setError("");
-                      setRole(pick);
-                      setIsPending(!connected);
-                      setOpen(false);
+                    if (pick !== role || pick === "regional_lead") {
+                      const r = await grantRole(
+                        personId,
+                        pick,
+                        pick === "regional_lead" ? region : null,
+                      );
+                      if (r.error) return setError(r.error);
                     }
+                    if (pick === "core_team" && leadsChanged) {
+                      const r = await setCoreRoles(personId, [...leadPick]);
+                      if (r.error) return setError(r.error);
+                      setSavedLeads([...leadPick]);
+                    }
+                    setError("");
+                    setRole(pick);
+                    setIsPending(!connected);
+                    setOpen(false);
                   })
                 }
                 className="w-full rounded-xl bg-pink px-4 py-2.5 font-semibold text-navy hover:bg-pink-strong disabled:opacity-40"
               >
-                {pending ? "Saving…" : addAsLabel(firstName, pick)}
+                {pending
+                  ? "Saving…"
+                  : pick === role && pick === "core_team"
+                    ? "Save"
+                    : addAsLabel(firstName, pick)}
               </button>
               {!connected && (
                 <p className="text-xs text-stone-500">

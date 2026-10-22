@@ -2,17 +2,32 @@ import Link from "next/link";
 import { requireCore, ROLE_LABEL } from "@/lib/organiser";
 import { StaffBar } from "@/components/staff-bar";
 import { NotificationBell } from "@/components/notification-bell";
+import { CoreTabs } from "./core-tabs";
 
 // Core Team: just their team's events and the attendance list.
 export default async function AttendanceLayout({
   children,
 }: LayoutProps<"/attendance">) {
   const { supabase, user, organiser } = await requireCore();
+  // Their own open tasks, for the "My tasks" count.
+  const { data: me } = await supabase
+    .from("people")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const { count: openTasks } = me
+    ? await supabase
+        .from("tasks")
+        .select("id", { count: "exact", head: true })
+        .eq("assigned_to", me.id)
+        .is("done_at", null)
+        .is("dismissed_at", null)
+    : { count: 0 };
 
   return (
     <div className="flex flex-1 flex-col">
       <header className="sticky top-0 z-10 bg-navy text-white">
-        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 pb-1 pt-3">
           <Link href="/attendance" className="min-w-0 leading-tight">
             <span className="block text-xs font-bold uppercase tracking-wider text-pink">
               Movement Hub
@@ -34,6 +49,9 @@ export default async function AttendanceLayout({
             </Link>
           </div>
         </div>
+        <CoreTabs
+          openTasks={organiser.coreSetupPreview ? 0 : (openTasks ?? 0)}
+        />
       </header>
       <StaffBar
         teams={organiser.teams.map((t) => ({ id: t.id, name: t.name }))}

@@ -68,10 +68,11 @@ export const ROLE_INFO: Record<
     ],
   },
   core_team: {
-    summary: "Helps take attendance at their community's events.",
+    summary:
+      "Takes ownership of an area (community, events or promo) and the tasks that go with it.",
     can: [
-      "Logs in and opens today's event straight away",
-      "Ticks people in and adds newcomers at the door",
+      "Picks the tasks they'll look after, and can hand them to a helper",
+      "Takes attendance and adds newcomers at the door",
     ],
     cannot: "Sees names only: no contact details, People list or Insights.",
   },
@@ -108,3 +109,23 @@ export function addAsLabel(name: string, role: Access): string {
   if (role === "organiser") return `Add ${name} as an Organiser`;
   return `Add ${name} as a ${ROLE_LABEL[role]}`;
 }
+
+// Core Team lead roles: the area a Core Team member takes ownership of.
+export type CoreRole = "community_lead" | "events_lead" | "promo_lead";
+export const CORE_ROLES: CoreRole[] = [
+  "community_lead",
+  "events_lead",
+  "promo_lead",
+];
+export const CORE_ROLE_LABEL: Record<CoreRole, string> = {
+  community_lead: "Community Lead",
+  events_lead: "Events Lead",
+  promo_lead: "Promo Lead",
+};
+export const CORE_ROLE_BLURB: Record<CoreRole, string> = {
+  community_lead:
+    "Looks after the community: welcoming, chats, keeping people connected",
+  events_lead:
+    "Looks after events on the day: setting up, attendance, running things",
+  promo_lead: "Gets the word out: Facebook, Instagram, photos",
+};

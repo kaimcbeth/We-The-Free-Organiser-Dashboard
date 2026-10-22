@@ -20,9 +20,21 @@ type CoreEvent = {
 
 export default async function AttendanceHome() {
   const { supabase, organiser } = await requireCore();
-  const { data, error } = await supabase.rpc("core_events", {
-    p_team_id: organiser.team_id,
-  });
+  const [{ data, error }, { data: setup }] = await Promise.all([
+    supabase.rpc("core_events", { p_team_id: organiser.team_id }),
+    supabase.rpc("my_core_setup"),
+  ]);
+  // New Core Team member who hasn't picked their tasks yet.
+  const core = setup as {
+    person_id: string;
+    roles: string[];
+    tasks: { owner_id: string | null }[];
+  } | null;
+  const needsSetup =
+    organiser.coreSetupPreview ||
+    (!!core &&
+      core.roles.length > 0 &&
+      !core.tasks.some((t) => t.owner_id === core.person_id));
   if (error || !data) return <LoadError what="events" />;
 
   const events = data as CoreEvent[];
@@ -33,6 +45,17 @@ export default async function AttendanceHome() {
 
   return (
     <div className="space-y-8">
+      {needsSetup && (
+        <Link
+          href="/attendance/tasks"
+          className="block rounded-2xl bg-yellow p-4 text-navy shadow-sm hover:brightness-95"
+        >
+          <p className="font-semibold">Welcome to the Core Team!</p>
+          <p className="text-sm">
+            Pick the tasks you&apos;d like to look after →
+          </p>
+        </Link>
+      )}
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">
           Take attendance

@@ -10,7 +10,7 @@ import { Avatar } from "@/components/avatar";
 import { signPhotos } from "@/lib/photos";
 import { RolePicker } from "@/components/role-picker";
 import { PhoneField } from "./phone-field";
-import { GIVES, type Access } from "@/lib/roles";
+import { GIVES, type Access, type CoreRole } from "@/lib/roles";
 
 type Person = {
   id: string;
@@ -73,10 +73,19 @@ export default async function PersonPage({
     person.starting_outreach_count;
   const name = [person.first_name, person.last_name].filter(Boolean).join(" ");
   const photos = await signPhotos(supabase, [person]);
-  const [{ data: roleRows }, { data: regions }] = await Promise.all([
-    supabase.rpc("list_roles"),
-    supabase.from("regions").select("id, name").order("sort_order"),
-  ]);
+  const [{ data: roleRows }, { data: regions }, { data: leadRows }] =
+    await Promise.all([
+      supabase.rpc("list_roles"),
+      supabase.from("regions").select("id, name").order("sort_order"),
+      supabase
+        .from("person_core_roles")
+        .select("core_role")
+        .eq("person_id", person.id)
+        .is("ended_at", null),
+    ]);
+  const leads = ((leadRows ?? []) as { core_role: CoreRole }[]).map(
+    (r) => r.core_role,
+  );
   const realRole =
     ((roleRows as { person_id: string | null; role: Access }[] | null) ?? [])
       .filter((r) => organiser.role === "god" || r.role !== "god")
@@ -142,6 +151,7 @@ export default async function PersonPage({
           connected={!!person.user_id}
           current={role}
           pending={!realRole && !!person.pending_role}
+          leads={leads}
           gives={GIVES[organiser.role]}
           regions={regions ?? []}
         />
