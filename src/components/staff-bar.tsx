@@ -14,12 +14,12 @@ const ROLE_OPTIONS: ViewOption[] = [
   { value: "god", label: "God Mode" },
   { value: "regional_lead", label: "Regional Support Lead" },
   { value: "organiser", label: "Organiser" },
-  { value: "core_team", label: "Core Team member" },
+  { value: "core_team", label: "Core Team Member" },
   { value: "member", label: "Member" },
 ];
 const TUTORIAL_OPTIONS: ViewOption[] = [
   { value: "new_organiser", label: "New organiser" },
-  { value: "new_core_team", label: "New Core Team member" },
+  { value: "new_core_team", label: "New Core Team Member" },
   { value: "new_member", label: "New member" },
 ];
 
