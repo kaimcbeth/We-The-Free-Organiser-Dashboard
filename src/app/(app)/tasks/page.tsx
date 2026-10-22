@@ -9,6 +9,8 @@ import { formatEventDate } from "@/lib/time";
 import { loadConnectContext } from "@/lib/connect";
 import { ConnectIdeas } from "@/components/connect-ideas";
 import { RegionTasks } from "./region-tasks";
+import { CoreTeamTasks } from "./core-team-tasks";
+import { CORE_ROLE_LABEL, type CoreRole } from "@/lib/roles";
 
 export default async function TasksPage() {
   const { supabase, organiser } = await requireOrganiser();
@@ -24,19 +26,25 @@ export default async function TasksPage() {
         showCommunities={organiser.role === "god"}
       />
     );
-  const [tasks, { data: people }, setup, connect] = await Promise.all([
-    loadTeamTasks(supabase, organiser.team_id, { regional: regionalStaff }),
-    supabase
-      .from("people")
-      .select("id, first_name, last_name")
-      .eq("team_id", organiser.team_id)
-      .not("user_id", "is", null)
-      .order("first_name"),
-    loadTaskSetup(supabase, organiser.team_id),
-    regionalStaff
-      ? loadConnectContext(supabase, [organiser.team])
-      : Promise.resolve(null),
-  ]);
+  const [tasks, { data: people }, setup, connect, { data: leadRows }] =
+    await Promise.all([
+      loadTeamTasks(supabase, organiser.team_id, { regional: regionalStaff }),
+      supabase
+        .from("people")
+        .select("id, first_name, last_name")
+        .eq("team_id", organiser.team_id)
+        .not("user_id", "is", null)
+        .order("first_name"),
+      loadTaskSetup(supabase, organiser.team_id),
+      regionalStaff
+        ? loadConnectContext(supabase, [organiser.team])
+        : Promise.resolve(null),
+      supabase
+        .from("person_core_roles")
+        .select("person_id, core_role")
+        .eq("team_id", organiser.team_id)
+        .is("ended_at", null),
+    ]);
   if (!tasks) return <LoadError what="tasks" />;
 
   // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
@@ -45,7 +53,43 @@ export default async function TasksPage() {
     id: p.id,
     name: [p.first_name, p.last_name].filter(Boolean).join(" "),
   }));
-  const minutes = tasks.open.reduce((n, t) => n + t.estimateMinutes, 0);
+  // Tasks with someone on them (Core Team or a helper) are shown separately,
+  // so the main list is just what's left for the organisers.
+  const covered = tasks.open.filter((t) => !t.regional && t.assignedTo);
+  const leadsOf = new Map<string, string[]>();
+  for (const r of (leadRows ?? []) as {
+    person_id: string;
+    core_role: CoreRole;
+  }[])
+    leadsOf.set(r.person_id, [
+      ...(leadsOf.get(r.person_id) ?? []),
+      CORE_ROLE_LABEL[r.core_role],
+    ]);
+  const crew = [
+    ...new Set([
+      ...covered.map((t) => t.assignedTo!),
+      ...tasks.done.filter((t) => t.assignedTo).map((t) => t.assignedTo!),
+      ...leadsOf.keys(),
+    ]),
+  ]
+    .map((id) => ({
+      id,
+      name:
+        assignable.find((p) => p.id === id)?.name ??
+        covered.find((t) => t.assignedTo === id)?.assigneeName ??
+        "Someone",
+      leads: leadsOf.get(id) ?? [],
+      open: covered
+        .filter((t) => t.assignedTo === id)
+        .sort((a, b) => a.dueAt.localeCompare(b.dueAt)),
+      done: tasks.done.filter((t) => t.assignedTo === id).length,
+    }))
+    .sort(
+      (a, b) => b.leads.length - a.leads.length || a.name.localeCompare(b.name),
+    );
+  const minutes = tasks.open
+    .filter((t) => !t.regional && !t.assignedTo)
+    .reduce((n, t) => n + t.estimateMinutes, 0);
   // Regional Support Lead check-ins sit on their own, above the community's tasks.
   const checkIns = tasks.open.filter((t) => t.regional);
 
@@ -55,7 +99,7 @@ export default async function TasksPage() {
     string,
     { key: string; title: string; at: string | null; tasks: typeof tasks.open }
   >();
-  for (const t of tasks.open.filter((t) => !t.regional)) {
+  for (const t of tasks.open.filter((t) => !t.regional && !t.assignedTo)) {
     const key = t.eventId ?? "other";
     const g = byEvent.get(key) ?? {
       key,
@@ -85,9 +129,9 @@ export default async function TasksPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
         <p className="mt-1 text-sm text-stone-500">
-          {tasks.open.length === 0
-            ? "All done. New tasks appear here after each event."
-            : `${tasks.open.length} to do · about ${minutes} min in total`}
+          {groups.reduce((n, g) => n + g.tasks.length, 0) === 0
+            ? "Nothing left for the organisers. New tasks appear here after each event."
+            : `${groups.reduce((n, g) => n + g.tasks.length, 0)} for the organisers · about ${minutes} min in total`}
         </p>
         <div className="mt-3">
           <ChooseTasks
@@ -124,6 +168,8 @@ export default async function TasksPage() {
           </ul>
         </section>
       )}
+
+      <CoreTeamTasks crew={crew} now={now} tz={common.tz} />
 
       {groups.map((g) => (
         <section key={g.key}>

@@ -36,7 +36,7 @@ export default async function WhatsNewPage() {
       </div>
       {releases.map((r) => (
         <section
-          key={r.date}
+          key={r.date + r.title}
           className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
         >
           <p className="text-xs font-semibold uppercase tracking-wide text-pink-ink">

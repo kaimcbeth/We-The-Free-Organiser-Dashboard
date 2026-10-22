@@ -11,6 +11,36 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-22",
+    title: "Core Team lead roles",
+    changes: [
+      {
+        level: "organiser",
+        text: "Core Team members now take ownership of an area: Community Lead, Events Lead or Promo Lead (or more than one). Pick it when you give someone the Core Team role, or tap their role chip to change it.",
+      },
+      {
+        level: "organiser",
+        text: "Core Team members choose the tasks they'll look after under My tasks. Those come to them every time, and anything nobody picks stays with you.",
+      },
+      {
+        level: "organiser",
+        text: "They can hand a task to a helper, or say they're away until a date (their tasks come back to you until then).",
+      },
+      {
+        level: "organiser",
+        text: "Tasks now has a “Core Team and helpers” overview, so you can see what everyone's looking after. The main list is just what's left for the organisers.",
+      },
+      {
+        level: "organiser",
+        text: "The People list shows lead roles, e.g. “Core Team · Promo Lead”.",
+      },
+      {
+        level: "god",
+        text: "person_core_roles, task_owners (owner + helper), task_kinds.core_role / schedule (event | weekly | monthly), people.away_until, private.task_assignee() priority: per-event-type delegate > helper > owner (not away) > organisers. Ending a role or task sets ended_at (no deletes). View as → New Core Team member previews the setup.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-22",
     title: "Roles before people connect",
     changes: [
       {
@@ -133,7 +163,9 @@ export const CHANGELOG: Release[] = [
   },
 ];
 
-export const LATEST_CHANGE = CHANGELOG[0]?.date ?? "";
+export const LATEST_CHANGE = CHANGELOG[0]
+  ? `${CHANGELOG[0].date}-${CHANGELOG.length}`
+  : "";
 
 const RANK: Record<ChangeLevel, number> = {
   organiser: 0,

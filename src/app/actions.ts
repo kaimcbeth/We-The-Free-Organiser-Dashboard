@@ -566,6 +566,7 @@ export async function setTaskDone(
   if (error || !data) return { error: "Couldn't save. Please try again." };
   revalidatePath("/tasks");
   revalidatePath("/me");
+  revalidatePath("/attendance/tasks");
   return {};
 }
 
