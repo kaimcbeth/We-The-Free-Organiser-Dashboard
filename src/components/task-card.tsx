@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import {
   assignTask,
+  completeCheckIn,
   dismissTask,
   setStandingDelegate,
   setTaskDone,
@@ -88,6 +89,8 @@ export function TaskCard({
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
   const [removed, setRemoved] = useState(false);
+  // Regional check-ins ask how it went before they're ticked off.
+  const [asking, setAsking] = useState(false);
   // "Every time" delegation is per kind of task and per event type.
   const standingKey = `${task.kind}|${task.eventTypeId ?? ""}`;
   const [delegating, setDelegating] = useState(false);
@@ -170,7 +173,11 @@ export function TaskCard({
           aria-checked={done}
           aria-label={done ? "Mark as not done" : "Mark as done"}
           disabled={pending}
-          onClick={() =>
+          onClick={() => {
+            if (task.regional && !done) {
+              setAsking(true);
+              return;
+            }
             start(async () => {
               const next = !done;
               setDone(next);
@@ -179,8 +186,8 @@ export function TaskCard({
                 setDone(!next);
                 setError(r.error);
               } else setError("");
-            })
-          }
+            });
+          }}
           className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 ${
             done
               ? "border-cyan bg-cyan text-navy"
@@ -233,7 +240,49 @@ export function TaskCard({
           {task.description && !done && (
             <p className="mt-1 text-sm text-stone-600">{task.description}</p>
           )}
-          {extra && !done && <div className="mt-3">{extra}</div>}
+          {asking && !done && (
+            <div className="mt-3 rounded-xl bg-cyan/15 p-3">
+              <p className="text-sm font-medium">Did they get back to you?</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(
+                  [
+                    ["replied", "Yes, we chatted"],
+                    ["no_reply", "No reply yet"],
+                  ] as const
+                ).map(([outcome, label]) => (
+                  <button
+                    key={outcome}
+                    disabled={pending}
+                    onClick={() =>
+                      start(async () => {
+                        const r = await completeCheckIn(task.id, outcome);
+                        if (r.error) setError(r.error);
+                        else {
+                          setError("");
+                          setAsking(false);
+                          setDone(true);
+                        }
+                      })
+                    }
+                    className="rounded-xl bg-white px-3 py-1.5 text-sm font-semibold text-navy ring-1 ring-stone-300 hover:bg-stone-50"
+                  >
+                    {label}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setAsking(false)}
+                  className="rounded-xl px-2 py-1.5 text-sm text-stone-500 hover:bg-white/60"
+                >
+                  Cancel
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-stone-600">
+                With no reply, there are no more monthly check-ins for this
+                community until you hear back.
+              </p>
+            </div>
+          )}
+          {extra && !done && !asking && <div className="mt-3">{extra}</div>}
 
           {!done && (
             <div className="mt-3 flex flex-wrap items-center gap-2">

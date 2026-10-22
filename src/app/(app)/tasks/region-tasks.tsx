@@ -6,6 +6,7 @@ import { TaskCard } from "@/components/task-card";
 import { loadTeamTasks } from "@/lib/tasks";
 import { loadConnectContext } from "@/lib/connect";
 import { ConnectIdeas } from "@/components/connect-ideas";
+import { WaitingList } from "./waiting-list";
 
 const short = (name: string) =>
   name.replace(/, (Australia|New Zealand|Canada)$/, "");
@@ -23,14 +24,29 @@ export async function RegionTasks({
   showCommunities: boolean; // God Mode: also how each community's own tasks are going
 }) {
   const ids = teams.map((t) => t.id);
-  const [tasks, connect] = await Promise.all([
+  const [tasks, connect, { data: waitRows }] = await Promise.all([
     loadTeamTasks(supabase, ids, { regional: true }),
     loadConnectContext(supabase, teams),
+    supabase
+      .from("teams")
+      .select("id, connect_waiting_since")
+      .in("id", ids)
+      .not("connect_waiting_since", "is", null),
   ]);
   if (!tasks) return <LoadError what="tasks" />;
   // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
   const now = Date.now();
   const byId = Object.fromEntries(teams.map((t) => [t.id, t]));
+  const waiting = (
+    (waitRows ?? []) as { id: string; connect_waiting_since: string }[]
+  )
+    .map((w) => ({
+      id: w.id,
+      name: short(byId[w.id]?.name ?? ""),
+      since: w.connect_waiting_since,
+      weeks: Math.floor((now - Date.parse(w.connect_waiting_since)) / 6048e5),
+    }))
+    .sort((a, b) => a.since.localeCompare(b.since));
 
   const checkIns = tasks.open.filter((t) => t.regional);
   const doneCheckIns = tasks.done.filter((t) => t.regional);
@@ -85,6 +101,8 @@ export async function RegionTasks({
           </ul>
         </section>
       )}
+
+      <WaitingList teams={waiting} />
 
       {showCommunities && (
         <section>

@@ -1,0 +1,4 @@
+-- (Applied as check_in_waiting_for_reply.) teams.connect_waiting_since,
+-- tasks.outcome; complete_check_in(task, 'replied' | 'no_reply');
+-- resolve_check_in_wait(team, 'replied' | 'try_again'); create_monthly_tasks
+-- makes no regional check-in for a team while it's waiting to hear back.

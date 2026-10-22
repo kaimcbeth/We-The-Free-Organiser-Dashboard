@@ -760,3 +760,39 @@ export async function setAwayUntil(
   revalidatePath("/attendance", "layout");
   return {};
 }
+
+// ---- Regional Support Lead check-ins ----
+
+// Tick off a check-in with how it went. "No reply yet" pauses that
+// community's monthly check-ins until they reply (no repeated nudges).
+export async function completeCheckIn(
+  taskId: string,
+  outcome: "replied" | "no_reply",
+): Promise<{ error?: string }> {
+  const { supabase } = await requireOrganiser();
+  const { data, error } = await supabase.rpc("complete_check_in", {
+    p_task_id: taskId,
+    p_outcome: outcome,
+  });
+  if (error || data !== "ok")
+    return { error: "Couldn't save that. Please try again." };
+  revalidatePath("/tasks");
+  return {};
+}
+
+// For a community we're waiting to hear back from: they replied (monthly
+// check-ins resume) or try again now (a new check-in task).
+export async function resolveCheckInWait(
+  teamId: string,
+  action: "replied" | "try_again",
+): Promise<{ error?: string }> {
+  const { supabase } = await requireOrganiser();
+  const { data, error } = await supabase.rpc("resolve_check_in_wait", {
+    p_team_id: teamId,
+    p_action: action,
+  });
+  if (error || data !== "ok")
+    return { error: "Couldn't save that. Please try again." };
+  revalidatePath("/tasks");
+  return {};
+}

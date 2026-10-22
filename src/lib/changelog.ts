@@ -10,6 +10,20 @@ export type Release = { date: string; title: string; changes: Change[] };
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-10-23",
+    title: "No repeat nudges",
+    changes: [
+      {
+        level: "regional_lead",
+        text: "Ticking off a check-in asks whether the organisers replied. If not, that community gets no more monthly check-ins until they do. It moves to “Waiting to hear back”, where you can mark that they replied or try again when it feels right.",
+      },
+      {
+        level: "god",
+        text: "teams.connect_waiting_since, tasks.outcome ('replied' | 'no_reply'); complete_check_in and resolve_check_in_wait RPCs; create_monthly_tasks skips regional check-ins for waiting teams.",
+      },
+    ],
+  },
+  {
     date: "2026-10-22",
     title: "Core Team lead roles",
     changes: [
