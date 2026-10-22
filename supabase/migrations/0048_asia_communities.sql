@@ -1,0 +1,5 @@
+-- (Applied as asia_communities.) The 21 We The Free teams in Asia listed on
+-- activism.wtf/teams (India, Nepal, Pakistan, Thailand, Indonesia, Japan,
+-- Israel), in the Asia region with their own time zones and locations.
+-- Each gets its hidden test person via the teams trigger; events come from the
+-- usual import.
