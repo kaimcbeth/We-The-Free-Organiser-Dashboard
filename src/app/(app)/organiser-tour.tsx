@@ -110,17 +110,38 @@ export function OrganiserTour({
     },
     {
       section: 2,
-      icon: "📣",
+      icon: "✔️",
       tone: "bg-cyan",
+      title: "Your task list",
+      body: "Tasks appear around each event on the Tasks page, each with a time estimate. Tick them off as you go.",
+    },
+    {
+      section: 2,
+      icon: "📆",
+      tone: "bg-yellow",
+      title: "Promote your event",
+      body: "Two weeks before, a task shows up to create the Facebook event. We copy the details for you, so you just paste them into Facebook.",
+    },
+    {
+      section: 2,
+      icon: "📣",
+      tone: "bg-pink",
       title: "Share in local Facebook groups",
-      body: "A week before each event, a task appears to share it in local vegan Facebook groups. Tap “Open all” and every group opens in its own tab, ready to post. Your list is under Tasks → Facebook groups, and we may have added some nearby groups for you already. If only one tab opens, allow pop-ups for the Movement Hub (the task shows you how).",
+      body: "A week before, tap “Open all” and every local group opens in its own tab, ready to post. Your list is under Tasks → Facebook groups.",
+    },
+    {
+      section: 2,
+      icon: "⏰",
+      tone: "bg-cyan",
+      title: "Not now?",
+      body: "Tap Move to hide a task until 6am on a later day. The bell at the top shows what's new.",
     },
     {
       section: 2,
       icon: "📝",
-      tone: "bg-pink",
-      title: "Tasks after each event",
-      body: "After every event, a few quick follow-up tasks appear on the Tasks page, each with a time estimate. Let's pick the ones that suit you.",
+      tone: "bg-yellow",
+      title: "After each event",
+      body: "Photos, follow-ups and more. Let's pick the ones that suit you.",
     },
   ];
 
