@@ -24,7 +24,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     .maybeSingle();
   const photos = me ? await signPhotos(supabase, [me]) : {};
   const tourSetup = organiser.showTour
-    ? await loadTaskSetup(supabase, organiser.team_id)
+    ? await loadTaskSetup(supabase, organiser.homeTeamId)
     : null;
   // Tasks badge: Regional Support Leads (and "All communities") count only
   // their own tasks; everyone else the community's tasks.
@@ -116,12 +116,18 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         <OrganiserTour
           key={organiser.tourPreview ? "preview" : "tour"}
           firstName={(me?.first_name ?? organiser.name).split(" ")[0]}
-          communityName={organiser.team.name.replace(
-            /, (Australia|New Zealand)$/,
-            "",
-          )}
+          communityName={(
+            organiser.teams.find((t) => t.id === organiser.homeTeamId) ??
+            organiser.team
+          ).name.replace(/, (Australia|New Zealand)$/, "")}
           setup={tourSetup}
         />
+      )}
+      {organiser.exampleMode && (
+        <p className="bg-cyan/25 px-4 py-2 text-center text-sm text-navy">
+          You&apos;re looking at an <b>example community</b> for the tour. Your
+          own appears when the tour ends.
+        </p>
       )}
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-5">
         <EventsViewSwitch />

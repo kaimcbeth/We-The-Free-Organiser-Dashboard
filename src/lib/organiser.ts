@@ -30,6 +30,8 @@ export type Organiser = {
   coreSetupPreview: boolean; // God Mode "View as New Core Team member": setup, nothing saved
   region_id: string | null;
   team_id: string; // the team being looked at (with "All communities", a stand-in)
+  homeTeamId: string; // their real community (differs only during the tour)
+  exampleMode: boolean; // tour running: pages show the Example Community
   team: Team;
   teams: Team[]; // every team they can switch between
   allCommunities: boolean; // "All communities" picked (Regional Support Lead / God)
@@ -69,6 +71,7 @@ export async function getStaff() {
   const { data: allTeams } = await supabase
     .from("teams")
     .select("id, name, slug, whatsapp_url, region_id, timezone")
+    .eq("is_example", false)
     .order("name")
     .returns<Team[]>();
   let teams = allTeams ?? [];
@@ -106,10 +109,30 @@ export async function getStaff() {
     teams = teams.filter((t) => t.region_id === team.region_id);
   // "All communities" is for people who look after more than one.
   const allCommunities =
+    !(tourPreview || (row.access === "organiser" && !row.tutorial_done_at)) &&
     jar.get(ALL_COOKIE)?.value === "1" &&
     teams.length > 1 &&
     (role === "god" || role === "regional_lead");
   if (!teams.includes(team)) team = teams[0];
+
+  const showTour =
+    tourPreview || (row.access === "organiser" && !row.tutorial_done_at);
+  // During the tour, pages show a pretend community (John, Paul, George and
+  // Ringo) so there's something to look at before their own has any data.
+  const homeTeamId = team.id;
+  let exampleMode = false;
+  if (showTour) {
+    const { data: example } = await supabase
+      .from("teams")
+      .select("id, name, slug, whatsapp_url, region_id, timezone")
+      .eq("is_example", true)
+      .maybeSingle<Team>();
+    if (example) {
+      team = example;
+      teams = [example, ...teams];
+      exampleMode = true;
+    }
+  }
 
   setRequestTz(team.timezone);
 
@@ -127,10 +150,11 @@ export async function getStaff() {
         : viewingAs,
     tourPreview,
     coreSetupPreview,
-    showTour:
-      tourPreview || (row.access === "organiser" && !row.tutorial_done_at),
+    showTour,
     region_id: row.region_id,
     team_id: team.id,
+    homeTeamId,
+    exampleMode,
     team,
     teams,
     allCommunities,

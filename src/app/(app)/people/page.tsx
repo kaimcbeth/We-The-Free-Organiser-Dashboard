@@ -76,7 +76,8 @@ export default async function PeoplePage({
       ...p,
       connected: !!user_id,
       role: roles.get(p.id) ?? pending_role ?? null,
-      rolePending: !roles.get(p.id) && !!pending_role,
+      // The tour's Example Community has no real accounts; show its roles as set.
+      rolePending: !organiser.exampleMode && !roles.get(p.id) && !!pending_role,
       roleTeamId: pending_team_id,
       leads: leads.get(p.id) ?? [],
       events: attendance[0]?.count ?? 0,

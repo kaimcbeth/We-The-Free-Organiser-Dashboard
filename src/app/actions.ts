@@ -619,7 +619,7 @@ export async function saveTeamTasks(
   const { supabase, organiser } = await requireOrganiser();
   if (organiser.viewingAs) return {}; // God Mode preview: don't change anything
   const { data, error } = await supabase.rpc("set_team_tasks", {
-    p_team_id: organiser.team_id,
+    p_team_id: organiser.homeTeamId,
     p_kinds: kinds,
   });
   if (error || !data) return { error: "Couldn't save. Please try again." };
@@ -697,7 +697,7 @@ export async function addCustomTask(
   const { supabase, organiser } = await requireOrganiser();
   if (!title.trim()) return { error: "Give the task a name." };
   const { data, error } = await supabase.rpc("add_custom_task", {
-    p_team_id: organiser.team_id,
+    p_team_id: organiser.homeTeamId,
     p_title: title.trim(),
     p_minutes: minutes,
     p_when: when,

@@ -10,6 +10,20 @@ export type Release = { date: string; title: string; changes: Change[] };
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-10-24",
+    title: "A guided tour of the app",
+    changes: [
+      {
+        level: "organiser",
+        text: "The welcome tour now walks new organisers through the real pages (Events, an event's check-in list, Insights, People and Tasks), highlighting each part, using an example community with John, Paul, George and Ringo.",
+      },
+      {
+        level: "god",
+        text: "teams.is_example (Example Community) is readable by any staff during the tour, never writable; private.example_events re-dates its events (and their tasks) hourly so the next event is always 4 days away. Organiser.exampleMode swaps team_id while showTour; homeTeamId keeps task choices on their real community.",
+      },
+    ],
+  },
+  {
     date: "2026-10-23",
     title: "Hundreds of Facebook groups added",
     changes: [
