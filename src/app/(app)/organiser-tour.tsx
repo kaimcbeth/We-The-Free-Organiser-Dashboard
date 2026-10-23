@@ -44,7 +44,11 @@ export function OrganiserTour({
   const [i, setI] = useState(0);
   const pathname = usePathname();
   // Where the highlighted element is on screen (null = no spotlight).
-  const [spot, setSpot] = useState<{ key: string; rect: DOMRect } | null>(null);
+  // rect null = looked and couldn't find it (show the big card instead).
+  const [spot, setSpot] = useState<{
+    key: string;
+    rect: DOMRect | null;
+  } | null>(null);
   // Pages already opened for the current card (so redirects like
   // Events → Calendar don't loop); cleared when the card changes.
   const pushed = useRef({ step: -1, keys: new Set<string>() });
@@ -258,7 +262,11 @@ export function OrganiserTour({
 
   // Only trust a measurement taken for this card on this page.
   const spotKey = `${target}|${pathname}`;
-  const rect = target && spot?.key === spotKey ? spot.rect : null;
+  const found = target && spot?.key === spotKey ? spot : null;
+  const rect = found?.rect ?? null;
+  // Still finding the highlight: show nothing for a moment rather than
+  // flashing the big centred card.
+  const searching = !!target && !found;
   useEffect(() => {
     let el: Element | null = null;
     let tries = 0;
@@ -286,7 +294,10 @@ export function OrganiserTour({
           inline: "center",
         });
         window.setTimeout(measure, 350);
-      } else if (++tries > 25) window.clearInterval(find);
+      } else if (++tries > 25) {
+        window.clearInterval(find);
+        setSpot({ key: spotKey, rect: null });
+      }
     }, 120);
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, true);
@@ -323,6 +334,15 @@ export function OrganiserTour({
 
   // Spotlighting something: a small card tucked next to it, so the page
   // stays visible.
+  if (searching)
+    return (
+      <div
+        aria-hidden
+        className="fixed inset-0 z-[60]"
+        style={{ background: "rgb(15 23 42 / 0.6)" }}
+      />
+    );
+
   if (rect) {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
