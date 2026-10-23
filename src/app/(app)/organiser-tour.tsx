@@ -69,6 +69,18 @@ export function OrganiserTour({
     },
   ];
 
+  // Rough time left: reading at ~180 words a minute, a few seconds per card,
+  // plus about a minute to choose tasks at the end.
+  const minutesLeft = (from: number) => {
+    const words = steps
+      .slice(from)
+      .reduce((n, st) => n + `${st.title} ${st.body}`.split(/\s+/).length, 0);
+    return Math.max(
+      1,
+      Math.round(words / 180 + (steps.length - from) * 0.08 + 1),
+    );
+  };
+
   function finish() {
     setOpen(false);
     setChoosing(false);
@@ -99,6 +111,10 @@ export function OrganiserTour({
         <div className="flex items-center justify-between text-sm">
           <span className="font-medium text-stone-500">
             {i + 1} of {steps.length}
+            <span className="ml-2 rounded-full bg-black/5 px-2 py-0.5 text-xs font-semibold text-stone-600">
+              ⏱ {i === 0 ? "About" : "~"} {minutesLeft(i)} min
+              {i === 0 ? "" : " left"}
+            </span>
           </span>
           <button
             onClick={finish}
