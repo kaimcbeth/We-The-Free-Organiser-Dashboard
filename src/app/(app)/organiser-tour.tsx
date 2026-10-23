@@ -96,7 +96,7 @@ export function OrganiserTour({
       tone: "bg-yellow",
       title: "Insights",
       href: "/insights",
-      target: "nav-insights",
+      target: "insights-table,nav-insights",
       body: "See who's been coming to events, who's new, who hasn't been in a while, and upcoming milestones like someone's 10th event.",
     },
     {

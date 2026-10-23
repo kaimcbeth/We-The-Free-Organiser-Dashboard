@@ -73,7 +73,10 @@ export function EveryoneTable({
         aria-label="Search everyone"
         className={`${inputClass} mb-3`}
       />
-      <div className="overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+      <div
+        data-tour="insights-table"
+        className="scroll-mt-24 overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-black/5"
+      >
         <table className="w-full min-w-[520px] text-sm">
           <thead>
             <tr className="bg-navy text-left text-white/70">
