@@ -8,9 +8,11 @@ import { createClient } from "@/lib/supabase/client";
 export function ImportStatus({
   text,
   warning,
+  teamId,
 }: {
   text: string;
   warning: boolean;
+  teamId: string;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -19,8 +21,12 @@ export function ImportStatus({
   async function importNow() {
     setBusy(true);
     setNote("");
-    const { data, error } =
-      await createClient().functions.invoke("import-events");
+    const { data, error } = await createClient().functions.invoke(
+      "import-events",
+      {
+        body: { teamId },
+      },
+    );
     setBusy(false);
     if (error) {
       setNote("Import didn't work. Try again in a minute.");

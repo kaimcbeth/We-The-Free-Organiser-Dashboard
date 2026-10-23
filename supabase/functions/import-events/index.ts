@@ -1,5 +1,7 @@
 // Imports each team's events from its activism.wtf calendar feed.
-// Runs twice a day (pg_cron) and when an organiser taps "Import now".
+// Runs every hour (pg_cron) on the communities checked longest ago, a batch at
+// a time so it stays inside the time limit with 200+ communities, and for one
+// community when an organiser taps "Import now" ({ teamId }).
 // Adds new events and updates changed ones; never deletes, and never
 // overwrites an event type an organiser has chosen.
 
@@ -7,32 +9,42 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { cleanTitle, guessType, parseIcs, splitLocation } from "./ics.ts";
 
 const LOOKBACK_DAYS = 14;
+const BATCH = 70; // communities per scheduled run
+const TIME_BUDGET_MS = 100_000; // stop starting new ones after this
 
 type Team = { id: string; name: string; activism_team_url: string; timezone: string };
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
+  const started = Date.now();
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const body = await req.json().catch(() => ({}));
+  const teamId: string | null = typeof body?.teamId === "string" ? body.teamId : null;
 
-  // Don't run more than once a minute.
-  const { data: last } = await supabase
-    .from("import_runs")
-    .select("ran_at")
-    .order("ran_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (last && Date.now() - Date.parse(last.ran_at) < 60_000) {
-    return Response.json({ skipped: "ran less than a minute ago" });
+  let teamsQuery = supabase
+    .from("teams")
+    .select("id, name, activism_team_url, timezone, last_import_at")
+    .not("activism_team_url", "is", null);
+  if (teamId) {
+    teamsQuery = teamsQuery.eq("id", teamId);
+  } else {
+    teamsQuery = teamsQuery.order("last_import_at", { ascending: true, nullsFirst: true }).limit(BATCH);
   }
-
   const [{ data: teams }, { data: types }] = await Promise.all([
-    supabase.from("teams").select("id, name, activism_team_url, timezone").not("activism_team_url", "is", null),
+    teamsQuery,
     supabase.from("event_types").select("id, name"),
   ]);
+  // Don't re-import one community more than once a minute.
+  if (teamId) {
+    const t = (teams ?? [])[0] as (Team & { last_import_at: string | null }) | undefined;
+    if (t?.last_import_at && Date.now() - Date.parse(t.last_import_at) < 60_000)
+      return Response.json({ skipped: "ran less than a minute ago" });
+  }
   const typeId = new Map((types ?? []).map((t) => [t.name as string, t.id as string]));
   const cutoff = Date.now() - LOOKBACK_DAYS * 864e5;
   const results = [];
 
   for (const team of (teams ?? []) as Team[]) {
+    if (!teamId && Date.now() - started > TIME_BUDGET_MS) break;
     const run = { team_id: team.id, ok: true, found: 0, added: 0, updated: 0, message: null as string | null };
     try {
       const feedUrl = team.activism_team_url.replace(/\/+$/, "") + "/events.ics";
@@ -100,6 +112,7 @@ Deno.serve(async () => {
       run.message = err instanceof Error ? err.message : String(err);
     }
     await supabase.from("import_runs").insert(run);
+    await supabase.from("teams").update({ last_import_at: new Date().toISOString() }).eq("id", team.id);
     results.push({ team: team.name, ...run });
   }
 

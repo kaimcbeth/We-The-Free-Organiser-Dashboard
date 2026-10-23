@@ -1,0 +1,4 @@
+-- (Applied as import_batches, uk_communities.) teams.last_import_at; the
+-- import runs hourly on the 70 communities checked longest ago (stays inside
+-- the Edge Function time limit), and "Import now" imports just that community.
+-- 50 UK teams from activism.wtf/teams in the UK region (Europe/London).

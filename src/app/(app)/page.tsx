@@ -114,6 +114,7 @@ export default async function EventsPage() {
       </div>
 
       <ImportStatus
+        teamId={organiser.team_id}
         {...describeImport(lastRun.data ?? null, lastOk.data ?? null)}
       />
 
