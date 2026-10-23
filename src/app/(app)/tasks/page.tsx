@@ -184,8 +184,12 @@ export default async function TasksPage() {
 
       <CoreTeamTasks crew={crew} now={now} tz={common.tz} />
 
-      {groups.map((g) => (
-        <section key={g.key}>
+      {groups.map((g, n) => (
+        <section
+          key={g.key}
+          data-tour={n === 0 ? "task-group" : undefined}
+          className="scroll-mt-24"
+        >
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="min-w-0 truncate font-semibold">
               {g.title}

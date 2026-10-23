@@ -153,7 +153,7 @@ export function OrganiserTour({
       tone: "bg-cyan",
       title: "Your task list",
       href: "/tasks",
-      target: "tasks-head",
+      target: "task-group,tasks-head",
       body: "Tasks appear around each event on the Tasks page, each with a time estimate. Tick them off as you go.",
     },
     {
@@ -162,7 +162,7 @@ export function OrganiserTour({
       tone: "bg-yellow",
       title: "Promote your event",
       href: "/tasks",
-      target: "tasks-head",
+      target: "task-facebook_event,tasks-head",
       body: "Two weeks before, a task shows up to create the Facebook event. We copy the details for you, so you just paste them into Facebook.",
     },
     {
@@ -171,7 +171,7 @@ export function OrganiserTour({
       tone: "bg-pink",
       title: "Share in local Facebook groups",
       href: "/tasks",
-      target: "fb-groups-link",
+      target: "task-promote_facebook_groups,fb-groups-link",
       body: "A week before, tap “Open all” and every local group opens in its own tab, ready to post. Your list is under Tasks → Facebook groups.",
     },
     {
@@ -189,7 +189,7 @@ export function OrganiserTour({
       tone: "bg-yellow",
       title: "After each event",
       href: "/tasks",
-      target: "nav-tasks",
+      target: "choose-tasks,nav-tasks",
       body: "Photos, follow-ups and more. Let's pick the ones that suit you.",
     },
   ];

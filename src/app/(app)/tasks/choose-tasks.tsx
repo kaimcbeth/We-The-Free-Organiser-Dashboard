@@ -20,7 +20,10 @@ export function ChooseTasks({
   return (
     <>
       {!setup.configured ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-yellow/40 p-4">
+        <div
+          data-tour="choose-tasks"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-yellow/40 p-4"
+        >
           <p className="text-sm text-navy">
             <span className="font-semibold">Pick your tasks.</span> Tell us how
             much time you have each week and we&apos;ll suggest which follow-up
@@ -36,6 +39,7 @@ export function ChooseTasks({
       ) : (
         <button
           onClick={() => setOpen(true)}
+          data-tour="choose-tasks"
           className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-navy ring-1 ring-stone-300 hover:bg-stone-50"
         >
           Choose tasks ({onCount} on)
