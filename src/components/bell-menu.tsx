@@ -54,6 +54,7 @@ export function BellMenu({
     <div ref={box} className="relative">
       <button
         type="button"
+        data-tour="bell"
         onClick={toggle}
         aria-expanded={open}
         aria-haspopup="true"

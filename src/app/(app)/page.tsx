@@ -118,7 +118,7 @@ export default async function EventsPage() {
         {...describeImport(lastRun.data ?? null, lastOk.data ?? null)}
       />
 
-      <section>
+      <section data-tour="today">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
           Today
         </h2>

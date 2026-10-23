@@ -63,7 +63,7 @@ export function PeopleList({
 
   return (
     <div className="mt-5">
-      <div className="flex gap-2">
+      <div data-tour="people-search" className="flex gap-2">
         <input
           ref={searchRef}
           type="search"
@@ -118,7 +118,10 @@ export function PeopleList({
           )}
         </p>
       ) : (
-        <ul className="mt-4 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+        <ul
+          data-tour="people-list"
+          className="mt-4 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5"
+        >
           {visible.map((p) => (
             <li
               key={p.id}

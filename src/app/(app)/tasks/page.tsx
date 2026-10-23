@@ -131,7 +131,7 @@ export default async function TasksPage() {
 
   return (
     <div className="space-y-8">
-      <div>
+      <div data-tour="tasks-head">
         <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
         <p className="mt-1 text-sm text-stone-500">
           {groups.reduce((n, g) => n + g.tasks.length, 0) === 0
@@ -148,6 +148,7 @@ export default async function TasksPage() {
           />
           <Link
             href="/facebook-groups"
+            data-tour="fb-groups-link"
             className="rounded-xl px-3 py-2 text-sm font-medium text-stone-500 hover:bg-stone-100 hover:text-navy"
           >
             Facebook groups

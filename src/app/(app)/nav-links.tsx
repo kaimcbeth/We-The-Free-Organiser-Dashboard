@@ -71,6 +71,7 @@ export function NavLinks({
           <Link
             key={l.href}
             href={l.href}
+            data-tour={`nav-${l.label.toLowerCase().replace(/\W+/g, "-")}`}
             className={`border-b-2 px-3 pb-2.5 pt-1 text-sm font-medium ${
               active
                 ? "border-pink text-white"

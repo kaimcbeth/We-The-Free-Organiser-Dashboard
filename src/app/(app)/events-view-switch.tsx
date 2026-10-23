@@ -13,7 +13,10 @@ export function EventsViewSwitch() {
       active ? "bg-white text-navy shadow-sm" : "text-stone-500 hover:text-navy"
     }`;
   return (
-    <div className="mb-4 inline-flex rounded-xl bg-stone-200/70 p-1">
+    <div
+      data-tour="view-switch"
+      className="mb-4 inline-flex rounded-xl bg-stone-200/70 p-1"
+    >
       <Link
         href="/events-view?v=list"
         className={tab(!calendar)}
