@@ -17,6 +17,7 @@ type Step = {
   // data-tour="…" link in `link` (e.g. today's or the next event).
   follow?: { on: string; link: string };
   click?: string; // data-tour="…" button to press first (e.g. open a menu)
+  whole?: boolean; // highlight all of it, even if it's tall
   target?: string; // data-tour="…" element(s) to spotlight, first found wins
 };
 
@@ -132,6 +133,7 @@ export function OrganiserTour({
       href: "/people",
       click: "role-button",
       target: "sheet",
+      whole: true,
       body: "Tap + Role next to anyone to make them an Organiser or Core Team member, even before they've connected. The role switches on when they join.",
     },
     {
@@ -210,6 +212,7 @@ export function OrganiserTour({
   const followOn = follow?.on;
   const followLink = follow?.link;
   const target = active ? step0.target : undefined;
+  const whole = !!step0.whole;
   useEffect(() => {
     if (pushed.current.step !== i)
       pushed.current = { step: i, keys: new Set() };
@@ -274,7 +277,7 @@ export function OrganiserTour({
       if (!el) return;
       const r = el.getBoundingClientRect();
       // Long lists: just the top part, leaving room for the card.
-      const cap = window.innerHeight * 0.45;
+      const cap = whole ? Infinity : window.innerHeight * 0.45;
       const rect = r.height > cap ? new DOMRect(r.x, r.y, r.width, cap) : r;
       if (r.width || r.height) setSpot({ key: spotKey, rect });
     };
@@ -288,6 +291,7 @@ export function OrganiserTour({
         window.clearInterval(find);
         el = found;
         const tall =
+          !whole &&
           found.getBoundingClientRect().height > window.innerHeight * 0.45;
         el.scrollIntoView({
           block: tall ? "start" : "center",
@@ -306,7 +310,7 @@ export function OrganiserTour({
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
-  }, [target, spotKey]);
+  }, [target, spotKey, whole]);
 
   function finish() {
     setOpen(false);
@@ -347,14 +351,21 @@ export function OrganiserTour({
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const width = Math.min(320, vw - 24);
-    const left = Math.min(Math.max(12, rect.left), vw - width - 12);
     const room = 210; // roughly the card's height
+    const sideTop = Math.min(Math.max(12, rect.top), vh - room - 12);
+    // Below, above, then beside the highlight; if none fit, the bottom.
     const place: React.CSSProperties =
       vh - rect.bottom - 14 >= room
         ? { top: rect.bottom + 14 }
         : rect.top - 14 >= room
           ? { bottom: vh - rect.top + 14 }
-          : { bottom: 12 };
+          : vw - rect.right - 20 >= width
+            ? { top: sideTop, left: rect.right + 20 }
+            : rect.left - 20 >= width
+              ? { top: sideTop, left: rect.left - 20 - width }
+              : { bottom: 12 };
+    const left =
+      place.left ?? Math.min(Math.max(12, rect.left), vw - width - 12);
     const inSection = steps.filter((st) => st.section === step.section);
     return (
       <div className="fixed inset-0 z-[60]">
