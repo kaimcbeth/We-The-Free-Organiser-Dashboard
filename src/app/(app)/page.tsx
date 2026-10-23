@@ -118,7 +118,7 @@ export default async function EventsPage() {
         {...describeImport(lastRun.data ?? null, lastOk.data ?? null)}
       />
 
-      <section data-tour="today">
+      <section>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
           Today
         </h2>
@@ -127,7 +127,7 @@ export default async function EventsPage() {
             No events today.
           </p>
         ) : (
-          <div className="space-y-3">
+          <div data-tour="today-event" className="space-y-3">
             {todays.map((e) => (
               <Link
                 key={e.id}
@@ -175,7 +175,7 @@ export default async function EventsPage() {
 // The next event after today, shown big so it's easy to find.
 function NextUp({ event: e }: { event: EventRow }) {
   return (
-    <section>
+    <section data-tour="next-event">
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
         Next up
       </h2>

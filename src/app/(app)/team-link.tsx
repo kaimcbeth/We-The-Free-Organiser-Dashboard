@@ -30,6 +30,7 @@ export function TeamLinkButton({
   return (
     <>
       <button
+        data-tour="helper-qr"
         onClick={() => setOpen(true)}
         className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-navy ring-1 ring-stone-300 hover:bg-stone-50"
       >

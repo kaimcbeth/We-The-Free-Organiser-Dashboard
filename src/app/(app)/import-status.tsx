@@ -47,6 +47,7 @@ export function ImportStatus({
 
   return (
     <div
+      data-tour="import-status"
       className={`flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-sm ${
         warning
           ? "bg-yellow/30 ring-1 ring-yellow"

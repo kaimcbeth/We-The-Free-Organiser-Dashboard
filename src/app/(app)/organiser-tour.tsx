@@ -13,7 +13,7 @@ type Step = {
   title: string;
   body: string;
   href?: string; // page to show for this card
-  target?: string; // data-tour="…" element to spotlight there
+  target?: string; // data-tour="…" element(s) to spotlight, first found wins
 };
 
 // The tour in a few bite-sized parts, so it doesn't feel like a wall of cards.
@@ -57,7 +57,7 @@ export function OrganiserTour({
       tone: "bg-cyan",
       title: "Events come in by themselves",
       href: "/",
-      target: "today",
+      target: "import-status",
       body: "Your events are copied from activism.wtf automatically, so you never have to type them in.",
     },
     {
@@ -75,8 +75,8 @@ export function OrganiserTour({
       tone: "bg-pink",
       title: "Taking attendance",
       href: "/",
-      target: "today",
-      body: "Open today's event and tap names as people arrive. The people most likely to come are at the top, and someone new is one tap away.",
+      target: "today-event,next-event",
+      body: "On the day, open the event and tap names as people arrive. The people most likely to come are at the top, and someone new is one tap away.",
     },
     {
       section: 0,
@@ -84,7 +84,7 @@ export function OrganiserTour({
       tone: "bg-cyan",
       title: "Hand it off",
       href: "/",
-      target: "today",
+      target: "helper-qr",
       body: "Busy running the event? A volunteer can scan the Helper QR and check people in from their own phone. Your Core Team can take attendance too.",
     },
     {
@@ -214,9 +214,11 @@ export function OrganiserTour({
       if (r.width || r.height) setSpot({ key: spotKey, rect: r });
     };
     const find = window.setInterval(() => {
-      const found = target
-        ? document.querySelector(`[data-tour="${target}"]`)
-        : null;
+      const found =
+        target
+          ?.split(",")
+          .map((t) => document.querySelector(`[data-tour="${t}"]`))
+          .find((e) => e && e.getBoundingClientRect().height > 0) ?? null;
       if (found && found.getBoundingClientRect().height > 0) {
         window.clearInterval(find);
         el = found;
