@@ -2,7 +2,18 @@ import { redirect } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
 import { GroupsList, type FbGroup } from "./groups-list";
 
-export default async function FacebookGroupsPage() {
+export default async function FacebookGroupsPage({
+  searchParams,
+}: PageProps<"/facebook-groups">) {
+  const sp = await searchParams;
+  // Arrived from the "Add to Movement Hub" bookmark on a Facebook group.
+  const add =
+    typeof sp.add === "string" && /facebook\.com\/groups\//i.test(sp.add)
+      ? {
+          url: sp.add,
+          name: typeof sp.name === "string" ? sp.name.slice(0, 200) : "",
+        }
+      : null;
   const { supabase, organiser } = await requireOrganiser();
   if (organiser.role === "core_team") redirect("/");
   const isGod = organiser.role === "god";
@@ -61,6 +72,7 @@ export default async function FacebookGroupsPage() {
         }
         defaultTeamId={organiser.team_id}
         isGod={isGod}
+        add={add}
       />
     </div>
   );

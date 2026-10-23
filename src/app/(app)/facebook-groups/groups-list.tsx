@@ -46,8 +46,10 @@ export function GroupsList({
   teams,
   defaultTeamId,
   isGod = false,
+  add = null,
 }: {
   isGod?: boolean;
+  add?: { url: string; name: string } | null;
   groups: FbGroup[];
   teams: { id: string; name: string }[];
   defaultTeamId: string;
@@ -55,7 +57,19 @@ export function GroupsList({
   // Organisers start on their own community; God Mode on everything.
   const [filter, setFilter] = useState<string>(isGod ? "all" : defaultTeamId);
   const [search, setSearch] = useState("");
-  const [editing, setEditing] = useState<FbGroup | null>(null);
+  const [editing, setEditing] = useState<FbGroup | null>(
+    add
+      ? {
+          id: "",
+          teamId: defaultTeamId,
+          name: add.name,
+          url: add.url,
+          category: "vegan",
+          members: null,
+          notes: "",
+        }
+      : null,
+  );
   const teamName = useMemo(
     () => Object.fromEntries(teams.map((t) => [t.id, short(t.name)])),
     [teams],
@@ -156,6 +170,8 @@ export function GroupsList({
           </section>
         ))
       )}
+
+      <AddFromFacebook />
 
       {editing && (
         <GroupSheet
@@ -311,7 +327,12 @@ function GroupSheet({
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-sm font-medium">Name</span>
+          <span className="mb-1 block text-sm font-medium">
+            Name{" "}
+            <span className="font-normal text-stone-500">
+              (guessed from the link: check it matches Facebook)
+            </span>
+          </span>
           <input
             value={g.name}
             onChange={(e) => setG({ ...g, name: e.target.value })}
@@ -387,5 +408,34 @@ function GroupSheet({
         </button>
       </div>
     </Sheet>
+  );
+}
+
+// A bookmark that, tapped on a Facebook group page, opens this page with the
+// group's real name and link filled in (Facebook won't show group names to
+// apps, but your own browser can see them).
+function AddFromFacebook() {
+  const target = "https://wtf-organiser.vercel.app/facebook-groups";
+  const code = `(function(){var n=document.title.replace(/^\\(\\d+\\)\\s*/,'').replace(/\\s*\\|\\s*Facebook$/,'');var u=location.href.split('?')[0];window.open('${target}?add='+encodeURIComponent(u)+'&name='+encodeURIComponent(n),'_blank');})();`;
+  const href = `javascript:${code}`;
+  return (
+    <section className="rounded-2xl bg-white p-4 text-sm shadow-sm ring-1 ring-black/5">
+      <h2 className="font-semibold">Add groups with their real names</h2>
+      <p className="mt-1 text-stone-600">
+        Drag this button to your bookmarks bar (on a computer). Then, on any
+        Facebook group page, tap the bookmark and the group opens here with its
+        name and link filled in.
+      </p>
+      <a
+        // React blocks javascript: links in href, so set it directly.
+        ref={(el) => {
+          el?.setAttribute("href", href);
+        }}
+        onClick={(e) => e.preventDefault()}
+        className="mt-3 inline-block cursor-grab rounded-xl bg-[#0866FF] px-3 py-1.5 font-semibold text-white"
+      >
+        + Add to Movement Hub
+      </a>
+    </section>
   );
 }
