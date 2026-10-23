@@ -31,7 +31,9 @@ export function PeopleList({
   regions,
   communities = [],
   homeTeamId,
+  withContact = false,
 }: {
+  withContact?: boolean;
   people: PersonRow[];
   gives: Access[];
   regions: { id: string; name: string }[];
@@ -83,6 +85,7 @@ export function PeopleList({
 
       {adding && (
         <AddPersonForm
+          withContact={withContact}
           initialName={query}
           onDone={() => {
             setAdding(false);
@@ -191,9 +194,11 @@ function splitName(full: string) {
 function AddPersonForm({
   onDone,
   initialName = "",
+  withContact = false,
 }: {
   onDone: () => void;
   initialName?: string;
+  withContact?: boolean; // Regional Support Leads / God Mode can add contact details
 }) {
   const [names] = useState(() => splitName(initialName));
   const [state, action, pending] = useActionState<
@@ -238,10 +243,42 @@ function AddPersonForm({
           />
         </Field>
       </div>
-      <p className="text-xs text-stone-500">
-        Just a name. They add their own details and photo when they connect
-        their account.
-      </p>
+      {withContact ? (
+        <details className="rounded-xl bg-stone-50 p-3 ring-1 ring-black/5">
+          <summary className="cursor-pointer text-sm font-medium">
+            Contact details{" "}
+            <span className="font-normal text-stone-500">(optional)</span>
+          </summary>
+          <div className="mt-2 grid gap-2 sm:grid-cols-3">
+            <input
+              name="phone"
+              type="tel"
+              placeholder="Phone (WhatsApp)"
+              aria-label="Phone"
+              className={inputClass}
+            />
+            <input
+              name="email"
+              type="email"
+              placeholder="Email"
+              aria-label="Email"
+              className={inputClass}
+            />
+            <input
+              name="facebook"
+              type="url"
+              placeholder="Facebook profile link"
+              aria-label="Facebook profile link"
+              className={inputClass}
+            />
+          </div>
+        </details>
+      ) : (
+        <p className="text-xs text-stone-500">
+          Just a name. They add their own details and photo when they connect
+          their account.
+        </p>
+      )}
       {state.error && <p className="text-sm text-red-700">{state.error}</p>}
       <button
         type="submit"

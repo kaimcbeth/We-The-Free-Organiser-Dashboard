@@ -10,6 +10,7 @@ import { Avatar } from "@/components/avatar";
 import { signPhotos } from "@/lib/photos";
 import { RolePicker } from "@/components/role-picker";
 import { PhoneField } from "./phone-field";
+import { MessengerButton } from "@/components/messenger-button";
 import { GIVES, type Access, type CoreRole } from "@/lib/roles";
 
 type Person = {
@@ -22,6 +23,7 @@ type Person = {
   user_id: string | null;
   pending_role: Access | null;
   pending_team_id: string | null;
+  facebook_url: string | null;
   linked_at: string | null;
   consent_marketing: boolean;
   added_via: string;
@@ -50,7 +52,7 @@ export default async function PersonPage({
   const { data: person } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, is_buddy",
+      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, is_buddy",
     )
     .eq("id", id)
     .or(
@@ -94,6 +96,11 @@ export default async function PersonPage({
       .filter((r) => organiser.role === "god" || r.role !== "god")
       .find((r) => r.person_id === person.id)?.role ?? null;
   const role = realRole ?? person.pending_role;
+  // Contact details: for people with a role; RSLs and God Mode for anyone.
+  const canEditContact =
+    (!!role && role !== "god") ||
+    organiser.role === "god" ||
+    organiser.role === "regional_lead";
 
   // Buddy info: this person's buddy, who they look after, and who could be their buddy.
   const fullName = (p: { first_name: string; last_name: string | null }) =>
@@ -164,15 +171,21 @@ export default async function PersonPage({
           regions={regions ?? []}
         />
       </div>
-      {role && role !== "god" && (
+      {canEditContact && (
         <PhoneField
           personId={person.id}
           initial={person.phone ?? ""}
           initialEmail={person.email ?? ""}
+          initialFacebook={person.facebook_url ?? ""}
         />
       )}
-      {/* People with a role get the editable Contact line above instead. */}
-      {role && role !== "god" ? (
+      {!canEditContact && person.facebook_url && (
+        <div className="mt-2">
+          <MessengerButton facebookUrl={person.facebook_url} />
+        </div>
+      )}
+      {/* People with a role (or anyone, for RSLs) get the editable Contact line above instead. */}
+      {canEditContact ? (
         person.suburb && (
           <p className="mt-1 text-sm text-stone-500">{person.suburb}</p>
         )

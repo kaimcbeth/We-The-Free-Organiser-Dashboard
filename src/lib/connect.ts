@@ -8,6 +8,7 @@ export type ConnectOrganiser = {
   name: string;
   firstName: string;
   whatsapp: string | null; // wa.me link
+  facebookUrl: string | null;
   email: string | null;
 };
 export type ConnectIdea = {
@@ -129,6 +130,7 @@ export async function loadConnectContext(
         first_name: string;
         phone: string | null;
         email: string | null;
+        facebook_url: string | null;
       }[]
     )
       .filter((o) => o.team_id === team.id)
@@ -138,6 +140,7 @@ export async function loadConnectContext(
         name: o.name,
         firstName: o.first_name,
         whatsapp: waLink(o.phone, tz),
+        facebookUrl: o.facebook_url,
         email: o.email,
       }));
 

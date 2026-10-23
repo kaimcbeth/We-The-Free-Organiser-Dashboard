@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { ConnectContext, ConnectIdea } from "@/lib/connect";
+import { MessengerButton } from "@/components/messenger-button";
 
 // Inside an "Organisers checked in with" task: who to message and some ideas
 // of what to ask about.
@@ -39,6 +40,7 @@ export function ConnectIdeas({ ctx }: { ctx: ConnectContext }) {
                     WhatsApp ↗
                   </a>
                 )}
+                <MessengerButton facebookUrl={o.facebookUrl} small />
                 {o.email && (
                   <a
                     href={`mailto:${o.email}`}

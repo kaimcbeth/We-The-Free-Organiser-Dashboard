@@ -14,6 +14,7 @@ import {
   type ViewRole,
 } from "@/lib/organiser";
 import { GIVES, type Access } from "@/lib/roles";
+import { cleanFacebookUrl } from "@/lib/messenger";
 import { dayBoundsUtc, todayInTz, zonedToUtcIso } from "@/lib/time";
 
 export async function signOut() {
@@ -77,18 +78,35 @@ export async function createPerson(
   const { supabase, organiser } = await requireOrganiser();
 
   const firstName = String(formData.get("first_name") ?? "").trim();
-  const lastName = String(formData.get("last_name") ?? "").trim() || null;
+  const lastName = String(formData.get("last_name") ?? "").trim();
+  // Contact details: only saved for Regional Support Leads and God Mode.
+  const phone = String(formData.get("phone") ?? "")
+    .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, "")
+    .trim();
+  const email = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
+  const facebook = cleanFacebookUrl(String(formData.get("facebook") ?? ""));
 
   if (!firstName) return { error: "Please add a first name." };
+  if (phone && phone.replace(/\D/g, "").length < 8)
+    return { error: "That phone number looks too short." };
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    return { error: "That email doesn't look right." };
+  if (facebook === null)
+    return { error: "Paste their Facebook profile link (facebook.com/…)." };
 
-  const { error } = await supabase.from("people").insert({
-    team_id: organiser.team_id,
-    first_name: firstName,
-    last_name: lastName,
-    added_via: "host",
+  const { data, error } = await supabase.rpc("add_person", {
+    p_team_id: organiser.team_id,
+    p_first: firstName,
+    p_last: lastName,
+    p_phone: phone,
+    p_email: email,
+    p_facebook: facebook,
   });
 
-  if (error) return { error: "Couldn't save this person. Please try again." };
+  if (error || !data)
+    return { error: "Couldn't save this person. Please try again." };
 
   revalidatePath("/people");
   return {};
@@ -855,5 +873,30 @@ export async function setPersonContact(
     };
   revalidatePath(`/people/${personId}`);
   revalidatePath("/people");
+  return {};
+}
+
+// Someone's Facebook profile link (for the Messenger button). Same rule as
+// phone and email: only for people with a role.
+export async function setPersonFacebook(
+  personId: string,
+  url: string,
+): Promise<{ error?: string }> {
+  const { supabase } = await requireOrganiser();
+  const clean = cleanFacebookUrl(url);
+  if (clean === null)
+    return { error: "Paste their Facebook profile link (facebook.com/…)." };
+  const { data, error } = await supabase.rpc("set_person_facebook", {
+    p_person_id: personId,
+    p_url: clean,
+  });
+  if (error || data !== "ok")
+    return {
+      error:
+        data === "no_role"
+          ? "A Facebook link can only be added for people with a role."
+          : "Couldn't save the Facebook link. Please try again.",
+    };
+  revalidatePath(`/people/${personId}`);
   return {};
 }

@@ -1,0 +1,5 @@
+-- (Applied as person_facebook, add_person_with_contact.) people.facebook_url
+-- (Messenger button); set_person_facebook; add_person(team, first, last, phone,
+-- email, facebook) saves contact details only for Regional Support Leads / God.
+-- set_person_contact / set_person_facebook: RSLs and God for anyone, organisers
+-- only for people with a role. Nathan Tran's Facebook link added.

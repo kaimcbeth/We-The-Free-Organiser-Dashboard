@@ -14,6 +14,14 @@ export const CHANGELOG: Release[] = [
     title: "No repeat nudges, and moving tasks",
     changes: [
       {
+        level: "organiser",
+        text: "A blue Messenger button opens a Facebook chat with someone, once their Facebook profile link is added to their contact details.",
+      },
+      {
+        level: "regional_lead",
+        text: "When adding a person you can include their phone, email and Facebook link straight away, and edit anyone's contact details on their profile.",
+      },
+      {
         level: "regional_lead",
         text: "When you make someone an Organiser you can choose which community they'll run, and add their phone and email in the same pop-up (handy before they've connected).",
       },
