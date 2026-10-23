@@ -1,0 +1,3 @@
+-- (Applied as fb_groups_per_event_not_weekly.) The weekly Facebook groups task
+-- is archived (and its open tasks dismissed); the per-event "Promoted in local
+-- Facebook groups" is due the day before the event instead of 3 days before.

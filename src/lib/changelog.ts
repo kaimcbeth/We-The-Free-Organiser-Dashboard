@@ -15,7 +15,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "Keep a list of your local vegan and community Facebook groups (Tasks → Facebook groups). The Facebook groups promo tasks then have an “Open all” button that opens every group in its own tab.",
+        text: "Keep a list of your local vegan and community Facebook groups (Tasks → Facebook groups). The “Promoted in local Facebook groups” task for each event then has an “Open all” button that opens every group in its own tab. It appears a week before the event and is due the day before.",
       },
       {
         level: "god",
@@ -27,10 +27,6 @@ export const CHANGELOG: Release[] = [
     date: "2026-10-23",
     title: "No repeat nudges, and moving tasks",
     changes: [
-      {
-        level: "organiser",
-        text: "New weekly task: “Upcoming events shared in local vegan Facebook groups”, every Monday. It's part of the Promo Lead's list, and can be switched off in Choose tasks.",
-      },
       {
         level: "organiser",
         text: "A blue Messenger button opens a Facebook chat with someone, once their Facebook profile link is added to their contact details.",
