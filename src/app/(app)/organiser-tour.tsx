@@ -82,7 +82,7 @@ export function OrganiserTour({
       title: "Attendance in 60 seconds",
       follow: { on: "/", link: "today-event,next-event" },
       target: "checkin-list",
-      body: "It only takes about 60 seconds. On the day, open the event and tap names as people arrive. The people most likely to come are at the top, and someone new is one tap away.",
+      body: "On the day, open the event and tap names as people arrive. The people most likely to come are at the top, and someone new is one tap away.",
     },
     {
       section: 0,
