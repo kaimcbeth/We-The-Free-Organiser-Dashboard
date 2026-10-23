@@ -243,12 +243,15 @@ export function OrganiserTour({
     if (pathname !== followOn) return go(followOn);
     let tries = 0;
     const look = window.setInterval(() => {
+      // Only links inside the Hub (never e.g. the activism.wtf link).
       const link = followLink
         .split(",")
         .map((k) =>
-          document.querySelector<HTMLAnchorElement>(
-            `a[data-tour="${k}"], [data-tour="${k}"] a`,
-          ),
+          [
+            ...document.querySelectorAll<HTMLAnchorElement>(
+              `a[data-tour="${k}"], [data-tour="${k}"] a`,
+            ),
+          ].find((el) => el.getAttribute("href")?.startsWith("/")),
         )
         .find(Boolean);
       if (link?.getAttribute("href")) {
