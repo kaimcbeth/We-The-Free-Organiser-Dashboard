@@ -4,6 +4,7 @@ import { LoadError } from "@/components/load-error";
 import { TaskCard } from "@/components/task-card";
 import { loadTeamTasks } from "@/lib/tasks";
 import { loadTaskSetup } from "@/lib/task-setup";
+import { loadUpcomingActions } from "@/lib/upcoming-actions";
 import { ChooseTasks } from "./choose-tasks";
 import { RemoveEventTasks } from "./remove-event-tasks";
 import { dayBoundsUtc, formatEventDate, todayInTz } from "@/lib/time";
@@ -152,6 +153,23 @@ export default async function TasksPage() {
   ).length;
   const weekTotal = weekDone + weekLeft;
 
+  // Actions on their way for the next week's events (shown quietly).
+  const upcoming = await loadUpcomingActions(
+    supabase,
+    organiser.team_id,
+    setup.enabled,
+    now,
+  );
+  const upcomingFor = (eventId: string) =>
+    upcoming.filter((u) => u.eventId === eventId);
+  const when = (iso: string) => {
+    const days = Math.round((Date.parse(iso) - now) / 864e5);
+    return days <= 0
+      ? "later today"
+      : days === 1
+        ? "tomorrow"
+        : `in ${days} days`;
+  };
   const groups = [...byEvent.values()]
     .map((g) => ({
       ...g,
@@ -281,8 +299,48 @@ export default async function TasksPage() {
               <TaskCard key={t.id} task={t} {...common} hideEvent />
             ))}
           </ul>
+          {upcomingFor(g.key).length > 0 && (
+            <p className="mt-2 px-1 text-xs text-stone-400">
+              Coming up:{" "}
+              {upcomingFor(g.key)
+                .map((u) => `${u.title} (${when(u.appearsAt)})`)
+                .join(" · ")}
+            </p>
+          )}
         </section>
       ))}
+
+      {/* Events with nothing to do yet, but actions on the way. */}
+      {(() => {
+        const rest = [
+          ...new Map(
+            upcoming
+              .filter((u) => !byEvent.has(u.eventId))
+              .map((u) => [u.eventId, u]),
+          ).values(),
+        ];
+        if (rest.length === 0) return null;
+        return (
+          <section>
+            <h2 className="mb-1.5 text-sm font-medium text-stone-400">
+              Coming up
+            </h2>
+            <ul className="space-y-1 text-xs text-stone-400">
+              {rest.map((e) => (
+                <li key={e.eventId}>
+                  <span className="font-medium text-stone-500">
+                    {e.eventTitle} · {formatEventDate(e.eventAt)}
+                  </span>
+                  :{" "}
+                  {upcomingFor(e.eventId)
+                    .map((u) => `${u.title} (${when(u.appearsAt)})`)
+                    .join(" · ")}
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })()}
 
       {/* What the Core Team and helpers have on: kept apart from your own. */}
       <CoreTeamTasks crew={crew} now={now} tz={common.tz} />
