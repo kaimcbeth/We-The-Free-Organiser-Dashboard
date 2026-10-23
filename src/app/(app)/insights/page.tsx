@@ -5,9 +5,12 @@ import { computeInsights, RULES, type PersonInsight } from "@/lib/insights";
 import { LoadError } from "@/components/load-error";
 import { EveryoneTable } from "./everyone-table";
 import { RegionInsights } from "./region-insights";
+import { GlobalInsights } from "./global-insights";
 
 export default async function InsightsPage() {
   const { supabase, organiser } = await requireOrganiser();
+  if (organiser.allCommunities && organiser.role === "god")
+    return <GlobalInsights supabase={supabase} teams={organiser.teams} />;
   if (organiser.allCommunities)
     return <RegionInsights supabase={supabase} teams={organiser.teams} />;
   const data = await loadInsightData(supabase, organiser.team_id);
