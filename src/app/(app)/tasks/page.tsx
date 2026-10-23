@@ -6,7 +6,7 @@ import { loadTeamTasks } from "@/lib/tasks";
 import { loadTaskSetup } from "@/lib/task-setup";
 import { ChooseTasks } from "./choose-tasks";
 import { RemoveEventTasks } from "./remove-event-tasks";
-import { formatEventDate } from "@/lib/time";
+import { dayBoundsUtc, formatEventDate, todayInTz } from "@/lib/time";
 import { loadConnectContext } from "@/lib/connect";
 import { ConnectIdeas } from "@/components/connect-ideas";
 import { RegionTasks } from "./region-tasks";
@@ -131,6 +131,27 @@ export default async function TasksPage() {
     g.tasks.push(t);
     byEvent.set(key, g);
   }
+  // This week's progress (Monday to Sunday, community time): your tasks
+  // ticked off this week, out of those plus everything still open that's due
+  // by Sunday (overdue ones included).
+  const today = todayInTz();
+  const d = new Date(`${today}T00:00:00Z`);
+  const monday = new Date(d.getTime() - ((d.getUTCDay() + 6) % 7) * 864e5);
+  const ymd = (x: Date) => x.toISOString().slice(0, 10);
+  const weekStart = dayBoundsUtc(ymd(monday)).start;
+  const weekEnd = dayBoundsUtc(
+    ymd(new Date(monday.getTime() + 7 * 864e5)),
+  ).start;
+  const mine = (t: { regional: boolean; assignedTo: string | null }) =>
+    !t.regional && !t.assignedTo;
+  const weekDone = tasks.done.filter(
+    (t) => mine(t) && t.doneAt && Date.parse(t.doneAt) >= Date.parse(weekStart),
+  ).length;
+  const weekLeft = tasks.open.filter(
+    (t) => mine(t) && Date.parse(t.dueAt) < Date.parse(weekEnd),
+  ).length;
+  const weekTotal = weekDone + weekLeft;
+
   const groups = [...byEvent.values()]
     .map((g) => ({
       ...g,
@@ -154,6 +175,33 @@ export default async function TasksPage() {
             ? "Nothing left for the organisers. New tasks appear here after each event."
             : `${groups.reduce((n, g) => n + g.tasks.length, 0)} for the organisers · about ${minutes} min in total`}
         </p>
+        {weekTotal > 0 && (
+          <div className="mt-4" data-tour="week-progress">
+            <div className="flex items-baseline justify-between text-sm">
+              <span className="font-medium text-navy">
+                {weekLeft === 0
+                  ? "🎉 All done for this week"
+                  : `This week: ${weekDone} of ${weekTotal} done`}
+              </span>
+              <span className="text-xs text-stone-500">
+                {Math.round((weekDone / weekTotal) * 100)}%
+              </span>
+            </div>
+            <div
+              className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-stone-200"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={weekTotal}
+              aria-valuenow={weekDone}
+              aria-label="Tasks done this week"
+            >
+              <div
+                className="h-full rounded-full bg-pink transition-all"
+                style={{ width: `${(weekDone / weekTotal) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <ChooseTasks
             setup={setup}
