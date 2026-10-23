@@ -11,6 +11,7 @@ import { signPhotos } from "@/lib/photos";
 import { RolePicker } from "@/components/role-picker";
 import { PhoneField } from "./phone-field";
 import { MessengerButton } from "@/components/messenger-button";
+import { WhatsAppButton } from "@/components/whatsapp-button";
 import { GIVES, type Access, type CoreRole } from "@/lib/roles";
 
 type Person = {
@@ -177,10 +178,12 @@ export default async function PersonPage({
           initial={person.phone ?? ""}
           initialEmail={person.email ?? ""}
           initialFacebook={person.facebook_url ?? ""}
+          tz={organiser.team.timezone}
         />
       )}
-      {!canEditContact && person.facebook_url && (
-        <div className="mt-2">
+      {!canEditContact && (person.facebook_url || person.phone) && (
+        <div className="mt-2 flex gap-2">
+          <WhatsAppButton phone={person.phone} tz={organiser.team.timezone} />
           <MessengerButton facebookUrl={person.facebook_url} />
         </div>
       )}

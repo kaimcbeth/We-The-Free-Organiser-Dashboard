@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { setPersonContact, setPersonFacebook } from "@/app/actions";
 import { messengerLink } from "@/lib/messenger";
+import { WhatsAppButton } from "@/components/whatsapp-button";
 
 // For people with a role: phone (WhatsApp) and email their Regional Support
 // Lead can use. Can be added before they've connected their account.
@@ -11,7 +12,9 @@ export function PhoneField({
   initial,
   initialEmail,
   initialFacebook,
+  tz,
 }: {
+  tz: string;
   personId: string;
   initial: string;
   initialEmail: string;
@@ -42,6 +45,7 @@ export function PhoneField({
           {[saved.phone, saved.email].filter(Boolean).join(" · ") ||
             "No phone or email yet"}
         </span>
+        <WhatsAppButton phone={saved.phone} tz={tz} small />
         {messenger && (
           <a
             href={messenger}

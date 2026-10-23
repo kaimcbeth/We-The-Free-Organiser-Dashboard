@@ -8,6 +8,7 @@ import { Field, inputClass } from "@/components/form";
 import { Avatar } from "@/components/avatar";
 import { RolePicker } from "@/components/role-picker";
 import { MessengerButton } from "@/components/messenger-button";
+import { WhatsAppButton } from "@/components/whatsapp-button";
 import type { Access, CoreRole } from "@/lib/roles";
 
 export type PersonRow = {
@@ -34,8 +35,10 @@ export function PeopleList({
   communities = [],
   homeTeamId,
   withContact = false,
+  tz,
 }: {
   withContact?: boolean;
+  tz: string;
   people: PersonRow[];
   gives: Access[];
   regions: { id: string; name: string }[];
@@ -149,8 +152,9 @@ export function PeopleList({
                   </p>
                 </div>
               </Link>
-              {p.facebook_url && (
-                <span className="mr-2 shrink-0">
+              {(p.facebook_url || p.phone) && (
+                <span className="mr-2 flex shrink-0 gap-1">
+                  <WhatsAppButton phone={p.phone} tz={tz} small />
                   <MessengerButton facebookUrl={p.facebook_url} small />
                 </span>
               )}
