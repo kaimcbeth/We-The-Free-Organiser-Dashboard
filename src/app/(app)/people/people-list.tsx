@@ -11,6 +11,7 @@ import { MessengerButton } from "@/components/messenger-button";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import type { Access, CoreRole } from "@/lib/roles";
 import { NEWCOMER_EVENTS, isNewcomer } from "@/lib/newcomer";
+import { driftText, type Drift } from "@/lib/drift";
 
 export type PersonRow = {
   id: string;
@@ -27,6 +28,7 @@ export type PersonRow = {
   photoUrl: string | null;
   events: number;
   attendedBefore: boolean; // came before the app: never a first-timer
+  drift: Drift | null; // "Not seen in a while"
   role: Access | null;
 };
 
@@ -153,6 +155,14 @@ export function PeopleList({
                         p.connected ? "Account connected" : "No account yet"
                       }
                     />
+                    {p.drift && (
+                      <span
+                        title={driftText(p.drift)}
+                        className="shrink-0 rounded-full bg-pink/25 px-2 py-0.5 text-xs font-semibold text-pink-ink"
+                      >
+                        Not seen in a while
+                      </span>
+                    )}
                     {p.events > 0 && isNewcomer(p.events, p.attendedBefore) && (
                       <FirstTimerChip
                         personId={p.id}

@@ -1,3 +1,4 @@
+import { notSeenInAWhile } from "@/lib/drift";
 import { requireOrganiser } from "@/lib/organiser";
 import { GIVES, type Access, type CoreRole } from "@/lib/roles";
 import { signPhotos } from "@/lib/photos";
@@ -14,13 +15,14 @@ type Row = Omit<
   | "leads"
   | "roleTeamId"
   | "attendedBefore"
+  | "drift"
 > & {
   attended_before_app: boolean;
   user_id: string | null;
   pending_role: Access | null;
   pending_team_id: string | null;
   photo_updated_at: string | null;
-  attendance: { count: number }[];
+  attendance: { event: { starts_at: string } | null }[];
 };
 
 export default async function PeoplePage({
@@ -32,7 +34,7 @@ export default async function PeoplePage({
   const { data, error } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, photo_updated_at, attended_before_app, attendance(count)",
+      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, photo_updated_at, attended_before_app, attendance(event:events(starts_at))",
     )
     // Also people made Organiser for this community whose profile is elsewhere.
     .or(
@@ -66,6 +68,8 @@ export default async function PeoplePage({
   );
 
   const photos = await signPhotos(supabase, data ?? []);
+  // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
+  const now = Date.now();
   const people: PersonRow[] = (data ?? []).map(
     ({
       attendance,
@@ -83,7 +87,11 @@ export default async function PeoplePage({
       rolePending: !organiser.exampleMode && !roles.get(p.id) && !!pending_role,
       roleTeamId: pending_team_id,
       leads: leads.get(p.id) ?? [],
-      events: attendance[0]?.count ?? 0,
+      events: attendance.length,
+      drift: notSeenInAWhile(
+        attendance.flatMap((a) => (a.event ? [a.event.starts_at] : [])),
+        now,
+      ),
       attendedBefore: attended_before_app,
       photoUrl: photo_updated_at ? (photos[p.id] ?? null) : null,
     }),

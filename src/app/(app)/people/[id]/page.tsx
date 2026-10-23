@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
 import { formatEventDate } from "@/lib/time";
 import { NEWCOMER_EVENTS, isNewcomer } from "@/lib/newcomer";
+import { driftText, notSeenInAWhile } from "@/lib/drift";
 import { InviteButton } from "./invite-button";
 import { DeletePerson } from "./delete-person";
 import { AttendedBefore } from "./attended-before";
@@ -181,6 +182,11 @@ export default async function PersonPage({
       .map((c) => ({ id: c.id, name: fullName(c) }));
   }
   const newcomer = isNewcomer(events.length, person.attended_before_app);
+  const drift = notSeenInAWhile(
+    events.map((e) => e.starts_at),
+    // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
+    Date.now(),
+  );
 
   return (
     <div>
@@ -256,6 +262,14 @@ export default async function PersonPage({
             </p>
           </div>
         </div>
+      )}
+      {drift && (
+        <p className="mt-5 flex flex-wrap items-center gap-x-2 rounded-2xl bg-pink/15 px-4 py-3 text-sm text-navy">
+          <span className="font-semibold text-pink-ink">
+            Not seen in a while
+          </span>
+          <span>{driftText(drift)}. Worth reaching out?</span>
+        </p>
       )}
       {newcomer && events.length > 1 && (
         <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-yellow px-3 py-1 text-sm font-semibold text-navy">
