@@ -199,10 +199,10 @@ export function OrganiserTour({
       section: 2,
       icon: "📝",
       tone: "bg-yellow",
-      title: "After each event",
+      title: "Set up your tasks",
       href: "/tasks",
       target: "choose-tasks,nav-tasks",
-      body: "Photos, follow-ups and more. Let's pick the ones that suit you.",
+      body: "Last step: tell us how much time you have and pick which tasks you want for your community. You can change them any time.",
     },
   ];
 
