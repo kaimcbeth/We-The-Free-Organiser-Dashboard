@@ -7,6 +7,7 @@ import { createPerson, type FormState } from "@/app/actions";
 import { Field, inputClass } from "@/components/form";
 import { Avatar } from "@/components/avatar";
 import { RolePicker } from "@/components/role-picker";
+import { MessengerButton } from "@/components/messenger-button";
 import type { Access, CoreRole } from "@/lib/roles";
 
 export type PersonRow = {
@@ -19,6 +20,7 @@ export type PersonRow = {
   connected: boolean;
   rolePending: boolean;
   roleTeamId: string | null;
+  facebook_url: string | null;
   leads: CoreRole[];
   photoUrl: string | null;
   events: number;
@@ -143,10 +145,15 @@ export function PeopleList({
                   </p>
                   <p className="truncate text-sm text-stone-500">
                     {[p.suburb, p.email, p.phone].filter(Boolean).join(" · ") ||
-                      "No details yet"}
+                      (p.facebook_url ? "Facebook" : "No details yet")}
                   </p>
                 </div>
               </Link>
+              {p.facebook_url && (
+                <span className="mr-2 shrink-0">
+                  <MessengerButton facebookUrl={p.facebook_url} small />
+                </span>
+              )}
               <RolePicker
                 personId={p.id}
                 firstName={p.first_name}

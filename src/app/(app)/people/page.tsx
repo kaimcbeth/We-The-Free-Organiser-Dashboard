@@ -30,7 +30,7 @@ export default async function PeoplePage({
   const { data, error } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, photo_updated_at, attendance(count)",
+      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, photo_updated_at, attendance(count)",
     )
     // Also people made Organiser for this community whose profile is elsewhere.
     .or(
