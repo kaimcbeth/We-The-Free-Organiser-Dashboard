@@ -11,6 +11,24 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-24",
+    title: "Newcomers and first-timers",
+    changes: [
+      {
+        level: "organiser",
+        text: "People stay newcomers until their 5th event. The People list shows “First-timer” (first event) or “Newcomer”, with a × to clear it. Profiles show a First-timer banner, how far along a newcomer is, and a clear place to connect a regular volunteer to support them.",
+      },
+      {
+        level: "organiser",
+        text: "When a newcomer comes to their 5th event, the person supporting them gets a congratulations notification.",
+      },
+      {
+        level: "god",
+        text: "NEWCOMER_EVENTS = 5 in src/lib/newcomer.ts; trigger attendance_newcomer_graduated notifies the supporter (kind newcomer_graduated) and ends the pairing on the 5th check-in.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-24",
     title: "A guided tour of the app",
     changes: [
       {
