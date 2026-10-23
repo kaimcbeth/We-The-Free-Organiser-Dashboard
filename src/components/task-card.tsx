@@ -326,7 +326,7 @@ export function TaskCard({
                     })
                   }
                   title="Tick off, and no more monthly check-ins for them until they reply"
-                  className="rounded-lg px-1.5 py-1 text-sm font-medium text-stone-400 hover:bg-stone-100 hover:text-navy"
+                  className="rounded px-1 py-0.5 text-xs text-stone-400 hover:text-stone-700 hover:underline"
                 >
                   No reply yet
                 </button>

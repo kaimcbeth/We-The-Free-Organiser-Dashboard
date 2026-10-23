@@ -14,7 +14,7 @@ export function ConnectIdeas({ ctx }: { ctx: ConnectContext }) {
         </p>
         {ctx.organisers.length === 0 ? (
           <p className="mt-0.5 text-sm text-stone-500">
-            No organisers with an account yet.
+            No organisers yet. Give someone the Organiser role to see them here.
           </p>
         ) : (
           <ul className="mt-1 flex flex-wrap gap-2">

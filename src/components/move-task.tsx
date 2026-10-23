@@ -85,7 +85,7 @@ export function MoveTask({
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg px-1.5 py-1 text-sm font-medium text-stone-500 hover:bg-stone-100 hover:text-navy"
+        className="rounded px-1 py-0.5 text-xs text-stone-400 hover:text-stone-700 hover:underline"
       >
         Move
       </button>
