@@ -114,3 +114,10 @@ select cron.schedule('refresh-example-events', '3 * * * *', 'select private.refr
 -- re-dated by refresh_example_events() to "6 days ago".
 create policy "staff read example pairings" on public.buddy_pairings for select
   using (private.is_example_team(team_id) and private.is_staff());
+
+-- (Data tweaks run directly.) Paul and Ringo are checked in to the upcoming
+-- Social; George has a (placeholder) Facebook link so the Messenger button
+-- shows; example events have placeholder activism.wtf links; five big Sydney
+-- groups are shared with the Example Community (also_team_ids) for the tour.
+update people p set facebook_url = 'https://www.facebook.com/example.george'
+from teams t where t.id = p.team_id and t.is_example and p.first_name = 'George';
