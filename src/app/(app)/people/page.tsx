@@ -3,6 +3,7 @@ import {
   engagement,
   engagementStatus,
   isLapsed,
+  loadTracking,
   recentEvents,
 } from "@/lib/engagement";
 import { requireOrganiser } from "@/lib/organiser";
@@ -56,27 +57,18 @@ export default async function PeoplePage({
 
   if (error) return <LoadError what="people" />;
 
-  const [
-    { data: roleRows },
-    { data: regions },
-    { data: leadRows },
-    { data: teamEvents },
-  ] = await Promise.all([
-    supabase.rpc("list_roles"),
-    supabase.from("regions").select("id, name").order("sort_order"),
-    supabase
-      .from("person_core_roles")
-      .select("person_id, core_role")
-      .eq("team_id", organiser.team_id)
-      .is("ended_at", null),
-    // The community's events over the last 5 months (engagement + trend).
-    supabase
-      .from("events")
-      .select("starts_at")
-      .eq("team_id", organiser.team_id)
-      .gte("starts_at", new Date(now - 155 * 864e5).toISOString()),
-  ]);
-  const communityDates = (teamEvents ?? []).map((e) => e.starts_at);
+  const [{ data: roleRows }, { data: regions }, { data: leadRows }, tracking] =
+    await Promise.all([
+      supabase.rpc("list_roles"),
+      supabase.from("regions").select("id, name").order("sort_order"),
+      supabase
+        .from("person_core_roles")
+        .select("person_id, core_role")
+        .eq("team_id", organiser.team_id)
+        .is("ended_at", null),
+      loadTracking(supabase, organiser.team_id, now),
+    ]);
+  const communityDates = tracking.tracked;
   const leads = new Map<string, CoreRole[]>();
   for (const r of (leadRows ?? []) as {
     person_id: string;
@@ -114,7 +106,7 @@ export default async function PeoplePage({
         );
         return {
           drift: isLapsed(dates, now) ? null : notSeenInAWhile(dates, now),
-          status: engagementStatus(dates, attended_before_app, now),
+          status: engagementStatus(dates, attended_before_app, now, tracking),
           recent: recentEvents(dates, now),
           engagement: engagement(dates, communityDates, now),
         };

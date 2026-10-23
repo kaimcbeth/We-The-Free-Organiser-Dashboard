@@ -8,6 +8,7 @@ import {
   engagementStatus,
   isLapsed,
   isNewcomerStatus,
+  loadTracking,
   recentEvents,
 } from "@/lib/engagement";
 import { EngagementBar } from "@/components/engagement-bar";
@@ -159,6 +160,7 @@ export default async function PersonPage({
   // yet: who this person could take on, if they're on New member support.
   // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
   const now = Date.now();
+  const tracking = await loadTracking(supabase, organiser.team_id, now);
   let newcomerOptions: { id: string; name: string }[] = [];
   if (person.is_buddy) {
     const [{ data: candidates }, { data: taken }] = await Promise.all([
@@ -193,27 +195,24 @@ export default async function PersonPage({
               c.attendance.flatMap((a) => (a.event ? [a.event.starts_at] : [])),
               c.attended_before_app,
               now,
+              tracking,
             ),
           ) && !supported.has(c.id),
       )
       .map((c) => ({ id: c.id, name: fullName(c) }));
   }
   const eventDates = events.map((e) => e.starts_at);
-  const status = engagementStatus(eventDates, person.attended_before_app, now);
+  const status = engagementStatus(
+    eventDates,
+    person.attended_before_app,
+    now,
+    tracking,
+  );
   const newcomer = isNewcomerStatus(status);
   const drift = isLapsed(eventDates, now)
     ? null
     : notSeenInAWhile(eventDates, now);
-  const { data: teamEvents } = await supabase
-    .from("events")
-    .select("starts_at")
-    .eq("team_id", organiser.team_id)
-    .gte("starts_at", new Date(now - 155 * 864e5).toISOString());
-  const eng = engagement(
-    eventDates,
-    (teamEvents ?? []).map((e) => e.starts_at),
-    now,
-  );
+  const eng = engagement(eventDates, tracking.tracked, now);
 
   return (
     <div>

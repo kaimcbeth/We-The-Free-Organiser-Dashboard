@@ -1,3 +1,5 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 // How engaged someone is, in two parts:
 //  - a status label (what to do about them), and
 //  - an engagement score 0–10 with a trend (how much, and which way).
@@ -37,20 +39,36 @@ export const isLapsed = (dates: string[], now: number) => {
   return t.length > 0 && now - t[t.length - 1] > LAPSED_DAYS * DAY;
 };
 
+// What we know about the community's record: events where attendance was
+// actually taken, and when the Hub started keeping it.
+export type Tracking = { tracked: string[]; since: number | null };
+
 // One main status, checked in order (first match wins). null = none (never
 // came, came once long ago, or lapsed).
+// While a community has under 3 months of check-ins, "5 in 3 months" isn't
+// fair yet: Regular is then anyone who came to at least half the tracked
+// events (2+), and nobody is called Occasional.
 export function engagementStatus(
   dates: string[],
   attendedBefore: boolean,
   now: number,
+  tracking?: Tracking,
 ): Status | null {
   const t = past(dates, now);
   if (t.length === 0) return null;
   if (now - t[t.length - 1] > LAPSED_DAYS * DAY) return null;
   const recent = t.filter((x) => now - x <= WINDOW_DAYS * DAY).length;
+  const early = !!tracking?.since && now - tracking.since < WINDOW_DAYS * DAY;
   const newToUs = !attendedBefore && now - t[0] <= WINDOW_DAYS * DAY;
   if (newToUs && t.length === 1) return "first_timer";
   if (newToUs && !everRegular(t)) return "newcomer";
+  if (early) {
+    // (Mostly people marked "came before the app".)
+    const tracked = past(tracking!.tracked, now).filter((x) => x >= t[0]);
+    if (t.length >= 2 && tracked.length > 0 && t.length / tracked.length >= 0.5)
+      return "regular";
+    return null;
+  }
   if (recent >= REGULAR_EVENTS) return "regular";
   if (t.length >= 2) return "occasional";
   return null;
@@ -64,8 +82,9 @@ export const recentEvents = (dates: string[], now: number) =>
   past(dates, now).filter((x) => now - x <= WINDOW_DAYS * DAY).length;
 
 // Engagement 0–10 as of a moment: the share of their community's events in
-// the 3 months before it (only since their first event) that they came to,
-// with the last 30 days ×3, 31–60 ×2, 61–90 ×1. null = nothing to go on.
+// the 3 months before it (only since their first event, and only events
+// where attendance was taken) that they came to, with the last 30 days ×3,
+// 31–60 ×2, 61–90 ×1. null = nothing to go on.
 export function engagementScore(
   dates: string[],
   communityEvents: string[],
@@ -116,3 +135,32 @@ export function engagement(
 // 0 = red … 10 = bright green, a step of colour for every point.
 export const engagementColour = (score: number) =>
   `hsl(${Math.round(score * 13)} 85% ${score >= 8 ? 42 : 48}%)`;
+
+// Loads a community's tracking record (events with check-ins, last ~5 months,
+// and when check-ins began).
+export async function loadTracking(
+  supabase: SupabaseClient,
+  teamId: string,
+  now: number,
+): Promise<Tracking> {
+  const [{ data: recent }, { data: first }] = await Promise.all([
+    supabase
+      .from("events")
+      .select("starts_at, attendance!inner(event_id)")
+      .eq("team_id", teamId)
+      .gte("starts_at", new Date(now - 155 * DAY).toISOString()),
+    supabase
+      .from("events")
+      .select("starts_at, attendance!inner(event_id)")
+      .eq("team_id", teamId)
+      .order("starts_at")
+      .limit(1),
+  ]);
+  const tracked = [
+    ...new Set(
+      ((recent ?? []) as { starts_at: string }[]).map((e) => e.starts_at),
+    ),
+  ];
+  const since = (first as { starts_at: string }[] | null)?.[0]?.starts_at;
+  return { tracked, since: since ? Date.parse(since) : null };
+}
