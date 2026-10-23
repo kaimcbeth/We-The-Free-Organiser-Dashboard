@@ -20,10 +20,15 @@ export function ConnectIdeas({ ctx }: { ctx: ConnectContext }) {
           <ul className="mt-1 flex flex-wrap gap-2">
             {ctx.organisers.map((o) => (
               <li
-                key={o.name}
+                key={o.personId}
                 className="flex items-center gap-1.5 rounded-lg bg-white py-1 pl-2.5 pr-1 text-sm ring-1 ring-black/5"
               >
-                <span className="font-medium">{o.name}</span>
+                <a
+                  href={`/people/open?id=${o.personId}&team=${o.teamId}`}
+                  className="font-medium text-navy hover:underline"
+                >
+                  {o.name}
+                </a>
                 {o.whatsapp && (
                   <a
                     href={o.whatsapp}

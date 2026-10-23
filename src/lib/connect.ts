@@ -3,6 +3,8 @@ import type { Team } from "@/lib/organiser";
 import { formatEventDate } from "@/lib/time";
 
 export type ConnectOrganiser = {
+  personId: string;
+  teamId: string;
   name: string;
   firstName: string;
   whatsapp: string | null; // wa.me link
@@ -122,6 +124,7 @@ export async function loadConnectContext(
     const organisers: ConnectOrganiser[] = (
       (orgs ?? []) as {
         team_id: string;
+        person_id: string;
         name: string;
         first_name: string;
         phone: string | null;
@@ -130,6 +133,8 @@ export async function loadConnectContext(
     )
       .filter((o) => o.team_id === team.id)
       .map((o) => ({
+        personId: o.person_id,
+        teamId: o.team_id,
         name: o.name,
         firstName: o.first_name,
         whatsapp: waLink(o.phone, tz),
