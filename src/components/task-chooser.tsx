@@ -397,14 +397,16 @@ export function TaskChooser({
                 + Add your own action
               </button>
             )}
-            <div className="mt-4 flex items-baseline justify-between rounded-2xl bg-navy px-4 py-3 text-white">
-              <p className="text-sm text-white/75">About</p>
-              <p className="text-2xl font-semibold">
-                {fmt(total)}{" "}
-                <span className="text-base font-normal text-white/75">
-                  a week
-                </span>
-              </p>
+            <div className="mt-4 rounded-2xl bg-navy px-4 py-3 text-white">
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-sm text-white/75">Your actions</p>
+                <p className="whitespace-nowrap text-2xl font-semibold">
+                  about {fmt(total)}{" "}
+                  <span className="text-base font-normal text-white/75">
+                    a week
+                  </span>
+                </p>
+              </div>
               {budget && total > budget && (
                 <p className="mt-1 text-sm text-yellow">
                   That&apos;s a bit more than the {fmt(budget)} you said.
