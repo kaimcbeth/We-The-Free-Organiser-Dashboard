@@ -6,10 +6,17 @@ import { PeopleList, type PersonRow } from "./people-list";
 
 type Row = Omit<
   PersonRow,
-  "events" | "connected" | "photoUrl" | "role" | "rolePending" | "leads"
+  | "events"
+  | "connected"
+  | "photoUrl"
+  | "role"
+  | "rolePending"
+  | "leads"
+  | "roleTeamId"
 > & {
   user_id: string | null;
   pending_role: Access | null;
+  pending_team_id: string | null;
   photo_updated_at: string | null;
   attendance: { count: number }[];
 };
@@ -23,9 +30,12 @@ export default async function PeoplePage({
   const { data, error } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, photo_updated_at, attendance(count)",
+      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, photo_updated_at, attendance(count)",
     )
-    .eq("team_id", organiser.team_id)
+    // Also people made Organiser for this community whose profile is elsewhere.
+    .or(
+      `team_id.eq.${organiser.team_id},pending_team_id.eq.${organiser.team_id}`,
+    )
     .order("first_name")
     .returns<Row[]>();
 
@@ -55,16 +65,37 @@ export default async function PeoplePage({
 
   const photos = await signPhotos(supabase, data ?? []);
   const people: PersonRow[] = (data ?? []).map(
-    ({ attendance, user_id, photo_updated_at, pending_role, ...p }) => ({
+    ({
+      attendance,
+      user_id,
+      photo_updated_at,
+      pending_role,
+      pending_team_id,
+      ...p
+    }) => ({
       ...p,
       connected: !!user_id,
       role: roles.get(p.id) ?? pending_role ?? null,
       rolePending: !roles.get(p.id) && !!pending_role,
+      roleTeamId: pending_team_id,
       leads: leads.get(p.id) ?? [],
       events: attendance[0]?.count ?? 0,
       photoUrl: photo_updated_at ? (photos[p.id] ?? null) : null,
     }),
   );
+  // Regional Support Leads (and God Mode) see the people who run things
+  // first: Organisers, Core Team, members, then attendees.
+  if (organiser.role === "regional_lead" || organiser.role === "god") {
+    const rank = (p: PersonRow) =>
+      p.role === "organiser" || p.role === "regional_lead" || p.role === "god"
+        ? 0
+        : p.role === "core_team"
+          ? 1
+          : p.connected
+            ? 2
+            : 3;
+    people.sort((a, b) => rank(a) - rank(b));
+  }
   const connected = people.filter((p) => p.connected).length;
 
   return (

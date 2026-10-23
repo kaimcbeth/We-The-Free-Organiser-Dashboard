@@ -21,6 +21,7 @@ type Person = {
   phone: string | null;
   user_id: string | null;
   pending_role: Access | null;
+  pending_team_id: string | null;
   linked_at: string | null;
   consent_marketing: boolean;
   added_via: string;
@@ -49,10 +50,12 @@ export default async function PersonPage({
   const { data: person } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, is_buddy",
+      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, is_buddy",
     )
     .eq("id", id)
-    .eq("team_id", organiser.team_id)
+    .or(
+      `team_id.eq.${organiser.team_id},pending_team_id.eq.${organiser.team_id}`,
+    )
     .maybeSingle<Person>();
   if (!person) notFound();
 
@@ -154,6 +157,7 @@ export default async function PersonPage({
           leads={leads}
           communities={organiser.teams.map((t) => ({ id: t.id, name: t.name }))}
           homeTeamId={organiser.team_id}
+          roleTeamId={person.pending_team_id}
           phone={person.phone ?? ""}
           email={person.email ?? ""}
           gives={GIVES[organiser.role]}

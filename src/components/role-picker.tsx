@@ -36,6 +36,7 @@ export function RolePicker({
   leads = [],
   communities = [],
   homeTeamId,
+  roleTeamId,
   phone = "",
   email = "",
 }: {
@@ -50,6 +51,7 @@ export function RolePicker({
   leads?: CoreRole[]; // Core Team lead roles
   communities?: { id: string; name: string }[]; // where they could be Organiser
   homeTeamId?: string; // the community their profile is in
+  roleTeamId?: string | null; // the community they're (going to be) Organiser for
   phone?: string;
   email?: string;
 }) {
@@ -60,7 +62,8 @@ export function RolePicker({
     current && gives.includes(current) ? current : gives[gives.length - 1],
   );
   const [region, setRegion] = useState("");
-  const [community, setCommunity] = useState(homeTeamId ?? "");
+  const [roleTeam, setRoleTeam] = useState(roleTeamId ?? homeTeamId ?? "");
+  const [community, setCommunity] = useState(roleTeam);
   const [contact, setContact] = useState({ phone, email });
   const contactChanged = contact.phone !== phone || contact.email !== email;
   const [savedLeads, setSavedLeads] = useState<CoreRole[]>(leads);
@@ -68,10 +71,18 @@ export function RolePicker({
   const leadsChanged =
     leadPick.size !== savedLeads.length ||
     savedLeads.some((l) => !leadPick.has(l));
+  // e.g. "Core Team · Promo Lead", or "Organiser · Sunshine Coast" when
+  // they run a different community from the one their profile is in.
+  const otherCommunity =
+    role === "organiser" && roleTeam && homeTeamId && roleTeam !== homeTeamId
+      ? communities
+          .find((c) => c.id === roleTeam)
+          ?.name.replace(/, (Australia|New Zealand|Canada)$/, "")
+      : undefined;
   const detail =
     role === "core_team" && savedLeads.length
       ? savedLeads.map((l) => CORE_ROLE_LABEL[l]).join(" & ")
-      : undefined;
+      : otherCommunity;
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
 
@@ -298,7 +309,7 @@ export function RolePicker({
                   (pick === role &&
                     pick !== "regional_lead" &&
                     !(pick === "core_team" && leadsChanged) &&
-                    !(pick === "organiser" && community !== homeTeamId) &&
+                    !(pick === "organiser" && community !== roleTeam) &&
                     !contactChanged) ||
                   (pick === "regional_lead" && !region) ||
                   (pick === "core_team" && leadPick.size === 0)
@@ -308,7 +319,7 @@ export function RolePicker({
                     if (
                       pick !== role ||
                       pick === "regional_lead" ||
-                      (pick === "organiser" && community !== homeTeamId)
+                      (pick === "organiser" && community !== roleTeam)
                     ) {
                       const r = await grantRole(
                         personId,
@@ -331,6 +342,7 @@ export function RolePicker({
                       if (r.error) return setError(r.error);
                       setSavedLeads([...leadPick]);
                     }
+                    if (pick === "organiser") setRoleTeam(community);
                     setError("");
                     setRole(pick);
                     setIsPending(!connected);

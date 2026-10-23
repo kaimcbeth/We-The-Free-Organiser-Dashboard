@@ -17,6 +17,7 @@ export type PersonRow = {
   phone: string | null;
   connected: boolean;
   rolePending: boolean;
+  roleTeamId: string | null;
   leads: CoreRole[];
   photoUrl: string | null;
   events: number;
@@ -149,6 +150,7 @@ export function PeopleList({
                 leads={p.leads}
                 communities={communities}
                 homeTeamId={homeTeamId}
+                roleTeamId={p.roleTeamId}
                 phone={p.phone ?? ""}
                 email={p.email ?? ""}
                 gives={gives}
