@@ -10,7 +10,8 @@ import { RolePicker } from "@/components/role-picker";
 import { MessengerButton } from "@/components/messenger-button";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import type { Access, CoreRole } from "@/lib/roles";
-import { REGULAR_EVENTS } from "@/lib/newcomer";
+import { REGULAR_EVENTS, type Engagement, type Status } from "@/lib/engagement";
+import { EngagementBar } from "@/components/engagement-bar";
 import { driftText, type Drift } from "@/lib/drift";
 
 export type PersonRow = {
@@ -28,8 +29,9 @@ export type PersonRow = {
   photoUrl: string | null;
   events: number;
   attendedBefore: boolean; // came before the app: never a first-timer
-  newcomer: boolean; // not yet a Regular (see lib/newcomer)
+  status: Status | null; // First-timer, Newcomer, Regular, Occasional
   recent: number; // events in the last 3 months
+  engagement: Engagement | null;
   drift: Drift | null; // "Not seen in a while"
   role: Access | null;
 };
@@ -165,7 +167,16 @@ export function PeopleList({
                         Not seen in a while
                       </span>
                     )}
-                    {p.newcomer && (
+                    {p.status === "occasional" && (
+                      <span
+                        title="Has been around a while and comes now and then"
+                        className="shrink-0 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-800"
+                      >
+                        Occasional
+                      </span>
+                    )}
+                    {(p.status === "first_timer" ||
+                      p.status === "newcomer") && (
                       <FirstTimerChip
                         personId={p.id}
                         name={p.first_name}
@@ -204,7 +215,7 @@ export function PeopleList({
               />
               <Link
                 href={`/people/${p.id}`}
-                className="w-14 shrink-0 py-3 pr-4 text-right"
+                className="w-20 shrink-0 py-3 pr-4 text-right"
               >
                 <div>
                   <p className="text-sm font-semibold tabular-nums">
@@ -213,6 +224,11 @@ export function PeopleList({
                   <p className="text-xs text-stone-500">
                     {p.events === 1 ? "event" : "events"}
                   </p>
+                  {p.engagement && (
+                    <span className="mt-1 flex justify-end">
+                      <EngagementBar e={p.engagement} />
+                    </span>
+                  )}
                 </div>
               </Link>
             </li>

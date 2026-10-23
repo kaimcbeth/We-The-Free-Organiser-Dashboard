@@ -4,10 +4,13 @@ import { requireOrganiser } from "@/lib/organiser";
 import { formatEventDate } from "@/lib/time";
 import {
   REGULAR_EVENTS,
-  isNewcomer,
+  engagement,
+  engagementStatus,
+  isLapsed,
+  isNewcomerStatus,
   recentEvents,
-  regularSince,
-} from "@/lib/newcomer";
+} from "@/lib/engagement";
+import { EngagementBar } from "@/components/engagement-bar";
 import { driftText, notSeenInAWhile } from "@/lib/drift";
 import { InviteButton } from "./invite-button";
 import { DeletePerson } from "./delete-person";
@@ -154,6 +157,8 @@ export default async function PersonPage({
 
   // First-timers (one event, not "been before") with no one supporting them
   // yet: who this person could take on, if they're on New member support.
+  // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
+  const now = Date.now();
   let newcomerOptions: { id: string; name: string }[] = [];
   if (person.is_buddy) {
     const [{ data: candidates }, { data: taken }] = await Promise.all([
@@ -183,20 +188,31 @@ export default async function PersonPage({
     )
       .filter(
         (c) =>
-          isNewcomer(
-            c.attendance.flatMap((a) => (a.event ? [a.event.starts_at] : [])),
-            c.attended_before_app,
+          isNewcomerStatus(
+            engagementStatus(
+              c.attendance.flatMap((a) => (a.event ? [a.event.starts_at] : [])),
+              c.attended_before_app,
+              now,
+            ),
           ) && !supported.has(c.id),
       )
       .map((c) => ({ id: c.id, name: fullName(c) }));
   }
   const eventDates = events.map((e) => e.starts_at);
-  const newcomer = isNewcomer(eventDates, person.attended_before_app);
-  const regular = regularSince(eventDates);
-  const drift = notSeenInAWhile(
-    events.map((e) => e.starts_at),
-    // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
-    Date.now(),
+  const status = engagementStatus(eventDates, person.attended_before_app, now);
+  const newcomer = isNewcomerStatus(status);
+  const drift = isLapsed(eventDates, now)
+    ? null
+    : notSeenInAWhile(eventDates, now);
+  const { data: teamEvents } = await supabase
+    .from("events")
+    .select("starts_at")
+    .eq("team_id", organiser.team_id)
+    .gte("starts_at", new Date(now - 155 * 864e5).toISOString());
+  const eng = engagement(
+    eventDates,
+    (teamEvents ?? []).map((e) => e.starts_at),
+    now,
   );
 
   return (
@@ -259,7 +275,7 @@ export default async function PersonPage({
         </p>
       )}
 
-      {events.length === 1 && !person.attended_before_app && (
+      {status === "first_timer" && (
         <div className="mt-5 flex items-center gap-3 rounded-2xl bg-yellow p-4 text-navy">
           <span aria-hidden className="text-3xl">
             🌱
@@ -282,22 +298,36 @@ export default async function PersonPage({
           <span>{driftText(drift)}. Worth reaching out?</span>
         </p>
       )}
-      {regular && !person.attended_before_app && (
-        <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-cyan/25 px-3 py-1 text-sm font-semibold text-navy">
-          ⭐ Regular
-          <span className="font-normal">since {formatEventDate(regular)}</span>
-        </p>
+      {(status === "regular" || status === "occasional" || eng) && (
+        <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
+          {status === "regular" && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan/25 px-3 py-1 text-sm font-semibold text-navy">
+              ⭐ Regular
+            </span>
+          )}
+          {status === "occasional" && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-3 py-1 text-sm font-semibold text-violet-800">
+              🪐 Occasional
+              <span className="font-normal">comes now and then</span>
+            </span>
+          )}
+          {eng && (
+            <span className="inline-flex items-center gap-2 text-sm text-stone-600">
+              Engagement
+              <EngagementBar e={eng} size="md" />
+              <span className="font-semibold tabular-nums text-navy">
+                {eng.score}/10
+              </span>
+            </span>
+          )}
+        </div>
       )}
-      {newcomer && events.length > 1 && (
+      {status === "newcomer" && (
         <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-yellow px-3 py-1 text-sm font-semibold text-navy">
           🌱 Newcomer
           <span className="font-normal">
-            {recentEvents(
-              eventDates,
-              // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
-              Date.now(),
-            )}{" "}
-            of {REGULAR_EVENTS} events in 3 months to become a Regular
+            {recentEvents(eventDates, now)} of {REGULAR_EVENTS} events in 3
+            months to become a Regular
           </span>
         </p>
       )}

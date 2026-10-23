@@ -11,6 +11,24 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-24",
+    title: "Statuses and engagement",
+    changes: [
+      {
+        level: "organiser",
+        text: "Everyone gets a status: First-timer, Newcomer (their first 3 months), Regular (5+ events in the last 3 months) or Occasional (been around a while, comes now and then), plus “Not seen in a while” when they're slower than their own usual rhythm.",
+      },
+      {
+        level: "organiser",
+        text: "A little engagement bar (0–10, red to green) shows how many of the community's recent events someone came to, with recent weeks counting most, and an arrow when it's going up or down.",
+      },
+      {
+        level: "god",
+        text: "src/lib/engagement.ts: engagementStatus (first match: first_timer, newcomer, regular, occasional; lapsed after 365 days), engagementScore (weights 3/2/1 by 30-day bands, community events since their first), trend vs 60 days ago. The supporter's congratulations fires when a newcomer reaches 5 events in 90 days.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-24",
     title: "Newcomers and first-timers",
     changes: [
       {
