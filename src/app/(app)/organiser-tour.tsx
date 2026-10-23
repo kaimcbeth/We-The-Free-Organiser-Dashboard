@@ -14,6 +14,7 @@ type Step = {
   body: string;
   href?: string; // page to show for this card
   eventPage?: boolean; // show today's (or the next) event's own page
+  click?: string; // data-tour="…" button to press first (e.g. open a menu)
   target?: string; // data-tour="…" element(s) to spotlight, first found wins
 };
 
@@ -123,8 +124,9 @@ export function OrganiserTour({
       tone: "bg-pink",
       title: "Build your crew",
       href: "/people",
-      target: "people-list",
-      body: "Give people roles from their profile, even before they've connected. The role switches on when they join.",
+      click: "role-button",
+      target: "sheet",
+      body: "Tap + Role next to anyone to make them an Organiser or Core Team member, even before they've connected. The role switches on when they join.",
     },
     {
       section: 1,
@@ -224,6 +226,26 @@ export function OrganiserTour({
     }, 120);
     return () => window.clearInterval(look);
   }, [i, href, eventPage, pathname, router]);
+  // Some cards press a button first (like opening the role menu), and close
+  // what it opened when you move on.
+  const click = active ? step0.click : undefined;
+  useEffect(() => {
+    if (!click) return;
+    let tries = 0;
+    const press = window.setInterval(() => {
+      const btn = document.querySelector<HTMLElement>(`[data-tour="${click}"]`);
+      if (btn) {
+        window.clearInterval(press);
+        btn.scrollIntoView({ block: "center" });
+        btn.click();
+      } else if (++tries > 25) window.clearInterval(press);
+    }, 150);
+    return () => {
+      window.clearInterval(press);
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    };
+  }, [click, pathname]);
+
   // Only trust a measurement taken for this card on this page.
   const spotKey = `${target}|${pathname}`;
   const rect = target && spot?.key === spotKey ? spot.rect : null;
@@ -305,7 +327,7 @@ export function OrganiserTour({
           : { bottom: 12 };
     const inSection = steps.filter((st) => st.section === step.section);
     return (
-      <div className="fixed inset-0 z-50">
+      <div className="fixed inset-0 z-[60]">
         <div
           aria-hidden
           className="pointer-events-none fixed rounded-2xl ring-2 ring-pink transition-all duration-300"
@@ -368,7 +390,7 @@ export function OrganiserTour({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-navy/70 sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-navy/70 sm:items-center sm:p-4">
       <div
         role="dialog"
         aria-modal="true"

@@ -99,6 +99,7 @@ export function RolePicker({
       <button
         type="button"
         onClick={() => setOpen(true)}
+        data-tour={compact && !role ? "role-button" : undefined}
         className="inline-flex shrink-0 items-center gap-1 rounded-full hover:opacity-80"
         aria-label={`Role: ${ROLE_LABEL[shown]}. Change`}
       >

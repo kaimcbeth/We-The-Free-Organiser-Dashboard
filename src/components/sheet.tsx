@@ -27,6 +27,7 @@ export function Sheet({
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        data-tour="sheet"
         onClick={(e) => e.stopPropagation()}
         className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-background p-5 pb-8 sm:max-w-sm sm:rounded-3xl"
       >
