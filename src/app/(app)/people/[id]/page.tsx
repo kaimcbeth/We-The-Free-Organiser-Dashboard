@@ -258,7 +258,7 @@ export default async function PersonPage({
         </div>
       )}
       {newcomer && events.length > 1 && (
-        <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-yellow/35 px-3 py-1 text-sm font-semibold text-navy">
+        <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-yellow px-3 py-1 text-sm font-semibold text-navy">
           🌱 Newcomer
           <span className="font-normal">
             {events.length} of {NEWCOMER_EVENTS} events

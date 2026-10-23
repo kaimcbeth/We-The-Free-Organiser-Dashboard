@@ -230,7 +230,7 @@ function FirstTimerChip({
           ? "First event"
           : `Newcomer: ${events} of ${NEWCOMER_EVENTS} events`
       }
-      className={`group/ft relative shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold text-navy ${events === 1 ? "bg-yellow" : "bg-yellow/35"}`}
+      className={`group/ft relative shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold text-navy bg-yellow`}
     >
       {events === 1 ? "First-timer" : "Newcomer"}
       <button
