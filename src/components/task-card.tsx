@@ -302,6 +302,7 @@ export function TaskCard({
                 ) : (
                   <button
                     onClick={() => setDelegating(true)}
+                    data-tour="delegate-button"
                     className="rounded-lg px-1.5 py-1 text-sm font-medium text-stone-500 hover:bg-stone-100 hover:text-navy"
                   >
                     Delegate

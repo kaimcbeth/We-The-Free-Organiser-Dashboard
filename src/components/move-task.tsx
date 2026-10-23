@@ -85,6 +85,7 @@ export function MoveTask({
     <>
       <button
         onClick={() => setOpen(true)}
+        data-tour="move-link"
         className="rounded px-1 py-0.5 text-xs text-stone-400 hover:text-stone-700 hover:underline"
       >
         Move

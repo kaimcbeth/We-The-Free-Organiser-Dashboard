@@ -65,7 +65,11 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             </span>
           </Link>
           <div className="flex min-w-0 items-center gap-1">
-            <NotificationBell supabase={supabase} userId={user.id} />
+            <NotificationBell
+              supabase={supabase}
+              userId={user.id}
+              examples={organiser.exampleMode}
+            />
             <Link
               href="/me"
               className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pl-3 pr-1 hover:bg-white/10"

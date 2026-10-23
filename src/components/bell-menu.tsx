@@ -16,9 +16,11 @@ export type BellItem = {
 export function BellMenu({
   unread,
   items,
+  demo = false,
 }: {
   unread: number;
   items: BellItem[];
+  demo?: boolean; // tour examples: nothing to mark as read
 }) {
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState(unread);
@@ -44,7 +46,7 @@ export function BellMenu({
     const next = !open;
     setOpen(next);
     // Opening the preview counts as seeing them (the pink dots stay for now).
-    if (next && count > 0) {
+    if (next && count > 0 && !demo) {
       setCount(0);
       start(() => markAllNotificationsRead());
     }
@@ -88,7 +90,10 @@ export function BellMenu({
       </button>
 
       {open && (
-        <div className="fixed left-4 right-4 top-16 z-50 overflow-hidden rounded-2xl bg-white text-navy shadow-xl ring-1 ring-black/10 sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-96">
+        <div
+          data-tour="bell-menu"
+          className="fixed left-4 right-4 top-16 z-50 overflow-hidden rounded-2xl bg-white text-navy shadow-xl ring-1 ring-black/10 sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-96"
+        >
           <div className="flex items-center justify-between border-b border-black/5 px-4 py-3">
             <p className="font-semibold">Notifications</p>
             <Link

@@ -14,13 +14,45 @@ function ago(iso: string, now: number) {
 
 // Bell with the number of unread notifications; tapping it opens a preview
 // of the latest ones. Server component (the dropdown itself is BellMenu).
+// What the bell shows during the tour (Example Community).
+const EXAMPLES: BellItem[] = [
+  {
+    id: "ex-1",
+    title: "Facebook event created",
+    body: "Social on Wednesday: copy the details and paste them into Facebook.",
+    url: "/tasks",
+    unread: true,
+    when: "1h ago",
+  },
+  {
+    id: "ex-2",
+    title: "Ringo came for the first time",
+    body: "George is looking after him. Say hi in the WhatsApp group!",
+    url: "/people",
+    unread: true,
+    when: "6d ago",
+  },
+  {
+    id: "ex-3",
+    title: "Paul picked up 2 tasks",
+    body: "As Events Lead he's looking after event photos.",
+    url: "/tasks",
+    unread: true,
+    when: "1w ago",
+  },
+];
+
 export async function NotificationBell({
   supabase,
   userId,
+  examples = false,
 }: {
   supabase: SupabaseClient;
   userId: string;
+  examples?: boolean;
 }) {
+  if (examples)
+    return <BellMenu unread={EXAMPLES.length} items={EXAMPLES} demo />;
   const [{ count }, { data }] = await Promise.all([
     supabase
       .from("notifications")

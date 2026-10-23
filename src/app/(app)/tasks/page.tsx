@@ -34,19 +34,26 @@ export default async function TasksPage() {
   const [tasks, { data: people }, setup, connect, { data: leadRows }] =
     await Promise.all([
       loadTeamTasks(supabase, organiser.team_id, { regional: regionalStaff }),
-      supabase
-        .from("people")
-        .select("id, first_name, last_name")
-        .eq("team_id", organiser.team_id)
-        .not("user_id", "is", null)
-        .order("first_name"),
+      // (The tour's Example Community has no accounts: show everyone.)
+      organiser.exampleMode
+        ? supabase
+            .from("people")
+            .select("id, first_name, last_name")
+            .eq("team_id", organiser.team_id)
+            .order("first_name")
+        : supabase
+            .from("people")
+            .select("id, first_name, last_name")
+            .eq("team_id", organiser.team_id)
+            .not("user_id", "is", null)
+            .order("first_name"),
       loadTaskSetup(supabase, organiser.team_id),
       regionalStaff
         ? loadConnectContext(supabase, [organiser.team])
         : Promise.resolve(null),
       supabase
         .from("person_core_roles")
-        .select("person_id, core_role")
+        .select("person_id, core_role, person:people(first_name, last_name)")
         .eq("team_id", organiser.team_id)
         .is("ended_at", null),
     ]);
@@ -62,14 +69,22 @@ export default async function TasksPage() {
   // so the main list is just what's left for the organisers.
   const covered = tasks.open.filter((t) => !t.regional && t.assignedTo);
   const leadsOf = new Map<string, string[]>();
-  for (const r of (leadRows ?? []) as {
+  const leadName = new Map<string, string>();
+  for (const r of (leadRows ?? []) as unknown as {
     person_id: string;
     core_role: CoreRole;
-  }[])
+    person: { first_name: string; last_name: string | null } | null;
+  }[]) {
+    if (r.person)
+      leadName.set(
+        r.person_id,
+        [r.person.first_name, r.person.last_name].filter(Boolean).join(" "),
+      );
     leadsOf.set(r.person_id, [
       ...(leadsOf.get(r.person_id) ?? []),
       CORE_ROLE_LABEL[r.core_role],
     ]);
+  }
   const crew = [
     ...new Set([
       ...covered.map((t) => t.assignedTo!),
@@ -82,6 +97,7 @@ export default async function TasksPage() {
       name:
         assignable.find((p) => p.id === id)?.name ??
         covered.find((t) => t.assignedTo === id)?.assigneeName ??
+        leadName.get(id) ??
         "Someone",
       leads: leadsOf.get(id) ?? [],
       open: covered
