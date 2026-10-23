@@ -139,8 +139,10 @@ export function PeopleList({
                   size={40}
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2 truncate font-medium">
-                    {[p.first_name, p.last_name].filter(Boolean).join(" ")}
+                  <p className="flex items-center gap-2 py-1 font-medium">
+                    <span className="truncate">
+                      {[p.first_name, p.last_name].filter(Boolean).join(" ")}
+                    </span>
                     <span
                       className={`h-2 w-2 shrink-0 rounded-full ${p.connected ? "bg-cyan" : "bg-stone-300"}`}
                       title={
