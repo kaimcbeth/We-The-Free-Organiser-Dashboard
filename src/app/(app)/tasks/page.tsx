@@ -6,6 +6,7 @@ import { loadTeamTasks } from "@/lib/tasks";
 import { loadTaskSetup } from "@/lib/task-setup";
 import { loadUpcomingActions } from "@/lib/upcoming-actions";
 import { ComingUp } from "./coming-up";
+import { ShowMoreEvents } from "./show-more";
 import { ChooseTasks } from "./choose-tasks";
 import { RemoveEventTasks } from "./remove-event-tasks";
 import {
@@ -193,6 +194,49 @@ export default async function TasksPage() {
     whatsappUrl: organiser.team.whatsapp_url,
   };
 
+  // Past events' follow-ups always show, plus the next 2 upcoming events;
+  // later ones wait behind "Show more upcoming events".
+  const upcomingGroups = groups.filter((g) => g.at && Date.parse(g.at) > now);
+  const laterKeys = new Set(upcomingGroups.slice(2).map((g) => g.key));
+  const shownGroups = groups.filter((g) => !laterKeys.has(g.key));
+  const laterGroups = groups.filter((g) => laterKeys.has(g.key));
+  const renderGroup = (g: (typeof groups)[number], n: number) => (
+    <section
+      key={g.key}
+      data-tour={n === 0 ? "task-group" : undefined}
+      className="scroll-mt-24"
+    >
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="min-w-0 truncate font-semibold">
+          {g.title}
+          {g.at && (
+            <span className="font-normal text-stone-500">
+              {" "}
+              · {formatEventDate(g.at)}
+            </span>
+          )}
+        </h2>
+        <span className="ml-auto shrink-0 text-xs text-stone-500">
+          {g.tasks.length} to do · ~
+          {g.tasks.reduce((n, t) => n + t.estimateMinutes, 0)} min
+        </span>
+        {g.key !== "other" && (
+          <RemoveEventTasks eventId={g.key} count={g.tasks.length} />
+        )}
+      </div>
+      <ul className="space-y-3">
+        {g.tasks.map((t) => (
+          <TaskCard key={t.id} task={t} {...common} hideEvent />
+        ))}
+      </ul>
+      {upcomingFor(g.key).length > 0 && (
+        <>
+          <ComingUp items={upcomingFor(g.key)} whenLabel={whenLabel} />
+        </>
+      )}
+    </section>
+  );
+
   return (
     <div className="space-y-8">
       <div data-tour="tasks-head">
@@ -279,74 +323,10 @@ export default async function TasksPage() {
         </h2>
       )}
 
-      {groups.map((g, n) => (
-        <section
-          key={g.key}
-          data-tour={n === 0 ? "task-group" : undefined}
-          className="scroll-mt-24"
-        >
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="min-w-0 truncate font-semibold">
-              {g.title}
-              {g.at && (
-                <span className="font-normal text-stone-500">
-                  {" "}
-                  · {formatEventDate(g.at)}
-                </span>
-              )}
-            </h2>
-            <span className="ml-auto shrink-0 text-xs text-stone-500">
-              {g.tasks.length} to do · ~
-              {g.tasks.reduce((n, t) => n + t.estimateMinutes, 0)} min
-            </span>
-            {g.key !== "other" && (
-              <RemoveEventTasks eventId={g.key} count={g.tasks.length} />
-            )}
-          </div>
-          <ul className="space-y-3">
-            {g.tasks.map((t) => (
-              <TaskCard key={t.id} task={t} {...common} hideEvent />
-            ))}
-          </ul>
-          {upcomingFor(g.key).length > 0 && (
-            <>
-              <ComingUp items={upcomingFor(g.key)} whenLabel={whenLabel} />
-            </>
-          )}
-        </section>
-      ))}
-
-      {/* Events with nothing to do yet, but actions on the way. */}
-      {(() => {
-        const rest = [
-          ...new Map(
-            upcoming
-              .filter((u) => !byEvent.has(u.eventId))
-              .map((u) => [u.eventId, u]),
-          ).values(),
-        ];
-        if (rest.length === 0) return null;
-        return (
-          <section>
-            <h2 className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-400">
-              Coming up
-            </h2>
-            <div className="space-y-4">
-              {rest.map((e) => (
-                <div key={e.eventId}>
-                  <p className="text-sm font-medium text-stone-500">
-                    {e.eventTitle} · {formatEventDate(e.eventAt)}
-                  </p>
-                  <ComingUp
-                    items={upcomingFor(e.eventId)}
-                    whenLabel={whenLabel}
-                  />
-                </div>
-              ))}
-            </div>
-          </section>
-        );
-      })()}
+      {shownGroups.map((g, n) => renderGroup(g, n))}
+      <ShowMoreEvents count={laterGroups.length}>
+        {laterGroups.map((g, n) => renderGroup(g, shownGroups.length + n))}
+      </ShowMoreEvents>
 
       {/* What the Core Team and helpers have on: kept apart from your own. */}
       <CoreTeamTasks crew={crew} now={now} tz={common.tz} />
