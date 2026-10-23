@@ -607,7 +607,7 @@ export async function dismissTask(taskId: string): Promise<{ error?: string }> {
       "team_id",
       organiser.teams.map((t) => t.id),
     );
-  if (error) return { error: "Couldn't remove that task. Please try again." };
+  if (error) return { error: "Couldn't remove that action. Please try again." };
   revalidatePath("/tasks", "layout");
   return {};
 }
@@ -665,7 +665,8 @@ export async function dismissEventTasks(
     .eq("team_id", organiser.team_id)
     .is("done_at", null)
     .is("dismissed_at", null);
-  if (error) return { error: "Couldn't remove those tasks. Please try again." };
+  if (error)
+    return { error: "Couldn't remove those actions. Please try again." };
   revalidatePath("/tasks", "layout");
   return {};
 }
@@ -695,7 +696,7 @@ export async function addCustomTask(
   days: number,
 ): Promise<{ kind?: string; error?: string }> {
   const { supabase, organiser } = await requireOrganiser();
-  if (!title.trim()) return { error: "Give the task a name." };
+  if (!title.trim()) return { error: "Give the action a name." };
   const { data, error } = await supabase.rpc("add_custom_task", {
     p_team_id: organiser.homeTeamId,
     p_title: title.trim(),
@@ -704,7 +705,7 @@ export async function addCustomTask(
     p_days: days,
   });
   if (error || !data)
-    return { error: "Couldn't add the task. Please try again." };
+    return { error: "Couldn't add the action. Please try again." };
   revalidatePath("/tasks");
   return { kind: data as string };
 }
@@ -749,7 +750,7 @@ export async function chooseCoreTasks(
     p_kinds: kinds,
   });
   if (error || data !== "ok")
-    return { error: "Couldn't save your tasks. Please try again." };
+    return { error: "Couldn't save your actions. Please try again." };
   revalidatePath("/attendance", "layout");
   return {};
 }
@@ -835,7 +836,7 @@ export async function moveTask(
     p_due_at: dueAt,
   });
   if (error || data !== "ok")
-    return { error: "Couldn't move that task. Please try again." };
+    return { error: "Couldn't move that action. Please try again." };
   revalidatePath("/tasks");
   revalidatePath("/me");
   revalidatePath("/attendance/tasks");

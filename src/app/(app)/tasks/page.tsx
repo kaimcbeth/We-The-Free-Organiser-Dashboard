@@ -124,7 +124,7 @@ export default async function TasksPage() {
     const key = t.eventId ?? "other";
     const g = byEvent.get(key) ?? {
       key,
-      title: t.eventTitle ?? "Other tasks",
+      title: t.eventTitle ?? "Other actions",
       at: t.eventAt,
       tasks: [],
     };
@@ -169,10 +169,10 @@ export default async function TasksPage() {
   return (
     <div className="space-y-8">
       <div data-tour="tasks-head">
-        <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Actions</h1>
         <p className="mt-1 text-sm text-stone-500">
           {groups.reduce((n, g) => n + g.tasks.length, 0) === 0
-            ? "Nothing left for the organisers. New tasks appear here after each event."
+            ? "Nothing left for the organisers. New actions appear here after each event."
             : `${groups.reduce((n, g) => n + g.tasks.length, 0)} for the organisers · about ${minutes} min in total`}
         </p>
         {weekTotal > 0 && (
@@ -193,7 +193,7 @@ export default async function TasksPage() {
               aria-valuemin={0}
               aria-valuemax={weekTotal}
               aria-valuenow={weekDone}
-              aria-label="Tasks done this week"
+              aria-label="Actions done this week"
             >
               <div
                 className="h-full rounded-full bg-pink transition-all"
@@ -247,8 +247,8 @@ export default async function TasksPage() {
       )}
 
       {groups.length > 0 && (
-        <h2 className="-mb-4 border-t border-black/10 pt-6 text-lg font-semibold tracking-tight">
-          Your tasks
+        <h2 className="border-t border-black/10 pt-6 text-lg font-semibold tracking-tight">
+          Your actions
         </h2>
       )}
 

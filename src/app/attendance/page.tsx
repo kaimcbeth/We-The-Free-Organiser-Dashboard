@@ -52,7 +52,7 @@ export default async function AttendanceHome() {
         >
           <p className="font-semibold">Welcome to the Core Team!</p>
           <p className="text-sm">
-            Pick the tasks you&apos;d like to look after →
+            Pick the actions you&apos;d like to look after →
           </p>
         </Link>
       )}

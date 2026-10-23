@@ -45,7 +45,7 @@ function toRow(t: Raw): TaskRow {
     eventId: t.event?.id ?? null,
     eventTypeId: t.event?.event_type_id ?? null,
     eventTypeName: t.event?.event_type?.name ?? null,
-    title: t.kind?.title ?? "Task",
+    title: t.kind?.title ?? "Action",
     description: t.kind?.description ?? null,
     // Ranges ("5–10 min") count as their middle for totals.
     estimateMinutes: Math.ceil(

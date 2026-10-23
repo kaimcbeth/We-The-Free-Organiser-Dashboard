@@ -66,10 +66,10 @@ export async function RegionTasks({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Actions</h1>
         <p className="mt-1 text-sm text-stone-500">
           {checkIns.length === 0
-            ? "All your Regional Support Lead tasks are done."
+            ? "All your Regional Support Lead actions are done."
             : `${checkIns.length} check-in${checkIns.length === 1 ? "" : "s"} to do this month`}
         </p>
       </div>
@@ -134,9 +134,9 @@ export async function RegionTasks({
 
       {showCommunities && (
         <section>
-          <h2 className="mb-1 font-semibold">Communities&apos; own tasks</h2>
+          <h2 className="mb-1 font-semibold">Communities&apos; own actions</h2>
           <p className="mb-3 text-sm text-stone-500">
-            Pick a community above to see or help with its tasks.
+            Pick a community above to see or help with its actions.
           </p>
           <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
             {summary.map((s) => (

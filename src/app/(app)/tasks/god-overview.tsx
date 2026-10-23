@@ -140,7 +140,7 @@ export async function GodOverview({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Actions</h1>
         <p className="mt-1 text-sm text-stone-500">
           How each region&apos;s Regional Support Lead is going with their
           monthly check-ins. Just an overview: nothing to do here.

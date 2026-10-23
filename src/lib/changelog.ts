@@ -33,11 +33,11 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "The welcome tour now walks new organisers through the real pages (Events, an event's check-in list, Insights, People and Tasks), highlighting each part, using an example community with John, Paul, George and Ringo.",
+        text: "The welcome tour now walks new organisers through the real pages (Events, an event's check-in list, Insights, People and Actions), highlighting each part, using an example community with John, Paul, George and Ringo.",
       },
       {
         level: "god",
-        text: "teams.is_example (Example Community) is readable by any staff during the tour, never writable; private.example_events re-dates its events (and their tasks) hourly so the next event is always 4 days away. Organiser.exampleMode swaps team_id while showTour; homeTeamId keeps task choices on their real community.",
+        text: "teams.is_example (Example Community) is readable by any staff during the tour, never writable; private.example_events re-dates its events (and their actions) hourly so the next event is always 4 days away. Organiser.exampleMode swaps team_id while showTour; homeTeamId keeps action choices on their real community.",
       },
     ],
   },
@@ -65,7 +65,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "Keep a list of your local vegan and community Facebook groups (Tasks → Facebook groups). The “Promoted in local Facebook groups” task for each event then has an “Open all” button that opens every group in its own tab. It appears a week before the event and is due the day before.",
+        text: "Keep a list of your local vegan and community Facebook groups (Actions → Facebook groups). The “Promoted in local Facebook groups” action for each event then has an “Open all” button that opens every group in its own tab. It appears a week before the event and is due the day before.",
       },
       {
         level: "god",
@@ -75,7 +75,7 @@ export const CHANGELOG: Release[] = [
   },
   {
     date: "2026-10-23",
-    title: "No repeat nudges, and moving tasks",
+    title: "No repeat nudges, and moving actions",
     changes: [
       {
         level: "organiser",
@@ -91,7 +91,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "“Move” on any task puts it out of the way until a better day (tomorrow, next week, the day before the event, or a day you pick). It shows up in Tasks that morning.",
+        text: "“Move” on any action puts it out of the way until a better day (tomorrow, next week, the day before the event, or a day you pick). It shows up in Actions that morning.",
       },
       {
         level: "regional_lead",
@@ -99,7 +99,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "god",
-        text: "Tasks with “All communities” in God Mode is now a compact overview by region: each region's Regional Support Lead, how many communities they've checked in with this month, who's waiting to hear back, and a one-line status per community.",
+        text: "Actions with “All communities” in God Mode is now a compact overview by region: each region's Regional Support Lead, how many communities they've checked in with this month, who's waiting to hear back, and a one-line status per community.",
       },
       {
         level: "god",
@@ -121,15 +121,15 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Core Team members choose the tasks they'll look after under My tasks. Those come to them every time, and anything nobody picks stays with you.",
+        text: "Core Team members choose the actions they'll look after under My actions. Those come to them every time, and anything nobody picks stays with you.",
       },
       {
         level: "organiser",
-        text: "They can hand a task to a helper, or say they're away until a date (their tasks come back to you until then).",
+        text: "They can hand an action to a helper, or say they're away until a date (their actions come back to you until then).",
       },
       {
         level: "organiser",
-        text: "Tasks now has a “Core Team and helpers” overview, so you can see what everyone's looking after. The main list is just what's left for the organisers.",
+        text: "Actions now has a “Core Team and helpers” overview, so you can see what everyone's looking after. The main list is just what's left for the organisers.",
       },
       {
         level: "organiser",
@@ -137,7 +137,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "god",
-        text: "person_core_roles, task_owners (owner + helper), task_kinds.core_role / schedule (event | weekly | monthly), people.away_until, private.task_assignee() priority: per-event-type delegate > helper > owner (not away) > organisers. Ending a role or task sets ended_at (no deletes). View as → New Core Team member previews the setup.",
+        text: "person_core_roles, task_owners (owner + helper), task_kinds.core_role / schedule (event | weekly | monthly), people.away_until, private.task_assignee() priority: per-event-type delegate > helper > owner (not away) > organisers. Ending a role or action sets ended_at (no deletes). View as → New Core Team member previews the setup.",
       },
     ],
   },
@@ -163,7 +163,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "regional_lead",
-        text: "Your Tasks page now only shows your own tasks: a monthly “Organisers checked in with” task for each community, with the organisers' WhatsApp and email, recent and upcoming events, and a heads-up when a community has gone quiet.",
+        text: "Your Actions page now only shows your own actions: a monthly “Organisers checked in with” action for each community, with the organisers' WhatsApp and email, recent and upcoming events, and a heads-up when a community has gone quiet.",
       },
       {
         level: "regional_lead",
@@ -175,7 +175,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "god",
-        text: "task_kinds.audience ('community' | 'regional'), tasks.period with a unique (team, kind, period) index; private.create_monthly_tasks() on cron 'monthly-tasks' (hourly at :20), due the 15th. Tasks policy hides regional tasks from community organisers. community_organisers() RPC for contact details.",
+        text: "task_kinds.audience ('community' | 'regional'), tasks.period with a unique (team, kind, period) index; private.create_monthly_tasks() on cron 'monthly-tasks' (hourly at :20), due the 15th. Actions policy hides regional actions from community organisers. community_organisers() RPC for contact details.",
       },
       {
         level: "god",
@@ -185,7 +185,7 @@ export const CHANGELOG: Release[] = [
   },
   {
     date: "2026-10-21",
-    title: "Facebook events, new tasks and the Movement Hub",
+    title: "Facebook events, new actions and the Movement Hub",
     changes: [
       {
         level: "organiser",
@@ -197,7 +197,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "New tasks you can turn on: Facebook event created, Event photos taken, and Prizes purchased (Movie Challenges only).",
+        text: "New actions you can turn on: Facebook event created, Event photos taken, and Prizes purchased (Movie Challenges only).",
       },
       {
         level: "organiser",
@@ -221,21 +221,21 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "god",
-        text: "task_kinds.event_type_id limits a task to one event type; create_event_tasks respects it. New kinds start off for communities that already chose their tasks.",
+        text: "task_kinds.event_type_id limits an action to one event type; create_event_tasks respects it. New kinds start off for communities that already chose their actions.",
       },
     ],
   },
   {
     date: "2026-10-15",
-    title: "Tasks, calendar and insights",
+    title: "Actions, calendar and insights",
     changes: [
       {
         level: "organiser",
-        text: "Tasks: before, during and after each event, with time estimates, red/orange/yellow lights, delegating (just this once or every time), and your own custom tasks.",
+        text: "Actions: before, during and after each event, with time estimates, red/orange/yellow lights, delegating (just this once or every time), and your own custom actions.",
       },
       {
         level: "organiser",
-        text: "Choose which tasks are made automatically based on how much time you have each week.",
+        text: "Choose which actions are made automatically based on how much time you have each week.",
       },
       {
         level: "organiser",
@@ -259,7 +259,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "god",
-        text: "Roles: God, Regional Support Lead, Organiser, Core Team (organisers.access), regions, team time zones, hidden test person per community, task_kinds / tasks / team_task_kinds / task_delegates with private.create_event_tasks() hourly at :15.",
+        text: "Roles: God, Regional Support Lead, Organiser, Core Team (organisers.access), regions, team time zones, hidden test person per community, task_kinds / actions / team_task_kinds / task_delegates with private.create_event_tasks() hourly at :15.",
       },
     ],
   },

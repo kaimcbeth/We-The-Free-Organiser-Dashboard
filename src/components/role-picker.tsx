@@ -300,7 +300,7 @@ export function RolePicker({
                     </label>
                   ))}
                   <p className="text-xs text-stone-500">
-                    {firstName} then picks the tasks they&apos;ll look after.
+                    {firstName} then picks the actions they&apos;ll look after.
                   </p>
                 </fieldset>
               )}

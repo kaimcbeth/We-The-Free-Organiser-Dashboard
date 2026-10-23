@@ -27,7 +27,7 @@ const TOUR_MINUTES = 5;
 const SECTIONS = [
   { icon: "📅", name: "Events" },
   { icon: "🧑‍🤝‍🧑", name: "People" },
-  { icon: "📝", name: "Tasks" },
+  { icon: "📝", name: "Actions" },
 ];
 
 // Welcome tour for new organisers. Ends by asking how much time they have
@@ -62,7 +62,7 @@ export function OrganiserTour({
       icon: "👋",
       tone: "bg-pink",
       title: `Welcome, ${firstName}!`,
-      body: `You're now an organiser for ${communityName}. The tour has three short parts: your events, your people, and your tasks.`,
+      body: `You're now an organiser for ${communityName}. The tour has three short parts: your events, your people, and your actions.`,
     },
     {
       section: 0,
@@ -151,10 +151,10 @@ export function OrganiserTour({
       section: 2,
       icon: "✔️",
       tone: "bg-cyan",
-      title: "Your task list",
+      title: "Your action list",
       href: "/tasks",
       target: "task-group,tasks-head",
-      body: "Tasks appear around each event on the Tasks page, each with a time estimate. Tick them off as you go.",
+      body: "Actions appear around each event on the Actions page, each with a time estimate. Tick them off as you go.",
     },
     {
       section: 2,
@@ -163,7 +163,7 @@ export function OrganiserTour({
       title: "Promote your event",
       href: "/tasks",
       target: "task-facebook_event,tasks-head",
-      body: "Two weeks before, a task shows up to create the Facebook event. We copy the details for you, so you just paste them into Facebook.",
+      body: "Two weeks before, an action shows up to create the Facebook event. We copy the details for you, so you just paste them into Facebook.",
     },
     {
       section: 2,
@@ -178,12 +178,12 @@ export function OrganiserTour({
       section: 2,
       icon: "🙋",
       tone: "bg-yellow",
-      title: "Hand tasks to your crew",
+      title: "Hand actions to your crew",
       href: "/tasks",
       click: "delegate-button",
       target: "sheet",
       whole: true,
-      body: "Tap Delegate on any task and pick who'll do it, just this once or every time. They get a notification and see it on their page.",
+      body: "Tap Delegate on any action and pick who'll do it, just this once or every time. They get a notification and see it on their page.",
     },
     {
       section: 2,
@@ -193,16 +193,16 @@ export function OrganiserTour({
       href: "/tasks",
       click: "bell",
       target: "bell-menu",
-      body: "The bell keeps you in the loop: tasks due, newcomers, and what your Core Team has picked up.",
+      body: "The bell keeps you in the loop: actions due, newcomers, and what your Core Team has picked up.",
     },
     {
       section: 2,
       icon: "📝",
       tone: "bg-yellow",
-      title: "Set up your tasks",
+      title: "Set up your actions",
       href: "/tasks",
-      target: "choose-tasks,nav-tasks",
-      body: "Last step: tell us how much time you have and pick which tasks you want for your community. You can change them any time.",
+      target: "choose-tasks,nav-actions",
+      body: "Last step: tell us how much time you have and pick which actions you want for your community. You can change them any time.",
     },
   ];
 
@@ -349,7 +349,7 @@ export function OrganiserTour({
   const step = steps[i];
   const last = i === steps.length - 1;
   const nextLabel = last
-    ? "Choose my tasks"
+    ? "Choose my actions"
     : steps[i + 1].section !== step.section
       ? `${i === 0 ? "Start with" : "Next:"} ${SECTIONS[steps[i + 1].section].name}`
       : "Next";

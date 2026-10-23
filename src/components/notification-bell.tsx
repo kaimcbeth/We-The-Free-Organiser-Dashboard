@@ -34,7 +34,7 @@ const EXAMPLES: BellItem[] = [
   },
   {
     id: "ex-3",
-    title: "Paul picked up 2 tasks",
+    title: "Paul picked up 2 actions",
     body: "As Events Lead he's looking after event photos.",
     url: "/tasks",
     unread: true,

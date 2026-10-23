@@ -74,12 +74,12 @@ export function CoreTaskSetup({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">
-          {firstTime ? "Welcome to the Core Team!" : "Your Core Team tasks"}
+          {firstTime ? "Welcome to the Core Team!" : "Your Core Team actions"}
         </h1>
         <p className="mt-1 text-sm text-stone-600">
           {firstTime
-            ? "Pick the tasks you'd like to look after. They'll come to you every time, with a reminder. Anything you don't pick stays with the organisers."
-            : "The tasks you look after. Change them any time, or hand one to a helper."}
+            ? "Pick the actions you'd like to look after. They'll come to you every time, with a reminder. Anything you don't pick stays with the organisers."
+            : "The actions you look after. Change them any time, or hand one to a helper."}
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {roles.map((r) => (
@@ -102,7 +102,7 @@ export function CoreTaskSetup({
               {CORE_ROLE_BLURB[role]}
             </p>
             {list.length === 0 ? (
-              <p className="text-sm text-stone-500">No tasks here yet.</p>
+              <p className="text-sm text-stone-500">No actions here yet.</p>
             ) : (
               <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
                 {list.map((t) => {
@@ -189,7 +189,7 @@ export function CoreTaskSetup({
           {pending
             ? "Saving…"
             : firstTime
-              ? `These are my tasks (${chosen.size})`
+              ? `These are my actions (${chosen.size})`
               : changed
                 ? "Save changes"
                 : "Saved"}
@@ -241,7 +241,7 @@ function Away({
                 month: "short",
               })}
             </span>
-            . Your tasks go to the organisers until then.
+            . Your actions go to the organisers until then.
           </p>
           <button
             disabled={pending}
@@ -254,7 +254,7 @@ function Away({
       ) : (
         <>
           <p className="mt-1 text-sm text-stone-600">
-            Your tasks go to the organisers while you&apos;re away.
+            Your actions go to the organisers while you&apos;re away.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <label className="text-sm text-stone-600" htmlFor="away-until">

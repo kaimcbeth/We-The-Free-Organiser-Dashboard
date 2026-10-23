@@ -214,7 +214,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
       {myTasks.length > 0 && (
         <section id="tasks" className="mt-8 scroll-mt-4">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
-            Your tasks
+            Your actions
           </h2>
           <ul className="space-y-3">
             {myTasks.map((t) => (

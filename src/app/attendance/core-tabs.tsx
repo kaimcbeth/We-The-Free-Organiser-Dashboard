@@ -19,7 +19,7 @@ export function CoreTabs({ openTasks }: { openTasks: number }) {
         Attendance
       </Link>
       <Link href="/attendance/tasks" className={cls(tasks)}>
-        My tasks
+        My actions
         {openTasks > 0 && (
           <span className="ml-1.5 rounded-full bg-pink px-1.5 py-0.5 text-[10px] font-bold text-navy">
             {openTasks}

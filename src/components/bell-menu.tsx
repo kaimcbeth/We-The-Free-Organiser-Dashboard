@@ -106,7 +106,7 @@ export function BellMenu({
           </div>
           {items.length === 0 ? (
             <p className="px-4 py-6 text-center text-sm text-stone-500">
-              Nothing yet. Tasks and reminders will show up here.
+              Nothing yet. Actions and reminders will show up here.
             </p>
           ) : (
             <ul className="max-h-[60vh] overflow-y-auto">

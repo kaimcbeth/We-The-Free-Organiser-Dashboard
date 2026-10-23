@@ -143,8 +143,8 @@ export function TaskCard({
       {(people || removable) && (
         <button
           type="button"
-          aria-label="Remove task"
-          title="Remove task"
+          aria-label="Remove action"
+          title="Remove action"
           disabled={pending}
           onClick={() =>
             start(async () => {
@@ -347,7 +347,10 @@ export function TaskCard({
         </div>
       </div>
       {delegating && people && (
-        <Sheet title="Delegate this task" onClose={() => setDelegating(false)}>
+        <Sheet
+          title="Delegate this action"
+          onClose={() => setDelegating(false)}
+        >
           <p className="mb-3 text-sm text-stone-600">
             <span className="font-medium text-stone-900">{task.title}</span>
             {task.eventTitle ? ` for ${task.eventTitle}` : ""}. They&apos;ll get
@@ -359,11 +362,11 @@ export function TaskCard({
             aria-label="How often"
           >
             {[
-              { v: false, label: "Just this once", hint: "Only this task" },
+              { v: false, label: "Just this once", hint: "Only this action" },
               {
                 v: true,
                 label: "Every time",
-                hint: `All future “${task.title}” tasks${task.eventTypeName ? ` for ${task.eventTypeName} events` : ""}`,
+                hint: `All future “${task.title}” actions${task.eventTypeName ? ` for ${task.eventTypeName} events` : ""}`,
               },
             ].map((o) => (
               <button
@@ -416,7 +419,7 @@ export function TaskCard({
           </ul>
           {people.length === 0 && (
             <p className="mt-3 text-sm text-stone-500">
-              No members yet. People can be delegated tasks once they&apos;ve
+              No members yet. People can be delegated actions once they&apos;ve
               made an account.
             </p>
           )}

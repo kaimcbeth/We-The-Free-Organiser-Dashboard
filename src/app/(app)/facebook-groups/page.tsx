@@ -62,7 +62,7 @@ export default async function FacebookGroupsPage({
         </h1>
         <p className="mt-1 text-sm text-stone-500">
           Local vegan and community Facebook groups where your events get
-          shared. The Facebook groups tasks open them all in one go.
+          shared. The Facebook groups actions open them all in one go.
         </p>
       </div>
       <GroupsList

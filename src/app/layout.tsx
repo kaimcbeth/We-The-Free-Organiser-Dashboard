@@ -7,7 +7,7 @@ import { TestAccountBar } from "@/components/test-account-bar";
 export const metadata: Metadata = {
   title: "Movement Hub",
   description:
-    "We The Free Movement Hub: events, attendance and tasks for our communities",
+    "We The Free Movement Hub: events, attendance and actions for our communities",
   appleWebApp: {
     capable: true,
     title: "Movement Hub",

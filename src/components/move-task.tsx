@@ -91,9 +91,9 @@ export function MoveTask({
         Move
       </button>
       {open && (
-        <Sheet title="Move this task" onClose={() => setOpen(false)}>
+        <Sheet title="Move this action" onClose={() => setOpen(false)}>
           <p className="mb-3 text-sm text-stone-600">
-            It&apos;ll be out of the way until then, and show up in Tasks that
+            It&apos;ll be out of the way until then, and show up in Actions that
             morning.
           </p>
           <ul className="space-y-2">

@@ -48,8 +48,8 @@ export function RemoveEventTasks({
   return (
     <button
       onClick={() => setAsking(true)}
-      aria-label="Remove all tasks for this event"
-      title="Remove all tasks for this event (e.g. it was cancelled)"
+      aria-label="Remove all actions for this event"
+      title="Remove all actions for this event (e.g. it was cancelled)"
       className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-stone-300 hover:bg-stone-200/60 hover:text-stone-600"
     >
       <svg

@@ -104,7 +104,7 @@ export default async function CoreTasksPage() {
       {myTasks.length > 0 && (
         <section>
           <h1 className="mb-3 text-2xl font-semibold tracking-tight">
-            Your tasks
+            Your actions
           </h1>
           <ul className="space-y-3">
             {myTasks.map((t) => (
@@ -123,11 +123,11 @@ export default async function CoreTasksPage() {
       {!setup || setup.roles.length === 0 ? (
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Core Team tasks
+            Core Team actions
           </h1>
           <p className="mt-2 text-sm text-stone-600">
             Once an organiser gives you a lead role (Community, Events or
-            Promo), you&apos;ll pick the tasks you&apos;ll look after here.
+            Promo), you&apos;ll pick the actions you&apos;ll look after here.
           </p>
         </div>
       ) : (

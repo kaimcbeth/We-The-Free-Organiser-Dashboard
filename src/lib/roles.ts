@@ -69,9 +69,9 @@ export const ROLE_INFO: Record<
   },
   core_team: {
     summary:
-      "Takes ownership of an area (community, events or promo) and the tasks that go with it.",
+      "Takes ownership of an area (community, events or promo) and the actions that go with it.",
     can: [
-      "Picks the tasks they'll look after, and can hand them to a helper",
+      "Picks the actions they'll look after, and can hand them to a helper",
       "Takes attendance and adds newcomers at the door",
     ],
     cannot: "Sees names only: no contact details, People list or Insights.",

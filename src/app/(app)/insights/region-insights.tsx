@@ -158,7 +158,7 @@ export async function RegionInsights({
                   `${r.organisers} organiser${r.organisers === 1 ? "" : "s"}${r.pending_roles ? ` (+${r.pending_roles} invited)` : ""}`,
                   `${r.core_team} Core Team`,
                   `${r.accounts} of ${r.people} people with accounts`,
-                  r.tasks_done_30 ? `${r.tasks_done_30} tasks done` : null,
+                  r.tasks_done_30 ? `${r.tasks_done_30} actions done` : null,
                   r.last_attendance
                     ? `last attendance ${daysAgo(r.last_attendance, now)}`
                     : "no attendance taken yet",

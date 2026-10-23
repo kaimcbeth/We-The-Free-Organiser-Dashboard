@@ -98,12 +98,12 @@ export function TaskChooser({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Choose your tasks"
+        aria-label="Choose your actions"
         className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-background p-6 pb-8 sm:max-w-md sm:rounded-3xl"
       >
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold tracking-tight">
-            {step === "time" ? "How much time do you have?" : "Your tasks"}
+            {step === "time" ? "How much time do you have?" : "Your actions"}
           </h2>
           <button
             onClick={() => onClose(false)}
@@ -116,13 +116,13 @@ export function TaskChooser({
         {step === "time" ? (
           <>
             <p className="mt-2 text-stone-600">
-              Around each event, a few quick tasks can appear for you.{" "}
+              Around each event, a few quick actions can appear for you.{" "}
               {communityName} runs about{" "}
               <span className="font-semibold text-navy">
                 {setup.eventsPerWeek} event
                 {setup.eventsPerWeek === 1 ? "" : "s"} a week
               </span>
-              . Roughly how much time can you give these tasks each week, not
+              . Roughly how much time can you give these actions each week, not
               counting the events themselves?
             </p>
             <div className="mt-5 grid grid-cols-2 gap-2">
@@ -154,7 +154,7 @@ export function TaskChooser({
             <p className="mt-2 text-sm text-stone-600">
               {budget
                 ? `Suggested for about ${fmt(budget)} a week.`
-                : "Switch on the tasks you want."}{" "}
+                : "Switch on the actions you want."}{" "}
               Change it any time.
             </p>
             {(() => {
@@ -252,7 +252,7 @@ export function TaskChooser({
                         onClick={() => setShowMore((v) => !v)}
                         className="text-sm font-semibold text-pink-ink hover:underline"
                       >
-                        {showMore ? "Hide" : "More tasks"} ({more.length})
+                        {showMore ? "Hide" : "More actions"} ({more.length})
                       </button>
                       {showMore && (
                         <ul className="mt-2 space-y-2">{more.map(row)}</ul>
@@ -275,7 +275,7 @@ export function TaskChooser({
                       draft.days,
                     );
                     if (r.error || !r.kind)
-                      setError(r.error ?? "Couldn't add the task.");
+                      setError(r.error ?? "Couldn't add the action.");
                     else {
                       setError("");
                       setKinds((all) => [
@@ -305,7 +305,7 @@ export function TaskChooser({
                 }}
                 className="mt-4 space-y-3 rounded-2xl bg-white p-4 ring-2 ring-pink/60"
               >
-                <p className="font-semibold">Your own task</p>
+                <p className="font-semibold">Your own action</p>
                 <input
                   autoFocus
                   required
@@ -314,7 +314,7 @@ export function TaskChooser({
                     setDraft({ ...draft, title: e.target.value })
                   }
                   placeholder="e.g. Thank-you message sent to volunteers"
-                  aria-label="Task name"
+                  aria-label="Action name"
                   maxLength={80}
                   className={inputClass}
                 />
@@ -368,7 +368,7 @@ export function TaskChooser({
                     disabled={pending}
                     className="flex-1 rounded-xl bg-navy px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                   >
-                    Add task
+                    Add action
                   </button>
                   <button
                     type="button"
@@ -384,7 +384,7 @@ export function TaskChooser({
                 onClick={() => setAdding(true)}
                 className="mt-3 text-sm font-semibold text-pink-ink hover:underline"
               >
-                + Add your own task
+                + Add your own action
               </button>
             )}
             <div className="mt-4 flex items-baseline justify-between rounded-2xl bg-navy px-4 py-3 text-white">
@@ -422,7 +422,7 @@ export function TaskChooser({
                 }
                 className="flex-1 rounded-xl bg-pink px-4 py-3 font-semibold text-navy hover:bg-pink-strong disabled:opacity-60"
               >
-                {pending ? "Saving…" : "Save my tasks"}
+                {pending ? "Saving…" : "Save my actions"}
               </button>
             </div>
           </>

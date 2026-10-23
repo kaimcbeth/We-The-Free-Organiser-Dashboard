@@ -39,7 +39,7 @@ export function NavLinks({
   // Tasks sits right after Events (and Calendar).
   base.splice(1, 0, {
     href: "/tasks",
-    label: "Tasks",
+    label: "Actions",
     match: (p: string) => p.startsWith("/tasks"),
   });
   const links = canManageRoles
