@@ -35,7 +35,6 @@ export function TaskChooser({
   const [kinds, setKinds] = useState<SetupKind[]>(setup.kinds);
   // The tasks shown up front (the suggestion); everything else sits under "More tasks".
   const [featured, setFeatured] = useState<Set<string>>(new Set(setup.enabled));
-  const [showMore, setShowMore] = useState(false);
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState({
     title: "",
@@ -247,16 +246,26 @@ export function TaskChooser({
                 <>
                   <ul className="mt-4 space-y-2">{main.map(row)}</ul>
                   {more.length > 0 && (
-                    <div className="mt-3">
-                      <button
-                        onClick={() => setShowMore((v) => !v)}
-                        className="text-sm font-semibold text-pink-ink hover:underline"
-                      >
-                        {showMore ? "Hide" : "More actions"} ({more.length})
-                      </button>
-                      {showMore && (
-                        <ul className="mt-2 space-y-2">{more.map(row)}</ul>
-                      )}
+                    // Everything else stays visible but quiet: there if
+                    // they want it, no pressure.
+                    <div className="mt-5">
+                      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-400">
+                        Also available · switch on any time
+                      </p>
+                      <ul className="space-y-2">
+                        {more.map((k) => (
+                          <div
+                            key={k.kind}
+                            className={
+                              on.has(k.kind)
+                                ? ""
+                                : "opacity-55 transition-opacity hover:opacity-100 focus-within:opacity-100"
+                            }
+                          >
+                            {row(k)}
+                          </div>
+                        ))}
+                      </ul>
                     </div>
                   )}
                 </>
