@@ -28,6 +28,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
+        {/* Kai's banner (remove this block to take it down). */}
+        <div className="bg-pink px-4 py-3 text-center text-lg font-bold text-navy sm:text-xl">
+          Crystal has a flat nose
+        </div>
         {children}
         <TestAccountBar />
       </body>
