@@ -246,21 +246,6 @@ export function OrganiserTour({
           {step.title}
         </h2>
         <p className="mt-2 text-stone-600">{step.body}</p>
-        {step.section === -1 && (
-          <ul className="mx-auto mt-4 max-w-56 space-y-1.5 text-left text-sm">
-            {SECTIONS.map((sec, n) => (
-              <li key={sec.name} className="flex items-center gap-2">
-                <span aria-hidden className="text-base">
-                  {sec.icon}
-                </span>
-                <span className="font-semibold">{sec.name}</span>
-                <span className="text-stone-500">
-                  {steps.filter((st) => st.section === n).length} cards
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
         <div className="mt-6 flex gap-2">
           {i > 0 && (
             <button
