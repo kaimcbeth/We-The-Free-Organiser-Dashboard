@@ -1,0 +1,3 @@
+-- (Applied as europe_communities.) The 51 We The Free teams in mainland Europe
+-- and Ireland listed on activism.wtf/teams, in the Europe region with their
+-- own time zones and locations. UK teams are left for the UK region.
