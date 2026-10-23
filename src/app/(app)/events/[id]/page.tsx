@@ -9,6 +9,7 @@ import {
 } from "@/lib/time";
 import { CheckIn, type Person } from "./check-in";
 import { EventNotes } from "./event-notes";
+import { GraphicMaker } from "@/components/graphic-maker";
 import { TypePicker } from "./type-picker";
 import { signPhotos } from "@/lib/photos";
 import { LoadError } from "@/components/load-error";
@@ -156,6 +157,20 @@ export default async function EventCheckInPage({
               }}
             />
           )}
+          <GraphicMaker
+            tz={team.timezone}
+            event={{
+              title: event.title,
+              startsAt: event.starts_at,
+              endsAt: event.ends_at,
+              venue: event.venue,
+              address: event.address,
+              typeName:
+                (types.data ?? []).find((t) => t.id === event.event_type_id)
+                  ?.name ?? null,
+              community: team.name.replace(/, (Australia|New Zealand)$/, ""),
+            }}
+          />
           {!!openActions && (
             <Link
               href={`/tasks?event=${event.id}`}

@@ -11,6 +11,24 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-24",
+    title: "Event graphics, notes and quicker links",
+    changes: [
+      {
+        level: "organiser",
+        text: "“Make graphics” on each event page (and “Get graphic” on promo actions) makes a ready-to-post image for Instagram, stories or a Facebook event cover, from the event's details.",
+      },
+      {
+        level: "organiser",
+        text: "Each event has a Notes box, and a “3 actions →” link that shows just that event's actions.",
+      },
+      {
+        level: "organiser",
+        text: "New Core Team members get a short welcome tour that ends in picking their actions.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-24",
     title: "Statuses and engagement",
     changes: [
       {

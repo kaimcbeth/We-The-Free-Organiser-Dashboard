@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { TaskRow } from "@/components/task-card";
 import { signPhotos } from "@/lib/photos";
+import type { GraphicSize } from "@/components/graphic-maker";
 
 type Raw = {
   id: string;
@@ -29,12 +30,21 @@ type Raw = {
     source_url: string | null;
     event_type_id: string | null;
     event_type: { name: string } | null;
+    team: { name: string } | null;
   } | null;
   assignee: { first_name: string; last_name: string | null } | null;
 };
 
 const SELECT =
-  "id, team_id, due_at, show_from, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes, audience), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, event_type_id, event_type:event_types(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name)";
+  "id, team_id, due_at, show_from, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes, audience), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, event_type_id, event_type:event_types(name), team:teams(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name)";
+
+// Promo actions that get a "Get graphic" button, and the size they need.
+const GRAPHIC_SIZE: Record<string, GraphicSize | undefined> = {
+  promote_instagram: "post",
+  facebook_event: "cover",
+  promote_facebook_groups: "post",
+  promote_whatsapp: "story",
+};
 
 function toRow(t: Raw): TaskRow {
   return {
@@ -72,6 +82,23 @@ function toRow(t: Raw): TaskRow {
             address: t.event.address,
             description: t.event.description,
             url: t.event.source_url,
+          }
+        : null,
+    graphic:
+      t.event && t.kind && GRAPHIC_SIZE[t.kind.kind]
+        ? {
+            size: GRAPHIC_SIZE[t.kind.kind]!,
+            event: {
+              title: t.event.title,
+              startsAt: t.event.starts_at,
+              endsAt: t.event.ends_at,
+              venue: t.event.venue,
+              address: t.event.address,
+              typeName: t.event.event_type?.name ?? null,
+              community:
+                t.event.team?.name.replace(/, (Australia|New Zealand)$/, "") ??
+                null,
+            },
           }
         : null,
     assignedTo: t.assigned_to,

@@ -11,6 +11,11 @@ import {
 import { formatEventDate } from "@/lib/time";
 import { Sheet } from "@/components/sheet";
 import { Avatar } from "@/components/avatar";
+import {
+  GraphicMaker,
+  type GraphicEvent,
+  type GraphicSize,
+} from "@/components/graphic-maker";
 import { MoveTask } from "@/components/move-task";
 import { FbGroupsButton } from "@/components/fb-groups-button";
 import { inputClass } from "@/components/form";
@@ -39,6 +44,7 @@ export type TaskRow = {
   eventTitle: string | null;
   eventAt: string | null;
   fbEvent?: FbEventDetails | null; // "Facebook event created" tasks
+  graphic?: { size: GraphicSize; event: GraphicEvent } | null; // promo actions
   assignedTo: string | null;
   assigneeName: string | null;
   delegatedBy?: { name: string; photoUrl: string | null } | null; // who handed it to me
@@ -269,6 +275,15 @@ export function TaskCard({
               {(task.kind === "promote_facebook_groups" ||
                 task.kind === "promote_fb_groups_weekly") && (
                 <FbGroupsButton teamId={task.teamId} canEdit={!!people} />
+              )}
+              {task.graphic && (
+                <GraphicMaker
+                  event={task.graphic.event}
+                  tz={tz}
+                  initialSize={task.graphic.size}
+                  label="Get graphic"
+                  className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10"
+                />
               )}
               {task.fbEvent && (
                 <FacebookEventButton event={task.fbEvent} tz={tz} />
