@@ -57,7 +57,7 @@ export function OrganiserTour({
       tone: "bg-cyan",
       title: "Events come in by themselves",
       href: "/",
-      target: "import-status",
+      target: "today-event,next-event",
       body: "Your events are copied from activism.wtf automatically, so you never have to type them in.",
     },
     {
