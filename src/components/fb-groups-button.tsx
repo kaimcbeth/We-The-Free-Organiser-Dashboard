@@ -51,8 +51,11 @@ export function FbGroupsButton({
     // site; count the ones that didn't open so we can say so.
     let missed = 0;
     for (const g of groups!) {
-      const w = window.open(g.url, "_blank", "noopener");
-      if (!w) missed++;
+      // No "noopener" here: with it, window.open always returns null, so we
+      // couldn't tell a blocked tab from an opened one. Cut the link instead.
+      const w = window.open(g.url, "_blank");
+      if (w) w.opener = null;
+      else missed++;
     }
     setBlocked(missed);
     if (missed) setShowList(true);
