@@ -64,6 +64,7 @@ export function TaskChooser({
       "promote_facebook_groups",
       "promote_fb_groups_weekly",
       "facebook_event",
+      "facebook_invites",
       "instagram_stories",
       "promote_instagram",
       "post_photos_instagram",
