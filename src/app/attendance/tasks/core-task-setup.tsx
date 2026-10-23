@@ -71,7 +71,7 @@ export function CoreTaskSetup({
   }
 
   return (
-    <div className="space-y-6">
+    <div id="choose" className="scroll-mt-24 space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">
           {firstTime ? "Welcome to the Core Team!" : "Your Core Team actions"}

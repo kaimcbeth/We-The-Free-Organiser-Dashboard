@@ -961,3 +961,10 @@ export async function saveEventNotes(
   if (error) return { error: "Couldn't save." };
   return {};
 }
+
+export async function finishCoreTour(): Promise<void> {
+  const { supabase, organiser } = await requireCore();
+  if (organiser.coreSetupPreview) return;
+  await supabase.rpc("finish_core_tutorial");
+  revalidatePath("/attendance", "layout");
+}

@@ -28,6 +28,7 @@ export type Organiser = {
   showTour: boolean; // run the organiser welcome tour on this page load
   tourPreview: boolean; // God Mode "View as New organiser": tour every time, nothing saved
   coreSetupPreview: boolean; // God Mode "View as New Core Team member": setup, nothing saved
+  showCoreTour: boolean; // run the Core Team welcome tour
   region_id: string | null;
   team_id: string; // the team being looked at (with "All communities", a stand-in)
   homeTeamId: string; // their real community (differs only during the tour)
@@ -55,7 +56,9 @@ export async function getStaff() {
 
   const { data: row } = await supabase
     .from("organisers")
-    .select("id, team_id, region_id, name, email, access, tutorial_done_at")
+    .select(
+      "id, team_id, region_id, name, email, access, tutorial_done_at, core_tutorial_done_at",
+    )
     .eq("id", user.id)
     .maybeSingle<{
       id: string;
@@ -65,6 +68,7 @@ export async function getStaff() {
       email: string;
       access: Access;
       tutorial_done_at: string | null;
+      core_tutorial_done_at: string | null;
     }>();
   if (!row) return { supabase, user, organiser: null };
 
@@ -150,6 +154,9 @@ export async function getStaff() {
         : viewingAs,
     tourPreview,
     coreSetupPreview,
+    showCoreTour:
+      coreSetupPreview ||
+      (row.access === "core_team" && !row.core_tutorial_done_at),
     showTour,
     region_id: row.region_id,
     team_id: team.id,

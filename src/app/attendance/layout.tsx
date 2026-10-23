@@ -4,6 +4,7 @@ import { requireCore, ROLE_LABEL } from "@/lib/organiser";
 import { StaffBar } from "@/components/staff-bar";
 import { NotificationBell } from "@/components/notification-bell";
 import { CoreTabs } from "./core-tabs";
+import { CoreTour } from "./core-tour";
 
 // Core Team: just their team's events and the attendance list.
 export default async function AttendanceLayout({
@@ -13,7 +14,7 @@ export default async function AttendanceLayout({
   // Their own open tasks, for the "My tasks" count.
   const { data: me } = await supabase
     .from("people")
-    .select("id")
+    .select("id, first_name")
     .eq("user_id", user.id)
     .maybeSingle();
   const { count: openTasks } = me
@@ -64,6 +65,16 @@ export default async function AttendanceLayout({
         }
         allCommunities={organiser.allCommunities}
       />
+      {organiser.showCoreTour && (
+        <CoreTour
+          key={organiser.coreSetupPreview ? "preview" : "tour"}
+          firstName={(me?.first_name ?? organiser.name).split(" ")[0]}
+          communityName={organiser.team.name.replace(
+            /, (Australia|New Zealand)$/,
+            "",
+          )}
+        />
+      )}
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-5">
         {children}
       </main>
