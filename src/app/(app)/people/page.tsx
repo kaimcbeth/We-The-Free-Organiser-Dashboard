@@ -13,7 +13,9 @@ type Row = Omit<
   | "rolePending"
   | "leads"
   | "roleTeamId"
+  | "attendedBefore"
 > & {
+  attended_before_app: boolean;
   user_id: string | null;
   pending_role: Access | null;
   pending_team_id: string | null;
@@ -30,7 +32,7 @@ export default async function PeoplePage({
   const { data, error } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, photo_updated_at, attendance(count)",
+      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, photo_updated_at, attended_before_app, attendance(count)",
     )
     // Also people made Organiser for this community whose profile is elsewhere.
     .or(
@@ -71,6 +73,7 @@ export default async function PeoplePage({
       photo_updated_at,
       pending_role,
       pending_team_id,
+      attended_before_app,
       ...p
     }) => ({
       ...p,
@@ -81,6 +84,7 @@ export default async function PeoplePage({
       roleTeamId: pending_team_id,
       leads: leads.get(p.id) ?? [],
       events: attendance[0]?.count ?? 0,
+      attendedBefore: attended_before_app,
       photoUrl: photo_updated_at ? (photos[p.id] ?? null) : null,
     }),
   );

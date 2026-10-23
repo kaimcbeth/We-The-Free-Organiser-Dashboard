@@ -3,7 +3,7 @@
 import { useFindShortcut } from "@/lib/use-find-shortcut";
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { createPerson, type FormState } from "@/app/actions";
+import { createPerson, setAttendedBefore, type FormState } from "@/app/actions";
 import { Field, inputClass } from "@/components/form";
 import { Avatar } from "@/components/avatar";
 import { RolePicker } from "@/components/role-picker";
@@ -25,6 +25,7 @@ export type PersonRow = {
   leads: CoreRole[];
   photoUrl: string | null;
   events: number;
+  attendedBefore: boolean; // came before the app: never a first-timer
   role: Access | null;
 };
 
@@ -149,10 +150,8 @@ export function PeopleList({
                         p.connected ? "Account connected" : "No account yet"
                       }
                     />
-                    {p.events === 1 && (
-                      <span className="shrink-0 rounded-full bg-yellow px-2 py-0.5 text-xs font-semibold text-navy">
-                        First-timer
-                      </span>
+                    {p.events === 1 && !p.attendedBefore && (
+                      <FirstTimerChip personId={p.id} name={p.first_name} />
                     )}
                   </p>
                   <p className="truncate text-sm text-stone-500">
@@ -201,6 +200,49 @@ export function PeopleList({
         </ul>
       )}
     </div>
+  );
+}
+
+// "First-timer" label; hover (or tap) the × to say they've been before.
+function FirstTimerChip({
+  personId,
+  name,
+}: {
+  personId: string;
+  name: string;
+}) {
+  const [hidden, setHidden] = useState(false);
+  if (hidden) return null;
+  return (
+    <span className="group/ft flex shrink-0 items-center gap-0.5 rounded-full bg-yellow py-0.5 pl-2 pr-1 text-xs font-semibold text-navy">
+      First-timer
+      <button
+        type="button"
+        title={`${name} has been before: not a first-timer`}
+        aria-label={`${name} has been before: not a first-timer`}
+        onClick={(e) => {
+          // The label sits inside the link to their profile.
+          e.preventDefault();
+          e.stopPropagation();
+          setHidden(true);
+          setAttendedBefore(personId, true).then((r) => {
+            if (r.error) setHidden(false);
+          });
+        }}
+        className="flex h-4 w-4 items-center justify-center rounded-full opacity-0 transition-opacity hover:bg-navy/10 focus:opacity-100 group-hover/ft:opacity-100 [@media(hover:none)]:opacity-60"
+      >
+        <svg
+          viewBox="0 0 20 20"
+          className="h-2.5 w-2.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          aria-hidden
+        >
+          <path d="M6 6l8 8M14 6l-8 8" strokeLinecap="round" />
+        </svg>
+      </button>
+    </span>
   );
 }
 
