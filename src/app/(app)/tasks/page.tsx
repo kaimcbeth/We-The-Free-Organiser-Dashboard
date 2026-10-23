@@ -7,7 +7,12 @@ import { loadTaskSetup } from "@/lib/task-setup";
 import { loadUpcomingActions } from "@/lib/upcoming-actions";
 import { ChooseTasks } from "./choose-tasks";
 import { RemoveEventTasks } from "./remove-event-tasks";
-import { dayBoundsUtc, formatEventDate, todayInTz } from "@/lib/time";
+import {
+  dayBoundsUtc,
+  formatEventDate,
+  formatTime,
+  todayInTz,
+} from "@/lib/time";
 import { loadConnectContext } from "@/lib/connect";
 import { ConnectIdeas } from "@/components/connect-ideas";
 import { RegionTasks } from "./region-tasks";
@@ -165,11 +170,29 @@ export default async function TasksPage() {
   const when = (iso: string) => {
     const days = Math.round((Date.parse(iso) - now) / 864e5);
     return days <= 0
-      ? "later today"
+      ? `today at ${formatTime(iso)}`
       : days === 1
         ? "tomorrow"
         : `in ${days} days`;
   };
+  // Thin half-width cards for actions that haven't appeared yet.
+  const ComingUp = ({ items }: { items: typeof upcoming }) => (
+    <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+      {items.map((u) => (
+        <li
+          key={`${u.eventId}|${u.title}`}
+          className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-stone-300 bg-white/60 px-3 py-2"
+        >
+          <span className="min-w-0 truncate text-sm font-medium text-stone-600">
+            {u.title}
+          </span>
+          <span className="shrink-0 text-xs text-stone-400">
+            {when(u.appearsAt)}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
   const groups = [...byEvent.values()]
     .map((g) => ({
       ...g,
@@ -300,12 +323,12 @@ export default async function TasksPage() {
             ))}
           </ul>
           {upcomingFor(g.key).length > 0 && (
-            <p className="mt-2 px-1 text-xs text-stone-400">
-              Coming up:{" "}
-              {upcomingFor(g.key)
-                .map((u) => `${u.title} (${when(u.appearsAt)})`)
-                .join(" · ")}
-            </p>
+            <>
+              <p className="mt-4 px-1 text-xs font-medium uppercase tracking-wide text-stone-400">
+                Coming up
+              </p>
+              <ComingUp items={upcomingFor(g.key)} />
+            </>
           )}
         </section>
       ))}
@@ -322,22 +345,19 @@ export default async function TasksPage() {
         if (rest.length === 0) return null;
         return (
           <section>
-            <h2 className="mb-1.5 text-sm font-medium text-stone-400">
+            <h2 className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-400">
               Coming up
             </h2>
-            <ul className="space-y-1 text-xs text-stone-400">
+            <div className="space-y-4">
               {rest.map((e) => (
-                <li key={e.eventId}>
-                  <span className="font-medium text-stone-500">
+                <div key={e.eventId}>
+                  <p className="text-sm font-medium text-stone-500">
                     {e.eventTitle} · {formatEventDate(e.eventAt)}
-                  </span>
-                  :{" "}
-                  {upcomingFor(e.eventId)
-                    .map((u) => `${u.title} (${when(u.appearsAt)})`)
-                    .join(" · ")}
-                </li>
+                  </p>
+                  <ComingUp items={upcomingFor(e.eventId)} />
+                </div>
               ))}
-            </ul>
+            </div>
           </section>
         );
       })()}
