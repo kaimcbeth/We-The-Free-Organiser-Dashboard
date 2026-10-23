@@ -901,3 +901,48 @@ export async function setPersonFacebook(
   revalidatePath(`/people/${personId}`);
   return {};
 }
+
+// Bring an action that hasn't appeared yet forward: put it on the list now,
+// or tick it off straight away ("already done").
+export async function startActionEarly(
+  eventId: string,
+  kind: string,
+  done: boolean,
+): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  if (organiser.viewingAs) return {}; // God Mode preview: don't change anything
+  const [{ data: event }, { data: k }] = await Promise.all([
+    supabase
+      .from("events")
+      .select("id, team_id, starts_at, ends_at")
+      .eq("id", eventId)
+      .maybeSingle(),
+    supabase
+      .from("task_kinds")
+      .select("kind, anchor, due_after_hours")
+      .eq("kind", kind)
+      .maybeSingle(),
+  ]);
+  if (!event || !k) return { error: "Couldn't find that action." };
+  const anchor = Date.parse(
+    k.anchor === "end" ? (event.ends_at ?? event.starts_at) : event.starts_at,
+  );
+  const { error } = await supabase.from("tasks").insert({
+    team_id: event.team_id,
+    event_id: event.id,
+    kind,
+    due_at: new Date(anchor + Number(k.due_after_hours) * 36e5).toISOString(),
+    ...(done
+      ? { done_at: new Date().toISOString(), done_by: organiser.id }
+      : {}),
+  });
+  if (error)
+    return {
+      error:
+        error.code === "23505"
+          ? "It's already on your list."
+          : "Couldn't do that. Please try again.",
+    };
+  revalidatePath("/tasks");
+  return {};
+}

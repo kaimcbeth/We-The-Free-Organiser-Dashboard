@@ -2,6 +2,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type UpcomingAction = {
   eventId: string;
+  kind: string;
+  description: string | null;
+  minutes: string; // "5" or "5–10"
   eventTitle: string;
   eventAt: string;
   title: string;
@@ -27,7 +30,9 @@ export async function loadUpcomingActions(
       .lte("starts_at", new Date(now + 21 * DAY).toISOString()),
     supabase
       .from("task_kinds")
-      .select("kind, title, anchor, appear_hours, event_type_id, team_id")
+      .select(
+        "kind, title, description, estimate_minutes, estimate_max_minutes, anchor, appear_hours, event_type_id, team_id",
+      )
       .is("archived_at", null)
       .eq("audience", "community")
       .eq("schedule", "event")
@@ -55,6 +60,11 @@ export async function loadUpcomingActions(
       if (appears > now && appears <= now + 7 * DAY)
         out.push({
           eventId: e.id,
+          kind: k.kind,
+          description: k.description ?? null,
+          minutes: k.estimate_max_minutes
+            ? `${k.estimate_minutes}–${k.estimate_max_minutes}`
+            : String(k.estimate_minutes),
           eventTitle: e.title,
           eventAt: e.starts_at,
           title: k.title,

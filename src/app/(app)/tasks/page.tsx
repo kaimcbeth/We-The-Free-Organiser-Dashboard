@@ -5,6 +5,7 @@ import { TaskCard } from "@/components/task-card";
 import { loadTeamTasks } from "@/lib/tasks";
 import { loadTaskSetup } from "@/lib/task-setup";
 import { loadUpcomingActions } from "@/lib/upcoming-actions";
+import { ComingUp } from "./coming-up";
 import { ChooseTasks } from "./choose-tasks";
 import { RemoveEventTasks } from "./remove-event-tasks";
 import {
@@ -175,23 +176,8 @@ export default async function TasksPage() {
         ? "tomorrow"
         : `in ${days} days`;
   };
-  // Thin half-width cards for actions that haven't appeared yet.
-  const ComingUp = ({ items }: { items: typeof upcoming }) => (
-    <ul className="mt-2 grid gap-2 sm:grid-cols-2">
-      {items.map((u) => (
-        <li
-          key={`${u.eventId}|${u.title}`}
-          className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-stone-300 bg-white/60 px-3 py-2"
-        >
-          <span className="min-w-0 truncate text-sm font-medium text-stone-600">
-            {u.title}
-          </span>
-          <span className="shrink-0 text-xs text-stone-400">
-            {when(u.appearsAt)}
-          </span>
-        </li>
-      ))}
-    </ul>
+  const whenLabel = Object.fromEntries(
+    upcoming.map((u) => [u.appearsAt, when(u.appearsAt)]),
   );
   const groups = [...byEvent.values()]
     .map((g) => ({
@@ -324,10 +310,7 @@ export default async function TasksPage() {
           </ul>
           {upcomingFor(g.key).length > 0 && (
             <>
-              <p className="mt-4 px-1 text-xs font-medium uppercase tracking-wide text-stone-400">
-                Coming up
-              </p>
-              <ComingUp items={upcomingFor(g.key)} />
+              <ComingUp items={upcomingFor(g.key)} whenLabel={whenLabel} />
             </>
           )}
         </section>
@@ -354,7 +337,10 @@ export default async function TasksPage() {
                   <p className="text-sm font-medium text-stone-500">
                     {e.eventTitle} · {formatEventDate(e.eventAt)}
                   </p>
-                  <ComingUp items={upcomingFor(e.eventId)} />
+                  <ComingUp
+                    items={upcomingFor(e.eventId)}
+                    whenLabel={whenLabel}
+                  />
                 </div>
               ))}
             </div>
