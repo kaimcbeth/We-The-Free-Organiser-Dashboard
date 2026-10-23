@@ -18,9 +18,9 @@ const ROLE_OPTIONS: ViewOption[] = [
   { value: "member", label: "Member" },
 ];
 const TUTORIAL_OPTIONS: ViewOption[] = [
-  { value: "new_organiser", label: "New organiser" },
+  { value: "new_organiser", label: "New Organiser" },
   { value: "new_core_team", label: "New Core Team Member" },
-  { value: "new_member", label: "New member" },
+  { value: "new_member", label: "New Member" },
 ];
 
 // Thin bar under the header: team switcher (when there's more than one team)
