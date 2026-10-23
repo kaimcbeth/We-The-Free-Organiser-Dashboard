@@ -10,6 +10,7 @@ import { RolePicker } from "@/components/role-picker";
 import { MessengerButton } from "@/components/messenger-button";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import type { Access, CoreRole } from "@/lib/roles";
+import { NEWCOMER_EVENTS, isNewcomer } from "@/lib/newcomer";
 
 export type PersonRow = {
   id: string;
@@ -152,8 +153,12 @@ export function PeopleList({
                         p.connected ? "Account connected" : "No account yet"
                       }
                     />
-                    {p.events === 1 && !p.attendedBefore && (
-                      <FirstTimerChip personId={p.id} name={p.first_name} />
+                    {p.events > 0 && isNewcomer(p.events, p.attendedBefore) && (
+                      <FirstTimerChip
+                        personId={p.id}
+                        name={p.first_name}
+                        events={p.events}
+                      />
                     )}
                   </p>
                   <p className="truncate text-sm text-stone-500">
@@ -205,23 +210,33 @@ export function PeopleList({
   );
 }
 
-// "First-timer" label; hover (or tap) the × to say they've been before.
+// "First-timer" (1 event) or "Newcomer" (until NEWCOMER_EVENTS) label;
+// hover (or tap) the × to say they've been before.
 function FirstTimerChip({
   personId,
   name,
+  events,
 }: {
   personId: string;
   name: string;
+  events: number;
 }) {
   const [hidden, setHidden] = useState(false);
   if (hidden) return null;
   return (
-    <span className="group/ft relative shrink-0 rounded-full bg-yellow px-2 py-0.5 text-xs font-semibold text-navy">
-      First-timer
+    <span
+      title={
+        events === 1
+          ? "First event"
+          : `Newcomer: ${events} of ${NEWCOMER_EVENTS} events`
+      }
+      className={`group/ft relative shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold text-navy ${events === 1 ? "bg-yellow" : "bg-yellow/35"}`}
+    >
+      {events === 1 ? "First-timer" : "Newcomer"}
       <button
         type="button"
-        title={`${name} has been before: not a first-timer`}
-        aria-label={`${name} has been before: not a first-timer`}
+        title={`${name} isn't new: remove the label`}
+        aria-label={`${name} isn't new: remove the label`}
         onClick={(e) => {
           // The label sits inside the link to their profile.
           e.preventDefault();

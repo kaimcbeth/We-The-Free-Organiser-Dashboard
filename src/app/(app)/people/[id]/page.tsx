@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
 import { formatEventDate } from "@/lib/time";
+import { NEWCOMER_EVENTS, isNewcomer } from "@/lib/newcomer";
 import { InviteButton } from "./invite-button";
 import { DeletePerson } from "./delete-person";
 import { AttendedBefore } from "./attended-before";
@@ -174,13 +175,12 @@ export default async function PersonPage({
     )
       .filter(
         (c) =>
-          (c.attendance[0]?.count ?? 0) <= 1 &&
-          !c.attended_before_app &&
+          isNewcomer(c.attendance[0]?.count ?? 0, c.attended_before_app) &&
           !supported.has(c.id),
       )
       .map((c) => ({ id: c.id, name: fullName(c) }));
   }
-  const isFirstTimer = events.length <= 1 && !person.attended_before_app;
+  const newcomer = isNewcomer(events.length, person.attended_before_app);
 
   return (
     <div>
@@ -257,6 +257,14 @@ export default async function PersonPage({
           </div>
         </div>
       )}
+      {newcomer && events.length > 1 && (
+        <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-yellow/35 px-3 py-1 text-sm font-semibold text-navy">
+          🌱 Newcomer
+          <span className="font-normal">
+            {events.length} of {NEWCOMER_EVENTS} events
+          </span>
+        </p>
+      )}
 
       <div className="mt-5 grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
@@ -279,7 +287,7 @@ export default async function PersonPage({
       </div>
 
       {/* Who looks after this person (first-timers, or anyone who has someone). */}
-      {(isFirstTimer || myPairing) && (
+      {(newcomer || myPairing) && (
         <section
           data-tour="buddy-section"
           className="mt-5 scroll-mt-24 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"

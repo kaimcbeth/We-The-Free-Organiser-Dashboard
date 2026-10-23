@@ -162,7 +162,7 @@ export function BuddyPicker({
   );
 }
 
-// On a supporter's profile: give them a first-timer to look after.
+// On a supporter's profile: give them a newcomer to look after.
 export function NewcomerPicker({
   buddyId,
   firstName,
@@ -179,7 +179,7 @@ export function NewcomerPicker({
   if (options.length === 0)
     return (
       <p className="mt-3 text-xs text-stone-500">
-        No first-timers waiting for someone right now.
+        No newcomers waiting for someone right now.
       </p>
     );
   return (
@@ -188,10 +188,10 @@ export function NewcomerPicker({
         <select
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          aria-label={`A first-timer for ${firstName} to support`}
+          aria-label={`A newcomer for ${firstName} to support`}
           className="min-w-0 flex-1 rounded-xl border border-stone-300 bg-white px-3 py-2"
         >
-          <option value="">Add a first-timer…</option>
+          <option value="">Add a newcomer…</option>
           {options.map((o) => (
             <option key={o.id} value={o.id}>
               {o.name}
