@@ -1,0 +1,4 @@
+-- (Applied as regular_status_graduation.) Regular = 5 events within 3 months
+-- (src/lib/newcomer.ts). The check-in that makes a newcomer a Regular thanks
+-- their supporter and closes the pairing. Replaces 0063's "5th event ever".
+-- See private.newcomer_graduated() in the database for the body.

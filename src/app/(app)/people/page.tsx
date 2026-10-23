@@ -1,4 +1,5 @@
 import { notSeenInAWhile } from "@/lib/drift";
+import { isNewcomer, recentEvents } from "@/lib/newcomer";
 import { requireOrganiser } from "@/lib/organiser";
 import { GIVES, type Access, type CoreRole } from "@/lib/roles";
 import { signPhotos } from "@/lib/photos";
@@ -16,6 +17,8 @@ type Row = Omit<
   | "roleTeamId"
   | "attendedBefore"
   | "drift"
+  | "newcomer"
+  | "recent"
 > & {
   attended_before_app: boolean;
   user_id: string | null;
@@ -88,10 +91,16 @@ export default async function PeoplePage({
       roleTeamId: pending_team_id,
       leads: leads.get(p.id) ?? [],
       events: attendance.length,
-      drift: notSeenInAWhile(
-        attendance.flatMap((a) => (a.event ? [a.event.starts_at] : [])),
-        now,
-      ),
+      ...(() => {
+        const dates = attendance.flatMap((a) =>
+          a.event ? [a.event.starts_at] : [],
+        );
+        return {
+          drift: notSeenInAWhile(dates, now),
+          newcomer: isNewcomer(dates, attended_before_app),
+          recent: recentEvents(dates, now),
+        };
+      })(),
       attendedBefore: attended_before_app,
       photoUrl: photo_updated_at ? (photos[p.id] ?? null) : null,
     }),

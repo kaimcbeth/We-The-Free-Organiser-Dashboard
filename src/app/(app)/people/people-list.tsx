@@ -10,7 +10,7 @@ import { RolePicker } from "@/components/role-picker";
 import { MessengerButton } from "@/components/messenger-button";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import type { Access, CoreRole } from "@/lib/roles";
-import { NEWCOMER_EVENTS, isNewcomer } from "@/lib/newcomer";
+import { REGULAR_EVENTS } from "@/lib/newcomer";
 import { driftText, type Drift } from "@/lib/drift";
 
 export type PersonRow = {
@@ -28,6 +28,8 @@ export type PersonRow = {
   photoUrl: string | null;
   events: number;
   attendedBefore: boolean; // came before the app: never a first-timer
+  newcomer: boolean; // not yet a Regular (see lib/newcomer)
+  recent: number; // events in the last 3 months
   drift: Drift | null; // "Not seen in a while"
   role: Access | null;
 };
@@ -163,11 +165,12 @@ export function PeopleList({
                         Not seen in a while
                       </span>
                     )}
-                    {p.events > 0 && isNewcomer(p.events, p.attendedBefore) && (
+                    {p.newcomer && (
                       <FirstTimerChip
                         personId={p.id}
                         name={p.first_name}
                         events={p.events}
+                        recent={p.recent}
                       />
                     )}
                   </p>
@@ -220,16 +223,18 @@ export function PeopleList({
   );
 }
 
-// "First-timer" (1 event) or "Newcomer" (until NEWCOMER_EVENTS) label;
+// "First-timer" (1 event) or "Newcomer" (until they're a Regular) label;
 // hover (or tap) the × to say they've been before.
 function FirstTimerChip({
   personId,
   name,
   events,
+  recent,
 }: {
   personId: string;
   name: string;
   events: number;
+  recent: number;
 }) {
   const [hidden, setHidden] = useState(false);
   if (hidden) return null;
@@ -238,7 +243,7 @@ function FirstTimerChip({
       title={
         events === 1
           ? "First event"
-          : `Newcomer: ${events} of ${NEWCOMER_EVENTS} events`
+          : `Newcomer: ${recent} of ${REGULAR_EVENTS} events in the last 3 months`
       }
       className={`group/ft relative shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold text-navy bg-yellow`}
     >

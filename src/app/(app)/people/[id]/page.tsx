@@ -2,7 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
 import { formatEventDate } from "@/lib/time";
-import { NEWCOMER_EVENTS, isNewcomer } from "@/lib/newcomer";
+import {
+  REGULAR_EVENTS,
+  isNewcomer,
+  recentEvents,
+  regularSince,
+} from "@/lib/newcomer";
 import { driftText, notSeenInAWhile } from "@/lib/drift";
 import { InviteButton } from "./invite-button";
 import { DeletePerson } from "./delete-person";
@@ -155,7 +160,7 @@ export default async function PersonPage({
       supabase
         .from("people")
         .select(
-          "id, first_name, last_name, attended_before_app, attendance(count)",
+          "id, first_name, last_name, attended_before_app, attendance(event:events(starts_at))",
         )
         .eq("team_id", organiser.team_id)
         .neq("id", person.id)
@@ -173,17 +178,21 @@ export default async function PersonPage({
         first_name: string;
         last_name: string | null;
         attended_before_app: boolean;
-        attendance: { count: number }[];
+        attendance: { event: { starts_at: string } | null }[];
       }[]
     )
       .filter(
         (c) =>
-          isNewcomer(c.attendance[0]?.count ?? 0, c.attended_before_app) &&
-          !supported.has(c.id),
+          isNewcomer(
+            c.attendance.flatMap((a) => (a.event ? [a.event.starts_at] : [])),
+            c.attended_before_app,
+          ) && !supported.has(c.id),
       )
       .map((c) => ({ id: c.id, name: fullName(c) }));
   }
-  const newcomer = isNewcomer(events.length, person.attended_before_app);
+  const eventDates = events.map((e) => e.starts_at);
+  const newcomer = isNewcomer(eventDates, person.attended_before_app);
+  const regular = regularSince(eventDates);
   const drift = notSeenInAWhile(
     events.map((e) => e.starts_at),
     // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
@@ -273,11 +282,22 @@ export default async function PersonPage({
           <span>{driftText(drift)}. Worth reaching out?</span>
         </p>
       )}
+      {regular && !person.attended_before_app && (
+        <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-cyan/25 px-3 py-1 text-sm font-semibold text-navy">
+          ⭐ Regular
+          <span className="font-normal">since {formatEventDate(regular)}</span>
+        </p>
+      )}
       {newcomer && events.length > 1 && (
         <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-yellow px-3 py-1 text-sm font-semibold text-navy">
           🌱 Newcomer
           <span className="font-normal">
-            {events.length} of {NEWCOMER_EVENTS} events
+            {recentEvents(
+              eventDates,
+              // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
+              Date.now(),
+            )}{" "}
+            of {REGULAR_EVENTS} events in 3 months to become a Regular
           </span>
         </p>
       )}
@@ -308,7 +328,7 @@ export default async function PersonPage({
           data-tour="buddy-section"
           className="mt-5 scroll-mt-24 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
         >
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+          <h2 className="font-semibold text-navy">
             Connect a regular volunteer to help {person.first_name} feel welcome
           </h2>
           <p className="mb-3 mt-0.5 text-sm text-stone-500">
@@ -337,9 +357,7 @@ export default async function PersonPage({
 
       {/* Whether this person supports newcomers, and who. */}
       <section className="mt-5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
-          New member support
-        </h2>
+        <h2 className="mb-3 font-semibold text-navy">New member support</h2>
         <BuddySwitch
           personId={person.id}
           initial={person.is_buddy}
