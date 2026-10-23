@@ -18,7 +18,7 @@ const addDays = (date: string, n: number) =>
     .slice(0, 10);
 
 // "Move": put a task out of the way until a better day. It shows up in Tasks
-// again on that day (9am local), due a couple of days later, or by the event.
+// again on that day (6am local), due a couple of days later, or by the event.
 export function MoveTask({
   taskId,
   tz,
@@ -38,11 +38,11 @@ export function MoveTask({
   const [pending, start] = useTransition();
 
   const today = todayInTz(tz);
-  const at9 = (d: string) => zonedToUtcIso(d, "09:00", tz);
+  const at6 = (d: string) => zonedToUtcIso(d, "06:00", tz);
   const plain = (key: string, label: string, d: string): Option => ({
     key,
     label,
-    showFrom: at9(d),
+    showFrom: at6(d),
     dueAt: zonedToUtcIso(addDays(d, 2), "23:59", tz),
   });
   const dayBefore = (title: string, at: string, key: string): Option | null => {
@@ -51,7 +51,7 @@ export function MoveTask({
     return {
       key,
       label: `Day before ${title} (${formatEventDate(at, tz)})`,
-      showFrom: at9(d),
+      showFrom: at6(d),
       dueAt: at,
     };
   };
