@@ -24,7 +24,8 @@ export function FbGroupsButton({
     createClient()
       .from("facebook_groups")
       .select("id, name, url")
-      .eq("team_id", teamId)
+      // Its own groups plus ones shared with nearby communities.
+      .or(`team_id.eq.${teamId},also_team_ids.cs.{${teamId}}`)
       .is("archived_at", null)
       .order("name")
       .then(({ data }) => {

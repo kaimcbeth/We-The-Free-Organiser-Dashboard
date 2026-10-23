@@ -6,6 +6,7 @@ import { requireOrganiser } from "@/lib/organiser";
 export type GroupInput = {
   id?: string;
   teamId: string | null;
+  alsoTeamIds: string[];
   name: string;
   url: string;
   category: string;
@@ -48,6 +49,9 @@ export async function saveFacebookGroup(
   if (!url) return { error: "Paste the group's link." };
   const row = {
     team_id: g.teamId || null,
+    also_team_ids: [...new Set(g.alsoTeamIds)].filter(
+      (id) => id && id !== g.teamId,
+    ),
     name,
     url,
     category: g.category,

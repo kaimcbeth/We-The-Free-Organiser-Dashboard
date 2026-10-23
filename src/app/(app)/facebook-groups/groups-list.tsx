@@ -12,6 +12,7 @@ import { inputClass } from "@/components/form";
 export type FbGroup = {
   id: string;
   teamId: string | null;
+  alsoTeamIds: string[]; // nearby communities it's shared with
   name: string;
   url: string;
   category: string;
@@ -38,12 +39,20 @@ const short = (name: string) =>
 // Facebook won't show group pages to apps (it asks them to log in), so the
 // best guess is the link itself: /groups/vegans.of.sydney -> "Vegans Of Sydney".
 // Number-only links (/groups/123456) give nothing.
+// A group shows under its own community and each one it's shared with
+// ("" = no community).
+const homesOf = (g: FbGroup): string[] =>
+  g.teamId || g.alsoTeamIds.length
+    ? [...new Set([g.teamId ?? "", ...g.alsoTeamIds].filter(Boolean))]
+    : [""];
+
 const fmtMembers = (n: number) =>
   n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : String(n);
 
 export function GroupsList({
   groups,
   teams,
+  teamNames,
   defaultTeamId,
   isGod = false,
   add = null,
@@ -52,6 +61,7 @@ export function GroupsList({
   add?: { url: string; name: string } | null;
   groups: FbGroup[];
   teams: { id: string; name: string }[];
+  teamNames: Record<string, string>; // every community, for "Also in"
   defaultTeamId: string;
 }) {
   // Organisers start on their own community; God Mode on everything.
@@ -62,6 +72,7 @@ export function GroupsList({
       ? {
           id: "",
           teamId: defaultTeamId,
+          alsoTeamIds: [],
           name: add.name,
           url: add.url,
           category: "vegan",
@@ -71,14 +82,19 @@ export function GroupsList({
       : null,
   );
   const teamName = useMemo(
-    () => Object.fromEntries(teams.map((t) => [t.id, short(t.name)])),
-    [teams],
+    () =>
+      Object.fromEntries(
+        Object.entries(teamNames).map(([id, n]) => [id, short(n)]),
+      ),
+    [teamNames],
   );
 
   const shown = groups.filter(
     (g) =>
       (filter === "all" ||
-        (filter === "none" ? !g.teamId : g.teamId === filter)) &&
+        (filter === "none"
+          ? !g.teamId && !g.alsoTeamIds.length
+          : homesOf(g).includes(filter))) &&
       `${g.name} ${g.notes}`
         .toLowerCase()
         .includes(search.trim().toLowerCase()),
@@ -87,19 +103,19 @@ export function GroupsList({
   // Grouped by community, communities in name order, unassigned last.
   const sections = useMemo(() => {
     const by = new Map<string, FbGroup[]>();
-    for (const g of shown) {
-      const k = g.teamId ?? "";
-      by.set(k, [...(by.get(k) ?? []), g]);
-    }
+    for (const g of shown)
+      for (const k of homesOf(g))
+        if (filter === "all" || filter === "none" || k === filter)
+          by.set(k, [...(by.get(k) ?? []), g]);
     return [...by.entries()].sort(([a], [b]) =>
       !a ? 1 : !b ? -1 : (teamName[a] ?? "").localeCompare(teamName[b] ?? ""),
     );
-  }, [shown, teamName]);
+  }, [shown, teamName, filter]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
     for (const g of groups)
-      c[g.teamId ?? "none"] = (c[g.teamId ?? "none"] ?? 0) + 1;
+      for (const k of homesOf(g)) c[k || "none"] = (c[k || "none"] ?? 0) + 1;
     return c;
   }, [groups]);
 
@@ -136,6 +152,7 @@ export function GroupsList({
               id: "",
               teamId:
                 filter !== "all" && filter !== "none" ? filter : defaultTeamId,
+              alsoTeamIds: [],
               name: "",
               url: "",
               category: "vegan",
@@ -164,7 +181,14 @@ export function GroupsList({
             </h2>
             <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
               {list.map((g) => (
-                <GroupRow key={g.id} group={g} onEdit={() => setEditing(g)} />
+                <GroupRow
+                  key={g.id}
+                  group={g}
+                  sharedWith={homesOf(g)
+                    .filter((id) => id && id !== teamId)
+                    .map((id) => teamName[id] ?? "another community")}
+                  onEdit={() => setEditing(g)}
+                />
               ))}
             </ul>
           </section>
@@ -178,6 +202,7 @@ export function GroupsList({
           key={editing.id || "new"}
           group={editing}
           teams={teams}
+          teamName={teamName}
           isGod={isGod}
           onClose={() => setEditing(null)}
         />
@@ -186,7 +211,15 @@ export function GroupsList({
   );
 }
 
-function GroupRow({ group, onEdit }: { group: FbGroup; onEdit: () => void }) {
+function GroupRow({
+  group,
+  sharedWith,
+  onEdit,
+}: {
+  group: FbGroup;
+  sharedWith: string[];
+  onEdit: () => void;
+}) {
   const [pending, start] = useTransition();
   const [removed, setRemoved] = useState(false);
   const [error, setError] = useState("");
@@ -217,6 +250,11 @@ function GroupRow({ group, onEdit }: { group: FbGroup; onEdit: () => void }) {
         </div>
         {group.notes && (
           <p className="mt-0.5 text-sm text-stone-600">{group.notes}</p>
+        )}
+        {sharedWith.length > 0 && (
+          <p className="mt-0.5 text-xs text-stone-400">
+            Also in {sharedWith.join(", ")}
+          </p>
         )}
         {error && <p className="mt-1 text-sm text-red-700">{error}</p>}
       </div>
@@ -260,11 +298,13 @@ function GroupRow({ group, onEdit }: { group: FbGroup; onEdit: () => void }) {
 function GroupSheet({
   group,
   teams,
+  teamName,
   isGod,
   onClose,
 }: {
   group: FbGroup;
   teams: { id: string; name: string }[];
+  teamName: Record<string, string>;
   isGod: boolean;
   onClose: () => void;
 }) {
@@ -287,6 +327,7 @@ function GroupSheet({
       const r = await saveFacebookGroup({
         id: g.id || undefined,
         teamId: g.teamId,
+        alsoTeamIds: g.alsoTeamIds,
         name: g.name,
         url: g.url,
         category: g.category,
@@ -366,6 +407,62 @@ function GroupSheet({
               className={inputClass}
             />
           </label>
+        </div>
+        <div>
+          <span className="mb-1 block text-sm font-medium">
+            Also share with{" "}
+            <span className="font-normal text-stone-500">
+              (nearby communities that can use it too)
+            </span>
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            {g.alsoTeamIds
+              .filter((id) => id !== g.teamId)
+              .map((id) => (
+                <span
+                  key={id}
+                  className="flex items-center gap-1 rounded-full bg-stone-100 py-0.5 pl-2.5 pr-1 text-sm"
+                >
+                  {teamName[id] ?? "Another community"}
+                  <button
+                    type="button"
+                    aria-label={`Stop sharing with ${teamName[id] ?? "this community"}`}
+                    onClick={() =>
+                      setG({
+                        ...g,
+                        alsoTeamIds: g.alsoTeamIds.filter((x) => x !== id),
+                      })
+                    }
+                    className="flex h-5 w-5 items-center justify-center rounded-full text-stone-400 hover:bg-stone-200 hover:text-stone-700"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            <select
+              value=""
+              onChange={(e) =>
+                e.target.value &&
+                setG({
+                  ...g,
+                  alsoTeamIds: [...g.alsoTeamIds, e.target.value],
+                })
+              }
+              aria-label="Add a community"
+              className="rounded-xl bg-white px-2 py-1 text-sm ring-1 ring-stone-300"
+            >
+              <option value="">+ Add community</option>
+              {teams
+                .filter(
+                  (t) => t.id !== g.teamId && !g.alsoTeamIds.includes(t.id),
+                )
+                .map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {short(t.name)}
+                  </option>
+                ))}
+            </select>
+          </div>
         </div>
         <div>
           <span className="mb-1 block text-sm font-medium">Type</span>

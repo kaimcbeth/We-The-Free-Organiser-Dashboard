@@ -11,6 +11,24 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-23",
+    title: "Hundreds of Facebook groups added",
+    changes: [
+      {
+        level: "organiser",
+        text: "Your community's Facebook groups list now comes pre-filled with local vegan and animal rights groups from our worldwide list. Check it over and remove any that don't fit.",
+      },
+      {
+        level: "organiser",
+        text: "A group can be shared with nearby communities too (e.g. London groups show for Central and West London). Use “Also share with” when editing a group.",
+      },
+      {
+        level: "god",
+        text: "Imported 628 groups from the English-speaking groups sheet: 295 attached to 96 communities (by city, or nearby/region-wide), 333 with no community nearby kept God-only with the sheet section in notes. New facebook_groups.also_team_ids for shared groups; RLS covers them.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-23",
     title: "Local Facebook groups",
     changes: [
       {

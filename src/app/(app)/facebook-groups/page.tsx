@@ -21,13 +21,14 @@ export default async function FacebookGroupsPage({
   const [{ data: groups }, { data: teams }] = await Promise.all([
     supabase
       .from("facebook_groups")
-      .select("id, team_id, name, url, category, members, notes")
+      .select("id, team_id, also_team_ids, name, url, category, members, notes")
       .is("archived_at", null)
       .order("name")
       .returns<
         {
           id: string;
           team_id: string | null;
+          also_team_ids: string[];
           name: string;
           url: string;
           category: string;
@@ -45,6 +46,7 @@ export default async function FacebookGroupsPage({
   const rows: FbGroup[] = (groups ?? []).map((g) => ({
     id: g.id,
     teamId: g.team_id,
+    alsoTeamIds: g.also_team_ids ?? [],
     name: g.name,
     url: g.url,
     category: g.category,
@@ -70,6 +72,7 @@ export default async function FacebookGroupsPage({
             ? (teams ?? [])
             : organiser.teams.map((t) => ({ id: t.id, name: t.name }))
         }
+        teamNames={Object.fromEntries((teams ?? []).map((t) => [t.id, t.name]))}
         defaultTeamId={organiser.team_id}
         isGod={isGod}
         add={add}
