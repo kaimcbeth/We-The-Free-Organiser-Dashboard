@@ -6,7 +6,20 @@ import { finishOrganiserTour } from "@/app/actions";
 import { TaskChooser } from "@/components/task-chooser";
 import type { TaskSetup } from "@/lib/task-setup";
 
-type Step = { icon: string; tone: string; title: string; body: string };
+type Step = {
+  section: number; // index into SECTIONS; -1 = the welcome card
+  icon: string;
+  tone: string;
+  title: string;
+  body: string;
+};
+
+// The tour in a few bite-sized parts, so it doesn't feel like a wall of cards.
+const SECTIONS = [
+  { icon: "📅", name: "Events" },
+  { icon: "🧑‍🤝‍🧑", name: "People" },
+  { icon: "📝", name: "Tasks" },
+];
 
 // Welcome tour for new organisers. Ends by asking how much time they have
 // and choosing their follow-up tasks.
@@ -26,48 +39,56 @@ export function OrganiserTour({
 
   const steps: Step[] = [
     {
+      section: -1,
       icon: "👋",
       tone: "bg-pink",
       title: `Welcome, ${firstName}!`,
-      body: `You're now an organiser for ${communityName}. Here's a quick tour of what you can do.`,
+      body: `You're now an organiser for ${communityName}. The tour has three short parts: your events, your people, and your tasks.`,
     },
     {
+      section: 0,
       icon: "📅",
       tone: "bg-cyan",
       title: "Events come in by themselves",
-      body: "Events are pulled in from activism.wtf automatically. Today's event sits at the top of the Events page, with the next one just below.",
+      body: "Events are pulled in from activism.wtf automatically. Today's event sits at the top of the Events page, with the next one just below. Switch to Calendar to see the month.",
     },
     {
+      section: 0,
       icon: "✅",
       tone: "bg-yellow",
       title: "Taking attendance",
       body: "Open today's event and tap names as people arrive. The people most likely to come are at the top, and someone new is one tap away. Hand the job to a volunteer with the Helper QR.",
     },
     {
-      icon: "🧑‍🤝‍🧑",
+      section: 0,
+      icon: "📊",
       tone: "bg-pink",
+      title: "Insights",
+      body: "Insights shows who's coming, first-timers, who's drifted off and upcoming milestones.",
+    },
+    {
+      section: 1,
+      icon: "🧑‍🤝‍🧑",
+      tone: "bg-cyan",
       title: "People",
       body: "You only ever add a name. Members add their own details and photo when they connect, using the QR code on their profile.",
     },
     {
-      icon: "📊",
-      tone: "bg-cyan",
-      title: "Insights and calendar",
-      body: "Insights shows who's coming, first-timers, who's drifted off and upcoming milestones. The calendar shows your events, and nearby communities' too if you like.",
-    },
-    {
+      section: 1,
       icon: "🤝",
       tone: "bg-yellow",
       title: "Build your crew",
       body: "On Roles, add Core Team members to help take attendance. On someone's profile, switch on New member support so they can welcome newcomers.",
     },
     {
+      section: 2,
       icon: "📣",
       tone: "bg-cyan",
       title: "Share in local Facebook groups",
       body: "A week before each event, a task appears to share it in local vegan Facebook groups. Tap “Open all” and every group opens in its own tab, ready to post. Your list is under Tasks → Facebook groups, and we may have added some nearby groups for you already. If only one tab opens, allow pop-ups for the Movement Hub (the task shows you how).",
     },
     {
+      section: 2,
       icon: "📝",
       tone: "bg-pink",
       title: "Tasks after each event",
@@ -115,12 +136,9 @@ export function OrganiserTour({
         className="w-full rounded-t-3xl bg-background p-6 pb-8 text-center sm:max-w-sm sm:rounded-3xl"
       >
         <div className="flex items-center justify-between text-sm">
-          <span className="font-medium text-stone-500">
-            {i + 1} of {steps.length}
-            <span className="ml-2 rounded-full bg-black/5 px-2 py-0.5 text-xs font-semibold text-stone-600">
-              ⏱ {i === 0 ? "About" : "~"} {minutesLeft(i)} min
-              {i === 0 ? "" : " left"}
-            </span>
+          <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs font-semibold text-stone-600">
+            ⏱ {i === 0 ? "About" : "~"} {minutesLeft(i)} min
+            {i === 0 ? "" : " left"}
           </span>
           <button
             onClick={finish}
@@ -129,6 +147,47 @@ export function OrganiserTour({
             Skip tour
           </button>
         </div>
+        {/* The parts of the tour: done ones ticked, the current one filled. */}
+        <ol className="mt-4 flex items-center justify-center gap-1.5 text-xs font-semibold">
+          {SECTIONS.map((sec, n) => {
+            const done = step.section > n;
+            const here = step.section === n;
+            const inSection = steps.filter((st) => st.section === n);
+            const pos = inSection.indexOf(step) + 1;
+            return (
+              <li key={sec.name} className="flex items-center gap-1.5">
+                {n > 0 && (
+                  <span
+                    aria-hidden
+                    className={`h-px w-3 ${done || here ? "bg-pink" : "bg-stone-300"}`}
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setI(steps.findIndex((st) => st.section === n))
+                  }
+                  aria-current={here ? "step" : undefined}
+                  className={`flex items-center gap-1 rounded-full px-2.5 py-1 ring-1 transition-colors ${
+                    here
+                      ? "bg-navy text-white ring-navy"
+                      : done
+                        ? "bg-pink/20 text-navy ring-pink/40"
+                        : "bg-white text-stone-500 ring-stone-300"
+                  }`}
+                >
+                  <span aria-hidden>{done ? "✓" : sec.icon}</span>
+                  {sec.name}
+                  {here && (
+                    <span className="font-normal text-white/70">
+                      {pos}/{inSection.length}
+                    </span>
+                  )}
+                </button>
+              </li>
+            );
+          })}
+        </ol>
         <div
           className={`mx-auto mt-4 flex h-20 w-20 items-center justify-center rounded-3xl text-4xl ${step.tone}`}
         >
@@ -138,14 +197,21 @@ export function OrganiserTour({
           {step.title}
         </h2>
         <p className="mt-2 text-stone-600">{step.body}</p>
-        <div className="mt-6 flex justify-center gap-1.5" aria-hidden>
-          {steps.map((_, n) => (
-            <span
-              key={n}
-              className={`h-1.5 rounded-full transition-all ${n === i ? "w-5 bg-pink" : "w-1.5 bg-stone-300"}`}
-            />
-          ))}
-        </div>
+        {step.section === -1 && (
+          <ul className="mx-auto mt-4 max-w-56 space-y-1.5 text-left text-sm">
+            {SECTIONS.map((sec, n) => (
+              <li key={sec.name} className="flex items-center gap-2">
+                <span aria-hidden className="text-base">
+                  {sec.icon}
+                </span>
+                <span className="font-semibold">{sec.name}</span>
+                <span className="text-stone-500">
+                  {steps.filter((st) => st.section === n).length} cards
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="mt-6 flex gap-2">
           {i > 0 && (
             <button
@@ -159,7 +225,11 @@ export function OrganiserTour({
             onClick={() => (last ? setChoosing(true) : setI(i + 1))}
             className="flex-1 rounded-xl bg-pink px-4 py-3 font-semibold text-navy hover:bg-pink-strong"
           >
-            {last ? "Choose my tasks" : "Next"}
+            {last
+              ? "Choose my tasks"
+              : steps[i + 1].section !== step.section
+                ? `${i === 0 ? "Start with" : "Next:"} ${SECTIONS[steps[i + 1].section].name}`
+                : "Next"}
           </button>
         </div>
       </div>
