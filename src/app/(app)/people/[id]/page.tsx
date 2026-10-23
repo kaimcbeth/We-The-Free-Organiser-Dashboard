@@ -5,7 +5,7 @@ import { formatEventDate } from "@/lib/time";
 import { InviteButton } from "./invite-button";
 import { DeletePerson } from "./delete-person";
 import { AttendedBefore } from "./attended-before";
-import { BuddyPicker, BuddySwitch } from "./buddy-controls";
+import { BuddyPicker, BuddySwitch, NewcomerPicker } from "./buddy-controls";
 import { Avatar } from "@/components/avatar";
 import { signPhotos } from "@/lib/photos";
 import { RolePicker } from "@/components/role-picker";
@@ -143,6 +143,45 @@ export default async function PersonPage({
     name: fullName(b),
   }));
 
+  // First-timers (one event, not "been before") with no one supporting them
+  // yet: who this person could take on, if they're on New member support.
+  let newcomerOptions: { id: string; name: string }[] = [];
+  if (person.is_buddy) {
+    const [{ data: candidates }, { data: taken }] = await Promise.all([
+      supabase
+        .from("people")
+        .select(
+          "id, first_name, last_name, attended_before_app, attendance(count)",
+        )
+        .eq("team_id", organiser.team_id)
+        .neq("id", person.id)
+        .order("first_name"),
+      supabase
+        .from("buddy_pairings")
+        .select("newcomer_id")
+        .eq("team_id", organiser.team_id)
+        .is("ended_at", null),
+    ]);
+    const supported = new Set((taken ?? []).map((t) => t.newcomer_id));
+    newcomerOptions = (
+      (candidates ?? []) as unknown as {
+        id: string;
+        first_name: string;
+        last_name: string | null;
+        attended_before_app: boolean;
+        attendance: { count: number }[];
+      }[]
+    )
+      .filter(
+        (c) =>
+          (c.attendance[0]?.count ?? 0) <= 1 &&
+          !c.attended_before_app &&
+          !supported.has(c.id),
+      )
+      .map((c) => ({ id: c.id, name: fullName(c) }));
+  }
+  const isFirstTimer = events.length <= 1 && !person.attended_before_app;
+
   return (
     <div>
       <Link
@@ -239,14 +278,19 @@ export default async function PersonPage({
         />
       </div>
 
-      <section
-        data-tour="buddy-section"
-        className="mt-5 scroll-mt-24 space-y-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
-      >
-        <div>
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
-            New member support
+      {/* Who looks after this person (first-timers, or anyone who has someone). */}
+      {(isFirstTimer || myPairing) && (
+        <section
+          data-tour="buddy-section"
+          className="mt-5 scroll-mt-24 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
+        >
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+            Who&apos;s supporting {person.first_name}?
           </h2>
+          <p className="mb-3 mt-0.5 text-sm text-stone-500">
+            Someone on New member support who&apos;ll welcome{" "}
+            {person.first_name} and invite them back.
+          </p>
           <BuddyPicker
             key={myPairing?.id ?? "none"}
             newcomerId={person.id}
@@ -263,31 +307,48 @@ export default async function PersonPage({
             }
             options={buddyOptions}
           />
-        </div>
-        <div className="border-t border-black/5 pt-4">
-          <BuddySwitch
-            personId={person.id}
-            initial={person.is_buddy}
-            connected={!!person.user_id}
-            firstName={person.first_name}
-          />
-          {lookingAfterIds.length > 0 && (
-            <p className="mt-3 text-sm text-stone-600">
-              Looking after:{" "}
-              {lookingAfterIds.map((id, i) => (
-                <span key={id}>
-                  {i > 0 && ", "}
-                  <Link
-                    href={`/people/${id}`}
-                    className="font-medium text-stone-900 hover:underline"
-                  >
-                    {nameOf.get(id) ?? "someone"}
-                  </Link>
-                </span>
-              ))}
+        </section>
+      )}
+
+      {/* Whether this person supports newcomers, and who. */}
+      <section className="mt-5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+          New member support
+        </h2>
+        <BuddySwitch
+          personId={person.id}
+          initial={person.is_buddy}
+          connected={!!person.user_id}
+          firstName={person.first_name}
+        />
+        {person.is_buddy && (
+          <div className="mt-4 border-t border-black/5 pt-4 text-sm">
+            <p className="font-medium text-stone-900">
+              {person.first_name} is supporting
             </p>
-          )}
-        </div>
+            {lookingAfterIds.length > 0 ? (
+              <ul className="mt-1 space-y-0.5">
+                {lookingAfterIds.map((id) => (
+                  <li key={id}>
+                    <Link
+                      href={`/people/${id}`}
+                      className="text-stone-700 hover:underline"
+                    >
+                      {nameOf.get(id) ?? "someone"}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-1 text-stone-500">No one yet.</p>
+            )}
+            <NewcomerPicker
+              buddyId={person.id}
+              firstName={person.first_name}
+              options={newcomerOptions}
+            />
+          </div>
+        )}
       </section>
 
       <section className="mt-5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">

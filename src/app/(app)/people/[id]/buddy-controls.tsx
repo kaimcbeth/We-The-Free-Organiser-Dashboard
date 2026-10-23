@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { assignBuddy, setIsBuddy } from "@/app/actions";
 import { formatEventDate } from "@/lib/time";
@@ -156,6 +157,66 @@ export function BuddyPicker({
             : "Support person removed."}
         </p>
       )}
+      {error && <p className="mt-1 text-red-700">{error}</p>}
+    </div>
+  );
+}
+
+// On a supporter's profile: give them a first-timer to look after.
+export function NewcomerPicker({
+  buddyId,
+  firstName,
+  options,
+}: {
+  buddyId: string;
+  firstName: string;
+  options: Option[];
+}) {
+  const router = useRouter();
+  const [value, setValue] = useState("");
+  const [error, setError] = useState("");
+  const [pending, start] = useTransition();
+  if (options.length === 0)
+    return (
+      <p className="mt-3 text-xs text-stone-500">
+        No first-timers waiting for someone right now.
+      </p>
+    );
+  return (
+    <div className="mt-3">
+      <div className="flex gap-2">
+        <select
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          aria-label={`A first-timer for ${firstName} to support`}
+          className="min-w-0 flex-1 rounded-xl border border-stone-300 bg-white px-3 py-2"
+        >
+          <option value="">Add a first-timer…</option>
+          {options.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.name}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          disabled={pending || !value}
+          onClick={() =>
+            start(async () => {
+              const r = await assignBuddy(value, buddyId);
+              if (r.error) setError(r.error);
+              else {
+                setError("");
+                setValue("");
+                router.refresh();
+              }
+            })
+          }
+          className="shrink-0 rounded-xl bg-pink px-4 font-semibold text-navy hover:bg-pink-strong disabled:opacity-40"
+        >
+          {pending ? "Adding…" : "Add"}
+        </button>
+      </div>
       {error && <p className="mt-1 text-red-700">{error}</p>}
     </div>
   );
