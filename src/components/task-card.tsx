@@ -10,6 +10,7 @@ import {
 } from "@/app/actions";
 import { formatEventDate } from "@/lib/time";
 import { Sheet } from "@/components/sheet";
+import { MoveTask } from "@/components/move-task";
 import { inputClass } from "@/components/form";
 import {
   FacebookEventButton,
@@ -31,6 +32,7 @@ export type TaskRow = {
   estimateMinutes: number;
   estimateLabel: string; // e.g. "5" or "5–10"
   dueAt: string;
+  showFrom: string | null; // moved: hidden until then
   doneAt: string | null;
   eventTitle: string | null;
   eventAt: string | null;
@@ -73,6 +75,7 @@ export function TaskCard({
   standing = {},
   extra,
   removable = false,
+  moveEvents,
 }: {
   task: TaskRow;
   tz: string;
@@ -83,14 +86,13 @@ export function TaskCard({
   standing?: Record<string, string>; // kind -> standing delegate (person id)
   extra?: React.ReactNode; // shown under the description (e.g. check-in ideas)
   removable?: boolean; // show the × even without delegating (Regional Support Lead tasks)
+  moveEvents?: { title: string; at: string }[]; // events "Move" can line up with
 }) {
   const [done, setDone] = useState(!!task.doneAt);
   const [assignee, setAssignee] = useState(task.assignedTo ?? "");
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
   const [removed, setRemoved] = useState(false);
-  // Regional check-ins ask how it went before they're ticked off.
-  const [asking, setAsking] = useState(false);
   // "Every time" delegation is per kind of task and per event type.
   const standingKey = `${task.kind}|${task.eventTypeId ?? ""}`;
   const [delegating, setDelegating] = useState(false);
@@ -174,8 +176,16 @@ export function TaskCard({
           aria-label={done ? "Mark as not done" : "Mark as done"}
           disabled={pending}
           onClick={() => {
+            // Check-ins: ticking means they replied (the usual case).
             if (task.regional && !done) {
-              setAsking(true);
+              start(async () => {
+                setDone(true);
+                const r = await completeCheckIn(task.id, "replied");
+                if (r.error) {
+                  setDone(false);
+                  setError(r.error);
+                }
+              });
               return;
             }
             start(async () => {
@@ -240,49 +250,7 @@ export function TaskCard({
           {task.description && !done && (
             <p className="mt-1 text-sm text-stone-600">{task.description}</p>
           )}
-          {asking && !done && (
-            <div className="mt-3 rounded-xl bg-cyan/15 p-3">
-              <p className="text-sm font-medium">Did they get back to you?</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {(
-                  [
-                    ["replied", "Yes, we chatted"],
-                    ["no_reply", "No reply yet"],
-                  ] as const
-                ).map(([outcome, label]) => (
-                  <button
-                    key={outcome}
-                    disabled={pending}
-                    onClick={() =>
-                      start(async () => {
-                        const r = await completeCheckIn(task.id, outcome);
-                        if (r.error) setError(r.error);
-                        else {
-                          setError("");
-                          setAsking(false);
-                          setDone(true);
-                        }
-                      })
-                    }
-                    className="rounded-xl bg-white px-3 py-1.5 text-sm font-semibold text-navy ring-1 ring-stone-300 hover:bg-stone-50"
-                  >
-                    {label}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setAsking(false)}
-                  className="rounded-xl px-2 py-1.5 text-sm text-stone-500 hover:bg-white/60"
-                >
-                  Cancel
-                </button>
-              </div>
-              <p className="mt-2 text-xs text-stone-600">
-                With no reply, there are no more monthly check-ins for this
-                community until you hear back.
-              </p>
-            </div>
-          )}
-          {extra && !done && !asking && <div className="mt-3">{extra}</div>}
+          {extra && !done && <div className="mt-3">{extra}</div>}
 
           {!done && (
             <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -333,6 +301,36 @@ export function TaskCard({
                     Delegate
                   </button>
                 ))}
+              <MoveTask
+                taskId={task.id}
+                tz={tz}
+                eventAt={
+                  task.eventAt && Date.parse(task.eventAt) > now
+                    ? task.eventAt
+                    : null
+                }
+                events={moveEvents}
+                onMoved={() => setRemoved(true)}
+              />
+              {task.regional && (
+                <button
+                  disabled={pending}
+                  onClick={() =>
+                    start(async () => {
+                      setDone(true);
+                      const r = await completeCheckIn(task.id, "no_reply");
+                      if (r.error) {
+                        setDone(false);
+                        setError(r.error);
+                      }
+                    })
+                  }
+                  title="Tick off, and no more monthly check-ins for them until they reply"
+                  className="rounded-lg px-1.5 py-1 text-sm font-medium text-stone-400 hover:bg-stone-100 hover:text-navy"
+                >
+                  No reply yet
+                </button>
+              )}
               {!people && task.assigneeName && (
                 <span className="text-sm text-stone-500">Delegated to you</span>
               )}

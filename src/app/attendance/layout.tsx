@@ -22,6 +22,7 @@ export default async function AttendanceLayout({
         .eq("assigned_to", me.id)
         .is("done_at", null)
         .is("dismissed_at", null)
+        .or(`show_from.is.null,show_from.lte.${new Date().toISOString()}`)
     : { count: 0 };
 
   return (

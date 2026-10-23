@@ -158,6 +158,7 @@ export default async function TasksPage() {
                 now={now}
                 whatsappUrl={null}
                 removable
+                moveEvents={connect?.[t.teamId]?.upcoming}
                 extra={
                   connect?.[t.teamId] && (
                     <ConnectIdeas ctx={connect[t.teamId]} />
@@ -198,6 +199,27 @@ export default async function TasksPage() {
           </ul>
         </section>
       ))}
+
+      {tasks.later.length > 0 && (
+        <section>
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
+            Moved for later
+          </h2>
+          <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white text-sm shadow-sm ring-1 ring-black/5">
+            {tasks.later.map((t) => (
+              <li key={t.id} className="flex justify-between gap-3 px-4 py-2.5">
+                <span className="truncate">
+                  {t.title}
+                  {t.eventTitle ? ` · ${t.eventTitle}` : ""}
+                </span>
+                <span className="shrink-0 text-stone-500">
+                  {formatEventDate(t.showFrom!, common.tz)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {tasks.done.length > 0 && (
         <section>

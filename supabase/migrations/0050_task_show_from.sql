@@ -1,0 +1,2 @@
+-- (Applied as task_show_from.) tasks.show_from: a moved task is hidden until
+-- then. move_task(task, show_from, due_at) for the assignee or organisers.

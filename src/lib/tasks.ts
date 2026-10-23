@@ -5,6 +5,7 @@ type Raw = {
   id: string;
   team_id: string;
   due_at: string;
+  show_from: string | null;
   done_at: string | null;
   assigned_to: string | null;
   kind: {
@@ -32,7 +33,7 @@ type Raw = {
 };
 
 const SELECT =
-  "id, team_id, due_at, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes, audience), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, event_type_id, event_type:event_types(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name)";
+  "id, team_id, due_at, show_from, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes, audience), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, event_type_id, event_type:event_types(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name)";
 
 function toRow(t: Raw): TaskRow {
   return {
@@ -56,6 +57,7 @@ function toRow(t: Raw): TaskRow {
       ? `${t.kind.estimate_minutes}–${t.kind.estimate_max_minutes}`
       : String(t.kind?.estimate_minutes ?? 5),
     dueAt: t.due_at,
+    showFrom: t.show_from,
     doneAt: t.done_at,
     eventTitle: t.event?.title ?? null,
     eventAt: t.event?.starts_at ?? null,
@@ -107,8 +109,14 @@ export async function loadTeamTasks(
   ]);
   if (open.error || done.error) return null;
   const keep = (t: TaskRow) => regional || !t.regional;
+  // Moved tasks stay out of the way until their day.
+  const nowIso = new Date().toISOString();
+  const all = (open.data ?? []).map(toRow).filter(keep);
   return {
-    open: (open.data ?? []).map(toRow).filter(keep),
+    open: all.filter((t) => !t.showFrom || t.showFrom <= nowIso),
+    later: all
+      .filter((t) => t.showFrom && t.showFrom > nowIso)
+      .sort((a, b) => a.showFrom!.localeCompare(b.showFrom!)),
     done: (done.data ?? []).map(toRow).filter(keep),
   };
 }
@@ -123,5 +131,8 @@ export async function loadMyTasks(supabase: SupabaseClient, personId: string) {
     .is("dismissed_at", null)
     .order("due_at")
     .returns<Raw[]>();
-  return (data ?? []).map(toRow);
+  const nowIso = new Date().toISOString();
+  return (data ?? [])
+    .map(toRow)
+    .filter((t) => !t.showFrom || t.showFrom <= nowIso);
 }

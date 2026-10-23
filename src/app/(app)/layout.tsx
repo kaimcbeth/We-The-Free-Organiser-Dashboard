@@ -42,7 +42,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         : [organiser.team_id],
     )
     .is("done_at", null)
-    .is("dismissed_at", null);
+    .is("dismissed_at", null)
+    .or(`show_from.is.null,show_from.lte.${new Date().toISOString()}`);
   if (organiser.allCommunities || organiser.role === "regional_lead")
     countQuery = countQuery.eq("kind.audience", "regional");
   else if (!regionalStaff)

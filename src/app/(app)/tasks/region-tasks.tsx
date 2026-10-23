@@ -7,6 +7,7 @@ import { loadTeamTasks } from "@/lib/tasks";
 import { loadConnectContext } from "@/lib/connect";
 import { ConnectIdeas } from "@/components/connect-ideas";
 import { WaitingList } from "./waiting-list";
+import { formatEventDate } from "@/lib/time";
 
 const short = (name: string) =>
   name.replace(/, (Australia|New Zealand|Canada)$/, "");
@@ -90,6 +91,7 @@ export async function RegionTasks({
                   now={now}
                   whatsappUrl={null}
                   removable
+                  moveEvents={connect[t.teamId]?.upcoming}
                   extra={
                     connect[t.teamId] && (
                       <ConnectIdeas ctx={connect[t.teamId]} />
@@ -103,6 +105,32 @@ export async function RegionTasks({
       )}
 
       <WaitingList teams={waiting} />
+
+      {tasks.later.filter((t) => t.regional).length > 0 && (
+        <section>
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
+            Moved for later
+          </h2>
+          <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white text-sm shadow-sm ring-1 ring-black/5">
+            {tasks.later
+              .filter((t) => t.regional)
+              .map((t) => (
+                <li
+                  key={t.id}
+                  className="flex justify-between gap-3 px-4 py-2.5"
+                >
+                  <span className="truncate">
+                    {t.title}
+                    {`: ${short(byId[t.teamId]?.name ?? "")}`}
+                  </span>
+                  <span className="shrink-0 text-stone-500">
+                    {formatEventDate(t.showFrom!, byId[t.teamId]?.timezone)}
+                  </span>
+                </li>
+              ))}
+          </ul>
+        </section>
+      )}
 
       {showCommunities && (
         <section>

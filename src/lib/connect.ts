@@ -9,6 +9,8 @@ export type ConnectOrganiser = {
   email: string | null;
 };
 export type ConnectIdea = {
+  title: string;
+  at: string;
   label: string; // "Movie Challenge, Sat 18 Oct · 14 came"
   note: string | null; // "First Workshop in a while"
   eventId: string;
@@ -94,6 +96,8 @@ export async function loadConnectContext(
     const idea = (e: Ev, past: boolean): ConnectIdea => {
       const n = e.attendance[0]?.count ?? 0;
       return {
+        title: e.title,
+        at: e.starts_at,
         eventId: e.id,
         label: `${e.title}, ${formatEventDate(e.starts_at, tz)}${past ? (n ? ` · ${n} came` : " · no attendance taken") : ""}`,
         note: rare(e)

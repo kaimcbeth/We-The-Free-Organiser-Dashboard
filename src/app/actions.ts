@@ -796,3 +796,23 @@ export async function resolveCheckInWait(
   revalidatePath("/tasks");
   return {};
 }
+
+// Move a task: hidden until showFrom, then due at dueAt.
+export async function moveTask(
+  taskId: string,
+  showFrom: string,
+  dueAt: string,
+): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("move_task", {
+    p_task_id: taskId,
+    p_show_from: showFrom,
+    p_due_at: dueAt,
+  });
+  if (error || data !== "ok")
+    return { error: "Couldn't move that task. Please try again." };
+  revalidatePath("/tasks");
+  revalidatePath("/me");
+  revalidatePath("/attendance/tasks");
+  return {};
+}
