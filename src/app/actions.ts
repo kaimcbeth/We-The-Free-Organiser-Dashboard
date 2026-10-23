@@ -832,7 +832,10 @@ export async function setPersonContact(
   email: string,
 ): Promise<{ error?: string }> {
   const { supabase } = await requireOrganiser();
-  const p = phone.trim();
+  // Numbers pasted from a contacts app can carry invisible formatting marks.
+  const p = phone
+    .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, "")
+    .trim();
   const e = email.trim().toLowerCase();
   if (p && p.replace(/\D/g, "").length < 8)
     return { error: "That phone number looks too short." };

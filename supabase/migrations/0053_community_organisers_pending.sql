@@ -1,0 +1,3 @@
+-- (Applied as community_organisers_pending.) community_organisers() also lists
+-- people made Organiser who haven't connected yet (pending_role), for the
+-- community they'll run; strips invisible characters from stored phone numbers.
