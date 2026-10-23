@@ -253,20 +253,29 @@ export function OrganiserTour({
   if (!open) return null;
   const step = steps[i];
   const last = i === steps.length - 1;
+  const nextLabel = last
+    ? "Choose my tasks"
+    : steps[i + 1].section !== step.section
+      ? `${i === 0 ? "Start with" : "Next:"} ${SECTIONS[steps[i + 1].section].name}`
+      : "Next";
 
-  return (
-    <div
-      className={`fixed inset-0 z-50 flex justify-center sm:p-4 ${
-        rect
-          ? // Card on the opposite half of the screen to the highlight.
-            rect.top + rect.height / 2 > window.innerHeight / 2
-            ? "items-start pt-3"
-            : "items-end"
-          : "items-end bg-navy/70 sm:items-center"
-      }`}
-    >
-      {rect && (
-        // The spotlight: a hole in the dimmed page around the element.
+  // Spotlighting something: a small card tucked next to it, so the page
+  // stays visible.
+  if (rect) {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const width = Math.min(320, vw - 24);
+    const left = Math.min(Math.max(12, rect.left), vw - width - 12);
+    const room = 210; // roughly the card's height
+    const place: React.CSSProperties =
+      vh - rect.bottom - 14 >= room
+        ? { top: rect.bottom + 14 }
+        : rect.top - 14 >= room
+          ? { bottom: vh - rect.top + 14 }
+          : { bottom: 12 };
+    const inSection = steps.filter((st) => st.section === step.section);
+    return (
+      <div className="fixed inset-0 z-50">
         <div
           aria-hidden
           className="pointer-events-none fixed rounded-2xl ring-2 ring-pink transition-all duration-300"
@@ -275,19 +284,66 @@ export function OrganiserTour({
             left: rect.left - 6,
             width: rect.width + 12,
             height: rect.height + 12,
-            boxShadow: "0 0 0 9999px rgb(15 23 42 / 0.7)",
+            boxShadow: "0 0 0 9999px rgb(15 23 42 / 0.6)",
           }}
         />
-      )}
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Organiser welcome tour"
+          className="fixed rounded-2xl bg-background p-4 text-left shadow-2xl ring-1 ring-black/5"
+          style={{ ...place, left, width }}
+        >
+          <div className="flex items-center justify-between gap-2 text-xs text-stone-500">
+            <span>
+              <span className="font-semibold text-navy">
+                {SECTIONS[step.section]?.name} {inSection.indexOf(step) + 1}/
+                {inSection.length}
+              </span>{" "}
+              · ~{minutesLeft(i)} min left
+            </span>
+            <button
+              onClick={finish}
+              className="rounded px-1 py-0.5 hover:bg-black/5 hover:text-stone-700"
+            >
+              Skip
+            </button>
+          </div>
+          <h2 className="mt-1.5 font-semibold tracking-tight">
+            <span aria-hidden className="mr-1">
+              {step.icon}
+            </span>
+            {step.title}
+          </h2>
+          <p className="mt-1 text-sm leading-snug text-stone-600">
+            {step.body}
+          </p>
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              onClick={() => setI(i - 1)}
+              className="rounded-lg px-2 py-1 text-sm font-medium text-stone-500 hover:bg-black/5"
+            >
+              Back
+            </button>
+            <button
+              onClick={() => (last ? setChoosing(true) : setI(i + 1))}
+              className="rounded-xl bg-pink px-4 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+            >
+              {nextLabel}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-navy/70 sm:items-center sm:p-4">
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Organiser welcome tour"
-        className={`relative w-full bg-background text-center sm:max-w-sm sm:rounded-3xl ${
-          rect
-            ? "mx-3 rounded-3xl p-5 shadow-2xl sm:mx-0"
-            : "rounded-t-3xl p-6 pb-8"
-        }`}
+        className="relative w-full rounded-t-3xl bg-background p-6 pb-8 text-center sm:max-w-sm sm:rounded-3xl"
       >
         <div className="flex items-center justify-between text-sm">
           <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs font-semibold text-stone-600">
@@ -342,25 +398,16 @@ export function OrganiserTour({
             );
           })}
         </ol>
-        {!rect && (
-          <div
-            className={`mx-auto mt-4 flex h-20 w-20 items-center justify-center rounded-3xl text-4xl ${step.tone}`}
-          >
-            <span aria-hidden>{step.icon}</span>
-          </div>
-        )}
-        <h2
-          className={`text-xl font-semibold tracking-tight ${rect ? "mt-4" : "mt-5"}`}
+        <div
+          className={`mx-auto mt-4 flex h-20 w-20 items-center justify-center rounded-3xl text-4xl ${step.tone}`}
         >
-          {rect && (
-            <span aria-hidden className="mr-1.5">
-              {step.icon}
-            </span>
-          )}
+          <span aria-hidden>{step.icon}</span>
+        </div>
+        <h2 className="mt-5 text-xl font-semibold tracking-tight">
           {step.title}
         </h2>
         <p className="mt-2 text-stone-600">{step.body}</p>
-        <div className={`flex gap-2 ${rect ? "mt-4" : "mt-6"}`}>
+        <div className="mt-6 flex gap-2">
           {i > 0 && (
             <button
               onClick={() => setI(i - 1)}
@@ -373,11 +420,7 @@ export function OrganiserTour({
             onClick={() => (last ? setChoosing(true) : setI(i + 1))}
             className="flex-1 rounded-xl bg-pink px-4 py-3 font-semibold text-navy hover:bg-pink-strong"
           >
-            {last
-              ? "Choose my tasks"
-              : steps[i + 1].section !== step.section
-                ? `${i === 0 ? "Start with" : "Next:"} ${SECTIONS[steps[i + 1].section].name}`
-                : "Next"}
+            {nextLabel}
           </button>
         </div>
       </div>
