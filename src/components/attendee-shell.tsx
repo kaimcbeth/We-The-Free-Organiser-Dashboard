@@ -1,4 +1,5 @@
 // Simple branded frame for attendee-facing pages (join, invite, my profile).
+import { EasterEggLogo } from "@/components/easter-egg-logo";
 export function AttendeeShell({
   children,
   right,
@@ -10,9 +11,7 @@ export function AttendeeShell({
     <div className="flex flex-1 flex-col">
       <header className="bg-navy text-white">
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-          <span className="text-sm font-bold uppercase tracking-wider text-pink">
-            Movement Hub
-          </span>
+          <EasterEggLogo className="text-sm font-bold uppercase tracking-wider text-pink" />
           {right}
         </div>
       </header>

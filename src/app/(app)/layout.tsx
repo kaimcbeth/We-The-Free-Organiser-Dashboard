@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EasterEggLogo } from "@/components/easter-egg-logo";
 import { cookies } from "next/headers";
 import { LATEST_CHANGE } from "@/lib/changelog";
 import { requireOrganiser, ROLE_LABEL } from "@/lib/organiser";
@@ -58,9 +59,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       <header className="sticky top-0 z-10 bg-navy text-white">
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 pt-3">
           <Link href="/" className="min-w-0 leading-tight">
-            <span className="block text-xs font-bold uppercase tracking-wider text-pink">
-              Movement Hub
-            </span>
+            <EasterEggLogo className="block text-xs font-bold uppercase tracking-wider text-pink" />
             <span className="block truncate text-sm font-medium text-white">
               {organiser.team?.name ?? "Your community"}
             </span>

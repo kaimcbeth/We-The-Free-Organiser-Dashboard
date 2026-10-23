@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EasterEggLogo } from "@/components/easter-egg-logo";
 import { requireCore, ROLE_LABEL } from "@/lib/organiser";
 import { StaffBar } from "@/components/staff-bar";
 import { NotificationBell } from "@/components/notification-bell";
@@ -30,9 +31,7 @@ export default async function AttendanceLayout({
       <header className="sticky top-0 z-10 bg-navy text-white">
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 pb-1 pt-3">
           <Link href="/attendance" className="min-w-0 leading-tight">
-            <span className="block text-xs font-bold uppercase tracking-wider text-pink">
-              Movement Hub
-            </span>
+            <EasterEggLogo className="block text-xs font-bold uppercase tracking-wider text-pink" />
             <span className="block truncate text-sm font-medium text-white">
               {organiser.team.name}
             </span>
