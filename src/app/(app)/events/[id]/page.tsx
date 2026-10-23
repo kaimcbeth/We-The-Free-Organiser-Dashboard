@@ -8,6 +8,7 @@ import {
   setRequestTz,
 } from "@/lib/time";
 import { CheckIn, type Person } from "./check-in";
+import { EventNotes } from "./event-notes";
 import { TypePicker } from "./type-picker";
 import { signPhotos } from "@/lib/photos";
 import { LoadError } from "@/components/load-error";
@@ -26,6 +27,7 @@ type EventDetail = {
   source_url: string | null;
   description: string | null;
   event_type_id: string | null;
+  notes: string | null;
 };
 
 export default async function EventCheckInPage({
@@ -37,12 +39,19 @@ export default async function EventCheckInPage({
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, team_id, title, starts_at, ends_at, venue, address, source_url, description, event_type_id",
+      "id, team_id, title, starts_at, ends_at, venue, address, source_url, description, event_type_id, notes",
     )
     .eq("id", id)
     .maybeSingle<EventDetail>();
 
   if (!event) notFound();
+  const { count: openActions } = await supabase
+    .from("tasks")
+    .select("id", { count: "exact", head: true })
+    .eq("event_id", event.id)
+    .is("done_at", null)
+    .is("dismissed_at", null)
+    .or(`show_from.is.null,show_from.lte.${nowIso()}`);
   // Opened from "All communities" or the calendar: show it as its own community.
   const team =
     organiser.teams.find((t) => t.id === event.team_id) ?? organiser.team;
@@ -147,8 +156,18 @@ export default async function EventCheckInPage({
               }}
             />
           )}
+          {!!openActions && (
+            <Link
+              href={`/tasks?event=${event.id}`}
+              className="rounded-full bg-pink/15 px-2.5 py-1 text-xs font-semibold text-pink-ink hover:bg-pink/25"
+            >
+              {openActions} action{openActions === 1 ? "" : "s"} →
+            </Link>
+          )}
         </div>
       </div>
+
+      <EventNotes eventId={event.id} initial={event.notes ?? ""} />
 
       <CheckIn
         eventId={event.id}

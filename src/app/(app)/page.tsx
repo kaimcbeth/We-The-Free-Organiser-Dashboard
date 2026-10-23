@@ -28,6 +28,27 @@ type EventRow = {
   attendance: { count: number }[];
 };
 
+// Quick link to an event's open actions.
+function ActionsLink({
+  eventId,
+  count,
+  className,
+}: {
+  eventId: string;
+  count: number;
+  className: string;
+}) {
+  if (!count) return null;
+  return (
+    <Link
+      href={`/tasks?event=${eventId}`}
+      className={`rounded-md px-1.5 py-0.5 text-xs font-semibold hover:underline ${className}`}
+    >
+      {count} action{count === 1 ? "" : "s"} →
+    </Link>
+  );
+}
+
 // A small, quiet link to the event's page on the We The Free website.
 function WebsiteLink({ url, className }: { url: string; className: string }) {
   return (
@@ -57,56 +78,69 @@ export default async function EventsPage() {
   const select =
     "id, title, starts_at, ends_at, venue, address, source_url, event_type:event_types(name), attendance(count)";
 
-  const [today, upcoming, past, lastRun, lastOk, teamLink] = await Promise.all([
-    supabase
-      .from("events")
-      .select(select)
-      .eq("team_id", organiser.team_id)
-      .gte("starts_at", todayStart)
-      .lt("starts_at", todayEnd)
-      .order("starts_at")
-      .returns<EventRow[]>(),
-    supabase
-      .from("events")
-      .select(select)
-      .eq("team_id", organiser.team_id)
-      .gte("starts_at", todayEnd)
-      .order("starts_at")
-      .limit(10)
-      .returns<EventRow[]>(),
-    supabase
-      .from("events")
-      .select(select)
-      .eq("team_id", organiser.team_id)
-      .lt("starts_at", todayStart)
-      .order("starts_at", { ascending: false })
-      .limit(20)
-      .returns<EventRow[]>(),
-    supabase
-      .from("import_runs")
-      .select("ran_at, ok, added, updated, message")
-      .eq("team_id", organiser.team_id)
-      .order("ran_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("import_runs")
-      .select("ran_at, ok, added, updated, message")
-      .eq("team_id", organiser.team_id)
-      .eq("ok", true)
-      .order("ran_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("checkin_links")
-      .select("token, expires_at")
-      .eq("team_id", organiser.team_id)
-      .is("revoked_at", null)
-      .gt("expires_at", nowIso())
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ]);
+  const [today, upcoming, past, lastRun, lastOk, teamLink, openActions] =
+    await Promise.all([
+      supabase
+        .from("events")
+        .select(select)
+        .eq("team_id", organiser.team_id)
+        .gte("starts_at", todayStart)
+        .lt("starts_at", todayEnd)
+        .order("starts_at")
+        .returns<EventRow[]>(),
+      supabase
+        .from("events")
+        .select(select)
+        .eq("team_id", organiser.team_id)
+        .gte("starts_at", todayEnd)
+        .order("starts_at")
+        .limit(10)
+        .returns<EventRow[]>(),
+      supabase
+        .from("events")
+        .select(select)
+        .eq("team_id", organiser.team_id)
+        .lt("starts_at", todayStart)
+        .order("starts_at", { ascending: false })
+        .limit(20)
+        .returns<EventRow[]>(),
+      supabase
+        .from("import_runs")
+        .select("ran_at, ok, added, updated, message")
+        .eq("team_id", organiser.team_id)
+        .order("ran_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("import_runs")
+        .select("ran_at, ok, added, updated, message")
+        .eq("team_id", organiser.team_id)
+        .eq("ok", true)
+        .order("ran_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("checkin_links")
+        .select("token, expires_at")
+        .eq("team_id", organiser.team_id)
+        .is("revoked_at", null)
+        .gt("expires_at", nowIso())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      // Open actions per event, for the "N actions" links.
+      supabase
+        .from("tasks")
+        .select("event_id, show_from")
+        .eq("team_id", organiser.team_id)
+        .is("done_at", null)
+        .is("dismissed_at", null)
+        .not("event_id", "is", null),
+    ]);
+  const actionsFor = new Map<string, number>();
+  for (const t of openActions.data ?? [])
+    if (!t.show_from || t.show_from <= nowIso())
+      actionsFor.set(t.event_id!, (actionsFor.get(t.event_id!) ?? 0) + 1);
 
   if (today.error || upcoming.error || past.error)
     return <LoadError what="events" />;
@@ -148,12 +182,19 @@ export default async function EventsPage() {
           <div data-tour="today-event" className="space-y-3">
             {todays.map((e) => (
               <div key={e.id} className="relative">
-                {e.source_url && (
-                  <WebsiteLink
-                    url={e.source_url}
-                    className="absolute right-3 top-3 z-10 text-white/45 hover:text-white"
+                <span className="absolute right-3 top-3 z-10 flex items-center gap-1">
+                  <ActionsLink
+                    eventId={e.id}
+                    count={actionsFor.get(e.id) ?? 0}
+                    className="bg-white/10 text-white hover:bg-white/20"
                   />
-                )}
+                  {e.source_url && (
+                    <WebsiteLink
+                      url={e.source_url}
+                      className="text-white/45 hover:text-white"
+                    />
+                  )}
+                </span>
                 <Link
                   href={`/events/${e.id}`}
                   className="block rounded-2xl bg-navy p-5 text-white shadow-sm hover:bg-navy-2"
@@ -180,37 +221,46 @@ export default async function EventsPage() {
         )}
       </section>
 
-      {next && <NextUp event={next} />}
+      {next && <NextUp event={next} actions={actionsFor.get(next.id) ?? 0} />}
 
       <EventList
         title="Upcoming"
         events={upcoming.data ?? []}
         empty="Nothing scheduled yet."
         nextId={next?.id}
+        actions={actionsFor}
       />
       <EventList
         title="Past"
         events={past.data ?? []}
         empty="No past events yet."
+        actions={actionsFor}
       />
     </div>
   );
 }
 
 // The next event after today, shown big so it's easy to find.
-function NextUp({ event: e }: { event: EventRow }) {
+function NextUp({ event: e, actions }: { event: EventRow; actions: number }) {
   return (
     <section data-tour="next-event">
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
         Next up
       </h2>
       <div className="relative">
-        {e.source_url && (
-          <WebsiteLink
-            url={e.source_url}
-            className="absolute bottom-4 right-4 z-10 text-stone-400 hover:text-navy"
+        <span className="absolute bottom-4 right-4 z-10 flex items-center gap-1">
+          <ActionsLink
+            eventId={e.id}
+            count={actions}
+            className="bg-pink/15 text-pink-ink hover:bg-pink/25"
           />
-        )}
+          {e.source_url && (
+            <WebsiteLink
+              url={e.source_url}
+              className="text-stone-400 hover:text-navy"
+            />
+          )}
+        </span>
         <Link
           href={`/events/${e.id}`}
           className="block rounded-2xl bg-white p-5 shadow-sm ring-2 ring-pink transition-transform hover:-translate-y-0.5"
@@ -242,7 +292,9 @@ function EventList({
   events,
   empty,
   nextId,
+  actions,
 }: {
+  actions?: Map<string, number>;
   title: string;
   events: EventRow[];
   empty: string;
@@ -287,6 +339,11 @@ function EventList({
                   {e.attendance[0]?.count ?? 0}
                 </div>
               </Link>
+              <ActionsLink
+                eventId={e.id}
+                count={actions?.get(e.id) ?? 0}
+                className="shrink-0 text-pink-ink/70 hover:text-pink-ink"
+              />
               {e.source_url ? (
                 <WebsiteLink
                   url={e.source_url}

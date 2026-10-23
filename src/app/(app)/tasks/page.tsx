@@ -22,7 +22,8 @@ import { GodOverview } from "./god-overview";
 import { CoreTeamTasks } from "./core-team-tasks";
 import { CORE_ROLE_LABEL, type CoreRole } from "@/lib/roles";
 
-export default async function TasksPage() {
+export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
+  const { event: onlyEvent } = await searchParams;
   const { supabase, organiser } = await requireOrganiser();
   const regionalStaff =
     organiser.role === "god" || organiser.role === "regional_lead";
@@ -197,9 +198,16 @@ export default async function TasksPage() {
   // Past events' follow-ups always show, plus the next 2 upcoming events;
   // later ones wait behind "Show more upcoming events".
   const upcomingGroups = groups.filter((g) => g.at && Date.parse(g.at) > now);
+  // Opened from an event ("3 actions →"): just that event's actions.
+  const focus =
+    typeof onlyEvent === "string"
+      ? (groups.find((g) => g.key === onlyEvent) ?? null)
+      : null;
   const laterKeys = new Set(upcomingGroups.slice(2).map((g) => g.key));
-  const shownGroups = groups.filter((g) => !laterKeys.has(g.key));
-  const laterGroups = groups.filter((g) => laterKeys.has(g.key));
+  const shownGroups = focus
+    ? [focus]
+    : groups.filter((g) => !laterKeys.has(g.key));
+  const laterGroups = focus ? [] : groups.filter((g) => laterKeys.has(g.key));
   const renderGroup = (g: (typeof groups)[number], n: number) => (
     <section
       key={g.key}
@@ -323,6 +331,16 @@ export default async function TasksPage() {
         </h2>
       )}
 
+      {focus && (
+        <p className="-mb-4 flex items-center justify-between gap-3 rounded-xl bg-cyan/15 px-3 py-2 text-sm text-navy">
+          <span>
+            Showing the actions for <b>{focus.title}</b>
+          </span>
+          <Link href="/tasks" className="font-semibold text-pink-ink">
+            Show all actions
+          </Link>
+        </p>
+      )}
       {shownGroups.map((g, n) => renderGroup(g, n))}
       <ShowMoreEvents count={laterGroups.length}>
         {laterGroups.map((g, n) => renderGroup(g, shownGroups.length + n))}

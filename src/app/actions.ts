@@ -946,3 +946,18 @@ export async function startActionEarly(
   revalidatePath("/tasks");
   return {};
 }
+
+// An event's own notes (organisers).
+export async function saveEventNotes(
+  eventId: string,
+  notes: string,
+): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  if (organiser.viewingAs || organiser.exampleMode) return {};
+  const { error } = await supabase
+    .from("events")
+    .update({ notes: notes.trim() ? notes.slice(0, 5000) : null })
+    .eq("id", eventId);
+  if (error) return { error: "Couldn't save." };
+  return {};
+}
