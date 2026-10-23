@@ -71,7 +71,7 @@ export function OrganiserTour({
       title: "Events come in by themselves",
       href: "/",
       target: "today-event,next-event",
-      body: "Your events are copied from activism.wtf automatically, so you never have to type them in.",
+      body: "Your events are copied from activism.wtf automatically, so you never have to type them in. Tap “activism.wtf ↗” on any event to open it on the We The Free website.",
     },
     {
       section: 0,

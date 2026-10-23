@@ -24,8 +24,26 @@ type EventRow = {
   venue: string | null;
   address: string | null;
   event_type: { name: string } | null;
+  source_url: string | null;
   attendance: { count: number }[];
 };
+
+// A small, quiet link to the event's page on the We The Free website.
+function WebsiteLink({ url, className }: { url: string; className: string }) {
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      title="Open on the We The Free website"
+      aria-label="Open on the We The Free website"
+      data-tour="website-link"
+      className={`rounded-md px-1.5 py-0.5 text-xs hover:underline ${className}`}
+    >
+      activism.wtf ↗
+    </a>
+  );
+}
 
 export default async function EventsPage() {
   const { supabase, organiser } = await requireOrganiser();
@@ -37,7 +55,7 @@ export default async function EventsPage() {
   const { start: todayStart, end: todayEnd } = dayBoundsUtc(todayInTz());
 
   const select =
-    "id, title, starts_at, ends_at, venue, address, event_type:event_types(name), attendance(count)";
+    "id, title, starts_at, ends_at, venue, address, source_url, event_type:event_types(name), attendance(count)";
 
   const [today, upcoming, past, lastRun, lastOk, teamLink] = await Promise.all([
     supabase
@@ -129,27 +147,34 @@ export default async function EventsPage() {
         ) : (
           <div data-tour="today-event" className="space-y-3">
             {todays.map((e) => (
-              <Link
-                key={e.id}
-                href={`/events/${e.id}`}
-                className="block rounded-2xl bg-navy p-5 text-white shadow-sm hover:bg-navy-2"
-              >
-                <p className="text-sm text-cyan">
-                  {formatTimeRange(e.starts_at, e.ends_at)}
-                  {e.venue || e.address ? ` · ${e.venue ?? e.address}` : ""}
-                </p>
-                <p className="mt-1 text-lg font-semibold leading-snug">
-                  {e.title}
-                </p>
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-sm text-white/80">
-                    {e.attendance[0]?.count ?? 0} here
-                  </span>
-                  <span className="rounded-lg bg-pink px-3 py-1.5 text-sm font-semibold text-navy">
-                    Take attendance →
-                  </span>
-                </div>
-              </Link>
+              <div key={e.id} className="relative">
+                {e.source_url && (
+                  <WebsiteLink
+                    url={e.source_url}
+                    className="absolute right-3 top-3 z-10 text-white/45 hover:text-white"
+                  />
+                )}
+                <Link
+                  href={`/events/${e.id}`}
+                  className="block rounded-2xl bg-navy p-5 text-white shadow-sm hover:bg-navy-2"
+                >
+                  <p className="text-sm text-cyan">
+                    {formatTimeRange(e.starts_at, e.ends_at)}
+                    {e.venue || e.address ? ` · ${e.venue ?? e.address}` : ""}
+                  </p>
+                  <p className="mt-1 text-lg font-semibold leading-snug">
+                    {e.title}
+                  </p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-sm text-white/80">
+                      {e.attendance[0]?.count ?? 0} here
+                    </span>
+                    <span className="rounded-lg bg-pink px-3 py-1.5 text-sm font-semibold text-navy">
+                      Take attendance →
+                    </span>
+                  </div>
+                </Link>
+              </div>
             ))}
           </div>
         )}
@@ -179,27 +204,35 @@ function NextUp({ event: e }: { event: EventRow }) {
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
         Next up
       </h2>
-      <Link
-        href={`/events/${e.id}`}
-        className="block rounded-2xl bg-white p-5 shadow-sm ring-2 ring-pink transition-transform hover:-translate-y-0.5"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-sm font-medium text-pink-ink">
-            {formatEventDate(e.starts_at)} ·{" "}
-            {formatTimeRange(e.starts_at, e.ends_at)}
+      <div className="relative">
+        {e.source_url && (
+          <WebsiteLink
+            url={e.source_url}
+            className="absolute bottom-4 right-4 z-10 text-stone-400 hover:text-navy"
+          />
+        )}
+        <Link
+          href={`/events/${e.id}`}
+          className="block rounded-2xl bg-white p-5 shadow-sm ring-2 ring-pink transition-transform hover:-translate-y-0.5"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <p className="text-sm font-medium text-pink-ink">
+              {formatEventDate(e.starts_at)} ·{" "}
+              {formatTimeRange(e.starts_at, e.ends_at)}
+            </p>
+            <span className="shrink-0 rounded-full bg-yellow px-2.5 py-0.5 text-xs font-semibold text-navy">
+              {daysUntilLabel(e.starts_at)}
+            </span>
+          </div>
+          <p className="mt-1 text-lg font-semibold leading-snug">{e.title}</p>
+          <p className="mt-0.5 text-sm text-stone-500">
+            {[e.event_type?.name, e.venue ?? e.address]
+              .filter(Boolean)
+              .join(" · ") || "No details yet"}
           </p>
-          <span className="shrink-0 rounded-full bg-yellow px-2.5 py-0.5 text-xs font-semibold text-navy">
-            {daysUntilLabel(e.starts_at)}
-          </span>
-        </div>
-        <p className="mt-1 text-lg font-semibold leading-snug">{e.title}</p>
-        <p className="mt-0.5 text-sm text-stone-500">
-          {[e.event_type?.name, e.venue ?? e.address]
-            .filter(Boolean)
-            .join(" · ") || "No details yet"}
-        </p>
-        <p className="mt-3 text-sm font-semibold text-navy">Open event →</p>
-      </Link>
+          <p className="mt-3 text-sm font-semibold text-navy">Open event →</p>
+        </Link>
+      </div>
     </section>
   );
 }
@@ -225,10 +258,13 @@ function EventList({
       ) : (
         <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
           {events.map((e) => (
-            <li key={e.id}>
+            <li
+              key={e.id}
+              className={`flex items-center hover:bg-stone-50 ${e.id === nextId ? "bg-pink/5" : ""}`}
+            >
               <Link
                 href={`/events/${e.id}`}
-                className={`flex items-center gap-4 px-4 py-3.5 hover:bg-stone-50 ${e.id === nextId ? "bg-pink/5" : ""}`}
+                className="flex min-w-0 flex-1 items-center gap-4 py-3.5 pl-4 pr-2"
               >
                 <div className="w-16 shrink-0 text-sm font-medium text-stone-500">
                   {formatEventDate(e.starts_at)}
@@ -251,6 +287,14 @@ function EventList({
                   {e.attendance[0]?.count ?? 0}
                 </div>
               </Link>
+              {e.source_url ? (
+                <WebsiteLink
+                  url={e.source_url}
+                  className="mr-2 shrink-0 text-stone-300 hover:text-navy"
+                />
+              ) : (
+                <span className="w-2" />
+              )}
             </li>
           ))}
         </ul>
