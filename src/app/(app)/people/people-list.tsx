@@ -214,7 +214,7 @@ function FirstTimerChip({
   const [hidden, setHidden] = useState(false);
   if (hidden) return null;
   return (
-    <span className="group/ft flex shrink-0 items-center gap-0.5 rounded-full bg-yellow py-0.5 pl-2 pr-1 text-xs font-semibold text-navy">
+    <span className="group/ft relative shrink-0 rounded-full bg-yellow px-2 py-0.5 text-xs font-semibold text-navy">
       First-timer
       <button
         type="button"
@@ -229,14 +229,15 @@ function FirstTimerChip({
             if (r.error) setHidden(false);
           });
         }}
-        className="flex h-4 w-4 items-center justify-center rounded-full opacity-0 transition-opacity hover:bg-navy/10 focus:opacity-100 group-hover/ft:opacity-100 [@media(hover:none)]:opacity-60"
+        // Sits on the chip's top-right corner, so the chip keeps its size.
+        className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-navy text-white opacity-0 shadow ring-2 ring-white transition-opacity hover:bg-navy-2 focus:opacity-100 group-hover/ft:opacity-100 [@media(hover:none)]:opacity-70"
       >
         <svg
           viewBox="0 0 20 20"
-          className="h-2.5 w-2.5"
+          className="h-2 w-2"
           fill="none"
           stroke="currentColor"
-          strokeWidth="3"
+          strokeWidth="3.5"
           aria-hidden
         >
           <path d="M6 6l8 8M14 6l-8 8" strokeLinecap="round" />
