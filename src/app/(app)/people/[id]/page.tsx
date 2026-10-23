@@ -309,11 +309,11 @@ export default async function PersonPage({
           className="mt-5 scroll-mt-24 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
         >
           <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-            Connect a regular volunteer to help support {person.first_name}
+            Connect a regular volunteer to help {person.first_name} feel welcome
           </h2>
           <p className="mb-3 mt-0.5 text-sm text-stone-500">
-            They&apos;ll welcome {person.first_name} and invite them back.
-            Anyone on New member support can be picked.
+            They&apos;ll check in and invite {person.first_name} back. Anyone on
+            New member support can be picked.
           </p>
           <BuddyPicker
             key={myPairing?.id ?? "none"}
