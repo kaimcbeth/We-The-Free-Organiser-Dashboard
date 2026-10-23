@@ -13,6 +13,7 @@ type Step = {
   title: string;
   body: string;
   href?: string; // page to show for this card
+  eventPage?: boolean; // show today's (or the next) event's own page
   target?: string; // data-tour="…" element(s) to spotlight, first found wins
 };
 
@@ -41,7 +42,9 @@ export function OrganiserTour({
   const pathname = usePathname();
   // Where the highlighted element is on screen (null = no spotlight).
   const [spot, setSpot] = useState<{ key: string; rect: DOMRect } | null>(null);
-  const visited = useRef(new Set<number>());
+  // Pages already opened for the current card (so redirects like
+  // Events → Calendar don't loop); cleared when the card changes.
+  const pushed = useRef({ step: -1, keys: new Set<string>() });
 
   const steps: Step[] = [
     {
@@ -74,8 +77,8 @@ export function OrganiserTour({
       icon: "✅",
       tone: "bg-pink",
       title: "Taking attendance",
-      href: "/",
-      target: "today-event,next-event",
+      eventPage: true,
+      target: "checkin-list",
       body: "On the day, open the event and tap names as people arrive. The people most likely to come are at the top, and someone new is one tap away.",
     },
     {
@@ -191,17 +194,36 @@ export function OrganiserTour({
     );
   };
 
-  // Take them to the card's page (once per card, so redirects like
-  // Events → Calendar don't loop), then find and spotlight its element.
+  // Take them to the card's page, then find and spotlight its element.
   const step0 = steps[i];
-  const href = open && !choosing ? step0.href : undefined;
-  const target = open && !choosing ? step0.target : undefined;
+  const active = open && !choosing;
+  const href = active ? step0.href : undefined;
+  const eventPage = active && !!step0.eventPage;
+  const target = active ? step0.target : undefined;
   useEffect(() => {
-    if (href && !visited.current.has(i) && pathname !== href) {
-      visited.current.add(i);
-      router.push(href);
-    }
-  }, [i, href, pathname, router]);
+    if (pushed.current.step !== i)
+      pushed.current = { step: i, keys: new Set() };
+    const go = (to: string) => {
+      if (pushed.current.keys.has(to)) return;
+      pushed.current.keys.add(to);
+      router.push(to);
+    };
+    if (href && pathname !== href) go(href);
+    if (!eventPage || pathname.startsWith("/events/")) return;
+    // The event page: follow today's (or the next) event's link on Events.
+    if (pathname !== "/") return go("/");
+    let tries = 0;
+    const look = window.setInterval(() => {
+      const link = document.querySelector<HTMLAnchorElement>(
+        '[data-tour="today-event"] a, [data-tour="next-event"] a',
+      );
+      if (link?.getAttribute("href")) {
+        window.clearInterval(look);
+        go(link.getAttribute("href")!);
+      } else if (++tries > 25) window.clearInterval(look);
+    }, 120);
+    return () => window.clearInterval(look);
+  }, [i, href, eventPage, pathname, router]);
   // Only trust a measurement taken for this card on this page.
   const spotKey = `${target}|${pathname}`;
   const rect = target && spot?.key === spotKey ? spot.rect : null;
@@ -211,7 +233,10 @@ export function OrganiserTour({
     const measure = () => {
       if (!el) return;
       const r = el.getBoundingClientRect();
-      if (r.width || r.height) setSpot({ key: spotKey, rect: r });
+      // Long lists: just the top part, leaving room for the card.
+      const cap = window.innerHeight * 0.45;
+      const rect = r.height > cap ? new DOMRect(r.x, r.y, r.width, cap) : r;
+      if (r.width || r.height) setSpot({ key: spotKey, rect });
     };
     const find = window.setInterval(() => {
       const found =
@@ -222,7 +247,12 @@ export function OrganiserTour({
       if (found && found.getBoundingClientRect().height > 0) {
         window.clearInterval(find);
         el = found;
-        el.scrollIntoView({ block: "center", inline: "center" });
+        const tall =
+          found.getBoundingClientRect().height > window.innerHeight * 0.45;
+        el.scrollIntoView({
+          block: tall ? "start" : "center",
+          inline: "center",
+        });
         window.setTimeout(measure, 350);
       } else if (++tries > 25) window.clearInterval(find);
     }, 120);

@@ -340,8 +340,12 @@ export function CheckInList({
           )}
         </div>
       ) : (
-        groups.map((g) => (
-          <div key={g.label || "all"} className="mb-4">
+        groups.map((g, n) => (
+          <div
+            key={g.label || "all"}
+            data-tour={n === 0 ? "checkin-list" : undefined}
+            className="mb-4 scroll-mt-24"
+          >
             {g.label && (
               <h3 className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-stone-500">
                 {g.label}
