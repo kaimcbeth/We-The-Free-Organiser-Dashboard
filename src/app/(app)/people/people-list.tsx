@@ -1,5 +1,6 @@
 "use client";
 
+import { useFindShortcut } from "@/lib/use-find-shortcut";
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createPerson, type FormState } from "@/app/actions";
@@ -38,6 +39,7 @@ export function PeopleList({
   homeTeamId?: string;
 }) {
   const [query, setQuery] = useState("");
+  const searchRef = useFindShortcut();
   const [adding, setAdding] = useState(false);
 
   const visible = useMemo(() => {
@@ -56,6 +58,7 @@ export function PeopleList({
     <div className="mt-5">
       <div className="flex gap-2">
         <input
+          ref={searchRef}
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}

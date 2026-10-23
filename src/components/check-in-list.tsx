@@ -1,5 +1,6 @@
 "use client";
 
+import { useFindShortcut } from "@/lib/use-find-shortcut";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { inputClass } from "@/components/form";
 import { Avatar } from "@/components/avatar";
@@ -64,6 +65,7 @@ export function CheckInList({
   const [checkedIn, setCheckedIn] = useState(() => new Set(initialCheckedIn));
   const [pending, setPending] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState("");
+  const searchRef = useFindShortcut();
   const [onlyHere, setOnlyHere] = useState(false);
   const [error, setError] = useState("");
   const [adding, setAdding] = useState(false);
@@ -215,6 +217,7 @@ export function CheckInList({
         className={`sticky ${stickyTopClass} z-[5] -mx-4 mt-5 bg-background/95 px-4 pb-3 pt-1 backdrop-blur`}
       >
         <input
+          ref={searchRef}
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}

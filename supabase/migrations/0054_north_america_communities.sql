@@ -1,0 +1,4 @@
+-- (Applied as north_america_communities.) The 48 We The Free teams in Canada
+-- and the USA listed on activism.wtf/teams (Calgary already existed), in the
+-- North America region with their own time zones and locations. Mexican teams
+-- are left for Latin America.
