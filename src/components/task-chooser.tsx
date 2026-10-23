@@ -45,8 +45,10 @@ export function TaskChooser({
   });
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
-  const perWeek = (kind: string) =>
-    (kinds.find((k) => k.kind === kind)?.estimate ?? 0) * setup.eventsPerWeek;
+  const perWeek = (kind: string) => {
+    const k = kinds.find((x) => x.kind === kind);
+    return (k?.estimate ?? 0) * (k?.timesPerWeek ?? setup.eventsPerWeek);
+  };
   const total = [...on].reduce((n, k) => n + perWeek(k), 0);
 
   function pickBudget(minutes: number) {
@@ -61,6 +63,7 @@ export function TaskChooser({
       "promote_whatsapp",
       "post_photos",
       "promote_facebook_groups",
+      "promote_fb_groups_weekly",
       "facebook_event",
       "instagram_stories",
       "promote_instagram",
@@ -70,7 +73,7 @@ export function TaskChooser({
     const rank = (kind: string) =>
       PRIORITY.includes(kind) ? PRIORITY.indexOf(kind) : PRIORITY.length;
     for (const k of [...kinds].sort((a, b) => rank(a.kind) - rank(b.kind))) {
-      const cost = k.estimate * setup.eventsPerWeek;
+      const cost = k.estimate * (k.timesPerWeek ?? setup.eventsPerWeek);
       if (next.size === 0 || used + cost <= minutes) {
         next.add(k.kind);
         used += cost;
@@ -159,6 +162,8 @@ export function TaskChooser({
                 before: "Before",
                 during: "On the day",
                 after: "After",
+                weekly: "Weekly",
+                monthly: "Monthly",
               } as const;
               const row = (k: SetupKind) => {
                 const checked = on.has(k.kind);
@@ -226,7 +231,13 @@ export function TaskChooser({
                   </li>
                 );
               };
-              const order = { before: 0, during: 1, after: 2 };
+              const order = {
+                weekly: 0,
+                monthly: 1,
+                before: 2,
+                during: 3,
+                after: 4,
+              };
               const sorted = [...kinds].sort(
                 (a, b) => order[a.when] - order[b.when],
               );
@@ -276,6 +287,7 @@ export function TaskChooser({
                           label: String(draft.minutes),
                           blurb: null,
                           when: draft.when,
+                          timesPerWeek: null,
                           custom: true,
                         },
                       ]);

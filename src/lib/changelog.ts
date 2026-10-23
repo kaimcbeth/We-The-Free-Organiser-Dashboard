@@ -15,6 +15,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "New weekly task: “Upcoming events shared in local vegan Facebook groups”, every Monday. It's part of the Promo Lead's list, and can be switched off in Choose tasks.",
+      },
+      {
+        level: "organiser",
         text: "A blue Messenger button opens a Facebook chat with someone, once their Facebook profile link is added to their contact details.",
       },
       {

@@ -6,7 +6,8 @@ export type SetupKind = {
   estimate: number; // minutes per event (middle of a range)
   label: string; // e.g. "5" or "5–10"
   blurb: string | null; // very short description
-  when: "before" | "during" | "after";
+  when: "before" | "during" | "after" | "weekly" | "monthly";
+  timesPerWeek: number | null; // weekly/monthly tasks; null = once per event
   custom: boolean; // made by this community's organisers
 };
 
@@ -28,7 +29,7 @@ export async function loadTaskSetup(
     supabase
       .from("task_kinds")
       .select(
-        "kind, title, blurb, estimate_minutes, estimate_max_minutes, anchor, due_after_hours, team_id",
+        "kind, title, blurb, estimate_minutes, estimate_max_minutes, anchor, due_after_hours, team_id, schedule",
       )
       .is("archived_at", null)
       .eq("audience", "community")
@@ -60,11 +61,17 @@ export async function loadTaskSetup(
       ? `${k.estimate_minutes}–${k.estimate_max_minutes}`
       : String(k.estimate_minutes),
     when:
-      k.anchor === "end"
-        ? "after"
-        : k.due_after_hours > 0
-          ? "during"
-          : "before",
+      k.schedule === "weekly"
+        ? "weekly"
+        : k.schedule === "monthly"
+          ? "monthly"
+          : k.anchor === "end"
+            ? "after"
+            : k.due_after_hours > 0
+              ? "during"
+              : "before",
+    timesPerWeek:
+      k.schedule === "weekly" ? 1 : k.schedule === "monthly" ? 0.25 : null,
     custom: !!k.team_id,
     blurb: k.blurb ?? null,
   }));

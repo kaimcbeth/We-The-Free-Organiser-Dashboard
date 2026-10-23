@@ -1,0 +1,3 @@
+-- (Applied as weekly_fb_groups_task, weekly_tasks_not_late.) Weekly Promo Lead
+-- task "Upcoming events shared in local vegan Facebook groups" (Mondays).
+-- Weekly/monthly tasks made part-way through a period get at least 2 days.
