@@ -130,16 +130,18 @@ export default async function PersonPage({
   const { data: related } = ids.length
     ? await supabase
         .from("people")
-        .select("id, first_name, last_name")
+        .select("id, first_name, last_name, photo_updated_at")
         .in("id", ids)
     : {
         data: [] as {
           id: string;
           first_name: string;
           last_name: string | null;
+          photo_updated_at: string | null;
         }[],
       };
   const nameOf = new Map((related ?? []).map((p) => [p.id, fullName(p)]));
+  const relatedPhotos = await signPhotos(supabase, related ?? []);
   const buddyOptions = (buddies ?? []).map((b) => ({
     id: b.id,
     name: fullName(b),
@@ -322,6 +324,7 @@ export default async function PersonPage({
                 ? {
                     buddyId: myPairing.buddy_id,
                     name: nameOf.get(myPairing.buddy_id) ?? "Their buddy",
+                    photoUrl: relatedPhotos[myPairing.buddy_id] ?? null,
                     since: myPairing.created_at,
                     via: myPairing.via,
                   }

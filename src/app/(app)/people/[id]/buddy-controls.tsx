@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { assignBuddy, setIsBuddy } from "@/app/actions";
 import { formatEventDate } from "@/lib/time";
+import { Avatar } from "@/components/avatar";
 
 type Option = { id: string; name: string };
 
@@ -84,7 +85,13 @@ export function BuddyPicker({
 }: {
   tz: string;
   newcomerId: string;
-  current: { buddyId: string; name: string; since: string; via: string } | null;
+  current: {
+    buddyId: string;
+    name: string;
+    photoUrl: string | null;
+    since: string;
+    via: string;
+  } | null;
   options: Option[];
 }) {
   const [value, setValue] = useState(current?.buddyId ?? "");
@@ -104,16 +111,21 @@ export function BuddyPicker({
   return (
     <div className="text-sm">
       {current && (
-        <p className="mb-2 text-stone-600">
-          <Link
-            href={`/people/${current.buddyId}`}
-            className="font-medium text-stone-900 hover:underline"
-          >
-            {current.name}
-          </Link>{" "}
-          since {formatEventDate(current.since, tz)}
-          {current.via === "claimed" ? " (they offered)" : ""}
-        </p>
+        <div className="mb-3 flex items-center gap-2.5 text-stone-600">
+          <Link href={`/people/${current.buddyId}`} className="shrink-0">
+            <Avatar name={current.name} url={current.photoUrl} size={32} />
+          </Link>
+          <p>
+            <Link
+              href={`/people/${current.buddyId}`}
+              className="font-medium text-stone-900 hover:underline"
+            >
+              {current.name}
+            </Link>{" "}
+            since {formatEventDate(current.since, tz)}
+            {current.via === "claimed" ? " (they offered)" : ""}
+          </p>
+        </div>
       )}
       <div className="flex gap-2">
         <select
