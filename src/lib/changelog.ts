@@ -27,6 +27,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "god",
+        text: "Tasks with “All communities” in God Mode is now a compact overview by region: each region's Regional Support Lead, how many communities they've checked in with this month, who's waiting to hear back, and a one-line status per community.",
+      },
+      {
+        level: "god",
         text: "teams.connect_waiting_since, tasks.outcome ('replied' | 'no_reply'); complete_check_in and resolve_check_in_wait RPCs; create_monthly_tasks skips regional check-ins for waiting teams.",
       },
     ],

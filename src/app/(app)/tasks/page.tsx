@@ -9,6 +9,7 @@ import { formatEventDate } from "@/lib/time";
 import { loadConnectContext } from "@/lib/connect";
 import { ConnectIdeas } from "@/components/connect-ideas";
 import { RegionTasks } from "./region-tasks";
+import { GodOverview } from "./god-overview";
 import { CoreTeamTasks } from "./core-team-tasks";
 import { CORE_ROLE_LABEL, type CoreRole } from "@/lib/roles";
 
@@ -18,6 +19,9 @@ export default async function TasksPage() {
     organiser.role === "god" || organiser.role === "regional_lead";
   // Regional Support Leads only get their own tasks (the communities' tasks
   // are for the communities). God Mode sees both.
+  // God Mode with "All communities": a light overview by region.
+  if (organiser.role === "god" && organiser.allCommunities)
+    return <GodOverview supabase={supabase} teams={organiser.teams} />;
   if (organiser.role === "regional_lead" || organiser.allCommunities)
     return (
       <RegionTasks
