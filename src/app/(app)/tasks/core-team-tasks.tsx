@@ -22,8 +22,10 @@ export function CoreTeamTasks({
 }) {
   if (crew.length === 0) return null;
   return (
-    <section>
-      <h2 className="font-semibold">Core Team and helpers</h2>
+    <section className="rounded-3xl bg-cyan/10 p-4 ring-1 ring-cyan/30 sm:p-5">
+      <h2 className="flex items-center gap-2 font-semibold">
+        <span aria-hidden>🤝</span> Core Team and helpers
+      </h2>
       <p className="mb-3 text-sm text-stone-500">
         What they&apos;re looking after. Nothing to do here unless they ask for
         a hand.

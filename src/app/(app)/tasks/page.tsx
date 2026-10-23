@@ -198,7 +198,11 @@ export default async function TasksPage() {
         </section>
       )}
 
-      <CoreTeamTasks crew={crew} now={now} tz={common.tz} />
+      {groups.length > 0 && (
+        <h2 className="-mb-4 border-t border-black/10 pt-6 text-lg font-semibold tracking-tight">
+          Your tasks
+        </h2>
+      )}
 
       {groups.map((g, n) => (
         <section
@@ -231,6 +235,9 @@ export default async function TasksPage() {
           </ul>
         </section>
       ))}
+
+      {/* What the Core Team and helpers have on: kept apart from your own. */}
+      <CoreTeamTasks crew={crew} now={now} tz={common.tz} />
 
       {tasks.later.length > 0 && (
         <section>
