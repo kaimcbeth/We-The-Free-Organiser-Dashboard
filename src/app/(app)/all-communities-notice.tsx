@@ -8,6 +8,7 @@ const REGION_WIDE = [
   "/insights",
   "/calendar",
   "/roles",
+  "/people",
   "/facebook-groups",
   "/test-accounts",
   "/events/",

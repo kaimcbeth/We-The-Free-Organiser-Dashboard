@@ -93,7 +93,6 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
           </div>
         </div>
         <NavLinks
-          canManageRoles={organiser.role !== "core_team"}
           openTasks={openTasks ?? 0}
           isGod={organiser.role === "god"}
           whatsNew={

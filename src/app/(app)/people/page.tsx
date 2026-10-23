@@ -8,6 +8,9 @@ import {
 } from "@/lib/engagement";
 import { requireOrganiser } from "@/lib/organiser";
 import { GIVES, type Access, type CoreRole } from "@/lib/roles";
+import type { RegionRole } from "./people-list";
+
+const ROLE_ORDER: Access[] = ["god", "regional_lead", "organiser", "core_team"];
 import { signPhotos } from "@/lib/photos";
 import { LoadError } from "@/components/load-error";
 import { PeopleList, type PersonRow } from "./people-list";
@@ -38,7 +41,7 @@ type Row = Omit<
 export default async function PeoplePage({
   searchParams,
 }: PageProps<"/people">) {
-  const { deleted } = await searchParams;
+  const { deleted, show } = await searchParams;
   // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
   const now = Date.now();
   const { supabase, organiser } = await requireOrganiser();
@@ -130,6 +133,75 @@ export default async function PeoplePage({
   }
   const connected = people.filter((p) => p.connected).length;
 
+  // "All communities": everyone with a role across them, for "Has a role".
+  let regionRoles: RegionRole[] | null = null;
+  if (organiser.allCommunities) {
+    const teamIds = organiser.teams.map((t) => t.id);
+    const teamByName = new Map(organiser.teams.map((t) => [t.name, t]));
+    const short = (n: string) => n.replace(/, (Australia|New Zealand)$/, "");
+    const { data: pendingRows } = await supabase
+      .from("people")
+      .select(
+        "id, first_name, last_name, team_id, pending_role, pending_team_id",
+      )
+      .not("pending_role", "is", null)
+      .is("user_id", null)
+      .in("team_id", teamIds);
+    const connectedRoles = (
+      (roleRows as
+        | {
+            user_id: string;
+            person_id: string | null;
+            name: string;
+            role: Access;
+            team: string | null;
+            region: string | null;
+          }[]
+        | null) ?? []
+    ).filter(
+      (r) =>
+        (r.role !== "god" || organiser.role === "god") &&
+        (r.role === "regional_lead" ||
+          r.role === "god" ||
+          (r.team && teamByName.has(r.team))),
+    );
+    regionRoles = [
+      ...connectedRoles.map((r) => ({
+        key: r.user_id,
+        personId: r.person_id,
+        teamId: r.team ? (teamByName.get(r.team)?.id ?? null) : null,
+        name: r.name,
+        role: r.role,
+        where:
+          r.role === "god"
+            ? "All regions"
+            : r.role === "regional_lead"
+              ? (r.region ?? "")
+              : short(r.team ?? ""),
+        pending: false,
+      })),
+      ...(pendingRows ?? []).map((p) => {
+        const t = organiser.teams.find(
+          (x) => x.id === (p.pending_team_id ?? p.team_id),
+        );
+        return {
+          key: p.id,
+          personId: p.id,
+          teamId: p.team_id,
+          name: [p.first_name, p.last_name].filter(Boolean).join(" "),
+          role: p.pending_role as Access,
+          where: t ? short(t.name) : "",
+          pending: true,
+        };
+      }),
+    ].sort(
+      (a, b) =>
+        ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role) ||
+        a.where.localeCompare(b.where) ||
+        a.name.localeCompare(b.name),
+    );
+  }
+
   return (
     <div>
       <h1 className="text-2xl font-semibold tracking-tight">People</h1>
@@ -143,6 +215,12 @@ export default async function PeoplePage({
         </p>
       )}
       <PeopleList
+        initialFilter={
+          show === "roles" || show === "newcomers" || show === "drift"
+            ? show
+            : "all"
+        }
+        regionRoles={regionRoles}
         people={people}
         gives={GIVES[organiser.role]}
         regions={regions ?? []}

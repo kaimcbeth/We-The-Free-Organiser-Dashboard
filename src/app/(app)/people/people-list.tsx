@@ -7,6 +7,7 @@ import { createPerson, setAttendedBefore, type FormState } from "@/app/actions";
 import { Field, inputClass } from "@/components/form";
 import { Avatar } from "@/components/avatar";
 import { RolePicker } from "@/components/role-picker";
+import { RoleChip } from "@/components/role-chip";
 import { MessengerButton } from "@/components/messenger-button";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import type { Access, CoreRole } from "@/lib/roles";
@@ -44,7 +45,12 @@ export function PeopleList({
   homeTeamId,
   withContact = false,
   tz,
+  initialFilter = "all",
+  regionRoles = null,
 }: {
+  initialFilter?: Filter;
+  // "All communities": everyone with a role across them (for "Has a role").
+  regionRoles?: RegionRole[] | null;
   withContact?: boolean;
   tz: string;
   people: PersonRow[];
@@ -56,18 +62,29 @@ export function PeopleList({
   const [query, setQuery] = useState("");
   const searchRef = useFindShortcut();
   const [adding, setAdding] = useState(false);
+  const [filter, setFilter] = useState<Filter>(initialFilter);
+
+  const counts = useMemo(() => {
+    const c = { all: people.length, roles: 0, newcomers: 0, drift: 0 };
+    for (const p of people)
+      for (const f of FILTERS) if (f.id !== "all" && f.match(p)) c[f.id]++;
+    if (regionRoles) c.roles = regionRoles.length;
+    return c;
+  }, [people, regionRoles]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return people;
-    return people.filter((p) =>
+    const f = FILTERS.find((x) => x.id === filter)!;
+    const shown = filter === "all" ? people : people.filter(f.match);
+    if (!q) return shown;
+    return shown.filter((p) =>
       [p.first_name, p.last_name, p.suburb, p.email]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
         .includes(q),
     );
-  }, [people, query]);
+  }, [people, query, filter]);
 
   return (
     <div className="mt-5">
@@ -96,146 +113,254 @@ export function PeopleList({
         </button>
       </div>
 
-      {adding && (
-        <AddPersonForm
-          withContact={withContact}
-          initialName={query}
-          onDone={() => {
-            setAdding(false);
-            setQuery("");
-          }}
-        />
-      )}
-
-      {visible.length === 0 ? (
-        <p className="mt-6 text-center text-sm text-stone-500">
-          {people.length === 0 ? (
-            "No one in the list yet."
-          ) : (
-            <>
-              No one matches “{query}”.{" "}
-              {!adding && (
-                <button
-                  onClick={() => setAdding(true)}
-                  className="font-semibold text-pink-ink"
-                >
-                  Add them
-                </button>
-              )}
-            </>
-          )}
-        </p>
-      ) : (
-        <ul
-          data-tour="people-list"
-          className="mt-4 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5"
-        >
-          {visible.map((p) => (
-            <li
-              key={p.id}
-              className="flex items-center border-b border-black/5 last:border-0 hover:bg-stone-50"
+      <div
+        className="mt-3 flex flex-wrap gap-1.5"
+        role="tablist"
+        aria-label="Show"
+      >
+        {FILTERS.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            role="tab"
+            aria-selected={filter === f.id}
+            onClick={() => setFilter(f.id)}
+            className={`rounded-full px-3 py-1 text-sm font-medium ring-1 transition-colors ${
+              filter === f.id
+                ? "bg-navy text-white ring-navy"
+                : "bg-white text-stone-600 ring-stone-300 hover:bg-stone-50"
+            }`}
+          >
+            {f.label}{" "}
+            <span
+              className={filter === f.id ? "text-white/60" : "text-stone-400"}
             >
-              <Link
-                href={`/people/${p.id}`}
-                data-tour={`person-${p.first_name.toLowerCase()}`}
-                className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 pr-2"
-              >
-                <Avatar
-                  name={[p.first_name, p.last_name].filter(Boolean).join(" ")}
-                  url={p.photoUrl}
-                  size={40}
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2 font-medium">
-                    <span className="truncate">
-                      {[p.first_name, p.last_name].filter(Boolean).join(" ")}
-                    </span>
-                    <span
-                      className={`h-2 w-2 shrink-0 rounded-full ${p.connected ? "bg-cyan" : "bg-stone-300"}`}
-                      title={
-                        p.connected ? "Account connected" : "No account yet"
-                      }
-                      aria-label={
-                        p.connected ? "Account connected" : "No account yet"
-                      }
-                    />
-                    {p.drift && (
-                      <span
-                        title={driftText(p.drift)}
-                        className="shrink-0 rounded-full bg-pink/25 px-2 py-0.5 text-xs font-semibold text-pink-ink"
-                      >
-                        Not seen in a while
-                      </span>
-                    )}
-                    {p.status === "occasional" && (
-                      <span
-                        title="Has been around a while and comes now and then"
-                        className="shrink-0 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-800"
-                      >
-                        Occasional
-                      </span>
-                    )}
-                    {(p.status === "first_timer" ||
-                      p.status === "newcomer") && (
-                      <FirstTimerChip
-                        personId={p.id}
-                        name={p.first_name}
-                        events={p.events}
-                        recent={p.recent}
-                      />
-                    )}
-                  </p>
-                  <p className="truncate text-sm text-stone-500">
-                    {[p.suburb, p.email, p.phone].filter(Boolean).join(" · ") ||
-                      (p.facebook_url ? "Facebook" : "No details yet")}
-                  </p>
-                </div>
-              </Link>
-              {(p.facebook_url || p.phone) && (
-                <span className="mr-2 flex shrink-0 gap-1">
-                  <WhatsAppButton phone={p.phone} tz={tz} small />
-                  <MessengerButton facebookUrl={p.facebook_url} small />
-                </span>
+              {counts[f.id]}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {filter === "roles" && regionRoles ? (
+        <RegionRoleList rows={regionRoles} query={query} />
+      ) : (
+        <>
+          {adding && (
+            <AddPersonForm
+              withContact={withContact}
+              initialName={query}
+              onDone={() => {
+                setAdding(false);
+                setQuery("");
+              }}
+            />
+          )}
+
+          {visible.length === 0 ? (
+            <p className="mt-6 text-center text-sm text-stone-500">
+              {people.length === 0 ? (
+                "No one in the list yet."
+              ) : (
+                <>
+                  No one matches “{query}”.{" "}
+                  {!adding && (
+                    <button
+                      onClick={() => setAdding(true)}
+                      className="font-semibold text-pink-ink"
+                    >
+                      Add them
+                    </button>
+                  )}
+                </>
               )}
-              <RolePicker
-                personId={p.id}
-                firstName={p.first_name}
-                connected={p.connected}
-                current={p.role}
-                pending={p.rolePending}
-                leads={p.leads}
-                communities={communities}
-                homeTeamId={homeTeamId}
-                roleTeamId={p.roleTeamId}
-                phone={p.phone ?? ""}
-                email={p.email ?? ""}
-                gives={gives}
-                regions={regions}
-                compact
-              />
-              <Link
-                href={`/people/${p.id}`}
-                className="w-20 shrink-0 py-3 pr-4 text-right"
-              >
-                <div>
-                  <p className="text-sm font-semibold tabular-nums">
-                    {p.events}
-                  </p>
-                  <p className="text-xs text-stone-500">
-                    {p.events === 1 ? "event" : "events"}
-                  </p>
-                  {p.engagement && (
-                    <span className="mt-1 flex justify-end">
-                      <EngagementBar e={p.engagement} />
+            </p>
+          ) : (
+            <ul
+              data-tour="people-list"
+              className="mt-4 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5"
+            >
+              {visible.map((p) => (
+                <li
+                  key={p.id}
+                  className="flex items-center border-b border-black/5 last:border-0 hover:bg-stone-50"
+                >
+                  <Link
+                    href={`/people/${p.id}`}
+                    data-tour={`person-${p.first_name.toLowerCase()}`}
+                    className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 pr-2"
+                  >
+                    <Avatar
+                      name={[p.first_name, p.last_name]
+                        .filter(Boolean)
+                        .join(" ")}
+                      url={p.photoUrl}
+                      size={40}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="flex items-center gap-2 font-medium">
+                        <span className="truncate">
+                          {[p.first_name, p.last_name]
+                            .filter(Boolean)
+                            .join(" ")}
+                        </span>
+                        <span
+                          className={`h-2 w-2 shrink-0 rounded-full ${p.connected ? "bg-cyan" : "bg-stone-300"}`}
+                          title={
+                            p.connected ? "Account connected" : "No account yet"
+                          }
+                          aria-label={
+                            p.connected ? "Account connected" : "No account yet"
+                          }
+                        />
+                        {p.drift && (
+                          <span
+                            title={driftText(p.drift)}
+                            className="shrink-0 rounded-full bg-pink/25 px-2 py-0.5 text-xs font-semibold text-pink-ink"
+                          >
+                            Not seen in a while
+                          </span>
+                        )}
+                        {p.status === "occasional" && (
+                          <span
+                            title="Has been around a while and comes now and then"
+                            className="shrink-0 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-800"
+                          >
+                            Occasional
+                          </span>
+                        )}
+                        {(p.status === "first_timer" ||
+                          p.status === "newcomer") && (
+                          <FirstTimerChip
+                            personId={p.id}
+                            name={p.first_name}
+                            events={p.events}
+                            recent={p.recent}
+                          />
+                        )}
+                      </p>
+                      <p className="truncate text-sm text-stone-500">
+                        {[p.suburb, p.email, p.phone]
+                          .filter(Boolean)
+                          .join(" · ") ||
+                          (p.facebook_url ? "Facebook" : "No details yet")}
+                      </p>
+                    </div>
+                  </Link>
+                  {(p.facebook_url || p.phone) && (
+                    <span className="mr-2 flex shrink-0 gap-1">
+                      <WhatsAppButton phone={p.phone} tz={tz} small />
+                      <MessengerButton facebookUrl={p.facebook_url} small />
                     </span>
                   )}
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+                  <RolePicker
+                    personId={p.id}
+                    firstName={p.first_name}
+                    connected={p.connected}
+                    current={p.role}
+                    pending={p.rolePending}
+                    leads={p.leads}
+                    communities={communities}
+                    homeTeamId={homeTeamId}
+                    roleTeamId={p.roleTeamId}
+                    phone={p.phone ?? ""}
+                    email={p.email ?? ""}
+                    gives={gives}
+                    regions={regions}
+                    compact
+                  />
+                  <Link
+                    href={`/people/${p.id}`}
+                    className="w-20 shrink-0 py-3 pr-4 text-right"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold tabular-nums">
+                        {p.events}
+                      </p>
+                      <p className="text-xs text-stone-500">
+                        {p.events === 1 ? "event" : "events"}
+                      </p>
+                      {p.engagement && (
+                        <span className="mt-1 flex justify-end">
+                          <EngagementBar e={p.engagement} />
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
     </div>
+  );
+}
+
+type Filter = "all" | "roles" | "newcomers" | "drift";
+const FILTERS: {
+  id: Filter;
+  label: string;
+  match: (p: PersonRow) => boolean;
+}[] = [
+  { id: "all", label: "Everyone", match: () => true },
+  {
+    id: "roles",
+    label: "Has a role",
+    match: (p) => !!p.role || p.leads.length > 0,
+  },
+  {
+    id: "newcomers",
+    label: "Newcomers",
+    match: (p) => p.status === "first_timer" || p.status === "newcomer",
+  },
+  { id: "drift", label: "Not seen in a while", match: (p) => !!p.drift },
+];
+
+export type RegionRole = {
+  key: string;
+  personId: string | null;
+  teamId: string | null;
+  name: string;
+  role: Access;
+  where: string;
+  pending: boolean;
+};
+
+// Everyone with a role across "All communities".
+function RegionRoleList({
+  rows,
+  query,
+}: {
+  rows: RegionRole[];
+  query: string;
+}) {
+  const q = query.trim().toLowerCase();
+  const shown = q ? rows.filter((r) => r.name.toLowerCase().includes(q)) : rows;
+  if (shown.length === 0)
+    return (
+      <p className="mt-6 text-center text-sm text-stone-500">No one matches.</p>
+    );
+  return (
+    <ul className="mt-4 divide-y divide-black/5 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+      {shown.map((r) => (
+        <li key={r.key} className="flex items-center gap-3 px-4 py-3">
+          <div className="min-w-0 flex-1">
+            {r.personId ? (
+              <Link
+                href={`/people/open?id=${r.personId}${r.teamId ? `&team=${r.teamId}` : ""}`}
+                className="truncate font-medium hover:underline"
+              >
+                {r.name}
+              </Link>
+            ) : (
+              <p className="truncate font-medium">{r.name}</p>
+            )}
+            <p className="truncate text-sm text-stone-500">{r.where}</p>
+          </div>
+          <RoleChip role={r.role} pending={r.pending} />
+        </li>
+      ))}
+    </ul>
   );
 }
 

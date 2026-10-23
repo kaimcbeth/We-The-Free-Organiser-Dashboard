@@ -23,12 +23,10 @@ const LINKS = [
 ];
 
 export function NavLinks({
-  canManageRoles,
   openTasks = 0,
   isGod = false,
   whatsNew = false,
 }: {
-  canManageRoles: boolean;
   openTasks?: number;
   isGod?: boolean;
   whatsNew?: boolean; // something new since they last looked
@@ -42,16 +40,8 @@ export function NavLinks({
     label: "Actions",
     match: (p: string) => p.startsWith("/tasks"),
   });
-  const links = canManageRoles
-    ? [
-        ...base,
-        {
-          href: "/roles",
-          label: "Roles",
-          match: (p: string) => p.startsWith("/roles"),
-        },
-      ]
-    : base;
+  // Roles live on People now (the + Role button, and the \"Has a role\" filter).
+  const links = base;
   links.push({
     href: "/whats-new",
     label: "What's new",
