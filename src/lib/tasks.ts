@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { TaskRow } from "@/components/task-card";
+import { signPhotos } from "@/lib/photos";
 
 type Raw = {
   id: string;
@@ -132,7 +133,38 @@ export async function loadMyTasks(supabase: SupabaseClient, personId: string) {
     .order("due_at")
     .returns<Raw[]>();
   const nowIso = new Date().toISOString();
-  return (data ?? [])
+  const rows = (data ?? [])
     .map(toRow)
     .filter((t) => !t.showFrom || t.showFrom <= nowIso);
+  // Who handed each one over (with their photo, when we can show it).
+  if (rows.length) {
+    const { data: by } = await supabase.rpc("my_task_delegators", {
+      p_task_ids: rows.map((t) => t.id),
+    });
+    const list = (by ?? []) as {
+      task_id: string;
+      name: string;
+      person_id: string | null;
+      photo_updated_at: string | null;
+    }[];
+    const photos = await signPhotos(
+      supabase,
+      list
+        .filter((d) => d.person_id)
+        .map((d) => ({
+          id: d.person_id!,
+          photo_updated_at: d.photo_updated_at,
+        })),
+    ).catch(() => ({}) as Record<string, string>);
+    const byTask = new Map(list.map((d) => [d.task_id, d]));
+    for (const t of rows) {
+      const d = byTask.get(t.id);
+      if (d)
+        t.delegatedBy = {
+          name: d.name,
+          photoUrl: d.person_id ? (photos[d.person_id] ?? null) : null,
+        };
+    }
+  }
+  return rows;
 }

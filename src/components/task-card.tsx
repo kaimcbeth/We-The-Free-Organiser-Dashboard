@@ -10,6 +10,7 @@ import {
 } from "@/app/actions";
 import { formatEventDate } from "@/lib/time";
 import { Sheet } from "@/components/sheet";
+import { Avatar } from "@/components/avatar";
 import { MoveTask } from "@/components/move-task";
 import { FbGroupsButton } from "@/components/fb-groups-button";
 import { inputClass } from "@/components/form";
@@ -40,6 +41,7 @@ export type TaskRow = {
   fbEvent?: FbEventDetails | null; // "Facebook event created" tasks
   assignedTo: string | null;
   assigneeName: string | null;
+  delegatedBy?: { name: string; photoUrl: string | null } | null; // who handed it to me
 };
 
 // "Due today", "Due tomorrow", "2 days overdue"...
@@ -339,7 +341,20 @@ export function TaskCard({
                 </button>
               )}
               {!people && task.assigneeName && (
-                <span className="text-sm text-stone-500">Delegated to you</span>
+                <span className="ml-auto flex items-center gap-1.5 text-xs text-stone-400">
+                  Delegated to you
+                  {task.delegatedBy && (
+                    <>
+                      {" "}
+                      by {task.delegatedBy.name.split(" ")[0]}
+                      <Avatar
+                        name={task.delegatedBy.name}
+                        url={task.delegatedBy.photoUrl}
+                        size={22}
+                      />
+                    </>
+                  )}
+                </span>
               )}
             </div>
           )}
