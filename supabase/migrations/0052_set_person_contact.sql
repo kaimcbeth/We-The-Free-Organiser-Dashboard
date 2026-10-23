@@ -1,0 +1,3 @@
+-- (Applied as set_person_contact.) Organisers can't update people's phone or
+-- email directly (column privileges). set_person_contact allows it only for
+-- people who have, or are about to have, a role.

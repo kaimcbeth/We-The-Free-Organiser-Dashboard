@@ -500,12 +500,17 @@ export async function setPersonPhone(
   const clean = phone.trim();
   if (clean && clean.replace(/\D/g, "").length < 8)
     return { error: "That number looks too short." };
-  const { data, error } = await supabase
+  const { data: row } = await supabase
     .from("people")
-    .update({ phone: clean || null })
+    .select("email")
     .eq("id", personId)
-    .select("id");
-  if (error || !data?.length)
+    .maybeSingle();
+  const { data, error } = await supabase.rpc("set_person_contact", {
+    p_person_id: personId,
+    p_phone: clean,
+    p_email: row?.email ?? "",
+  });
+  if (error || data !== "ok")
     return { error: "Couldn't save the number. Please try again." };
   revalidatePath(`/people/${personId}`);
   return {};
@@ -833,13 +838,18 @@ export async function setPersonContact(
     return { error: "That phone number looks too short." };
   if (e && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))
     return { error: "That email doesn't look right." };
-  const { data, error } = await supabase
-    .from("people")
-    .update({ phone: p || null, email: e || null })
-    .eq("id", personId)
-    .select("id");
-  if (error || !data?.length)
-    return { error: "Couldn't save their details. Please try again." };
+  const { data, error } = await supabase.rpc("set_person_contact", {
+    p_person_id: personId,
+    p_phone: p,
+    p_email: e,
+  });
+  if (error || data !== "ok")
+    return {
+      error:
+        data === "no_role"
+          ? "Contact details can only be added for people with a role."
+          : "Couldn't save their details. Please try again.",
+    };
   revalidatePath(`/people/${personId}`);
   revalidatePath("/people");
   return {};

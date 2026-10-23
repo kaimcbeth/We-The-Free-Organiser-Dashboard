@@ -305,14 +305,6 @@ export function RolePicker({
                 }
                 onClick={() =>
                   start(async () => {
-                    if (contactChanged) {
-                      const r = await setPersonContact(
-                        personId,
-                        contact.phone,
-                        contact.email,
-                      );
-                      if (r.error) return setError(r.error);
-                    }
                     if (
                       pick !== role ||
                       pick === "regional_lead" ||
@@ -323,6 +315,14 @@ export function RolePicker({
                         pick,
                         pick === "regional_lead" ? region : null,
                         pick === "organiser" && community ? community : null,
+                      );
+                      if (r.error) return setError(r.error);
+                    }
+                    if (contactChanged) {
+                      const r = await setPersonContact(
+                        personId,
+                        contact.phone,
+                        contact.email,
                       );
                       if (r.error) return setError(r.error);
                     }
