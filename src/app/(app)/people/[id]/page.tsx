@@ -171,14 +171,21 @@ export default async function PersonPage({
           initialEmail={person.email ?? ""}
         />
       )}
-      <p className="mt-1 text-sm text-stone-500">
-        {[person.suburb, person.email, person.phone]
-          .filter(Boolean)
-          .join(" · ") ||
-          (person.user_id
-            ? "No details added yet"
-            : `${person.first_name} adds their own details when they connect`)}
-      </p>
+      {/* People with a role get the editable Contact line above instead. */}
+      {role && role !== "god" ? (
+        person.suburb && (
+          <p className="mt-1 text-sm text-stone-500">{person.suburb}</p>
+        )
+      ) : (
+        <p className="mt-1 text-sm text-stone-500">
+          {[person.suburb, person.email, person.phone]
+            .filter(Boolean)
+            .join(" · ") ||
+            (person.user_id
+              ? "No details added yet"
+              : `${person.first_name} adds their own details when they connect`)}
+        </p>
+      )}
 
       <div className="mt-5 grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
