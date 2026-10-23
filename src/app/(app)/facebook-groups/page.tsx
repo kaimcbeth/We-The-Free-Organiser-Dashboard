@@ -4,7 +4,8 @@ import { GroupsList, type FbGroup } from "./groups-list";
 
 export default async function FacebookGroupsPage() {
   const { supabase, organiser } = await requireOrganiser();
-  if (organiser.role !== "god") redirect("/");
+  if (organiser.role === "core_team") redirect("/");
+  const isGod = organiser.role === "god";
 
   const [{ data: groups }, { data: teams }] = await Promise.all([
     supabase
@@ -47,14 +48,19 @@ export default async function FacebookGroupsPage() {
           Facebook groups
         </h1>
         <p className="mt-1 text-sm text-stone-500">
-          Every local Facebook group where communities can share their events.
-          Only God Mode can see this for now.
+          Local vegan and community Facebook groups where your events get
+          shared. The Facebook groups tasks open them all in one go.
         </p>
       </div>
       <GroupsList
         groups={rows}
-        teams={teams ?? []}
+        teams={
+          isGod
+            ? (teams ?? [])
+            : organiser.teams.map((t) => ({ id: t.id, name: t.name }))
+        }
         defaultTeamId={organiser.team_id}
+        isGod={isGod}
       />
     </div>
   );

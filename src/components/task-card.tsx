@@ -11,6 +11,7 @@ import {
 import { formatEventDate } from "@/lib/time";
 import { Sheet } from "@/components/sheet";
 import { MoveTask } from "@/components/move-task";
+import { FbGroupsButton } from "@/components/fb-groups-button";
 import { inputClass } from "@/components/form";
 import {
   FacebookEventButton,
@@ -261,6 +262,10 @@ export function TaskCard({
                 >
                   Take attendance →
                 </a>
+              )}
+              {(task.kind === "promote_facebook_groups" ||
+                task.kind === "promote_fb_groups_weekly") && (
+                <FbGroupsButton teamId={task.teamId} canEdit={!!people} />
               )}
               {task.fbEvent && (
                 <FacebookEventButton event={task.fbEvent} tz={tz} />

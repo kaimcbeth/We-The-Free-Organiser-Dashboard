@@ -1,0 +1,3 @@
+-- (Applied as facebook_groups_for_organisers.) Organisers and RSLs manage their
+-- communities' Facebook groups; Core Team can read them; no-community groups
+-- stay God-only.

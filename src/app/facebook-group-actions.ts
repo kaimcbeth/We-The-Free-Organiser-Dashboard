@@ -30,9 +30,10 @@ function cleanUrl(raw: string) {
   }
 }
 
+// Organisers and up; the database only lets them change their own
+// communities' groups (God Mode: any).
 async function requireGod() {
-  const { supabase, organiser } = await requireOrganiser();
-  if (organiser.access !== "god") return null;
+  const { supabase } = await requireOrganiser();
   return supabase;
 }
 
@@ -40,7 +41,7 @@ export async function saveFacebookGroup(
   g: GroupInput,
 ): Promise<{ error?: string }> {
   const supabase = await requireGod();
-  if (!supabase) return { error: "God Mode only." };
+  if (!supabase) return { error: "Not allowed." };
   const name = g.name.trim();
   const url = cleanUrl(g.url);
   if (!name) return { error: "Give the group a name." };
@@ -60,9 +61,11 @@ export async function saveFacebookGroup(
   if (error)
     return {
       error:
-        error.code === "23505"
-          ? "That group is already in the list."
-          : "Couldn't save it. Please try again.",
+        error.code === "42501"
+          ? "You can only add groups to your own community."
+          : error.code === "23505"
+            ? "That group is already in the list."
+            : "Couldn't save it. Please try again.",
     };
   revalidatePath("/facebook-groups");
   return {};
@@ -72,7 +75,7 @@ export async function removeFacebookGroup(
   id: string,
 ): Promise<{ error?: string }> {
   const supabase = await requireGod();
-  if (!supabase) return { error: "God Mode only." };
+  if (!supabase) return { error: "Not allowed." };
   const { error } = await supabase
     .from("facebook_groups")
     .update({ archived_at: new Date().toISOString() })

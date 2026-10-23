@@ -11,6 +11,20 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-23",
+    title: "Local Facebook groups",
+    changes: [
+      {
+        level: "organiser",
+        text: "Keep a list of your local vegan and community Facebook groups (Tasks → Facebook groups). The Facebook groups promo tasks then have an “Open all” button that opens every group in its own tab.",
+      },
+      {
+        level: "god",
+        text: "facebook_groups: organisers/RSLs manage their own communities' rows, Core Team can read them; groups with no community stay God-only.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-23",
     title: "No repeat nudges, and moving tasks",
     changes: [
       {

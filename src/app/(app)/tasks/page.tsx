@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireOrganiser } from "@/lib/organiser";
 import { LoadError } from "@/components/load-error";
 import { TaskCard } from "@/components/task-card";
@@ -137,7 +138,7 @@ export default async function TasksPage() {
             ? "Nothing left for the organisers. New tasks appear here after each event."
             : `${groups.reduce((n, g) => n + g.tasks.length, 0)} for the organisers · about ${minutes} min in total`}
         </p>
-        <div className="mt-3">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <ChooseTasks
             setup={setup}
             communityName={organiser.team.name.replace(
@@ -145,6 +146,12 @@ export default async function TasksPage() {
               "",
             )}
           />
+          <Link
+            href="/facebook-groups"
+            className="rounded-xl px-3 py-2 text-sm font-medium text-stone-500 hover:bg-stone-100 hover:text-navy"
+          >
+            Facebook groups
+          </Link>
         </div>
       </div>
 

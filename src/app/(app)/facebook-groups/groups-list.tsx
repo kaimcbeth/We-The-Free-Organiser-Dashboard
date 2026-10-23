@@ -61,12 +61,15 @@ export function GroupsList({
   groups,
   teams,
   defaultTeamId,
+  isGod = false,
 }: {
+  isGod?: boolean;
   groups: FbGroup[];
   teams: { id: string; name: string }[];
   defaultTeamId: string;
 }) {
-  const [filter, setFilter] = useState<string>("all");
+  // Organisers start on their own community; God Mode on everything.
+  const [filter, setFilter] = useState<string>(isGod ? "all" : defaultTeamId);
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<FbGroup | null>(null);
   const teamName = useMemo(
@@ -117,7 +120,9 @@ export function GroupsList({
               {short(t.name)} ({counts[t.id] ?? 0})
             </option>
           ))}
-          <option value="none">No community ({counts.none ?? 0})</option>
+          {isGod && (
+            <option value="none">No community ({counts.none ?? 0})</option>
+          )}
         </select>
         <input
           type="search"
@@ -173,6 +178,7 @@ export function GroupsList({
           key={editing.id || "new"}
           group={editing}
           teams={teams}
+          isGod={isGod}
           onClose={() => setEditing(null)}
         />
       )}
@@ -254,10 +260,12 @@ function GroupRow({ group, onEdit }: { group: FbGroup; onEdit: () => void }) {
 function GroupSheet({
   group,
   teams,
+  isGod,
   onClose,
 }: {
   group: FbGroup;
   teams: { id: string; name: string }[];
+  isGod: boolean;
   onClose: () => void;
 }) {
   const [g, setG] = useState(group);
@@ -334,7 +342,7 @@ function GroupSheet({
                   {short(t.name)}
                 </option>
               ))}
-              <option value="">No community</option>
+              {isGod && <option value="">No community</option>}
             </select>
           </label>
           <label className="block">
