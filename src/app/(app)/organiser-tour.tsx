@@ -145,7 +145,7 @@ export function OrganiserTour({
       title: "New member support",
       follow: { on: "/people", link: "person-ringo" },
       target: "buddy-section",
-      body: "Ringo came for the first time last week, so on his profile George was picked to support him. George checks in and invites him back. Switch on New member support on a welcoming member's profile to add them to this list.",
+      body: "Ringo is a first-timer, so on his profile George was picked to support him. George checks in and invites him back. Switch on New member support on a welcoming member's profile to add them to this list.",
     },
     {
       section: 2,

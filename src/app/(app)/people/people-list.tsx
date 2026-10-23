@@ -149,6 +149,11 @@ export function PeopleList({
                         p.connected ? "Account connected" : "No account yet"
                       }
                     />
+                    {p.events === 1 && (
+                      <span className="shrink-0 rounded-full bg-yellow px-2 py-0.5 text-xs font-semibold text-navy">
+                        First-timer
+                      </span>
+                    )}
                   </p>
                   <p className="truncate text-sm text-stone-500">
                     {[p.suburb, p.email, p.phone].filter(Boolean).join(" · ") ||
