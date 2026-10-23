@@ -203,6 +203,22 @@ export default async function PersonPage({
         </p>
       )}
 
+      {events.length === 1 && !person.attended_before_app && (
+        <div className="mt-5 flex items-center gap-3 rounded-2xl bg-yellow p-4 text-navy">
+          <span aria-hidden className="text-3xl">
+            🌱
+          </span>
+          <div className="min-w-0">
+            <p className="text-lg font-semibold leading-tight">First-timer</p>
+            <p className="text-sm">
+              {person.first_name} came for the first time at{" "}
+              <span className="font-medium">{events[0].title}</span>,{" "}
+              {formatEventDate(events[0].starts_at)}. Make them feel welcome!
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="mt-5 grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
           <p className="text-3xl font-semibold tabular-nums">{events.length}</p>
