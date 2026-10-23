@@ -1,35 +1,43 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { setPersonPhone } from "@/app/actions";
+import { setPersonContact } from "@/app/actions";
 
-// For people with a role: a WhatsApp number their Regional Support Lead can
-// use (can be added before they've connected their account).
+// For people with a role: phone (WhatsApp) and email their Regional Support
+// Lead can use. Can be added before they've connected their account.
 export function PhoneField({
   personId,
   initial,
+  initialEmail,
 }: {
   personId: string;
   initial: string;
+  initialEmail: string;
 }) {
   const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(initial);
-  const [saved, setSaved] = useState(initial);
+  const [phone, setPhone] = useState(initial);
+  const [email, setEmail] = useState(initialEmail);
+  const [saved, setSaved] = useState({ phone: initial, email: initialEmail });
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
 
   if (!editing)
     return (
-      <p className="mt-2 flex items-center gap-2 text-sm">
-        <span className="text-stone-500">WhatsApp:</span>
-        <span className={saved ? "font-medium" : "text-stone-400"}>
-          {saved || "No number yet"}
+      <p className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+        <span className="text-stone-500">Contact:</span>
+        <span
+          className={
+            saved.phone || saved.email ? "font-medium" : "text-stone-400"
+          }
+        >
+          {[saved.phone, saved.email].filter(Boolean).join(" · ") ||
+            "No phone or email yet"}
         </span>
         <button
           onClick={() => setEditing(true)}
           className="rounded-lg px-1.5 py-0.5 text-xs font-medium text-pink-ink hover:bg-stone-100"
         >
-          {saved ? "Change" : "Add"}
+          {saved.phone || saved.email ? "Change" : "Add"}
         </button>
       </p>
     );
@@ -40,11 +48,14 @@ export function PhoneField({
       onSubmit={(e) => {
         e.preventDefault();
         start(async () => {
-          const r = await setPersonPhone(personId, value);
+          const r = await setPersonContact(personId, phone, email);
           if (r.error) setError(r.error);
           else {
             setError("");
-            setSaved(value.trim());
+            setSaved({
+              phone: phone.trim(),
+              email: email.trim().toLowerCase(),
+            });
             setEditing(false);
           }
         });
@@ -54,11 +65,19 @@ export function PhoneField({
         autoFocus
         type="tel"
         inputMode="tel"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder="0412 345 678"
-        aria-label="WhatsApp number"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        placeholder="Phone (WhatsApp)"
+        aria-label="Phone"
         className="w-44 rounded-xl border border-stone-300 bg-white px-3 py-1.5 text-sm"
+      />
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+        aria-label="Email"
+        className="w-56 rounded-xl border border-stone-300 bg-white px-3 py-1.5 text-sm"
       />
       <button
         disabled={pending}
@@ -69,7 +88,8 @@ export function PhoneField({
       <button
         type="button"
         onClick={() => {
-          setValue(saved);
+          setPhone(saved.phone);
+          setEmail(saved.email);
           setEditing(false);
           setError("");
         }}

@@ -1,0 +1,4 @@
+-- (Applied as grant_role_with_community.) grant_role_in(person, role, region,
+-- team): Organiser for a chosen community (default: the person's own).
+-- people.pending_team_id carries it until they connect. grant_role now calls
+-- grant_role_in with no team.

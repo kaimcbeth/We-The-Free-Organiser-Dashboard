@@ -14,6 +14,10 @@ export const CHANGELOG: Release[] = [
     title: "No repeat nudges, and moving tasks",
     changes: [
       {
+        level: "regional_lead",
+        text: "When you make someone an Organiser you can choose which community they'll run, and add their phone and email in the same pop-up (handy before they've connected).",
+      },
+      {
         level: "organiser",
         text: "“Move” on any task puts it out of the way until a better day (tomorrow, next week, the day before the event, or a day you pick). It shows up in Tasks that morning.",
       },

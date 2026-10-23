@@ -516,6 +516,7 @@ export async function grantRole(
   personId: string,
   role: string,
   regionId: string | null,
+  teamId: string | null = null,
 ): Promise<{ error?: string }> {
   const { supabase, organiser } = await requireOrganiser();
   // Previewing: allowed when the previewed role could give this role too.
@@ -523,10 +524,11 @@ export async function grantRole(
     return {
       error: `A ${organiser.role === "regional_lead" ? "Regional Support Lead" : "role you're previewing"} can't give that role.`,
     };
-  const { data, error } = await supabase.rpc("grant_role", {
+  const { data, error } = await supabase.rpc("grant_role_in", {
     p_person_id: personId,
     p_role: role,
     p_region_id: regionId,
+    p_team_id: teamId,
   });
   if (error) return { error: "Couldn't save. Please try again." };
   if (data !== "ok")
@@ -814,5 +816,31 @@ export async function moveTask(
   revalidatePath("/tasks");
   revalidatePath("/me");
   revalidatePath("/attendance/tasks");
+  return {};
+}
+
+// A person's phone and email, added by an organiser or Regional Support Lead
+// (e.g. someone given a role before they've connected their account).
+export async function setPersonContact(
+  personId: string,
+  phone: string,
+  email: string,
+): Promise<{ error?: string }> {
+  const { supabase } = await requireOrganiser();
+  const p = phone.trim();
+  const e = email.trim().toLowerCase();
+  if (p && p.replace(/\D/g, "").length < 8)
+    return { error: "That phone number looks too short." };
+  if (e && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))
+    return { error: "That email doesn't look right." };
+  const { data, error } = await supabase
+    .from("people")
+    .update({ phone: p || null, email: e || null })
+    .eq("id", personId)
+    .select("id");
+  if (error || !data?.length)
+    return { error: "Couldn't save their details. Please try again." };
+  revalidatePath(`/people/${personId}`);
+  revalidatePath("/people");
   return {};
 }

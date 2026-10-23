@@ -83,6 +83,8 @@ export default async function PeoplePage({
         people={people}
         gives={GIVES[organiser.role]}
         regions={regions ?? []}
+        communities={organiser.teams.map((t) => ({ id: t.id, name: t.name }))}
+        homeTeamId={organiser.team_id}
       />
     </div>
   );

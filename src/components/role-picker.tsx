@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { clearPendingRole, grantRole, setCoreRoles } from "@/app/actions";
+import {
+  clearPendingRole,
+  grantRole,
+  setCoreRoles,
+  setPersonContact,
+} from "@/app/actions";
 import { Sheet } from "@/components/sheet";
 import { RoleChip } from "@/components/role-chip";
 import {
@@ -29,6 +34,10 @@ export function RolePicker({
   compact,
   pending: startsPending = false,
   leads = [],
+  communities = [],
+  homeTeamId,
+  phone = "",
+  email = "",
 }: {
   personId: string;
   firstName: string;
@@ -39,6 +48,10 @@ export function RolePicker({
   compact?: boolean;
   pending?: boolean; // the role waits until they connect their account
   leads?: CoreRole[]; // Core Team lead roles
+  communities?: { id: string; name: string }[]; // where they could be Organiser
+  homeTeamId?: string; // the community their profile is in
+  phone?: string;
+  email?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [role, setRole] = useState<Access | null>(current);
@@ -47,6 +60,9 @@ export function RolePicker({
     current && gives.includes(current) ? current : gives[gives.length - 1],
   );
   const [region, setRegion] = useState("");
+  const [community, setCommunity] = useState(homeTeamId ?? "");
+  const [contact, setContact] = useState({ phone, email });
+  const contactChanged = contact.phone !== phone || contact.email !== email;
   const [savedLeads, setSavedLeads] = useState<CoreRole[]>(leads);
   const [leadPick, setLeadPick] = useState<Set<CoreRole>>(new Set(leads));
   const leadsChanged =
@@ -187,6 +203,59 @@ export function RolePicker({
                   ))}
                 </select>
               )}
+              {pick === "organiser" && communities.length > 1 && (
+                <label className="block">
+                  <span className="mb-1 block text-sm font-medium">
+                    Organiser for
+                  </span>
+                  <select
+                    value={community}
+                    onChange={(e) => setCommunity(e.target.value)}
+                    className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2"
+                  >
+                    {communities.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <details
+                className="rounded-xl bg-white p-3 ring-1 ring-stone-200"
+                open={!connected && !phone && !email}
+              >
+                <summary className="cursor-pointer text-sm font-medium">
+                  Contact details{" "}
+                  <span className="font-normal text-stone-500">
+                    {phone || email
+                      ? [phone, email].filter(Boolean).join(" · ")
+                      : "(optional)"}
+                  </span>
+                </summary>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  <input
+                    type="tel"
+                    value={contact.phone}
+                    onChange={(e) =>
+                      setContact({ ...contact, phone: e.target.value })
+                    }
+                    placeholder="Phone (WhatsApp)"
+                    aria-label="Phone"
+                    className="rounded-lg border border-stone-300 px-3 py-2 text-sm"
+                  />
+                  <input
+                    type="email"
+                    value={contact.email}
+                    onChange={(e) =>
+                      setContact({ ...contact, email: e.target.value })
+                    }
+                    placeholder="Email"
+                    aria-label="Email"
+                    className="rounded-lg border border-stone-300 px-3 py-2 text-sm"
+                  />
+                </div>
+              </details>
               {pick === "core_team" && (
                 <fieldset className="space-y-2">
                   <legend className="mb-1 text-sm font-medium">
@@ -228,17 +297,32 @@ export function RolePicker({
                   pending ||
                   (pick === role &&
                     pick !== "regional_lead" &&
-                    !(pick === "core_team" && leadsChanged)) ||
+                    !(pick === "core_team" && leadsChanged) &&
+                    !(pick === "organiser" && community !== homeTeamId) &&
+                    !contactChanged) ||
                   (pick === "regional_lead" && !region) ||
                   (pick === "core_team" && leadPick.size === 0)
                 }
                 onClick={() =>
                   start(async () => {
-                    if (pick !== role || pick === "regional_lead") {
+                    if (contactChanged) {
+                      const r = await setPersonContact(
+                        personId,
+                        contact.phone,
+                        contact.email,
+                      );
+                      if (r.error) return setError(r.error);
+                    }
+                    if (
+                      pick !== role ||
+                      pick === "regional_lead" ||
+                      (pick === "organiser" && community !== homeTeamId)
+                    ) {
                       const r = await grantRole(
                         personId,
                         pick,
                         pick === "regional_lead" ? region : null,
+                        pick === "organiser" && community ? community : null,
                       );
                       if (r.error) return setError(r.error);
                     }
@@ -257,7 +341,7 @@ export function RolePicker({
               >
                 {pending
                   ? "Saving…"
-                  : pick === role && pick === "core_team"
+                  : pick === role
                     ? "Save"
                     : addAsLabel(firstName, pick)}
               </button>

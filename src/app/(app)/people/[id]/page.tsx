@@ -152,12 +152,20 @@ export default async function PersonPage({
           current={role}
           pending={!realRole && !!person.pending_role}
           leads={leads}
+          communities={organiser.teams.map((t) => ({ id: t.id, name: t.name }))}
+          homeTeamId={organiser.team_id}
+          phone={person.phone ?? ""}
+          email={person.email ?? ""}
           gives={GIVES[organiser.role]}
           regions={regions ?? []}
         />
       </div>
       {role && role !== "god" && (
-        <PhoneField personId={person.id} initial={person.phone ?? ""} />
+        <PhoneField
+          personId={person.id}
+          initial={person.phone ?? ""}
+          initialEmail={person.email ?? ""}
+        />
       )}
       <p className="mt-1 text-sm text-stone-500">
         {[person.suburb, person.email, person.phone]

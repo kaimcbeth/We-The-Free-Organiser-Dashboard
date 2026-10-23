@@ -27,10 +27,14 @@ export function PeopleList({
   people,
   gives,
   regions,
+  communities = [],
+  homeTeamId,
 }: {
   people: PersonRow[];
   gives: Access[];
   regions: { id: string; name: string }[];
+  communities?: { id: string; name: string }[];
+  homeTeamId?: string;
 }) {
   const [query, setQuery] = useState("");
   const [adding, setAdding] = useState(false);
@@ -143,6 +147,10 @@ export function PeopleList({
                 current={p.role}
                 pending={p.rolePending}
                 leads={p.leads}
+                communities={communities}
+                homeTeamId={homeTeamId}
+                phone={p.phone ?? ""}
+                email={p.email ?? ""}
                 gives={gives}
                 regions={regions}
                 compact
