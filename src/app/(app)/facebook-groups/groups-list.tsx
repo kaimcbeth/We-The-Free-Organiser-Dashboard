@@ -6,6 +6,7 @@ import {
   saveFacebookGroup,
 } from "@/app/facebook-group-actions";
 import { Sheet } from "@/components/sheet";
+import { groupNameFromLink } from "@/lib/group-name";
 import { inputClass } from "@/components/form";
 
 export type FbGroup = {
@@ -37,23 +38,6 @@ const short = (name: string) =>
 // Facebook won't show group pages to apps (it asks them to log in), so the
 // best guess is the link itself: /groups/vegans.of.sydney -> "Vegans Of Sydney".
 // Number-only links (/groups/123456) give nothing.
-function nameFromLink(link: string) {
-  const m = link.match(/facebook\.com\/groups\/([^/?#]+)/i);
-  if (!m) return "";
-  let slug = m[1];
-  try {
-    slug = decodeURIComponent(slug);
-  } catch {
-    /* odd characters: use it as it is */
-  }
-  if (/^\d+$/.test(slug)) return "";
-  return slug
-    .replace(/[._-]+/g, " ")
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .trim()
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 const fmtMembers = (n: number) =>
   n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : String(n);
 
@@ -268,6 +252,12 @@ function GroupSheet({
   isGod: boolean;
   onClose: () => void;
 }) {
+  // Guess the name from the link (lib/group-name), knowing our place names.
+  const nameFromLink = (u: string) =>
+    groupNameFromLink(
+      u,
+      teams.map((t) => t.name),
+    );
   const [g, setG] = useState(group);
   const [members, setMembers] = useState(
     group.members != null ? String(group.members) : "",
