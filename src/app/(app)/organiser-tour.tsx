@@ -21,6 +21,8 @@ type Step = {
   target?: string; // data-tour="…" element(s) to spotlight, first found wins
 };
 
+const TOUR_MINUTES = 5;
+
 // The tour in a few bite-sized parts, so it doesn't feel like a wall of cards.
 const SECTIONS = [
   { icon: "📅", name: "Events" },
@@ -192,16 +194,17 @@ export function OrganiserTour({
     },
   ];
 
-  // Rough time left: reading at ~180 words a minute, a few seconds per card,
-  // plus about a minute to choose tasks at the end.
   const minutesLeft = (from: number) => {
-    const words = steps
-      .slice(from)
-      .reduce((n, st) => n + `${st.title} ${st.body}`.split(/\s+/).length, 0);
-    return Math.max(
-      1,
-      Math.round(words / 180 + (steps.length - from) * 0.08 + 1),
-    );
+    // The whole tour is billed as 5 minutes; count down in proportion to
+    // how much is left to read (plus the task picker at the end).
+    const weight = (n: number) =>
+      steps
+        .slice(n)
+        .reduce(
+          (w, st) => w + `${st.title} ${st.body}`.split(/\s+/).length + 15,
+          0,
+        ) + 120;
+    return Math.max(1, Math.ceil((TOUR_MINUTES * weight(from)) / weight(0)));
   };
 
   // Take them to the card's page, then find and spotlight its element.
