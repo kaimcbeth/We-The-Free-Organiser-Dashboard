@@ -139,7 +139,7 @@ export function PeopleList({
                   size={40}
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2 py-1 font-medium">
+                  <p className="flex items-center gap-2 font-medium">
                     <span className="truncate">
                       {[p.first_name, p.last_name].filter(Boolean).join(" ")}
                     </span>
