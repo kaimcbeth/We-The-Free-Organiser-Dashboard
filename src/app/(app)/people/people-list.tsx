@@ -129,6 +129,7 @@ export function PeopleList({
             >
               <Link
                 href={`/people/${p.id}`}
+                data-tour={`person-${p.first_name.toLowerCase()}`}
                 className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 pr-2"
               >
                 <Avatar

@@ -108,3 +108,9 @@ begin
 end $$;
 
 select cron.schedule('refresh-example-events', '3 * * * *', 'select private.refresh_example_events()');
+
+-- (Applied separately as example_buddy_pairing.) George looks after Ringo,
+-- so the tour can show New member support on Ringo's profile; the pairing is
+-- re-dated by refresh_example_events() to "6 days ago".
+create policy "staff read example pairings" on public.buddy_pairings for select
+  using (private.is_example_team(team_id) and private.is_staff());

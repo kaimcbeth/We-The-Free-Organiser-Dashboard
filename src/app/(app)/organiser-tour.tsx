@@ -13,7 +13,9 @@ type Step = {
   title: string;
   body: string;
   href?: string; // page to show for this card
-  eventPage?: boolean; // show today's (or the next) event's own page
+  // Open a page linked from another one: on `on`, follow the first
+  // data-tour="…" link in `link` (e.g. today's or the next event).
+  follow?: { on: string; link: string };
   click?: string; // data-tour="…" button to press first (e.g. open a menu)
   target?: string; // data-tour="…" element(s) to spotlight, first found wins
 };
@@ -78,7 +80,7 @@ export function OrganiserTour({
       icon: "✅",
       tone: "bg-pink",
       title: "Attendance in 60 seconds",
-      eventPage: true,
+      follow: { on: "/", link: "today-event,next-event" },
       target: "checkin-list",
       body: "It only takes about 60 seconds. On the day, open the event and tap names as people arrive. The people most likely to come are at the top, and someone new is one tap away.",
     },
@@ -133,9 +135,9 @@ export function OrganiserTour({
       icon: "🌱",
       tone: "bg-cyan",
       title: "New member support",
-      href: "/people",
-      target: "people-list",
-      body: "Switch it on for your most welcoming people. Newcomers get paired with one of them, who checks in and invites them back.",
+      follow: { on: "/people", link: "person-ringo" },
+      target: "buddy-section",
+      body: "Ringo came for the first time last week, so on his profile George was picked to support him. George checks in and invites him back. Switch on New member support on a welcoming member's profile to add them to this list.",
     },
     {
       section: 2,
@@ -200,7 +202,9 @@ export function OrganiserTour({
   const step0 = steps[i];
   const active = open && !choosing;
   const href = active ? step0.href : undefined;
-  const eventPage = active && !!step0.eventPage;
+  const follow = active ? step0.follow : undefined;
+  const followOn = follow?.on;
+  const followLink = follow?.link;
   const target = active ? step0.target : undefined;
   useEffect(() => {
     if (pushed.current.step !== i)
@@ -211,21 +215,27 @@ export function OrganiserTour({
       router.push(to);
     };
     if (href && pathname !== href) go(href);
-    if (!eventPage || pathname.startsWith("/events/")) return;
-    // The event page: follow today's (or the next) event's link on Events.
-    if (pathname !== "/") return go("/");
+    if (!followOn || !followLink) return;
+    // Already on the followed page (one we opened for this card)?
+    if (pathname !== followOn && pushed.current.keys.has(pathname)) return;
+    if (pathname !== followOn) return go(followOn);
     let tries = 0;
     const look = window.setInterval(() => {
-      const link = document.querySelector<HTMLAnchorElement>(
-        '[data-tour="today-event"] a, [data-tour="next-event"] a',
-      );
+      const link = followLink
+        .split(",")
+        .map((k) =>
+          document.querySelector<HTMLAnchorElement>(
+            `a[data-tour="${k}"], [data-tour="${k}"] a`,
+          ),
+        )
+        .find(Boolean);
       if (link?.getAttribute("href")) {
         window.clearInterval(look);
         go(link.getAttribute("href")!);
       } else if (++tries > 25) window.clearInterval(look);
     }, 120);
     return () => window.clearInterval(look);
-  }, [i, href, eventPage, pathname, router]);
+  }, [i, href, followOn, followLink, pathname, router]);
   // Some cards press a button first (like opening the role menu), and close
   // what it opened when you move on.
   const click = active ? step0.click : undefined;
