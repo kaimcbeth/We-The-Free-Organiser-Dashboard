@@ -62,6 +62,12 @@ export function OrganiserTour({
       body: "On Roles, add Core Team members to help take attendance. On someone's profile, switch on New member support so they can welcome newcomers.",
     },
     {
+      icon: "📣",
+      tone: "bg-cyan",
+      title: "Share in local Facebook groups",
+      body: "A week before each event, a task appears to share it in local vegan Facebook groups. Tap “Open all” and every group opens in its own tab, ready to post. Your list is under Tasks → Facebook groups, and we may have added some nearby groups for you already. If only one tab opens, allow pop-ups for the Movement Hub (the task shows you how).",
+    },
+    {
       icon: "📝",
       tone: "bg-pink",
       title: "Tasks after each event",
