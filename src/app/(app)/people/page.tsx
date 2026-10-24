@@ -226,6 +226,10 @@ export default async function PeoplePage({
         regions={regions ?? []}
         communities={organiser.teams.map((t) => ({ id: t.id, name: t.name }))}
         homeTeamId={organiser.team_id}
+        canMove={
+          !organiser.allCommunities &&
+          (organiser.role === "god" || organiser.role === "regional_lead")
+        }
         tz={organiser.team.timezone}
         withContact={
           organiser.role === "god" || organiser.role === "regional_lead"

@@ -1,5 +1,6 @@
 "use client";
 
+import { MoveChip } from "./move-chip";
 import { useFindShortcut } from "@/lib/use-find-shortcut";
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
@@ -47,7 +48,9 @@ export function PeopleList({
   tz,
   initialFilter = "all",
   regionRoles = null,
+  canMove = false,
 }: {
+  canMove?: boolean; // God Mode / RSLs: "Move" to another community
   initialFilter?: Filter;
   // "All communities": everyone with a role across them (for "Has a role").
   regionRoles?: RegionRole[] | null;
@@ -212,6 +215,13 @@ export function PeopleList({
                             p.connected ? "Account connected" : "No account yet"
                           }
                         />
+                        {canMove && homeTeamId && communities.length > 1 && (
+                          <MoveChip
+                            personId={p.id}
+                            currentTeamId={homeTeamId}
+                            communities={communities}
+                          />
+                        )}
                         {p.drift && (
                           <span
                             title={driftText(p.drift)}

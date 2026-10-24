@@ -11,6 +11,10 @@ export type Release = { date: string; title: string; changes: Change[] };
 // What's being worked on next (shown at the top of What's new).
 export const COMING_SOON: { title: string; text: string }[] = [
   {
+    title: "Volunteer accounts",
+    text: "Volunteers log in to see their own events and history, say which events they're coming to, and choose how they hear from you.",
+  },
+  {
     title: "Text and email reminders for volunteers",
     text: "Volunteers who've said they're coming get a reminder by text or email before the event, with when and where.",
   },
