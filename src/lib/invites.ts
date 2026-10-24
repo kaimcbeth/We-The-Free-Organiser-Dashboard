@@ -321,3 +321,77 @@ export async function loadInviteList(
   );
   return { invites, eventTitle: event.title };
 }
+
+// Everyone who comes regularly (plus anyone with a role): for asking who can
+// help with something, like setting up. No spacing rules, nothing recorded.
+export async function loadRegularsList(
+  supabase: SupabaseClient,
+  eventId: string,
+  now: number,
+  canEditAny = false,
+): Promise<{ invites: Invite[]; eventTitle: string } | null> {
+  const { data: event } = await supabase
+    .from("events")
+    .select("id, team_id, title")
+    .eq("id", eventId)
+    .maybeSingle<{ id: string; team_id: string; title: string }>();
+  if (!event) return null;
+  const [{ data: people }, { data: roles }, { data: leads }, tracking] =
+    await Promise.all([
+      supabase
+        .from("people")
+        .select(
+          "id, first_name, last_name, phone, facebook_url, attended_before_app, pending_role, attendance(event:events(id, starts_at, event_type_id))",
+        )
+        .eq("team_id", event.team_id)
+        .eq("is_test", false)
+        .eq("no_messages", false)
+        .returns<Row[]>(),
+      supabase.rpc("list_roles"),
+      supabase
+        .from("person_core_roles")
+        .select("person_id")
+        .eq("team_id", event.team_id)
+        .is("ended_at", null),
+      loadTracking(supabase, event.team_id, now),
+    ]);
+  const withRole = new Set<string>([
+    ...((roles as { person_id: string | null }[] | null) ?? []).flatMap((r) =>
+      r.person_id ? [r.person_id] : [],
+    ),
+    ...(leads ?? []).map((l) => l.person_id as string),
+  ]);
+  const invites: Invite[] = [];
+  for (const p of people ?? []) {
+    const dates = p.attendance.flatMap((a) =>
+      a.event ? [a.event.starts_at] : [],
+    );
+    const status = engagementStatus(
+      dates,
+      p.attended_before_app,
+      now,
+      tracking,
+    );
+    const role = withRole.has(p.id) || !!p.pending_role;
+    if (status !== "regular" && !role) continue;
+    const recent = dates.filter(
+      (d) => now - Date.parse(d) <= WINDOW_DAYS * DAY && Date.parse(d) <= now,
+    ).length;
+    invites.push({
+      personId: p.id,
+      name: [p.first_name, p.last_name].filter(Boolean).join(" "),
+      group: "regulars",
+      reason: "regular",
+      detail: role ? "Has a role" : `${recent} events in 3 months`,
+      kind: "invite",
+      sent: false,
+      whatsapp: whatsappLink(p.phone),
+      facebook: messengerLink(p.facebook_url),
+      phone: p.phone,
+      facebookUrl: p.facebook_url,
+      canEdit: canEditAny || role,
+    });
+  }
+  invites.sort((a, b) => a.name.localeCompare(b.name));
+  return { invites, eventTitle: event.title };
+}

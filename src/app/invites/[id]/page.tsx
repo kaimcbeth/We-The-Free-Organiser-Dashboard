@@ -1,5 +1,5 @@
 import { requireCore } from "@/lib/organiser";
-import { loadInviteList } from "@/lib/invites";
+import { loadInviteList, loadRegularsList } from "@/lib/invites";
 import { formatEventDate, formatTimeRange } from "@/lib/time";
 import { InviteList } from "./invite-list";
 
@@ -7,13 +7,16 @@ import { InviteList } from "./invite-list";
 // "Personal invites sent" action so it can sit beside WhatsApp/Messenger.
 export default async function InvitesPage({
   params,
+  searchParams,
 }: PageProps<"/invites/[id]">) {
   const { id } = await params;
+  // ?list=regulars: everyone who comes regularly (e.g. for the set-up team).
+  const regulars = (await searchParams).list === "regulars";
   const { supabase, organiser } = await requireCore();
   // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
   const now = Date.now();
   const [list, { data: event }] = await Promise.all([
-    loadInviteList(
+    (regulars ? loadRegularsList : loadInviteList)(
       supabase,
       id,
       now,
@@ -40,13 +43,14 @@ export default async function InvitesPage({
         {event.venue ? ` · ${event.venue}` : ""}
       </p>
       <h1 className="mt-0.5 text-2xl font-semibold tracking-tight">
-        Personal invites: {list.eventTitle}
+        {regulars ? "Set-up team" : "Personal invites"}: {list.eventTitle}
       </h1>
       <p className="mt-1 text-sm text-stone-600">
-        Open a chat with WhatsApp or Messenger, write your own message, then
-        tick them off.
+        {regulars
+          ? "Ask your regulars who can help set up and pack down. Open a chat, write your own message, then tick them off."
+          : "Open a chat with WhatsApp or Messenger, write your own message, then tick them off."}
       </p>
-      <InviteList eventId={id} invites={list.invites} />
+      <InviteList eventId={id} invites={list.invites} local={regulars} />
     </main>
   );
 }

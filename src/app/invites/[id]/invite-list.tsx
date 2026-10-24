@@ -24,13 +24,25 @@ const WHY: Record<InviteReason, string> = {
 export function InviteList({
   eventId,
   invites,
+  local = false,
 }: {
   eventId: string;
   invites: Invite[];
+  // A plain list of regulars to message (e.g. the set-up team): ticks are
+  // only kept on this device, and nothing counts as a personal invite.
+  local?: boolean;
 }) {
-  const [sent, setSent] = useState(
-    () => new Set(invites.filter((i) => i.sent).map((i) => i.personId)),
-  );
+  const storeKey = `regulars-${eventId}`;
+  const [sent, setSent] = useState(() => {
+    if (local && typeof window !== "undefined") {
+      try {
+        return new Set<string>(
+          JSON.parse(localStorage.getItem(storeKey) ?? "[]"),
+        );
+      } catch {}
+    }
+    return new Set(invites.filter((i) => i.sent).map((i) => i.personId));
+  });
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
   // Contact details edited here: personId -> { phone, facebook } as saved.
@@ -93,8 +105,13 @@ export function InviteList({
       const n = new Set(s);
       if (on) n.add(i.personId);
       else n.delete(i.personId);
+      if (local)
+        try {
+          localStorage.setItem(storeKey, JSON.stringify([...n]));
+        } catch {}
       return n;
     });
+    if (local) return;
     start(async () => {
       const r = await markInvited(eventId, i.personId, i.kind, on);
       if (r.error) setError(r.error);
@@ -118,7 +135,9 @@ export function InviteList({
     },
     {
       title: "Regulars",
-      note: "People who come often. A quick \u201csee you there?\u201d is plenty.",
+      note: local
+        ? "People who come often, plus anyone with a role."
+        : "People who come often. A quick \u201csee you there?\u201d is plenty.",
       list: shown.filter((i) => i.group === "regulars"),
     },
   ];
@@ -275,13 +294,15 @@ export function InviteList({
                                 : "Add details"}
                             </button>
                           )}
-                          <button
-                            type="button"
-                            onClick={() => optOut(i)}
-                            className="ml-auto text-xs text-stone-400 hover:text-stone-700 hover:underline"
-                          >
-                            Doesn&apos;t want messages
-                          </button>
+                          {!local && (
+                            <button
+                              type="button"
+                              onClick={() => optOut(i)}
+                              className="ml-auto text-xs text-stone-400 hover:text-stone-700 hover:underline"
+                            >
+                              Doesn&apos;t want messages
+                            </button>
+                          )}
                         </div>
                       </div>
                     </li>

@@ -310,6 +310,16 @@ export function TaskCard({
                   Fill in &amp; send
                 </a>
               )}
+              {task.kind === "ev_setup_team" && task.eventId && (
+                <a
+                  href={`/invites/${task.eventId}?list=regulars`}
+                  target="_blank"
+                  rel="noopener"
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                >
+                  Message regulars ↗
+                </a>
+              )}
               {task.kind === "personal_invites" && task.eventId && (
                 <a
                   href={`/invites/${task.eventId}`}
