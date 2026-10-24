@@ -30,6 +30,7 @@ type EventDetail = {
   venue: string | null;
   address: string | null;
   source_url: string | null;
+  facebook_url: string | null;
   description: string | null;
   event_type_id: string | null;
   notes: string | null;
@@ -44,7 +45,7 @@ export default async function EventCheckInPage({
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, team_id, title, starts_at, ends_at, venue, address, source_url, description, event_type_id, notes",
+      "id, team_id, title, starts_at, ends_at, venue, address, source_url, facebook_url, description, event_type_id, notes",
     )
     .eq("id", id)
     .maybeSingle<EventDetail>();
@@ -145,6 +146,16 @@ export default async function EventCheckInPage({
               className="text-xs font-medium text-pink-ink hover:underline"
             >
               View on activism.wtf ↗
+            </a>
+          )}
+          {event.facebook_url && (
+            <a
+              href={event.facebook_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-[#0866FF] hover:underline"
+            >
+              Facebook event ↗
             </a>
           )}
           {event.starts_at > nowIso() && (

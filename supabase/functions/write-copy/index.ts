@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
     // Reading the event as the user checks they can see it.
     const { data: event } = await asUser
       .from("events")
-      .select("id, team_id, title, starts_at, ends_at, venue, address, description, source_url, event_type:event_types(name, counts_as_outreach), team:teams(name, timezone)")
+      .select("id, team_id, title, starts_at, ends_at, venue, address, description, source_url, facebook_url, event_type:event_types(name, counts_as_outreach), team:teams(name, timezone)")
       .eq("id", eventId)
       .maybeSingle();
     if (!event) return json({ error: "Couldn't find that event." }, 404);
@@ -87,6 +87,7 @@ Deno.serve(async (req) => {
       ev.venue || ev.address ? `Where: ${[ev.venue, ev.address].filter(Boolean).join(", ")}` : "",
       ev.description ? `About the event (from our website): ${String(ev.description).slice(0, 800)}` : "",
       ev.source_url ? `Event link: ${ev.source_url}` : "",
+      ev.facebook_url ? `Facebook event link (use this one for Facebook and WhatsApp): ${ev.facebook_url}` : "",
     ];
 
     if (past) {

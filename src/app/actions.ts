@@ -958,7 +958,7 @@ export async function saveEventNotes(
   notes: string,
 ): Promise<{ error?: string }> {
   const { supabase, organiser } = await requireOrganiser();
-  if (organiser.viewingAs || organiser.exampleMode) return {};
+  if (organiser.tourPreview || organiser.exampleMode) return {};
   const { error } = await supabase
     .from("events")
     .update({ notes: notes.trim() ? notes.slice(0, 5000) : null })
@@ -1022,4 +1022,38 @@ export async function setNoMessages(
   if (error) return { error: "Couldn't save. Please try again." };
   revalidatePath(`/people/${personId}`);
   return {};
+}
+
+// The event's Facebook event link, reused by every Facebook action.
+export async function saveEventFacebookUrl(
+  eventId: string,
+  url: string,
+): Promise<{ error?: string; url?: string | null }> {
+  const { supabase, organiser } = await requireCore();
+  if (organiser.tourPreview || organiser.exampleMode) return {};
+  const raw = url.trim();
+  let clean: string | null = null;
+  if (raw) {
+    try {
+      const u = new URL(raw.startsWith("http") ? raw : `https://${raw}`);
+      if (!/(^|\.)(facebook\.com|fb\.me|fb\.com)$/.test(u.hostname))
+        return { error: "That doesn't look like a Facebook link." };
+      u.search = u.searchParams.get("event_time_id")
+        ? `?event_time_id=${u.searchParams.get("event_time_id")}`
+        : "";
+      u.hash = "";
+      clean = u.toString();
+    } catch {
+      return { error: "That doesn't look like a link." };
+    }
+  }
+  const { data, error } = await supabase
+    .from("events")
+    .update({ facebook_url: clean })
+    .eq("id", eventId)
+    .select("id");
+  if (error || !data?.length) return { error: "Couldn't save the link." };
+  revalidatePath("/tasks");
+  revalidatePath(`/events/${eventId}`);
+  return { url: clean };
 }

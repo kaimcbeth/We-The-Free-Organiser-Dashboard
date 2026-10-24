@@ -18,6 +18,7 @@ import {
   type GraphicSize,
 } from "@/components/graphic-maker";
 import { MoveTask } from "@/components/move-task";
+import { FbEventLink } from "@/components/fb-event-link";
 import { ScriptButton } from "@/components/script-button";
 import { CopyMaker, type CopyPlatform } from "@/components/copy-maker";
 import { FbGroupsButton } from "@/components/fb-groups-button";
@@ -42,6 +43,16 @@ const COPY_FOR: Record<string, [CopyPlatform, boolean]> = {
   promo_monthly_recap: ["instagram", true],
 };
 
+// Actions that use the event's Facebook event link.
+const FB_KINDS = new Set([
+  "facebook_event",
+  "facebook_invites",
+  "promote_facebook_groups",
+  "promote_whatsapp",
+  "post_photos_facebook",
+  "promo_answer_questions",
+]);
+
 export type TaskRow = {
   id: string;
   teamId: string;
@@ -60,6 +71,7 @@ export type TaskRow = {
   showFrom: string | null; // moved: hidden until then
   doneAt: string | null;
   eventTitle: string | null;
+  eventFacebookUrl?: string | null; // pasted once, used by every Facebook action
   personId?: string | null; // actions about one person (a newcomer)
   personName?: string | null;
   eventAt: string | null;
@@ -342,6 +354,16 @@ export function TaskCard({
                       : "Open profile →"}
                   </a>
                 )}
+              {task.eventId && FB_KINDS.has(task.kind) && (
+                <FbEventLink
+                  eventId={task.eventId}
+                  initial={task.eventFacebookUrl ?? null}
+                  canAdd={
+                    task.kind === "facebook_event" ||
+                    task.kind === "facebook_invites"
+                  }
+                />
+              )}
               {task.kind === "ev_setup_team" && task.eventId && (
                 <a
                   href={`/invites/${task.eventId}?list=regulars`}

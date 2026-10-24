@@ -237,6 +237,37 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
           <RemoveEventTasks eventId={g.key} count={g.tasks.length} />
         )}
       </div>
+      {g.key !== "other" &&
+        (() => {
+          // This event's progress: everything for it, whoever has it.
+          const open = tasks.open.filter((t) => t.eventId === g.key).length;
+          const done = tasks.done.filter((t) => t.eventId === g.key).length;
+          const total = open + done;
+          if (total === 0) return null;
+          const COLOURS = [
+            "#2fd9df",
+            "#ffd90f",
+            "#a78bfa",
+            "#34d399",
+            "#fb923c",
+          ];
+          return (
+            <div className="-mt-1 mb-3 flex items-center gap-2">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-stone-200">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${(done / total) * 100}%`,
+                    background: COLOURS[n % COLOURS.length],
+                  }}
+                />
+              </div>
+              <span className="shrink-0 text-xs text-stone-500">
+                {done} of {total} done
+              </span>
+            </div>
+          );
+        })()}
       <ul className="space-y-3">
         {g.tasks.map((t) => (
           <TaskCard key={t.id} task={t} {...common} hideEvent />
