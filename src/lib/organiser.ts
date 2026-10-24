@@ -44,6 +44,8 @@ export const ALL_COOKIE = "all_communities";
 
 export const TEAM_COOKIE = "active_team";
 export const VIEW_AS_COOKIE = "view_as";
+// God Mode "New organiser", after the tour: set up the Practice Community.
+export const PRACTICE_COOKIE = "practice";
 
 // The signed-in user's role and the team they're looking at, or null if
 // they have no role (plain member) or aren't signed in.
@@ -76,6 +78,7 @@ export async function getStaff() {
     .from("teams")
     .select("id, name, slug, whatsapp_url, region_id, timezone")
     .eq("is_example", false)
+    .eq("is_practice", false)
     .order("name")
     .returns<Team[]>();
   let teams = allTeams ?? [];
@@ -90,10 +93,21 @@ export async function getStaff() {
 
   const rawAs = jar.get(VIEW_AS_COOKIE)?.value;
   // "New organiser" previews the organiser view with the welcome tour.
-  const tourPreview = row.access === "god" && rawAs === "new_organiser";
+  const newOrganiserView = row.access === "god" && rawAs === "new_organiser";
+  // After the tour, the preview carries on in the Practice Community, for real.
+  let practice: Team | null = null;
+  if (newOrganiserView && jar.get(PRACTICE_COOKIE)?.value === "1") {
+    const { data } = await supabase
+      .from("teams")
+      .select("id, name, slug, whatsapp_url, region_id, timezone")
+      .eq("is_practice", true)
+      .maybeSingle<Team>();
+    practice = data;
+  }
+  const tourPreview = newOrganiserView && !practice;
   const coreSetupPreview = row.access === "god" && rawAs === "new_core_team";
   const asCookie = (
-    tourPreview ? "organiser" : coreSetupPreview ? "core_team" : rawAs
+    newOrganiserView ? "organiser" : coreSetupPreview ? "core_team" : rawAs
   ) as ViewRole | undefined;
   const viewingAs =
     row.access === "god" &&
@@ -113,11 +127,16 @@ export async function getStaff() {
     teams = teams.filter((t) => t.region_id === team.region_id);
   // "All communities" is for people who look after more than one.
   const allCommunities =
+    !practice &&
     !(tourPreview || (row.access === "organiser" && !row.tutorial_done_at)) &&
     jar.get(ALL_COOKIE)?.value === "1" &&
     teams.length > 1 &&
     (role === "god" || role === "regional_lead");
   if (!teams.includes(team)) team = teams[0];
+  if (practice) {
+    team = practice;
+    teams = [practice];
+  }
 
   const showTour =
     tourPreview || (row.access === "organiser" && !row.tutorial_done_at);
@@ -147,7 +166,7 @@ export async function getStaff() {
     access: row.access,
     role,
     viewingAs,
-    viewValue: tourPreview
+    viewValue: newOrganiserView
       ? "new_organiser"
       : coreSetupPreview
         ? "new_core_team"

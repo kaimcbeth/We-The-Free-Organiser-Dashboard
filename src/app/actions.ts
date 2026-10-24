@@ -11,6 +11,7 @@ import {
   TEAM_COOKIE,
   ALL_COOKIE,
   VIEW_AS_COOKIE,
+  PRACTICE_COOKIE,
   type ViewRole,
 } from "@/lib/organiser";
 import { GIVES, type Access } from "@/lib/roles";
@@ -464,9 +465,12 @@ export async function setActiveTeam(teamId: string): Promise<void> {
 export async function setViewAs(
   role: ViewRole | "new_organiser" | "new_core_team" | null,
 ): Promise<void> {
-  const { organiser } = await getStaff();
+  const { supabase, organiser } = await getStaff();
   if (organiser?.access !== "god") return;
   const jar = await cookies();
+  // Every change of view starts the Practice Community afresh.
+  jar.delete(PRACTICE_COOKIE);
+  await supabase.rpc("reset_practice_team");
   if (!role || role === "god") jar.delete(VIEW_AS_COOKIE);
   else
     jar.set(VIEW_AS_COOKIE, role, {
@@ -630,7 +634,17 @@ export async function saveTeamTasks(
 
 export async function finishOrganiserTour(): Promise<void> {
   const { supabase, organiser } = await requireOrganiser();
-  if (organiser.tourPreview) return;
+  if (organiser.tourPreview) {
+    // God Mode preview: carry on setting up a fresh Practice Community.
+    await supabase.rpc("reset_practice_team");
+    (await cookies()).set(PRACTICE_COOKIE, "1", {
+      path: "/",
+      maxAge: 60 * 60 * 12,
+      sameSite: "lax",
+    });
+    revalidatePath("/", "layout");
+    return;
+  }
   await supabase.rpc("finish_organiser_tutorial");
   revalidatePath("/", "layout");
 }

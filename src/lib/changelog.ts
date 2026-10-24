@@ -86,6 +86,10 @@ export const CHANGELOG: Release[] = [
         text: "Gear: in Resources & Training, list your community's kit and tap Handed to… to keep track of who has each thing.",
       },
       {
+        level: "god",
+        text: 'View as New organiser: after the tour you carry on in a fresh, empty Practice Community and can set it up for real (checklist, events, actions, people). It\'s wiped every time View as changes. teams.is_practice; private.reset_practice_team(); cookie "practice".',
+      },
+      {
         level: "organiser",
         text: "New to activism: a tag for newcomers who've never done any activism before. Tick it when adding someone at check-in, or on their profile.",
       },
