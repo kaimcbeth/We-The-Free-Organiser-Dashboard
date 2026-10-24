@@ -11,6 +11,20 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-24",
+    title: "Resources & Training, and smarter role actions",
+    changes: [
+      {
+        level: "organiser",
+        text: "New Resources tab (for the Core Team too). First up: the NSW Notice of legal protections to show police at outreach events.",
+      },
+      {
+        level: "organiser",
+        text: "Onboarding sent and Paired with a regular now come up for each newcomer when they first check in, with their name and profile; pairing ticks itself off once a supporter is connected. Monthly recap shows in the last 3 days of the month. Briefing and debrief actions have a script. Set-up team organised has Message regulars. Chat moderation has gone.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-24",
     title: "Write post: social media copy in your voice",
     changes: [
       {

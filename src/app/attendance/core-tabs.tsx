@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 export function CoreTabs({ openTasks }: { openTasks: number }) {
   const path = usePathname();
   const tasks = path.startsWith("/attendance/tasks");
+  const resources = path.startsWith("/attendance/resources");
   const cls = (active: boolean) =>
     `border-b-2 px-3 pb-2.5 pt-1 text-sm font-medium ${
       active
@@ -15,7 +16,7 @@ export function CoreTabs({ openTasks }: { openTasks: number }) {
     }`;
   return (
     <nav className="mx-auto flex max-w-2xl gap-1 px-4">
-      <Link href="/attendance" className={cls(!tasks)}>
+      <Link href="/attendance" className={cls(!tasks && !resources)}>
         Attendance
       </Link>
       <Link href="/attendance/tasks" className={cls(tasks)}>
@@ -25,6 +26,9 @@ export function CoreTabs({ openTasks }: { openTasks: number }) {
             {openTasks}
           </span>
         )}
+      </Link>
+      <Link href="/attendance/resources" className={cls(resources)}>
+        Resources
       </Link>
     </nav>
   );

@@ -43,6 +43,11 @@ export function NavLinks({
   // Roles live on People now (the + Role button, and the \"Has a role\" filter).
   const links = base;
   links.push({
+    href: "/resources",
+    label: "Resources",
+    match: (p: string) => p.startsWith("/resources"),
+  });
+  links.push({
     href: "/whats-new",
     label: "What's new",
     match: (p: string) => p.startsWith("/whats-new"),
