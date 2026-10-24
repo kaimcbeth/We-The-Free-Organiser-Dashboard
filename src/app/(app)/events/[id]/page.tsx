@@ -12,6 +12,7 @@ import { EventNotes } from "./event-notes";
 import { EventActions } from "./event-actions";
 import { GraphicMaker } from "@/components/graphic-maker";
 import { CopyMaker } from "@/components/copy-maker";
+import { AddToCalendar } from "@/components/add-to-calendar";
 import { EventPhotos } from "@/components/event-photos";
 import { loadEventPhotos } from "@/lib/event-photos";
 import { TypePicker } from "./type-picker";
@@ -148,6 +149,18 @@ export default async function EventCheckInPage({
               View on activism.wtf ↗
             </a>
           )}
+          <AddToCalendar
+            event={{
+              id: event.id,
+              title: event.title,
+              starts_at: event.starts_at,
+              ends_at: event.ends_at,
+              venue: event.venue,
+              address: event.address,
+              description: event.description,
+              url: event.source_url,
+            }}
+          />
           {event.facebook_url && (
             <a
               href={event.facebook_url}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CalendarFeed } from "@/components/add-to-calendar";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { LoadError } from "@/components/load-error";
@@ -162,10 +163,20 @@ export default async function EventsPage() {
   const todays = today.data ?? [];
   const next = upcoming.data?.[0] ?? null;
 
+  const { data: cal } = await supabase
+    .from("teams")
+    .select("calendar_token")
+    .eq("id", organiser.team_id)
+    .maybeSingle();
+  const calendarToken = (cal?.calendar_token as string | undefined) ?? null;
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Events</h1>
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-2xl font-semibold tracking-tight">Events</h1>
+          {calendarToken && <CalendarFeed token={calendarToken} />}
+        </div>
         <div className="flex gap-2">
           <TeamLinkButton
             initial={teamLink.data ?? null}
