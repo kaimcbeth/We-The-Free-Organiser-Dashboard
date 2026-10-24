@@ -163,21 +163,30 @@ export function TaskChooser({
             {(() => {
               const allOn = kinds.every((k) => on.has(k.kind));
               return (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (allOn) setOn(new Set());
-                    else {
-                      setOn(new Set(kinds.map((k) => k.kind)));
-                      setFeatured(new Set(kinds.map((k) => k.kind)));
-                    }
-                  }}
-                  className="mt-3 rounded-lg px-2.5 py-1 text-sm font-semibold text-navy ring-1 ring-black/10 hover:bg-white"
-                >
-                  {allOn
-                    ? "Turn all off"
-                    : `Select all actions (${kinds.length})`}
-                </button>
+                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (allOn) setOn(new Set());
+                      else {
+                        setOn(new Set(kinds.map((k) => k.kind)));
+                        setFeatured(new Set(kinds.map((k) => k.kind)));
+                      }
+                    }}
+                    className="rounded-lg px-2.5 py-1 text-sm font-semibold text-navy ring-1 ring-black/10 hover:bg-white"
+                  >
+                    {allOn
+                      ? "Turn all off"
+                      : `Select all actions (${kinds.length})`}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep("time")}
+                    className="text-sm font-medium text-pink-ink hover:underline"
+                  >
+                    Suggest by how much time I have
+                  </button>
+                </div>
               );
             })()}
             {(() => {
