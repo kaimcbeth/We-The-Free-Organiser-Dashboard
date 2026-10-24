@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchOpen } from "./action-search";
 
 // Later events' actions, tucked away behind a small button.
 export function ShowMoreEvents({
@@ -11,7 +12,9 @@ export function ShowMoreEvents({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const searching = useSearchOpen();
   if (count === 0) return null;
+  if (searching) return <>{children}</>;
   return open ? (
     <>
       {children}

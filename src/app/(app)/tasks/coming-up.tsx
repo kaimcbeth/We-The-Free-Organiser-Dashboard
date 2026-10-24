@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { startActionEarly } from "@/app/actions";
+import { useSearchOpen } from "./action-search";
 import type { UpcomingAction } from "@/lib/upcoming-actions";
 
 // Actions on their way: thin cards that open up to say more, with the option
@@ -17,6 +18,7 @@ export function ComingUp({
 }) {
   // Hidden until asked for, so the list stays calm.
   const [show, setShow] = useState(alwaysOpen);
+  const searching = useSearchOpen();
   return (
     <div className="mt-3">
       {!alwaysOpen && (
@@ -29,7 +31,7 @@ export function ComingUp({
           {show ? "Hide" : "Show"} {items.length} coming up {show ? "▴" : "▾"}
         </button>
       )}
-      {show && (
+      {(show || searching) && (
         <ul className="mt-2 grid items-start gap-2 sm:grid-cols-2">
           {items.map((u) => (
             <Card
@@ -55,6 +57,7 @@ function Card({ u, when }: { u: UpcomingAction; when: string }) {
     });
   return (
     <li
+      data-search={`${u.title} ${u.description ?? ""} ${u.eventTitle}`}
       className={`rounded-xl border border-dashed bg-white/60 transition-colors ${open ? "border-stone-400 bg-white sm:col-span-2" : "border-stone-300 hover:border-stone-400"}`}
     >
       <button

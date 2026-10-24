@@ -20,6 +20,7 @@ import { ConnectIdeas } from "@/components/connect-ideas";
 import { RegionTasks } from "./region-tasks";
 import { GodOverview } from "./god-overview";
 import { CoreTeamTasks } from "./core-team-tasks";
+import { ActionSearch } from "./action-search";
 import { CORE_ROLE_LABEL, type CoreRole } from "@/lib/roles";
 
 export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
@@ -215,6 +216,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
     <section
       key={g.key}
       data-tour={n === 0 ? "task-group" : undefined}
+      data-search-group
       className="scroll-mt-24"
     >
       <div className="mb-3 flex items-center justify-between gap-3">
@@ -329,9 +331,10 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
       )}
 
       {groups.length > 0 && (
-        <h2 className="border-t border-black/10 pt-6 text-lg font-semibold tracking-tight">
-          Your actions
-        </h2>
+        <div className="space-y-3 border-t border-black/10 pt-6">
+          <h2 className="text-lg font-semibold tracking-tight">Your actions</h2>
+          <ActionSearch />
+        </div>
       )}
 
       {focus && (

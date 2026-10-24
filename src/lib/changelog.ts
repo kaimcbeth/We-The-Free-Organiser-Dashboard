@@ -11,6 +11,20 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-24",
+    title: "Search your actions",
+    changes: [
+      {
+        level: "organiser",
+        text: "A search box on the Actions page: type an action or event name to find it, including actions for later events and ones still coming up.",
+      },
+      {
+        level: "organiser",
+        text: "Police approval: once your details are saved, it opens straight on Ready to send, so it's one tap. Late notices still come up, right up until the event.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-24",
     title: "Police approval, filled in and sent for you",
     changes: [
       {
