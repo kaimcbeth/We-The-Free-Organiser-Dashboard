@@ -459,3 +459,73 @@ export async function loadQuietList(
   }
   return out.sort((a, b) => a.name.localeCompare(b.name));
 }
+
+// Everyone who came to an event: for "Thank-you messages sent".
+export async function loadAttendeesList(
+  supabase: SupabaseClient,
+  eventId: string,
+  now: number,
+  canEditAny = false,
+): Promise<Invite[]> {
+  const { data: event } = await supabase
+    .from("events")
+    .select("team_id")
+    .eq("id", eventId)
+    .maybeSingle<{ team_id: string }>();
+  if (!event) return [];
+  const [{ data: att }, { data: roles }, tracking] = await Promise.all([
+    supabase
+      .from("attendance")
+      .select(
+        "person:people!inner(id, first_name, last_name, phone, facebook_url, attended_before_app, pending_role, is_test, no_messages, attendance(event:events(id, starts_at, event_type_id)))",
+      )
+      .eq("event_id", eventId)
+      .returns<
+        { person: Row & { is_test: boolean; no_messages: boolean } }[]
+      >(),
+    supabase.rpc("list_roles"),
+    loadTracking(supabase, event.team_id, now),
+  ]);
+  const withRole = new Set<string>(
+    ((roles as { person_id: string | null }[] | null) ?? []).flatMap((r) =>
+      r.person_id ? [r.person_id] : [],
+    ),
+  );
+  const out: Invite[] = [];
+  for (const { person: p } of att ?? []) {
+    if (!p || p.is_test || p.no_messages) continue;
+    const dates = p.attendance.flatMap((a) =>
+      a.event ? [a.event.starts_at] : [],
+    );
+    const status = engagementStatus(
+      dates,
+      p.attended_before_app,
+      now,
+      tracking,
+    );
+    const role = withRole.has(p.id) || !!p.pending_role;
+    out.push({
+      personId: p.id,
+      name: [p.first_name, p.last_name].filter(Boolean).join(" "),
+      group: status === "first_timer" ? "priority" : "regulars",
+      reason: status ?? "regular",
+      detail:
+        status === "first_timer"
+          ? "Their first event"
+          : `${dates.length} events so far`,
+      kind: "invite",
+      sent: false,
+      whatsapp: whatsappLink(p.phone),
+      facebook: messengerLink(p.facebook_url),
+      phone: p.phone,
+      facebookUrl: p.facebook_url,
+      canEdit: canEditAny || role,
+    });
+  }
+  // First-timers first: they're the ones most worth a personal thank-you.
+  return out.sort(
+    (a, b) =>
+      Number(b.reason === "first_timer") - Number(a.reason === "first_timer") ||
+      a.name.localeCompare(b.name),
+  );
+}

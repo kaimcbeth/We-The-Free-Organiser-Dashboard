@@ -20,9 +20,11 @@ const SCALE = ["Not great", "Meh", "OK", "Good", "Loving it"];
 export function FeedbackSheet({
   teamId,
   className,
+  review = false,
 }: {
   teamId: string;
   className?: string;
+  review?: boolean; // "Feedback reviewed": straight to the responses
 }) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"ask" | "responses">("ask");
@@ -72,16 +74,32 @@ export function FeedbackSheet({
     "rounded-xl px-3 py-1.5 text-sm font-semibold ring-1 ring-black/10 hover:bg-stone-50";
   return (
     <>
-      <button type="button" onClick={() => show("ask")} className={className}>
-        Ask for feedback
-      </button>
-      <button
-        type="button"
-        onClick={() => show("responses")}
-        className="text-sm font-medium text-stone-500 hover:text-stone-800 hover:underline"
-      >
-        See responses
-      </button>
+      {review ? (
+        <button
+          type="button"
+          onClick={() => show("responses")}
+          className={className}
+        >
+          Read responses
+        </button>
+      ) : (
+        <>
+          <button
+            type="button"
+            onClick={() => show("ask")}
+            className={className}
+          >
+            Ask for feedback
+          </button>
+          <button
+            type="button"
+            onClick={() => show("responses")}
+            className="text-sm font-medium text-stone-500 hover:text-stone-800 hover:underline"
+          >
+            See responses
+          </button>
+        </>
+      )}
       {open && (
         <Sheet title="Volunteer feedback" onClose={() => setOpen(false)}>
           <div className="flex gap-1.5">

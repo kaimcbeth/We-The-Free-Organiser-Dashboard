@@ -15,6 +15,7 @@ import { EngagementBar } from "@/components/engagement-bar";
 import { driftText, notSeenInAWhile } from "@/lib/drift";
 import { InviteButton } from "./invite-button";
 import { DeletePerson } from "./delete-person";
+import { MergePerson } from "./merge-person";
 import { AttendedBefore } from "./attended-before";
 import { NoMessages } from "./no-messages";
 import { NewToActivism } from "./new-to-activism";
@@ -537,7 +538,20 @@ export default async function PersonPage({
           </ul>
         )}
       </section>
-      <section className="mt-10 border-t border-black/10 pt-6">
+      <section className="mt-10 space-y-4 border-t border-black/10 pt-6">
+        {organiser.role !== "core_team" && !organiser.exampleMode && (
+          <MergePerson
+            personId={person.id}
+            name={[person.first_name, person.last_name]
+              .filter(Boolean)
+              .join(" ")}
+            events={events.length}
+            team={(
+              organiser.teams.find((t) => t.id === person.team_id)?.name ??
+              organiser.team.name
+            ).replace(/, (Australia|New Zealand)$/, "")}
+          />
+        )}
         <DeletePerson
           personId={person.id}
           name={person.first_name}

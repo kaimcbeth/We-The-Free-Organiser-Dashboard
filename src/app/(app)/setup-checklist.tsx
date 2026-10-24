@@ -1,0 +1,195 @@
+"use client";
+
+import Link from "next/link";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+
+export type SetupStatus = {
+  whatsapp: boolean;
+  events: boolean;
+  actions: boolean;
+  core_team: boolean;
+  dismissed: boolean;
+};
+
+function Row({
+  done,
+  title,
+  text,
+  children,
+}: {
+  done: boolean;
+  title: string;
+  text: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <li className="flex gap-3">
+      <span
+        aria-hidden
+        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${done ? "bg-cyan text-navy" : "ring-2 ring-stone-300"}`}
+      >
+        {done ? "✓" : ""}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p
+          className={`font-medium ${done ? "text-stone-400 line-through" : "text-navy"}`}
+        >
+          {title}
+        </p>
+        {!done && <p className="text-sm text-stone-600">{text}</p>}
+        {!done && children && <div className="mt-1.5">{children}</div>}
+      </div>
+    </li>
+  );
+}
+
+// "Get <community> ready": a short list for a new community. Each item ticks
+// itself off; the card goes away once they're all done (or it's hidden).
+export function SetupChecklist({
+  teamId,
+  community,
+  status,
+}: {
+  teamId: string;
+  community: string;
+  status: SetupStatus;
+}) {
+  const router = useRouter();
+  const [hidden, setHidden] = useState(false);
+  const [wa, setWa] = useState("");
+  const [waOpen, setWaOpen] = useState(false);
+  const [waDone, setWaDone] = useState(status.whatsapp);
+  const [error, setError] = useState("");
+  const [pending, start] = useTransition();
+
+  const items = [
+    { key: "whatsapp", done: waDone },
+    { key: "events", done: status.events },
+    { key: "actions", done: status.actions },
+    { key: "core_team", done: status.core_team },
+  ];
+  const doneCount = items.filter((i) => i.done).length;
+  if (hidden || doneCount === items.length) return null;
+
+  const link =
+    "text-sm font-semibold text-pink-ink hover:underline whitespace-nowrap";
+
+  return (
+    <section className="rounded-2xl bg-white p-4 shadow-sm ring-2 ring-pink/50">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="font-semibold">Get {community} ready</h2>
+          <p className="text-sm text-stone-500">
+            {doneCount} of {items.length} done
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setHidden(true);
+            void createClient().rpc("dismiss_team_setup", {
+              p_team_id: teamId,
+            });
+          }}
+          className="text-xs text-stone-400 hover:text-stone-700 hover:underline"
+        >
+          Hide this
+        </button>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-stone-200">
+        <div
+          className="h-full rounded-full bg-pink transition-all"
+          style={{ width: `${(doneCount / items.length) * 100}%` }}
+        />
+      </div>
+      <ul className="mt-4 space-y-4">
+        <Row
+          done={waDone}
+          title="Add your community chat"
+          text="Paste the invite link to your WhatsApp community or group, so the Hub can open it for you and share it with volunteers."
+        >
+          {waOpen ? (
+            <form
+              className="flex flex-wrap gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                setError("");
+                const url = wa.trim();
+                if (
+                  !/^https?:\/\/(chat\.whatsapp\.com|(www\.)?whatsapp\.com|wa\.me)\//i.test(
+                    url,
+                  )
+                )
+                  return setError(
+                    "That doesn't look like a WhatsApp invite link (it starts with https://chat.whatsapp.com/).",
+                  );
+                start(async () => {
+                  const { data } = await createClient().rpc(
+                    "set_team_whatsapp",
+                    { p_team_id: teamId, p_url: url },
+                  );
+                  if (!data) return setError("Couldn't save that. Try again?");
+                  setWaDone(true);
+                  router.refresh();
+                });
+              }}
+            >
+              <input
+                autoFocus
+                value={wa}
+                onChange={(e) => setWa(e.target.value)}
+                placeholder="https://chat.whatsapp.com/…"
+                className="min-w-0 flex-1 rounded-lg bg-white px-2.5 py-1.5 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
+              />
+              <button
+                type="submit"
+                disabled={pending}
+                className="rounded-lg bg-navy px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-60"
+              >
+                Save
+              </button>
+              {error && <p className="w-full text-sm text-red-700">{error}</p>}
+            </form>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setWaOpen(true)}
+              className={link}
+            >
+              Add link
+            </button>
+          )}
+        </Row>
+        <Row
+          done={status.events}
+          title="Get your events in"
+          text="Events listed on your activism.wtf page come in by themselves every hour. You can also add one here."
+        >
+          <Link href="/events/new" className={link}>
+            Add event
+          </Link>
+        </Row>
+        <Row
+          done={status.actions}
+          title="Pick your actions"
+          text="Choose which regular actions the Hub reminds you about, based on how much time you have."
+        >
+          <Link href="/tasks" className={link}>
+            Choose actions
+          </Link>
+        </Row>
+        <Row
+          done={status.core_team}
+          title="Add your Core Team"
+          text="Give a few regulars a Core Team role so they can check people in and share the load."
+        >
+          <Link href="/roles" className={link}>
+            Go to Roles
+          </Link>
+        </Row>
+      </ul>
+    </section>
+  );
+}

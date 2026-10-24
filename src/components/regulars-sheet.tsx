@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sheet } from "@/components/sheet";
 import {
+  getAttendeesList,
   getInviteList,
   getNewcomersList,
   getQuietList,
@@ -19,12 +20,14 @@ export function RegularsSheet({
   invites = false,
   newcomers = false,
   quietTeamId,
+  thanks = false,
 }: {
   eventId: string;
   className?: string;
   invites?: boolean; // the personal invite list instead of all regulars
   newcomers?: boolean; // the community's newcomers
   quietTeamId?: string; // people not seen in a while (eventId = a key for ticks)
+  thanks?: boolean; // everyone who came, to thank them
 }) {
   const [open, setOpen] = useState(false);
   const [list, setList] = useState<Invite[] | null>(null);
@@ -40,24 +43,28 @@ export function RegularsSheet({
             setList(
               (quietTeamId
                 ? await getQuietList(quietTeamId)
-                : await (
-                    invites
-                      ? getInviteList
-                      : newcomers
-                        ? getNewcomersList
-                        : getRegularsList
-                  )(eventId)
+                : thanks
+                  ? await getAttendeesList(eventId)
+                  : await (
+                      invites
+                        ? getInviteList
+                        : newcomers
+                          ? getNewcomersList
+                          : getRegularsList
+                    )(eventId)
               )?.invites ?? [],
             );
         }}
       >
         {quietTeamId
           ? "Message them"
-          : invites
-            ? "Open invite list"
-            : newcomers
-              ? "Message newcomers"
-              : "Message regulars"}
+          : thanks
+            ? "Thank everyone"
+            : invites
+              ? "Open invite list"
+              : newcomers
+                ? "Message newcomers"
+                : "Message regulars"}
       </button>
       {open && (
         <Sheet
@@ -68,19 +75,32 @@ export function RegularsSheet({
                 ? "Newcomers"
                 : quietTeamId
                   ? "Quiet volunteers"
-                  : "Set-up team"
+                  : thanks
+                    ? "Thank everyone who came"
+                    : "Set-up team"
           }
           onClose={() => setOpen(false)}
         >
           <p className="text-sm text-stone-600">
-            {quietTeamId
-              ? "A friendly hello, no pressure. Open a chat, write your own message, then tick them off."
-              : invites || newcomers
-                ? "Open a chat with WhatsApp or Messenger, write your own message, then tick them off."
-                : "Ask your regulars who can help set up and pack down. Open a chat, write your own message, then tick them off."}
+            {thanks
+              ? "A quick personal thanks goes a long way, especially for first-timers. Open a chat, write your own message, then tick them off."
+              : quietTeamId
+                ? "A friendly hello, no pressure. Open a chat, write your own message, then tick them off."
+                : invites || newcomers
+                  ? "Open a chat with WhatsApp or Messenger, write your own message, then tick them off."
+                  : "Ask your regulars who can help set up and pack down. Open a chat, write your own message, then tick them off."}
           </p>
           {list ? (
-            <InviteList eventId={eventId} invites={list} local={!invites} />
+            <InviteList
+              eventId={thanks ? `thanks-${eventId}` : eventId}
+              invites={list}
+              local={!invites}
+              empty={
+                thanks
+                  ? "Nobody's checked in to this event yet, or nobody who came wants messages."
+                  : undefined
+              }
+            />
           ) : (
             <p className="mt-4 text-sm text-stone-500">Loading…</p>
           )}

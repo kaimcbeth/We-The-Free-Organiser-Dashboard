@@ -31,6 +31,7 @@ function when(t: { schedule: string; anchor: string; appear_hours: number }) {
   if (t.schedule === "quarterly") return "Every 3 months";
   if (t.schedule === "month_end") return "End of each month";
   if (t.schedule === "newcomer") return "Each newcomer";
+  if (t.schedule === "follow_up") return "A week after asking for feedback";
   if (t.anchor === "end") return "After events";
   return t.appear_hours < 0 ? "Before events" : "At events";
 }

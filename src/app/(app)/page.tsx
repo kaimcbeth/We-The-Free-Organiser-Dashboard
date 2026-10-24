@@ -8,6 +8,7 @@ import { TeamLinkButton } from "./team-link";
 import { describeImport } from "@/lib/import-status";
 import { requireOrganiser } from "@/lib/organiser";
 import { RegionEvents } from "./region-events";
+import { SetupChecklist, type SetupStatus } from "./setup-checklist";
 import {
   dayBoundsUtc,
   daysUntilLabel,
@@ -169,6 +170,10 @@ export default async function EventsPage() {
     .eq("id", organiser.team_id)
     .maybeSingle();
   const calendarToken = (cal?.calendar_token as string | undefined) ?? null;
+  const { data: setupData } = organiser.exampleMode
+    ? { data: null }
+    : await supabase.rpc("team_setup_status", { p_team_id: organiser.team_id });
+  const setup = setupData as SetupStatus | null;
 
   return (
     <div className="space-y-8">
@@ -190,6 +195,21 @@ export default async function EventsPage() {
           </Link>
         </div>
       </div>
+
+      {setup &&
+        !setup.dismissed &&
+        (organiser.role === "organiser" ||
+          organiser.role === "regional_lead" ||
+          organiser.role === "god") && (
+          <SetupChecklist
+            teamId={organiser.team_id}
+            community={organiser.team.name.replace(
+              /, (Australia|New Zealand)$/,
+              "",
+            )}
+            status={setup}
+          />
+        )}
 
       <ImportStatus
         teamId={organiser.team_id}

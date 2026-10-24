@@ -1189,3 +1189,96 @@ export async function getFeedback(teamId: string): Promise<{
     responses: (responses as FeedbackResponse[]) ?? [],
   };
 }
+
+// "Same person? Merge": people who might be the same as this one.
+export type MergeCandidate = {
+  id: string;
+  name: string;
+  team: string;
+  events: number;
+  connected: boolean;
+  detail: string;
+};
+export async function findMergeCandidates(
+  personId: string,
+  query: string,
+): Promise<MergeCandidate[]> {
+  const { supabase, organiser } = await requireOrganiser();
+  const q = query
+    .trim()
+    .replace(/[%_,()]/g, " ")
+    .trim();
+  const teamIds =
+    organiser.role === "god" || organiser.role === "regional_lead"
+      ? organiser.teams.map((t) => t.id)
+      : [organiser.team_id];
+  let req = supabase
+    .from("people")
+    .select(
+      "id, first_name, last_name, email, phone, suburb, user_id, team:teams(name), attendance(count)",
+    )
+    .in("team_id", teamIds)
+    .eq("is_test", false)
+    .neq("id", personId)
+    .order("first_name")
+    .limit(25);
+  if (q) {
+    const [first, ...rest] = q.split(/\s+/);
+    req = rest.length
+      ? req
+          .ilike("first_name", `${first}%`)
+          .ilike("last_name", `${rest.join(" ")}%`)
+      : req.or(`first_name.ilike.${first}%,last_name.ilike.${first}%`);
+  }
+  const { data } = await req.returns<
+    {
+      id: string;
+      first_name: string;
+      last_name: string | null;
+      email: string | null;
+      phone: string | null;
+      suburb: string | null;
+      user_id: string | null;
+      team: { name: string } | null;
+      attendance: { count: number }[];
+    }[]
+  >();
+  return (data ?? []).map((p) => ({
+    id: p.id,
+    name: [p.first_name, p.last_name].filter(Boolean).join(" "),
+    team: (p.team?.name ?? "").replace(/, (Australia|New Zealand)$/, ""),
+    events: p.attendance[0]?.count ?? 0,
+    connected: !!p.user_id,
+    detail: [p.suburb, p.email, p.phone].filter(Boolean).join(" · "),
+  }));
+}
+
+export async function mergePeople(
+  keepId: string,
+  dropId: string,
+): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  if (organiser.tourPreview || organiser.exampleMode) return {};
+  if (organiser.role === "core_team")
+    return { error: "Only organisers can merge people." };
+  const { data, error } = await supabase.rpc("merge_people", {
+    p_keep: keepId,
+    p_drop: dropId,
+  });
+  if (error) return { error: "Couldn't merge them. Please try again." };
+  if (data) return { error: data as string };
+  revalidatePath("/people");
+  return {};
+}
+
+export async function getAttendeesList(eventId: string) {
+  const { supabase, organiser } = await requireCore();
+  const { loadAttendeesList } = await import("@/lib/invites");
+  const invites = await loadAttendeesList(
+    supabase,
+    eventId,
+    Date.now(),
+    organiser.role === "god" || organiser.role === "regional_lead",
+  );
+  return { invites, eventTitle: "" };
+}

@@ -1,7 +1,23 @@
-import { RESOURCE_SECTIONS } from "@/lib/resources";
+"use client";
+
+import { useState } from "react";
+import { RESOURCE_SECTIONS, RESOURCES_COMING_SOON } from "@/lib/resources";
+
+const has = (q: string, ...text: (string | undefined)[]) =>
+  !q || text.some((t) => t?.toLowerCase().includes(q));
 
 // The Resources & Training page (organisers and the Core Team).
 export function ResourcesList() {
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const sections = RESOURCE_SECTIONS.map((s) => ({
+    ...s,
+    items: s.items.filter((r) =>
+      has(q, r.title, r.about, r.area, r.tip, s.title),
+    ),
+  })).filter((s) => s.items.length);
+  const soon = RESOURCES_COMING_SOON.filter((r) => has(q, r.title, r.about));
+
   return (
     <div>
       <h1 className="text-2xl font-semibold tracking-tight">
@@ -10,7 +26,15 @@ export function ResourcesList() {
       <p className="mt-1 text-sm text-stone-600">
         Guides and documents for running events. More coming soon.
       </p>
-      {RESOURCE_SECTIONS.map((s) => (
+      <input
+        type="search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search resources"
+        aria-label="Search resources"
+        className="mt-4 w-full rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
+      />
+      {sections.map((s) => (
         <section key={s.title} className="mt-6">
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
             {s.title}
@@ -55,6 +79,29 @@ export function ResourcesList() {
           </ul>
         </section>
       ))}
+      {soon.length > 0 && (
+        <section className="mt-6">
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
+            Coming soon
+          </h2>
+          <ul className="space-y-2">
+            {soon.map((r) => (
+              <li
+                key={r.title}
+                className="rounded-2xl border border-dashed border-stone-300 px-4 py-3"
+              >
+                <p className="font-medium text-stone-700">{r.title}</p>
+                <p className="text-sm text-stone-500">{r.about}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {q && !sections.length && !soon.length && (
+        <p className="mt-6 text-sm text-stone-500">
+          Nothing matches &ldquo;{query}&rdquo;.
+        </p>
+      )}
     </div>
   );
 }

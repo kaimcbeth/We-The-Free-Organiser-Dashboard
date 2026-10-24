@@ -11,6 +11,14 @@ export type Release = { date: string; title: string; changes: Change[] };
 // What's being worked on next (shown at the top of What's new).
 export const COMING_SOON: { title: string; text: string }[] = [
   {
+    title: "Fuller briefing and debrief guides",
+    text: "Much more detailed guides for running the volunteer briefing before outreach and the debrief after.",
+  },
+  {
+    title: "More in Resources & Training",
+    text: "Our theory of change, a code of conduct, an incident report form and a fundraising guide.",
+  },
+  {
     title: "Nearby communities: shared volunteers",
     text: "Link communities that share volunteers (like Sydney and Parramatta) so the same person can be checked in at either, with one history across both and no duplicates.",
   },
@@ -52,6 +60,26 @@ export const CHANGELOG: Release[] = [
       {
         level: "organiser",
         text: "Suggest something: send ideas for the Hub from this page.",
+      },
+      {
+        level: "organiser",
+        text: "Get your community ready: a short checklist on the Events page for new communities (community chat link, events, actions, Core Team). It ticks itself off.",
+      },
+      {
+        level: "organiser",
+        text: "Same person? Merge: on a profile, fold a duplicate into one record. Check-ins, messages and roles all come across.",
+      },
+      {
+        level: "organiser",
+        text: "Thank everyone: on Thank-you messages sent, a list of everyone who came with message links, first-timers first.",
+      },
+      {
+        level: "organiser",
+        text: "Feedback reviewed: a week after you tick off Volunteer feedback collected, if anyone answered, with a button to read the responses.",
+      },
+      {
+        level: "organiser",
+        text: "Resources & Training has a search box, and a list of what's coming.",
       },
       {
         level: "organiser",

@@ -25,12 +25,14 @@ export function InviteList({
   eventId,
   invites,
   local = false,
+  empty,
 }: {
   eventId: string;
   invites: Invite[];
   // A plain list of regulars to message (e.g. the set-up team): ticks are
   // only kept on this device, and nothing counts as a personal invite.
   local?: boolean;
+  empty?: string; // text when there's nobody to show
 }) {
   const storeKey = `regulars-${eventId}`;
   const [sent, setSent] = useState(() => {
@@ -146,8 +148,8 @@ export function InviteList({
   if (shown.length === 0)
     return (
       <p className="mt-6 rounded-2xl bg-white p-4 text-sm text-stone-600 shadow-sm ring-1 ring-black/5">
-        Nobody needs a personal message for this one. Everyone&apos;s either
-        been messaged recently or isn&apos;t due yet.
+        {empty ??
+          "Nobody needs a personal message for this one. Everyone's either been messaged recently or isn't due yet."}
       </p>
     );
 

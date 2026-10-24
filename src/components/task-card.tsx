@@ -393,6 +393,20 @@ export function TaskCard({
                   className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
                 />
               )}
+              {task.kind === "com_thank_you" && task.eventId && (
+                <RegularsSheet
+                  eventId={task.eventId}
+                  thanks
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
+              )}
+              {task.kind === "com_feedback_review" && (
+                <FeedbackSheet
+                  teamId={task.teamId}
+                  review
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
+              )}
               {task.kind === "com_feedback" && (
                 <FeedbackSheet
                   teamId={task.teamId}
