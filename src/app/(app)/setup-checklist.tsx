@@ -51,10 +51,12 @@ export function SetupChecklist({
   teamId,
   community,
   status,
+  preview = false,
 }: {
   teamId: string;
   community: string;
   status: SetupStatus;
+  preview?: boolean; // the tour: nothing is saved
 }) {
   const router = useRouter();
   const [hidden, setHidden] = useState(false);
@@ -77,7 +79,10 @@ export function SetupChecklist({
     "text-sm font-semibold text-pink-ink hover:underline whitespace-nowrap";
 
   return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm ring-2 ring-pink/50">
+    <section
+      data-tour="setup-checklist"
+      className="rounded-2xl bg-white p-4 shadow-sm ring-2 ring-pink/50"
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="font-semibold">Get {community} ready</h2>
@@ -89,6 +94,7 @@ export function SetupChecklist({
           type="button"
           onClick={() => {
             setHidden(true);
+            if (preview) return;
             void createClient().rpc("dismiss_team_setup", {
               p_team_id: teamId,
             });
@@ -125,6 +131,7 @@ export function SetupChecklist({
                   return setError(
                     "That doesn't look like a WhatsApp invite link (it starts with https://chat.whatsapp.com/).",
                   );
+                if (preview) return setWaDone(true);
                 start(async () => {
                   const { data } = await createClient().rpc(
                     "set_team_whatsapp",
