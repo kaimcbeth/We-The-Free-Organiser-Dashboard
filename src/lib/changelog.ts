@@ -11,6 +11,10 @@ export type Release = { date: string; title: string; changes: Change[] };
 // What's being worked on next (shown at the top of What's new).
 export const COMING_SOON: { title: string; text: string }[] = [
   {
+    title: "Nearby communities: shared volunteers",
+    text: "Link communities that share volunteers (like Sydney and Parramatta) so the same person can be checked in at either, with one history across both and no duplicates.",
+  },
+  {
     title: "Outreach training framework",
     text: "A step-by-step training path for new outreach volunteers, in Resources & Training.",
   },
