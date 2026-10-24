@@ -364,18 +364,19 @@ export function GraphicMaker({
       </button>
       {open && (
         <Sheet title="Event graphics" onClose={() => setOpen(false)}>
-          <div className="flex flex-wrap gap-1.5">
-            <button
-              type="button"
-              onClick={() => {
-                setTemplate("promo");
-                setChosen(null);
-              }}
-              className={chip(template === "promo")}
-            >
-              Promote it
-            </button>
-            {ownPhotos.length > 0 && (
+          {/* Only a choice once the event has its own photos. */}
+          {ownPhotos.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setTemplate("promo");
+                  setChosen(null);
+                }}
+                className={chip(template === "promo")}
+              >
+                Promote it
+              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -386,9 +387,9 @@ export function GraphicMaker({
               >
                 Thanks for coming
               </button>
-            )}
-          </div>
-          <div className="mt-2 flex flex-wrap gap-1.5">
+            </div>
+          )}
+          <div className="flex flex-wrap gap-1.5">
             {(Object.keys(SIZES) as GraphicSize[]).map((s) => (
               <button
                 key={s}
