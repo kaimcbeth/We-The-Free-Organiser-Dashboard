@@ -121,6 +121,7 @@ export function ApprovalForm({
 }) {
   const [f, setF] = useState<Fields>(initial);
   const [editMine, setEditMine] = useState(!hasSaved || !signatureUrl);
+  const [quick, setQuick] = useState(hasSaved && !!signatureUrl);
   const [sigBytes, setSigBytes] = useState<Uint8Array | null>(null);
   const [newSig, setNewSig] = useState<Blob | null>(null);
   const [subject, setSubject] = useState(
@@ -297,8 +298,8 @@ www.activism.wtf`,
   const late = daysAway < noticeDays;
   const realSent = sent.filter((s) => !s.test);
 
-  return (
-    <div className="mt-4 space-y-6">
+  const notices = (
+    <>
       {realSent.length > 0 && (
         <p className="rounded-2xl bg-cyan/20 px-4 py-3 text-sm text-navy">
           Already sent{" "}
@@ -318,6 +319,90 @@ www.activism.wtf`,
           send it.
         </p>
       )}
+    </>
+  );
+
+  // Details saved before: everything's filled in, so it's one tap.
+  if (quick)
+    return (
+      <div className="mt-4 space-y-4">
+        {notices}
+        <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+          <h2 className="font-semibold">Ready to send</h2>
+          <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+            <dt className="text-stone-500">When</dt>
+            <dd>
+              {dateLine}, {f.start}
+              {f.end ? `–${f.end}` : ""}
+            </dd>
+            <dt className="text-stone-500">Where</dt>
+            <dd>{f.place}</dd>
+            <dt className="text-stone-500">People</dt>
+            <dd>About {f.number}</dd>
+            <dt className="text-stone-500">From</dt>
+            <dd>
+              {f.name}, {f.capacity.split(",")[0]}
+            </dd>
+            <dt className="text-stone-500">To</dt>
+            <dd>
+              {authority.email}{" "}
+              <span className="text-stone-500">(you&apos;re CC&apos;d)</span>
+            </dd>
+          </dl>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            <button
+              type="button"
+              onClick={showPreview}
+              className="font-medium text-pink-ink hover:underline"
+            >
+              Preview the form
+            </button>
+            <button
+              type="button"
+              onClick={() => setQuick(false)}
+              className="text-stone-500 hover:text-stone-800 hover:underline"
+            >
+              Change something
+            </button>
+            <button
+              type="button"
+              disabled={busy || !sigBytes}
+              onClick={() => send(true)}
+              className="text-stone-500 hover:text-stone-800 hover:underline disabled:opacity-50"
+            >
+              Send me a test
+            </button>
+          </div>
+          {preview && (
+            <iframe
+              src={preview}
+              title="Form preview"
+              className="mt-3 h-[60vh] w-full rounded-xl bg-white ring-1 ring-black/10"
+            />
+          )}
+        </section>
+        {error && <p className="text-sm text-red-700">{error}</p>}
+        {status && (
+          <p className="rounded-2xl bg-cyan/20 px-4 py-3 text-sm text-navy">
+            {status}
+          </p>
+        )}
+        {!done && (
+          <button
+            type="button"
+            disabled={busy || !sigBytes}
+            onClick={() => send(false)}
+            className="w-full rounded-xl bg-pink px-4 py-3 font-semibold text-navy hover:bg-pink-strong disabled:opacity-60"
+          >
+            {busy ? "Sending…" : "Send to the police"}
+          </button>
+        )}
+      </div>
+    );
+
+  return (
+    <div className="mt-4 space-y-6">
+      {notices}
 
       <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
         <div className="flex items-baseline justify-between">
