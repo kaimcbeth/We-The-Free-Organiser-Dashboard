@@ -139,6 +139,15 @@ export function OrganiserTour({
     },
     {
       section: 1,
+      icon: "📶",
+      tone: "bg-cyan",
+      title: "Engagement at a glance",
+      href: "/people",
+      target: "engagement-bar,people-list",
+      body: "The little bars show how engaged each person is, from red (rarely comes) to green (comes a lot), out of 10. An arrow means it's gone up or down a lot in the last two months. Hover over a bar to see the score.",
+    },
+    {
+      section: 1,
       icon: "🤝",
       tone: "bg-pink",
       title: "Build your crew",

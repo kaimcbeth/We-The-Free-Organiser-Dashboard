@@ -301,7 +301,10 @@ export function PeopleList({
                         {p.events === 1 ? "event" : "events"}
                       </p>
                       {p.engagement && (
-                        <span className="mt-1 flex justify-end">
+                        <span
+                          data-tour="engagement-bar"
+                          className="mt-1 flex justify-end"
+                        >
                           <EngagementBar e={p.engagement} />
                         </span>
                       )}
