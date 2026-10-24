@@ -10,7 +10,7 @@ export function TypePicker({
 }: {
   eventId: string;
   value: string | null;
-  types: { id: string; name: string }[];
+  types: { id: string; name: string; category?: string }[];
 }) {
   const [current, setCurrent] = useState(value ?? "");
   const [pending, start] = useTransition();
@@ -34,11 +34,25 @@ export function TypePicker({
         } ${pending ? "opacity-60" : ""}`}
       >
         <option value="">Pick a type…</option>
-        {types.map((t) => (
-          <option key={t.id} value={t.id}>
-            {t.name}
-          </option>
-        ))}
+        {/* Grouped: Outreach events / Community events / Training. */}
+        {(
+          [
+            ["outreach", "Outreach events"],
+            ["community", "Community events"],
+            ["training", "Training"],
+          ] as const
+        ).map(([cat, label]) => {
+          const list = types.filter((t) => (t.category ?? "community") === cat);
+          return list.length ? (
+            <optgroup key={cat} label={label}>
+              {list.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </optgroup>
+          ) : null;
+        })}
       </select>
       <svg
         viewBox="0 0 20 20"

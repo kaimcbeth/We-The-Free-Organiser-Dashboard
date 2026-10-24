@@ -122,6 +122,7 @@ export function cleanTitle(summary: string): string {
 // Best guess at the event type from its title. null = leave for an organiser to pick.
 export function guessType(summary: string): string | null {
   if (/movie challenge|3\s?mmc|minute movie/i.test(summary)) return "Movie Challenge";
+  if (/co-?working|\bcowork/i.test(summary)) return "Co-working";
   if (/\bsocial\b|lunch|dinner|picnic|potluck|gathering|new years?|community/i.test(summary)) return "Community Event";
   if (/workshop|training|introduction to|intro to|strategy/i.test(summary)) return "Workshop/Training";
   if (/outreach|cube|vigil|stall|demo\b|protest|street/i.test(summary)) return "Other Outreach";

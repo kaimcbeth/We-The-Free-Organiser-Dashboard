@@ -18,6 +18,7 @@ import {
   type GraphicSize,
 } from "@/components/graphic-maker";
 import { MoveTask } from "@/components/move-task";
+import { RegularsSheet } from "@/components/regulars-sheet";
 import { FbEventLink } from "@/components/fb-event-link";
 import { ScriptButton } from "@/components/script-button";
 import { CopyMaker, type CopyPlatform } from "@/components/copy-maker";
@@ -365,24 +366,17 @@ export function TaskCard({
                 />
               )}
               {task.kind === "ev_setup_team" && task.eventId && (
-                <a
-                  href={`/invites/${task.eventId}?list=regulars`}
-                  target="_blank"
-                  rel="noopener"
+                <RegularsSheet
+                  eventId={task.eventId}
                   className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
-                >
-                  Message regulars ↗
-                </a>
+                />
               )}
               {task.kind === "personal_invites" && task.eventId && (
-                <a
-                  href={`/invites/${task.eventId}`}
-                  target="_blank"
-                  rel="noopener"
+                <RegularsSheet
+                  eventId={task.eventId}
+                  invites
                   className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
-                >
-                  Open invite list ↗
-                </a>
+                />
               )}
               {task.kind === "take_photos" && task.eventId && (
                 <PhotoUploader

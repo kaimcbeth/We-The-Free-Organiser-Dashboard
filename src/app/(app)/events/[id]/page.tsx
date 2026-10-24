@@ -88,7 +88,7 @@ export default async function EventCheckInPage({
         .lt("events.starts_at", event.starts_at),
       supabase
         .from("event_types")
-        .select("id, name, counts_as_outreach")
+        .select("id, name, counts_as_outreach, category")
         .order("sort_order"),
       supabase
         .from("checkin_links")

@@ -7,7 +7,7 @@ export default async function NewEventPage() {
   const { supabase } = await requireOrganiser();
   const { data: types } = await supabase
     .from("event_types")
-    .select("id, name")
+    .select("id, name, category")
     .order("sort_order");
 
   return (

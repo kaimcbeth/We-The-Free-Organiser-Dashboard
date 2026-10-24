@@ -10,6 +10,24 @@ export type Release = { date: string; title: string; changes: Change[] };
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-10-25",
+    title: "Facebook event links, Co-working, and pop-up lists",
+    changes: [
+      {
+        level: "organiser",
+        text: "Paste the Facebook event link once (on the Facebook event actions) and every Facebook action gets Open Facebook event and Copy link. It shows on the event page too.",
+      },
+      {
+        level: "organiser",
+        text: "Co-working is its own event type under Community events. Event types are now grouped: Outreach events, Community events, Training.",
+      },
+      {
+        level: "organiser",
+        text: "Each event on the Actions page has its own progress bar. Message regulars and Open invite list now open as pop-ups. Questions answered is due the day before the event.",
+      },
+    ],
+  },
+  {
     date: "2026-10-24",
     title: "Resources & Training, and smarter role actions",
     changes: [

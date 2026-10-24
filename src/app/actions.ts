@@ -1057,3 +1057,27 @@ export async function saveEventFacebookUrl(
   revalidatePath(`/events/${eventId}`);
   return { url: clean };
 }
+
+// The regulars list (for the set-up team pop-up).
+export async function getRegularsList(eventId: string) {
+  const { supabase, organiser } = await requireCore();
+  const { loadRegularsList } = await import("@/lib/invites");
+  return loadRegularsList(
+    supabase,
+    eventId,
+    Date.now(),
+    organiser.role === "god" || organiser.role === "regional_lead",
+  );
+}
+
+// This event's personal invite list (for the pop-up on the action).
+export async function getInviteList(eventId: string) {
+  const { supabase, organiser } = await requireCore();
+  const { loadInviteList } = await import("@/lib/invites");
+  return loadInviteList(
+    supabase,
+    eventId,
+    Date.now(),
+    organiser.role === "god" || organiser.role === "regional_lead",
+  );
+}

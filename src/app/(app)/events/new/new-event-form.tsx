@@ -8,7 +8,7 @@ export function NewEventForm({
   types,
   today,
 }: {
-  types: { id: string; name: string }[];
+  types: { id: string; name: string; category?: string }[];
   today: string;
 }) {
   const [state, action, pending] = useActionState<FormState, FormData>(
@@ -38,11 +38,26 @@ export function NewEventForm({
           className={inputClass}
           defaultValue={types[0]?.id}
         >
-          {types.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
+          {(
+            [
+              ["outreach", "Outreach events"],
+              ["community", "Community events"],
+              ["training", "Training"],
+            ] as const
+          ).map(([cat, label]) => {
+            const list = types.filter(
+              (t) => (t.category ?? "community") === cat,
+            );
+            return list.length ? (
+              <optgroup key={cat} label={label}>
+                {list.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </optgroup>
+            ) : null;
+          })}
         </select>
       </Field>
 
