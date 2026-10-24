@@ -2,8 +2,15 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { markInvited, setNoMessages } from "@/app/actions";
-import type { Invite, InviteReason } from "@/lib/invites";
+import {
+  markInvited,
+  setNoMessages,
+  setPersonFacebook,
+  setPersonPhone,
+} from "@/app/actions";
+import { inputClass } from "@/components/form";
+import { messengerLink } from "@/lib/messenger";
+import { whatsappLink, type Invite, type InviteReason } from "@/lib/invites";
 
 const WHY: Record<InviteReason, string> = {
   first_timer: "First-timer",
@@ -26,6 +33,58 @@ export function InviteList({
   );
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
+  // Contact details edited here: personId -> { phone, facebook } as saved.
+  const [contact, setContact] = useState<
+    Record<string, { phone: string; facebook: string }>
+  >({});
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draft, setDraft] = useState({ phone: "", facebook: "" });
+  const [saving, startSave] = useTransition();
+
+  function openEdit(i: Invite) {
+    const c = contact[i.personId];
+    setDraft({
+      phone: c?.phone ?? i.phone ?? "",
+      facebook: c?.facebook ?? i.facebookUrl ?? "",
+    });
+    setEditing(i.personId);
+    setError("");
+  }
+
+  function saveEdit(i: Invite) {
+    startSave(async () => {
+      const before = contact[i.personId] ?? {
+        phone: i.phone ?? "",
+        facebook: i.facebookUrl ?? "",
+      };
+      if (draft.phone.trim() !== before.phone) {
+        const r = await setPersonPhone(i.personId, draft.phone);
+        if (r.error) return setError(r.error);
+      }
+      if (draft.facebook.trim() !== before.facebook) {
+        const r = await setPersonFacebook(i.personId, draft.facebook);
+        if (r.error) return setError(r.error);
+      }
+      setContact((c) => ({
+        ...c,
+        [i.personId]: {
+          phone: draft.phone.trim(),
+          facebook: draft.facebook.trim(),
+        },
+      }));
+      setEditing(null);
+    });
+  }
+
+  // Links, using anything just added here.
+  const links = (i: Invite) => {
+    const c = contact[i.personId];
+    if (!c) return { whatsapp: i.whatsapp, facebook: i.facebook };
+    return {
+      whatsapp: whatsappLink(c.phone || null),
+      facebook: messengerLink(c.facebook || null),
+    };
+  };
   const [, start] = useTransition();
 
   function toggle(i: Invite) {
@@ -54,12 +113,12 @@ export function InviteList({
   const groups = [
     {
       title: "Priority",
-      note: "New people and people drifting off. Do these first.",
+      note: "New people and people drifting off. Message these first.",
       list: shown.filter((i) => i.group === "priority"),
     },
     {
       title: "Regulars",
-      note: "A quick round. Easy to hand to a helper.",
+      note: "People who come often. A quick \u201csee you there?\u201d is plenty.",
       list: shown.filter((i) => i.group === "regulars"),
     },
   ];
@@ -99,6 +158,7 @@ export function InviteList({
               <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
                 {g.list.map((i) => {
                   const isSent = sent.has(i.personId);
+                  const l = links(i);
                   return (
                     <li
                       key={i.personId}
@@ -125,15 +185,63 @@ export function InviteList({
                             {WHY[i.reason]} · {i.detail}
                           </span>
                         </div>
+                        {editing === i.personId && (
+                          <div className="mt-2 space-y-2 rounded-xl bg-stone-50 p-3 ring-1 ring-black/5">
+                            <label className="block text-xs font-medium text-stone-600">
+                              Mobile (for WhatsApp)
+                              <input
+                                type="tel"
+                                value={draft.phone}
+                                onChange={(e) =>
+                                  setDraft({ ...draft, phone: e.target.value })
+                                }
+                                placeholder="0412 345 678"
+                                className={`${inputClass} mt-1`}
+                              />
+                            </label>
+                            <label className="block text-xs font-medium text-stone-600">
+                              Facebook profile link (for Messenger)
+                              <input
+                                type="url"
+                                value={draft.facebook}
+                                onChange={(e) =>
+                                  setDraft({
+                                    ...draft,
+                                    facebook: e.target.value,
+                                  })
+                                }
+                                placeholder="facebook.com/…"
+                                className={`${inputClass} mt-1`}
+                              />
+                            </label>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                disabled={saving}
+                                onClick={() => saveEdit(i)}
+                                className="rounded-lg bg-navy px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-60"
+                              >
+                                {saving ? "Saving…" : "Save"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditing(null)}
+                                className="rounded-lg px-3 py-1.5 text-sm text-stone-500 hover:text-stone-800"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
                         {i.kind === "ask" && (
                           <p className="mt-0.5 text-xs font-medium text-pink-ink">
                             Make it an ask: help set up, or bring a friend?
                           </p>
                         )}
                         <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                          {i.whatsapp && (
+                          {l.whatsapp && (
                             <a
-                              href={i.whatsapp}
+                              href={l.whatsapp}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="rounded-lg bg-[#25D366]/15 px-2.5 py-1 text-xs font-semibold text-[#128C7E] hover:bg-[#25D366]/25"
@@ -141,9 +249,9 @@ export function InviteList({
                               WhatsApp ↗
                             </a>
                           )}
-                          {i.facebook && (
+                          {l.facebook && (
                             <a
-                              href={i.facebook}
+                              href={l.facebook}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="rounded-lg bg-[#0866FF]/10 px-2.5 py-1 text-xs font-semibold text-[#0866FF] hover:bg-[#0866FF]/15"
@@ -151,10 +259,21 @@ export function InviteList({
                               Messenger ↗
                             </a>
                           )}
-                          {!i.whatsapp && !i.facebook && (
+                          {!l.whatsapp && !l.facebook && (
                             <span className="text-xs text-stone-400">
                               No contact details yet
                             </span>
+                          )}
+                          {i.canEdit && editing !== i.personId && (
+                            <button
+                              type="button"
+                              onClick={() => openEdit(i)}
+                              className="text-xs font-medium text-pink-ink hover:underline"
+                            >
+                              {l.whatsapp || l.facebook
+                                ? "Edit details"
+                                : "Add details"}
+                            </button>
                           )}
                           <button
                             type="button"

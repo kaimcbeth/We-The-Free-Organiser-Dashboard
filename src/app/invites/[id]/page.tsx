@@ -9,11 +9,16 @@ export default async function InvitesPage({
   params,
 }: PageProps<"/invites/[id]">) {
   const { id } = await params;
-  const { supabase } = await requireCore();
+  const { supabase, organiser } = await requireCore();
   // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
   const now = Date.now();
   const [list, { data: event }] = await Promise.all([
-    loadInviteList(supabase, id, now),
+    loadInviteList(
+      supabase,
+      id,
+      now,
+      organiser.role === "god" || organiser.role === "regional_lead",
+    ),
     supabase
       .from("events")
       .select("starts_at, ends_at, venue")

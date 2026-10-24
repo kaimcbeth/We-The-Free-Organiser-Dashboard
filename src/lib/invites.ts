@@ -46,6 +46,9 @@ export type Invite = {
   sent: boolean; // already messaged for this event
   whatsapp: string | null;
   facebook: string | null;
+  phone: string | null; // raw, for editing
+  facebookUrl: string | null;
+  canEdit: boolean; // may add/edit their contact details (privacy rules)
 };
 
 type PersonIn = {
@@ -77,7 +80,16 @@ export function inviteFor(
   event: { id: string; typeId: string | null },
   now: number,
   tracking: Parameters<typeof engagementStatus>[3],
-): Omit<Invite, "personId" | "name" | "whatsapp" | "facebook"> | null {
+): Omit<
+  Invite,
+  | "personId"
+  | "name"
+  | "whatsapp"
+  | "facebook"
+  | "phone"
+  | "facebookUrl"
+  | "canEdit"
+> | null {
   const dates = p.attended.map((a) => a.at);
   const already = p.messages.find((m) => m.eventId === event.id);
   const earlier = p.messages.filter((m) => m.eventId !== event.id);
@@ -200,6 +212,8 @@ export async function loadInviteList(
   supabase: SupabaseClient,
   eventId: string,
   now: number,
+  // RSLs and God Mode may add anyone's details; otherwise only people with a role.
+  canEditAny = false,
 ): Promise<{ invites: Invite[]; eventTitle: string } | null> {
   const { data: event } = await supabase
     .from("events")
@@ -294,6 +308,9 @@ export async function loadInviteList(
         name: [p.first_name, p.last_name].filter(Boolean).join(" "),
         whatsapp: whatsappLink(p.phone),
         facebook: messengerLink(p.facebook_url),
+        phone: p.phone,
+        facebookUrl: p.facebook_url,
+        canEdit: canEditAny || withRole.has(p.id) || !!p.pending_role,
         ...decision,
       });
   }
