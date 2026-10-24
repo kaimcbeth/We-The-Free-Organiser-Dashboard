@@ -1,5 +1,5 @@
 import { requireOrganiser } from "@/lib/organiser";
-import { changelogFor, type ChangeLevel } from "@/lib/changelog";
+import { changelogFor, COMING_SOON, type ChangeLevel } from "@/lib/changelog";
 import { MarkSeen } from "./mark-seen";
 
 const BADGE: Record<ChangeLevel, { label: string; tone: string } | null> = {
@@ -34,6 +34,21 @@ export default async function WhatsNewPage() {
               : "."}
         </p>
       </div>
+      {COMING_SOON.length > 0 && (
+        <section className="rounded-2xl border border-dashed border-cyan bg-cyan/10 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-navy">
+            Coming soon
+          </p>
+          <ul className="mt-2 space-y-3">
+            {COMING_SOON.map((c) => (
+              <li key={c.title} className="text-sm">
+                <p className="font-semibold text-navy">{c.title}</p>
+                <p className="text-stone-700">{c.text}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {releases.map((r) => (
         <section
           key={r.date + r.title}

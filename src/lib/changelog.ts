@@ -8,7 +8,33 @@ export type ChangeLevel = "organiser" | "regional_lead" | "god";
 export type Change = { level: ChangeLevel; text: string };
 export type Release = { date: string; title: string; changes: Change[] };
 
+// What's being worked on next (shown at the top of What's new).
+export const COMING_SOON: { title: string; text: string }[] = [
+  {
+    title: "Text and email reminders for volunteers",
+    text: "Volunteers who've said they're coming get a reminder by text or email before the event, with when and where.",
+  },
+  {
+    title: "Write post: social media copy",
+    text: "Posts written in your community's voice for Instagram, Facebook groups, WhatsApp and stories. The button's there already; it switches on once the writing assistant is connected.",
+  },
+];
+
 export const CHANGELOG: Release[] = [
+  {
+    date: "2026-10-25",
+    title: "Add events to your calendar",
+    changes: [
+      {
+        level: "organiser",
+        text: "Add to calendar on each event (Google Calendar, or Apple and Outlook). On the Events page, Add all to calendar subscribes Google Calendar to all your community's events, and it keeps up as events change.",
+      },
+      {
+        level: "organiser",
+        text: "Actions: collapse an event's actions with the arrow by its name; every action still to come shows under coming up; Guides on equipment set-up, tech check and pack-down; Message them on Quiet volunteers re-engaged.",
+      },
+    ],
+  },
   {
     date: "2026-10-25",
     title: "Newcomer-based actions",
