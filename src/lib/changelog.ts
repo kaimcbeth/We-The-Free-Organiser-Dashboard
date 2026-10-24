@@ -27,6 +27,24 @@ export const COMING_SOON: { title: string; text: string }[] = [
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-25",
+    title: "Suggest a feature, and more events on Actions",
+    changes: [
+      {
+        level: "organiser",
+        text: "Suggest something: send ideas for the Hub from this page.",
+      },
+      {
+        level: "organiser",
+        text: "Actions lists all your upcoming events now, 3 more at a time with Show more.",
+      },
+      {
+        level: "organiser",
+        text: "Quiet volunteers re-engaged only comes up when someone has actually gone quiet. Regulars list checked is gone.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-25",
     title: "Add events to your calendar",
     changes: [
       {

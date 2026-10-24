@@ -1129,3 +1129,28 @@ export async function movePersonToTeam(
   revalidatePath("/people", "layout");
   return {};
 }
+
+// "Suggest a feature" on What's new.
+export async function addSuggestion(
+  body: string,
+): Promise<{ error?: string; ok?: boolean }> {
+  const { supabase, organiser } = await requireOrganiser();
+  if (organiser.tourPreview || organiser.exampleMode) return { ok: true };
+  const text = body.trim();
+  if (text.length < 5) return { error: "Tell us a bit more." };
+  if (text.length > 2000) return { error: "Keep it under 2,000 characters." };
+  const { error } = await supabase.from("feature_suggestions").insert({
+    body: text,
+    author_name: organiser.name,
+    team_id: organiser.homeTeamId,
+  });
+  if (error) return { error: "Couldn't send that. Please try again." };
+  revalidatePath("/whats-new");
+  return { ok: true };
+}
+
+export async function removeSuggestion(id: string) {
+  const { supabase } = await requireOrganiser();
+  await supabase.from("feature_suggestions").delete().eq("id", id);
+  revalidatePath("/whats-new");
+}

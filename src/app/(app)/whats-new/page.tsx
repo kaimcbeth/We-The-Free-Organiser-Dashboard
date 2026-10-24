@@ -1,6 +1,7 @@
 import { requireOrganiser } from "@/lib/organiser";
 import { changelogFor, COMING_SOON, type ChangeLevel } from "@/lib/changelog";
 import { MarkSeen } from "./mark-seen";
+import { Suggest, type Suggestion } from "./suggest";
 
 const BADGE: Record<ChangeLevel, { label: string; tone: string } | null> = {
   organiser: null,
@@ -9,7 +10,7 @@ const BADGE: Record<ChangeLevel, { label: string; tone: string } | null> = {
 };
 
 export default async function WhatsNewPage() {
-  const { organiser } = await requireOrganiser();
+  const { supabase, organiser } = await requireOrganiser();
   const level: ChangeLevel =
     organiser.role === "god"
       ? "god"
@@ -17,6 +18,30 @@ export default async function WhatsNewPage() {
         ? "regional_lead"
         : "organiser";
   const releases = changelogFor(level);
+  const everyone = organiser.access === "god";
+  const { data: rows } = await supabase
+    .from("feature_suggestions")
+    .select("id, body, created_at, author_name, user_id, team:teams(name)")
+    .order("created_at", { ascending: false })
+    .limit(everyone ? 200 : 20)
+    .returns<
+      {
+        id: string;
+        body: string;
+        created_at: string;
+        author_name: string | null;
+        user_id: string;
+        team: { name: string } | null;
+      }[]
+    >();
+  const suggestions: Suggestion[] = (rows ?? []).map((r) => ({
+    id: r.id,
+    body: r.body,
+    created_at: r.created_at,
+    author_name: r.author_name,
+    team: r.team?.name.replace(/, (Australia|New Zealand)$/, "") ?? null,
+    mine: r.user_id === organiser.id,
+  }));
 
   return (
     <div className="space-y-6">
@@ -49,6 +74,7 @@ export default async function WhatsNewPage() {
           </ul>
         </section>
       )}
+      <Suggest list={suggestions} everyone={everyone} />
       {releases.map((r) => (
         <section
           key={r.date + r.title}
