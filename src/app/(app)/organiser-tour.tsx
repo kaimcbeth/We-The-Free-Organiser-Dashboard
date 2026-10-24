@@ -78,9 +78,9 @@ export function OrganiserTour({
       icon: "🗓️",
       tone: "bg-yellow",
       title: "List or calendar",
-      href: "/",
+      href: "/calendar",
       target: "view-switch",
-      body: "Today's event sits at the top of the Events page, with the next one just below. Switch to Calendar to see the whole month.",
+      body: "Calendar shows the whole month at a glance. List puts today's event at the top, with the next one just below. Switch between them here.",
     },
     {
       section: 0,
