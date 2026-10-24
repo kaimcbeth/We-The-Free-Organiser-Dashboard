@@ -324,11 +324,13 @@ export async function loadInviteList(
 
 // Everyone who comes regularly (plus anyone with a role): for asking who can
 // help with something, like setting up. No spacing rules, nothing recorded.
+// With newcomers: the community's first-timers and newcomers instead.
 export async function loadRegularsList(
   supabase: SupabaseClient,
   eventId: string,
   now: number,
   canEditAny = false,
+  newcomers = false,
 ): Promise<{ invites: Invite[]; eventTitle: string } | null> {
   const { data: event } = await supabase
     .from("events")
@@ -373,16 +375,26 @@ export async function loadRegularsList(
       tracking,
     );
     const role = withRole.has(p.id) || !!p.pending_role;
-    if (status !== "regular" && !role) continue;
+    if (newcomers) {
+      if (status !== "first_timer" && status !== "newcomer") continue;
+    } else if (status !== "regular" && !role) continue;
     const recent = dates.filter(
       (d) => now - Date.parse(d) <= WINDOW_DAYS * DAY && Date.parse(d) <= now,
     ).length;
     invites.push({
       personId: p.id,
       name: [p.first_name, p.last_name].filter(Boolean).join(" "),
-      group: "regulars",
-      reason: "regular",
-      detail: role ? "Has a role" : `${recent} events in 3 months`,
+      group: newcomers ? "priority" : "regulars",
+      reason: newcomers
+        ? status === "first_timer"
+          ? "first_timer"
+          : "newcomer"
+        : "regular",
+      detail: newcomers
+        ? `${dates.length} event${dates.length === 1 ? "" : "s"} so far`
+        : role
+          ? "Has a role"
+          : `${recent} events in 3 months`,
       kind: "invite",
       sent: false,
       whatsapp: whatsappLink(p.phone),

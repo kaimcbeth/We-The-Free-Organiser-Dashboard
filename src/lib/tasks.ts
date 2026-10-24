@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { TaskRow } from "@/components/task-card";
 import { signPhotos } from "@/lib/photos";
+import { loadRegularsList } from "@/lib/invites";
 import type { GraphicSize } from "@/components/graphic-maker";
 
 type Raw = {
@@ -152,6 +153,7 @@ export async function loadTeamTasks(
   // Moved tasks stay out of the way until their day.
   const nowIso = new Date().toISOString();
   const all = (open.data ?? []).map(toRow).filter(keep);
+  await attachNewcomers(supabase, all);
   return {
     open: all.filter((t) => !t.showFrom || t.showFrom <= nowIso),
     later: all
@@ -159,6 +161,23 @@ export async function loadTeamTasks(
       .sort((a, b) => a.showFrom!.localeCompare(b.showFrom!)),
     done: (done.data ?? []).map(toRow).filter(keep),
   };
+}
+
+// "New volunteers reminded": name the newcomers to remind.
+async function attachNewcomers(supabase: SupabaseClient, rows: TaskRow[]) {
+  const ids = [
+    ...new Set(
+      rows
+        .filter((t) => t.kind === "com_remind_new" && t.eventId)
+        .map((t) => t.eventId!),
+    ),
+  ];
+  for (const id of ids) {
+    const list = await loadRegularsList(supabase, id, Date.now(), false, true);
+    const names = (list?.invites ?? []).map((i) => i.name);
+    for (const t of rows)
+      if (t.kind === "com_remind_new" && t.eventId === id) t.people = names;
+  }
 }
 
 // Open tasks assigned to one person (their own page).
@@ -175,6 +194,7 @@ export async function loadMyTasks(supabase: SupabaseClient, personId: string) {
   const rows = (data ?? [])
     .map(toRow)
     .filter((t) => !t.showFrom || t.showFrom <= nowIso);
+  await attachNewcomers(supabase, rows);
   // Who handed each one over (with their photo, when we can show it).
   if (rows.length) {
     const { data: by } = await supabase.rpc("my_task_delegators", {

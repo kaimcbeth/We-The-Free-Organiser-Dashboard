@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { Sheet } from "@/components/sheet";
-import { getInviteList, getRegularsList } from "@/app/actions";
+import {
+  getInviteList,
+  getNewcomersList,
+  getRegularsList,
+} from "@/app/actions";
 import { InviteList } from "@/app/invites/[id]/invite-list";
 import type { Invite } from "@/lib/invites";
 
@@ -12,10 +16,12 @@ export function RegularsSheet({
   eventId,
   className,
   invites = false,
+  newcomers = false,
 }: {
   eventId: string;
   className?: string;
   invites?: boolean; // the personal invite list instead of all regulars
+  newcomers?: boolean; // the community's newcomers
 }) {
   const [open, setOpen] = useState(false);
   const [list, setList] = useState<Invite[] | null>(null);
@@ -29,20 +35,37 @@ export function RegularsSheet({
           setOpen(true);
           if (!list)
             setList(
-              (await (invites ? getInviteList : getRegularsList)(eventId))
-                ?.invites ?? [],
+              (
+                await (
+                  invites
+                    ? getInviteList
+                    : newcomers
+                      ? getNewcomersList
+                      : getRegularsList
+                )(eventId)
+              )?.invites ?? [],
             );
         }}
       >
-        {invites ? "Open invite list" : "Message regulars"}
+        {invites
+          ? "Open invite list"
+          : newcomers
+            ? "Message newcomers"
+            : "Message regulars"}
       </button>
       {open && (
         <Sheet
-          title={invites ? "Personal invites" : "Set-up team"}
+          title={
+            invites
+              ? "Personal invites"
+              : newcomers
+                ? "Newcomers"
+                : "Set-up team"
+          }
           onClose={() => setOpen(false)}
         >
           <p className="text-sm text-stone-600">
-            {invites
+            {invites || newcomers
               ? "Open a chat with WhatsApp or Messenger, write your own message, then tick them off."
               : "Ask your regulars who can help set up and pack down. Open a chat, write your own message, then tick them off."}
           </p>

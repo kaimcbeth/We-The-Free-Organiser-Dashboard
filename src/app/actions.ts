@@ -1081,3 +1081,16 @@ export async function getInviteList(eventId: string) {
     organiser.role === "god" || organiser.role === "regional_lead",
   );
 }
+
+// The community's newcomers (for New volunteers reminded).
+export async function getNewcomersList(eventId: string) {
+  const { supabase, organiser } = await requireCore();
+  const { loadRegularsList } = await import("@/lib/invites");
+  return loadRegularsList(
+    supabase,
+    eventId,
+    Date.now(),
+    organiser.role === "god" || organiser.role === "regional_lead",
+    true,
+  );
+}

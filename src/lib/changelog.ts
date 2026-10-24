@@ -11,6 +11,16 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-25",
+    title: "Newcomer-based actions",
+    changes: [
+      {
+        level: "organiser",
+        text: "New volunteers reminded only comes up when you have newcomers, and names them, with Message newcomers. Photo consent checked is now per newcomer. Volunteers debriefed and Pack-down and gear check are for outreach events only.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-25",
     title: "Facebook event links, Co-working, and pop-up lists",
     changes: [
       {

@@ -75,6 +75,7 @@ export type TaskRow = {
   eventFacebookUrl?: string | null; // pasted once, used by every Facebook action
   personId?: string | null; // actions about one person (a newcomer)
   personName?: string | null;
+  people?: string[]; // names the action is about (e.g. newcomers to remind)
   eventAt: string | null;
   fbEvent?: FbEventDetails | null; // "Facebook event created" tasks
   graphic?: { size: GraphicSize; event: GraphicEvent } | null; // promo actions
@@ -310,6 +311,15 @@ export function TaskCard({
               </a>
             </p>
           )}
+          {task.people && task.people.length > 0 && !done && (
+            <p className="mt-1 text-sm text-stone-700">
+              <span className="font-medium">
+                {task.people.length} newcomer
+                {task.people.length === 1 ? "" : "s"}:
+              </span>{" "}
+              {task.people.join(", ")}
+            </p>
+          )}
           {task.description && !done && (
             <p className="mt-1 text-sm text-stone-600">{task.description}</p>
           )}
@@ -368,6 +378,13 @@ export function TaskCard({
               {task.kind === "ev_setup_team" && task.eventId && (
                 <RegularsSheet
                   eventId={task.eventId}
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
+              )}
+              {task.kind === "com_remind_new" && task.eventId && (
+                <RegularsSheet
+                  eventId={task.eventId}
+                  newcomers
                   className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
                 />
               )}
