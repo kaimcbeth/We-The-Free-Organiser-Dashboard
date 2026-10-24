@@ -129,3 +129,24 @@ export const CORE_ROLE_BLURB: Record<CoreRole, string> = {
     "Looks after events on the day: setting up, attendance, running things",
   promo_lead: "Gets the word out: Facebook, Instagram, photos",
 };
+
+// Part of the role, but with no set rhythm, so no reminders: they just
+// know it's theirs.
+export const CORE_ROLE_DUTIES: Record<CoreRole, string[]> = {
+  community_lead: [
+    "Working with the WTF Conflict Resolution Team",
+    "Posting community event listings",
+  ],
+  events_lead: [
+    "Storing event equipment",
+    "Transporting event equipment",
+    "Volunteer check-ins during events (water, breaks, sunscreen)",
+    "Helping resolve conflict with members of the public",
+    "Police or council approval, if needed",
+  ],
+  promo_lead: [
+    "Milestone posts",
+    "Basic graphics in Canva (training provided)",
+    "Promoting upcoming trainings and workshops",
+  ],
+};

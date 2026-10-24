@@ -11,6 +11,24 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-24",
+    title: "The full Core Team role lists",
+    changes: [
+      {
+        level: "organiser",
+        text: "23 new actions from the Events, Promo and Community Lead role lists (set-up team, weather check, briefing, pack-down, photo consent, monthly recap, thank-you messages, buddies, re-engaging quiet volunteers and more). They start switched off: turn on the ones you want, or a Core Team member can take them on. Anything switched on with no Core Team member looking after it comes to the organisers.",
+      },
+      {
+        level: "organiser",
+        text: "Each Core Team role now lists its as-needed duties too (like storing equipment or milestone posts), so people know what's theirs without getting reminders.",
+      },
+      {
+        level: "god",
+        text: "task_kinds.default_enabled (new kinds false) and a 'quarterly' schedule; Photos posted to WhatsApp moved to the Promo Lead.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-24",
     title: "Every action on the event page",
     changes: [
       {

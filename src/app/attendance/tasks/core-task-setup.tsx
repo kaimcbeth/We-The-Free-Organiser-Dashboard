@@ -2,7 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { chooseCoreTasks, setAwayUntil, setTaskHelper } from "@/app/actions";
-import { CORE_ROLE_BLURB, CORE_ROLE_LABEL, type CoreRole } from "@/lib/roles";
+import {
+  CORE_ROLE_BLURB,
+  CORE_ROLE_DUTIES,
+  CORE_ROLE_LABEL,
+  type CoreRole,
+} from "@/lib/roles";
 
 export type SetupTask = {
   kind: string;
@@ -176,6 +181,19 @@ export function CoreTaskSetup({
                 })}
               </ul>
             )}
+            <div className="mt-3 rounded-2xl bg-stone-100/70 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+                Also yours, as needed
+              </p>
+              <ul className="mt-1.5 space-y-1 text-sm text-stone-600">
+                {CORE_ROLE_DUTIES[role].map((d) => (
+                  <li key={d} className="flex gap-2">
+                    <span className="text-stone-400">•</span>
+                    {d}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </section>
         );
       })}

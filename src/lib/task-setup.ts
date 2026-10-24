@@ -6,9 +6,10 @@ export type SetupKind = {
   estimate: number; // minutes per event (middle of a range)
   label: string; // e.g. "5" or "5–10"
   blurb: string | null; // very short description
-  when: "before" | "during" | "after" | "weekly" | "monthly";
+  when: "before" | "during" | "after" | "weekly" | "monthly" | "quarterly";
   timesPerWeek: number | null; // weekly/monthly tasks; null = once per event
   custom: boolean; // made by this community's organisers
+  defaultOn: boolean; // on until an organiser says otherwise (the newer role actions start off)
 };
 
 export type TaskSetup = {
@@ -29,7 +30,7 @@ export async function loadTaskSetup(
     supabase
       .from("task_kinds")
       .select(
-        "kind, title, blurb, estimate_minutes, estimate_max_minutes, anchor, due_after_hours, team_id, schedule",
+        "kind, title, blurb, estimate_minutes, estimate_max_minutes, anchor, due_after_hours, team_id, schedule, default_enabled",
       )
       .is("archived_at", null)
       .eq("audience", "community")
@@ -65,20 +66,31 @@ export async function loadTaskSetup(
         ? "weekly"
         : k.schedule === "monthly"
           ? "monthly"
-          : k.anchor === "end"
-            ? "after"
-            : k.due_after_hours > 0
-              ? "during"
-              : "before",
+          : k.schedule === "quarterly"
+            ? "quarterly"
+            : k.anchor === "end"
+              ? "after"
+              : k.due_after_hours > 0
+                ? "during"
+                : "before",
     timesPerWeek:
-      k.schedule === "weekly" ? 1 : k.schedule === "monthly" ? 0.25 : null,
+      k.schedule === "weekly"
+        ? 1
+        : k.schedule === "monthly"
+          ? 0.25
+          : k.schedule === "quarterly"
+            ? 1 / 13
+            : null,
     custom: !!k.team_id,
+    defaultOn: k.default_enabled !== false,
     blurb: k.blurb ?? null,
   }));
-  const off = new Set(rows.filter((r) => !r.enabled).map((r) => r.kind));
+  const saved = new Map(rows.map((r) => [r.kind, r.enabled]));
   return {
     kinds: all,
-    enabled: all.filter((k) => !off.has(k.kind)).map((k) => k.kind),
+    enabled: all
+      .filter((k) => saved.get(k.kind) ?? k.defaultOn)
+      .map((k) => k.kind),
     configured: rows.length > 0,
     eventsPerWeek: Math.max(1, Math.round(((events.count ?? 0) / 8) * 2) / 2),
     delegates: Object.fromEntries(

@@ -72,7 +72,10 @@ export function TaskChooser({
     ];
     const rank = (kind: string) =>
       PRIORITY.includes(kind) ? PRIORITY.indexOf(kind) : PRIORITY.length;
-    for (const k of [...kinds].sort((a, b) => rank(a.kind) - rank(b.kind))) {
+    // Only the standard set: the newer role actions are there to switch on by hand.
+    for (const k of [...kinds]
+      .filter((x) => x.defaultOn || x.custom)
+      .sort((a, b) => rank(a.kind) - rank(b.kind))) {
       const cost = k.estimate * (k.timesPerWeek ?? setup.eventsPerWeek);
       if (next.size === 0 || used + cost <= minutes) {
         next.add(k.kind);
@@ -164,6 +167,7 @@ export function TaskChooser({
                 after: "After",
                 weekly: "Weekly",
                 monthly: "Monthly",
+                quarterly: "Every 3 months",
               } as const;
               const row = (k: SetupKind) => {
                 const checked = on.has(k.kind);
@@ -234,9 +238,10 @@ export function TaskChooser({
               const order = {
                 weekly: 0,
                 monthly: 1,
-                before: 2,
-                during: 3,
-                after: 4,
+                quarterly: 2,
+                before: 3,
+                during: 4,
+                after: 5,
               };
               const sorted = [...kinds].sort(
                 (a, b) => order[a.when] - order[b.when],
@@ -299,6 +304,7 @@ export function TaskChooser({
                           when: draft.when,
                           timesPerWeek: null,
                           custom: true,
+                          defaultOn: true,
                         },
                       ]);
                       setOn((o) => new Set(o).add(r.kind!));
