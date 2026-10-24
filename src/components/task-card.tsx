@@ -277,6 +277,16 @@ export function TaskCard({
                 task.kind === "promote_fb_groups_weekly") && (
                 <FbGroupsButton teamId={task.teamId} canEdit={!!people} />
               )}
+              {task.kind === "personal_invites" && task.eventId && (
+                <a
+                  href={`/invites/${task.eventId}`}
+                  target="_blank"
+                  rel="noopener"
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                >
+                  Open invite list ↗
+                </a>
+              )}
               {task.kind === "take_photos" && task.eventId && (
                 <PhotoUploader
                   teamId={task.teamId}

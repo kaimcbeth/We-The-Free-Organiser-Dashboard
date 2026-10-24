@@ -968,3 +968,53 @@ export async function finishCoreTour(): Promise<void> {
   await supabase.rpc("finish_core_tutorial");
   revalidatePath("/attendance", "layout");
 }
+
+// Personal invites: tick someone off as messaged for an event (or undo).
+export async function markInvited(
+  eventId: string,
+  personId: string,
+  kind: "invite" | "ask",
+  sent: boolean,
+): Promise<{ error?: string }> {
+  const { supabase } = await requireCore();
+  const { data: event } = await supabase
+    .from("events")
+    .select("team_id")
+    .eq("id", eventId)
+    .maybeSingle();
+  if (!event) return { error: "Couldn't find that event." };
+  const { error } = sent
+    ? await supabase.from("person_messages").upsert(
+        {
+          team_id: event.team_id,
+          person_id: personId,
+          event_id: eventId,
+          kind,
+        },
+        { onConflict: "person_id,event_id", ignoreDuplicates: true },
+      )
+    : await supabase
+        .from("person_messages")
+        .delete()
+        .eq("event_id", eventId)
+        .eq("person_id", personId);
+  if (error) return { error: "Couldn't save. Please try again." };
+  revalidatePath(`/people/${personId}`);
+  return {};
+}
+
+// Someone who'd rather not get personal messages: never listed again.
+export async function setNoMessages(
+  personId: string,
+  value: boolean,
+): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireCore();
+  const { error } = await supabase
+    .from("people")
+    .update({ no_messages: value })
+    .eq("id", personId)
+    .eq("team_id", organiser.team_id);
+  if (error) return { error: "Couldn't save. Please try again." };
+  revalidatePath(`/people/${personId}`);
+  return {};
+}

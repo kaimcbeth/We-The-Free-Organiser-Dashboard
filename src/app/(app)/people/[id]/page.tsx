@@ -16,6 +16,7 @@ import { driftText, notSeenInAWhile } from "@/lib/drift";
 import { InviteButton } from "./invite-button";
 import { DeletePerson } from "./delete-person";
 import { AttendedBefore } from "./attended-before";
+import { NoMessages } from "./no-messages";
 import { BuddyPicker, BuddySwitch, NewcomerPicker } from "./buddy-controls";
 import { Avatar } from "@/components/avatar";
 import { signPhotos } from "@/lib/photos";
@@ -44,6 +45,7 @@ type Person = {
   photo_updated_at: string | null;
   attended_before_app: boolean;
   is_buddy: boolean;
+  no_messages: boolean;
 };
 
 type Attended = {
@@ -64,7 +66,7 @@ export default async function PersonPage({
   const { data: person } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, is_buddy",
+      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, is_buddy, no_messages",
     )
     .eq("id", id)
     .or(
@@ -209,6 +211,19 @@ export default async function PersonPage({
     tracking,
   );
   const newcomer = isNewcomerStatus(status);
+  const { data: lastMsg } = await supabase
+    .from("person_messages")
+    .select("sent_at, kind")
+    .eq("person_id", person.id)
+    .order("sent_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const lastMessaged = lastMsg
+    ? {
+        days: Math.floor((now - Date.parse(lastMsg.sent_at)) / 864e5),
+        ask: lastMsg.kind === "ask",
+      }
+    : null;
   const drift = isLapsed(eventDates, now)
     ? null
     : notSeenInAWhile(eventDates, now);
@@ -344,11 +359,23 @@ export default async function PersonPage({
         </div>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 space-y-2">
         <AttendedBefore
           personId={person.id}
           initial={person.attended_before_app}
         />
+        <NoMessages personId={person.id} initial={person.no_messages} />
+        {lastMessaged && (
+          <p className="text-sm text-stone-500">
+            Last personal message{" "}
+            {lastMessaged.days === 0
+              ? "today"
+              : lastMessaged.days === 1
+                ? "yesterday"
+                : `${lastMessaged.days} days ago`}
+            {lastMessaged.ask ? " (an ask)" : ""}
+          </p>
+        )}
       </div>
 
       {/* Who looks after this person (first-timers, or anyone who has someone). */}

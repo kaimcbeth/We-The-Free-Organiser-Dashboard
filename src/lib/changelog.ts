@@ -11,6 +11,20 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-24",
+    title: "Personal invites before events",
+    changes: [
+      {
+        level: "organiser",
+        text: "New action: Personal invites sent (shows 5 days before, due 3 days before). “Open invite list” opens a window with who to message and why: first-timers, newcomers, people drifting off and occasionals first, then regulars, with WhatsApp and Messenger buttons. Tick people off as you go. It spaces messages out so nobody's pestered, and every few messages to a regular is an ask (help set up, bring a friend).",
+      },
+      {
+        level: "organiser",
+        text: "Profiles show when someone was last personally messaged, and a switch for people who'd rather not get messages.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-24",
     title: "Carousels",
     changes: [
       {
