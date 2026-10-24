@@ -84,6 +84,15 @@ export function OrganiserTour({
     },
     {
       section: 0,
+      icon: "🗺️",
+      tone: "bg-cyan",
+      title: "Nearby communities",
+      href: "/calendar",
+      target: "distance-slider",
+      body: "The calendar can show other communities' events too. Slide to see just yours, nearby ones, your region or everywhere. Their events open on activism.wtf.",
+    },
+    {
+      section: 0,
       icon: "✅",
       tone: "bg-pink",
       title: "Attendance in 60 seconds",

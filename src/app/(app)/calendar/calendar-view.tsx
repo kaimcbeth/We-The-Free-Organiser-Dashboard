@@ -197,11 +197,13 @@ export function CalendarView({
       </div>
 
       {nearby && (
-        <DistanceSlider
-          key={`${nearby.mode}-${nearby.km}`}
-          nearby={nearby}
-          month={month}
-        />
+        <div data-tour="distance-slider">
+          <DistanceSlider
+            key={`${nearby.mode}-${nearby.km}`}
+            nearby={nearby}
+            month={month}
+          />
+        </div>
       )}
 
       {/* Team key: tap a team to see only it; the small × hides just that team */}
