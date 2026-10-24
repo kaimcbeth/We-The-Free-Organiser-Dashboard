@@ -3,12 +3,14 @@ import { requireCore } from "@/lib/organiser";
 import { formatEventDate, formatTimeRange } from "@/lib/time";
 import type { HelperState } from "@/app/checkin/[token]/helper-check-in";
 import { CoreCheckIn } from "./core-check-in";
+import { EventPhotos } from "@/components/event-photos";
+import { loadEventPhotos } from "@/lib/event-photos";
 
 export default async function CoreAttendancePage({
   params,
 }: PageProps<"/attendance/[id]">) {
   const { id } = await params;
-  const { supabase } = await requireCore();
+  const { supabase, organiser } = await requireCore();
   const { data } = await supabase.rpc("core_checkin_state", { p_event_id: id });
   const state = data as HelperState | null;
 
@@ -33,6 +35,7 @@ export default async function CoreAttendancePage({
   }
 
   const e = state.event;
+  const photos = await loadEventPhotos(supabase, id);
   return (
     <div>
       <Link
@@ -49,6 +52,12 @@ export default async function CoreAttendancePage({
       <h1 className="mt-0.5 text-2xl font-semibold leading-tight tracking-tight">
         {e.title}
       </h1>
+      <EventPhotos
+        key={photos.map((p) => p.id).join()}
+        teamId={organiser.team_id}
+        eventId={id}
+        photos={photos}
+      />
       <CoreCheckIn eventId={id} state={state} />
     </div>
   );

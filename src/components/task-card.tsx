@@ -11,6 +11,7 @@ import {
 import { formatEventDate } from "@/lib/time";
 import { Sheet } from "@/components/sheet";
 import { Avatar } from "@/components/avatar";
+import { PhotoUploader } from "@/components/photo-uploader";
 import {
   GraphicMaker,
   type GraphicEvent,
@@ -275,6 +276,14 @@ export function TaskCard({
               {(task.kind === "promote_facebook_groups" ||
                 task.kind === "promote_fb_groups_weekly") && (
                 <FbGroupsButton teamId={task.teamId} canEdit={!!people} />
+              )}
+              {task.kind === "take_photos" && task.eventId && (
+                <PhotoUploader
+                  teamId={task.teamId}
+                  eventId={task.eventId}
+                  label="Upload photos"
+                  className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10"
+                />
               )}
               {task.graphic && (
                 <GraphicMaker

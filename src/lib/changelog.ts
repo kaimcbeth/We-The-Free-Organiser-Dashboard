@@ -11,6 +11,20 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-24",
+    title: "Event photos in your graphics",
+    changes: [
+      {
+        level: "organiser",
+        text: "Add photos to any event (event page, or “Upload photos” on the Event photos taken action, which ticks it off). Star favourites, or mark one “Not for promo”.",
+      },
+      {
+        level: "organiser",
+        text: "Graphics now use your community's photos: “Promote it” puts your best recent photo behind the event details, and “Thanks for coming” makes a photo collage after an event. Photo-posting actions get a Get graphic button too.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-24",
     title: "Event graphics, notes and quicker links",
     changes: [
       {

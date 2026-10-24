@@ -10,6 +10,8 @@ import {
 import { CheckIn, type Person } from "./check-in";
 import { EventNotes } from "./event-notes";
 import { GraphicMaker } from "@/components/graphic-maker";
+import { EventPhotos } from "@/components/event-photos";
+import { loadEventPhotos } from "@/lib/event-photos";
 import { TypePicker } from "./type-picker";
 import { signPhotos } from "@/lib/photos";
 import { LoadError } from "@/components/load-error";
@@ -46,6 +48,7 @@ export default async function EventCheckInPage({
     .maybeSingle<EventDetail>();
 
   if (!event) notFound();
+  const eventPhotos = await loadEventPhotos(supabase, event.id);
   const { count: openActions } = await supabase
     .from("tasks")
     .select("id", { count: "exact", head: true })
@@ -169,6 +172,8 @@ export default async function EventCheckInPage({
                 (types.data ?? []).find((t) => t.id === event.event_type_id)
                   ?.name ?? null,
               community: team.name.replace(/, (Australia|New Zealand)$/, ""),
+              teamId: event.team_id,
+              eventId: event.id,
             }}
           />
           {!!openActions && (
@@ -183,6 +188,13 @@ export default async function EventCheckInPage({
       </div>
 
       <EventNotes eventId={event.id} initial={event.notes ?? ""} />
+
+      <EventPhotos
+        key={eventPhotos.map((p) => p.id).join()}
+        teamId={event.team_id}
+        eventId={event.id}
+        photos={eventPhotos}
+      />
 
       <CheckIn
         eventId={event.id}
