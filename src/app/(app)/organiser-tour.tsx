@@ -66,15 +66,6 @@ export function OrganiserTour({
     },
     {
       section: 0,
-      icon: "✅",
-      tone: "bg-pink",
-      title: "Get your community ready",
-      href: "/",
-      target: "setup-checklist",
-      body: "New community? This checklist shows what's left to set up: your community chat link, events, actions and Core Team. Each step ticks itself off, and the card goes away when you're done.",
-    },
-    {
-      section: 0,
       icon: "📅",
       tone: "bg-cyan",
       title: "Events come in by themselves",
@@ -358,7 +349,11 @@ export function OrganiserTour({
   function finish() {
     setOpen(false);
     setChoosing(false);
-    finishOrganiserTour().then(() => router.refresh());
+    // Straight to the Events page, where "Get your community ready" waits.
+    finishOrganiserTour().then(() => {
+      router.push("/");
+      router.refresh();
+    });
   }
 
   if (choosing) {

@@ -170,17 +170,8 @@ export default async function EventsPage() {
     .eq("id", organiser.team_id)
     .maybeSingle();
   const calendarToken = (cal?.calendar_token as string | undefined) ?? null;
-  // During the tour (Example Community), show a made-up checklist.
   const { data: setupData } = organiser.exampleMode
-    ? {
-        data: {
-          whatsapp: false,
-          events: true,
-          actions: false,
-          core_team: false,
-          dismissed: false,
-        },
-      }
+    ? { data: null }
     : await supabase.rpc("team_setup_status", { p_team_id: organiser.team_id });
   const setup = setupData as SetupStatus | null;
 
@@ -217,7 +208,6 @@ export default async function EventsPage() {
               "",
             )}
             status={setup}
-            preview={organiser.exampleMode}
           />
         )}
 
