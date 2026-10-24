@@ -335,7 +335,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
       )}
 
       {focus && (
-        <p className="-mb-4 flex items-center justify-between gap-3 rounded-xl bg-cyan/15 px-3 py-2 text-sm text-navy">
+        <p className="flex items-center justify-between gap-3 rounded-xl bg-cyan/15 px-3 py-2 text-sm text-navy">
           <span>
             Showing the actions for <b>{focus.title}</b>
           </span>
