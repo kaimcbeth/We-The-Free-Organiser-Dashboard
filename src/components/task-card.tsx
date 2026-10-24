@@ -18,12 +18,28 @@ import {
   type GraphicSize,
 } from "@/components/graphic-maker";
 import { MoveTask } from "@/components/move-task";
+import { CopyMaker, type CopyPlatform } from "@/components/copy-maker";
 import { FbGroupsButton } from "@/components/fb-groups-button";
 import { inputClass } from "@/components/form";
 import {
   FacebookEventButton,
   type FbEventDetails,
 } from "@/components/facebook-event";
+
+// Actions that come with "Write post": the place to write for, and whether
+// it's about how the event went (true) or inviting people (false).
+const COPY_FOR: Record<string, [CopyPlatform, boolean]> = {
+  promote_instagram: ["instagram", false],
+  promote_facebook_groups: ["facebook", false],
+  promote_fb_groups_weekly: ["facebook", false],
+  promote_whatsapp: ["whatsapp", false],
+  facebook_event: ["facebook", false],
+  instagram_stories: ["story", true],
+  post_photos: ["whatsapp", true],
+  post_photos_facebook: ["facebook", true],
+  post_photos_instagram: ["instagram", true],
+  promo_monthly_recap: ["instagram", true],
+};
 
 export type TaskRow = {
   id: string;
@@ -328,6 +344,15 @@ export function TaskCard({
                       ? "Make carousel"
                       : "Get graphic"
                   }
+                  className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10"
+                />
+              )}
+              {task.eventId && COPY_FOR[task.kind] && (
+                <CopyMaker
+                  eventId={task.eventId}
+                  teamId={task.teamId}
+                  past={COPY_FOR[task.kind][1]}
+                  initial={[COPY_FOR[task.kind][0]]}
                   className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10"
                 />
               )}

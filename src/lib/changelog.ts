@@ -11,6 +11,20 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-24",
+    title: "Write post: social media copy in your voice",
+    changes: [
+      {
+        level: "organiser",
+        text: "Write post, on each event and on promo and photo actions, writes 3 options each for Instagram, Facebook groups, WhatsApp or stories. Add an optional line (\u201cbest moment from the day?\u201d) and it builds around it. After an event it shares how it went and invites people to your next one. You pick, tweak and post it yourself: nothing is posted for you.",
+      },
+      {
+        level: "organiser",
+        text: "Optional: paste up to 10 of your community's past posts and it'll sound like you.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-24",
     title: "Search your actions",
     changes: [
       {

@@ -11,6 +11,7 @@ import { CheckIn, type Person } from "./check-in";
 import { EventNotes } from "./event-notes";
 import { EventActions } from "./event-actions";
 import { GraphicMaker } from "@/components/graphic-maker";
+import { CopyMaker } from "@/components/copy-maker";
 import { EventPhotos } from "@/components/event-photos";
 import { loadEventPhotos } from "@/lib/event-photos";
 import { TypePicker } from "./type-picker";
@@ -201,6 +202,12 @@ export default async function EventCheckInPage({
               teamId: event.team_id,
               eventId: event.id,
             }}
+          />
+          <CopyMaker
+            eventId={event.id}
+            teamId={event.team_id}
+            // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
+            past={Date.parse(event.starts_at) < Date.now()}
           />
 
           {!!openActions && (
