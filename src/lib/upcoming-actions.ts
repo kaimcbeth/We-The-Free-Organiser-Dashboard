@@ -21,6 +21,7 @@ export async function loadUpcomingActions(
   now: number,
   // One event, however far ahead (the event page) instead of the next week.
   only?: { eventId: string },
+  horizonDays = 21, // how far ahead to look for events
 ): Promise<UpcomingAction[]> {
   const HOUR = 3600 * 1000;
   const DAY = 864e5;
@@ -43,7 +44,7 @@ export async function loadUpcomingActions(
       ? eventsQuery.eq("id", only.eventId)
       : eventsQuery
           .gte("starts_at", new Date(now).toISOString())
-          .lte("starts_at", new Date(now + 21 * DAY).toISOString())
+          .lte("starts_at", new Date(now + horizonDays * DAY).toISOString())
     ).returns<EventRow[]>(),
     supabase
       .from("task_kinds")

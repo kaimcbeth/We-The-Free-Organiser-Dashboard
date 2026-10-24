@@ -177,6 +177,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
     now,
     // Opened from one event: all of its actions, however far ahead.
     typeof onlyEvent === "string" ? { eventId: onlyEvent } : undefined,
+    180, // every upcoming event in the next 6 months
   );
   const upcomingFor = (eventId: string) =>
     upcoming.filter((u) => u.eventId === eventId);
@@ -192,6 +193,24 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
   const whenLabel = Object.fromEntries(
     upcoming.map((u) => [u.appearsAt, when(u.appearsAt)]),
   );
+  // Every upcoming event gets a group, even with nothing due yet (just its
+  // coming-up actions), so you can page through all of them.
+  const { data: ahead } = await supabase
+    .from("events")
+    .select("id, title, starts_at")
+    .eq("team_id", organiser.team_id)
+    .gt("starts_at", new Date(now).toISOString())
+    .lte("starts_at", new Date(now + 180 * 864e5).toISOString())
+    .order("starts_at")
+    .limit(100);
+  for (const e of ahead ?? [])
+    if (!byEvent.has(e.id))
+      byEvent.set(e.id, {
+        key: e.id,
+        title: e.title,
+        at: e.starts_at,
+        tasks: [],
+      });
   const groups = [...byEvent.values()]
     .map((g) => ({
       ...g,
@@ -240,10 +259,11 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
               )}
             </h2>
             <span className="ml-auto shrink-0 text-xs text-stone-500">
-              {g.tasks.length} to do · ~
-              {hoursMinutes(g.tasks.reduce((n, t) => n + t.estimateMinutes, 0))}
+              {g.tasks.length
+                ? `${g.tasks.length} to do · ~${hoursMinutes(g.tasks.reduce((n, t) => n + t.estimateMinutes, 0))}`
+                : "Nothing due yet"}
             </span>
-            {g.key !== "other" && (
+            {g.key !== "other" && g.tasks.length > 0 && (
               <RemoveEventTasks eventId={g.key} count={g.tasks.length} />
             )}
           </>
@@ -394,9 +414,11 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         </p>
       )}
       {shownGroups.map((g, n) => renderGroup(g, n))}
-      <ShowMoreEvents count={laterGroups.length}>
-        {laterGroups.map((g, n) => renderGroup(g, shownGroups.length + n))}
-      </ShowMoreEvents>
+      <ShowMoreEvents
+        items={laterGroups.map((g, n) =>
+          renderGroup(g, shownGroups.length + n),
+        )}
+      />
 
       {/* What the Core Team and helpers have on: kept apart from your own. */}
       <CoreTeamTasks crew={crew} now={now} tz={common.tz} />

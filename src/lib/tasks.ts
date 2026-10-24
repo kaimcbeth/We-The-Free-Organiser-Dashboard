@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { TaskRow } from "@/components/task-card";
 import { signPhotos } from "@/lib/photos";
-import { loadRegularsList } from "@/lib/invites";
+import { loadQuietList, loadRegularsList } from "@/lib/invites";
 import type { GraphicSize } from "@/components/graphic-maker";
 
 type Raw = {
@@ -163,8 +163,9 @@ export async function loadTeamTasks(
   const keep = (t: TaskRow) => regional || !t.regional;
   // Moved tasks stay out of the way until their day.
   const nowIso = new Date().toISOString();
-  const all = (open.data ?? []).map(toRow).filter(keep);
+  let all = (open.data ?? []).map(toRow).filter(keep);
   await attachNewcomers(supabase, all);
+  all = await dropEmptyQuiet(supabase, all);
   return {
     open: all.filter((t) => !t.showFrom || t.showFrom <= nowIso),
     later: all
@@ -191,6 +192,20 @@ async function attachNewcomers(supabase: SupabaseClient, rows: TaskRow[]) {
   }
 }
 
+// "Quiet volunteers re-engaged" only shows when someone's actually gone quiet.
+async function dropEmptyQuiet(supabase: SupabaseClient, rows: TaskRow[]) {
+  const teams = [
+    ...new Set(
+      rows.filter((t) => t.kind === "com_reengage").map((t) => t.teamId),
+    ),
+  ];
+  if (!teams.length) return rows;
+  const empty = new Set<string>();
+  for (const id of teams)
+    if (!(await loadQuietList(supabase, id, Date.now())).length) empty.add(id);
+  return rows.filter((t) => t.kind !== "com_reengage" || !empty.has(t.teamId));
+}
+
 // Open tasks assigned to one person (their own page).
 export async function loadMyTasks(supabase: SupabaseClient, personId: string) {
   const { data } = await supabase
@@ -202,10 +217,11 @@ export async function loadMyTasks(supabase: SupabaseClient, personId: string) {
     .order("due_at")
     .returns<Raw[]>();
   const nowIso = new Date().toISOString();
-  const rows = (data ?? [])
+  let rows = (data ?? [])
     .map(toRow)
     .filter((t) => !t.showFrom || t.showFrom <= nowIso);
   await attachNewcomers(supabase, rows);
+  rows = await dropEmptyQuiet(supabase, rows);
   // Who handed each one over (with their photo, when we can show it).
   if (rows.length) {
     const { data: by } = await supabase.rpc("my_task_delegators", {

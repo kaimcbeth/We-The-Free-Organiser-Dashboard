@@ -66,7 +66,9 @@ export function RegularsSheet({
               ? "Personal invites"
               : newcomers
                 ? "Newcomers"
-                : "Set-up team"
+                : quietTeamId
+                  ? "Quiet volunteers"
+                  : "Set-up team"
           }
           onClose={() => setOpen(false)}
         >
