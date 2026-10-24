@@ -9,6 +9,7 @@ import {
 } from "@/lib/time";
 import { CheckIn, type Person } from "./check-in";
 import { EventNotes } from "./event-notes";
+import { EventActions } from "./event-actions";
 import { GraphicMaker } from "@/components/graphic-maker";
 import { EventPhotos } from "@/components/event-photos";
 import { loadEventPhotos } from "@/lib/event-photos";
@@ -188,6 +189,14 @@ export default async function EventCheckInPage({
       </div>
 
       <EventNotes eventId={event.id} initial={event.notes ?? ""} />
+
+      <EventActions
+        supabase={supabase}
+        teamId={event.team_id}
+        eventId={event.id}
+        // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
+        now={Date.now()}
+      />
 
       <EventPhotos
         key={eventPhotos.map((p) => p.id).join()}

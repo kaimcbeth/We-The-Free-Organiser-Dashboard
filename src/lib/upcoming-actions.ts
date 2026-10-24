@@ -19,15 +19,20 @@ export async function loadUpcomingActions(
   teamId: string,
   enabled: string[],
   now: number,
+  // One event, however far ahead (the event page) instead of the next week.
+  only?: { eventId: string },
 ): Promise<UpcomingAction[]> {
   const DAY = 864e5;
+  const eventsQuery = supabase
+    .from("events")
+    .select("id, title, starts_at, ends_at, event_type_id")
+    .eq("team_id", teamId);
   const [{ data: events }, { data: kinds }] = await Promise.all([
-    supabase
-      .from("events")
-      .select("id, title, starts_at, ends_at, event_type_id")
-      .eq("team_id", teamId)
-      .gte("starts_at", new Date(now).toISOString())
-      .lte("starts_at", new Date(now + 21 * DAY).toISOString()),
+    only
+      ? eventsQuery.eq("id", only.eventId)
+      : eventsQuery
+          .gte("starts_at", new Date(now).toISOString())
+          .lte("starts_at", new Date(now + 21 * DAY).toISOString()),
     supabase
       .from("task_kinds")
       .select(
@@ -57,7 +62,7 @@ export async function loadUpcomingActions(
         k.anchor === "end" ? (e.ends_at ?? e.starts_at) : e.starts_at,
       );
       const appears = anchor + Number(k.appear_hours) * 36e5;
-      if (appears > now && appears <= now + 7 * DAY)
+      if (appears > now && (only || appears <= now + 7 * DAY))
         out.push({
           eventId: e.id,
           kind: k.kind,

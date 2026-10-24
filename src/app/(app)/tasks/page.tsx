@@ -167,6 +167,8 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
     organiser.team_id,
     setup.enabled,
     now,
+    // Opened from one event: all of its actions, however far ahead.
+    typeof onlyEvent === "string" ? { eventId: onlyEvent } : undefined,
   );
   const upcomingFor = (eventId: string) =>
     upcoming.filter((u) => u.eventId === eventId);

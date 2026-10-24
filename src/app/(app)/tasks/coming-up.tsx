@@ -9,22 +9,26 @@ import type { UpcomingAction } from "@/lib/upcoming-actions";
 export function ComingUp({
   items,
   whenLabel,
+  alwaysOpen = false,
 }: {
   items: UpcomingAction[];
   whenLabel: Record<string, string>; // appearsAt -> "in 4 days"
+  alwaysOpen?: boolean; // the event page: no toggle
 }) {
   // Hidden until asked for, so the list stays calm.
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(alwaysOpen);
   return (
     <div className="mt-3">
-      <button
-        type="button"
-        onClick={() => setShow(!show)}
-        aria-expanded={show}
-        className="rounded-full px-2 py-1 text-xs font-medium text-stone-500 ring-1 ring-stone-200 hover:bg-white hover:text-navy"
-      >
-        {show ? "Hide" : "Show"} {items.length} coming up {show ? "▴" : "▾"}
-      </button>
+      {!alwaysOpen && (
+        <button
+          type="button"
+          onClick={() => setShow(!show)}
+          aria-expanded={show}
+          className="rounded-full px-2 py-1 text-xs font-medium text-stone-500 ring-1 ring-stone-200 hover:bg-white hover:text-navy"
+        >
+          {show ? "Hide" : "Show"} {items.length} coming up {show ? "▴" : "▾"}
+        </button>
+      )}
       {show && (
         <ul className="mt-2 grid items-start gap-2 sm:grid-cols-2">
           {items.map((u) => (

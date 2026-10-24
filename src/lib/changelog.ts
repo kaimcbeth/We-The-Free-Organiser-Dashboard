@@ -11,6 +11,16 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-24",
+    title: "Every action on the event page",
+    changes: [
+      {
+        level: "organiser",
+        text: "Each event page now lists all its actions — to do, done, and still to come, however far ahead. You can start any of them early or mark them done.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-24",
     title: "Event photos in your graphics",
     changes: [
       {
