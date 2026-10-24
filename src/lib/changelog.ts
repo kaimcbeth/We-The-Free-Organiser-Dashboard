@@ -11,6 +11,20 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-24",
+    title: "Police approval, filled in and sent for you",
+    changes: [
+      {
+        level: "organiser",
+        text: "New action for outreach events: Police approval sent (shows 3 weeks before, due 8 days before). Fill in & send fills in the police form from the event and your saved details (name, address, signature: only you can see them), shows you a preview, and emails it as a PDF to the police with you CC'd. Send yourself a test first if you like.",
+      },
+      {
+        level: "god",
+        text: "approval_authorities per community (Sydney: sydcityevents@police.nsw.gov.au, NSW Form 1, 7 days), person_private, approval_submissions + approvals bucket, send-approval Edge Function (SMTP secrets). Forms live in src/lib/approval-forms.ts.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-24",
     title: "Tidier role actions",
     changes: [
       {

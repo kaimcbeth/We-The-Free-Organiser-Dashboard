@@ -176,6 +176,15 @@ export function OrganiserTour({
     },
     {
       section: 2,
+      icon: "🚓",
+      tone: "bg-cyan",
+      title: "Police approval in two taps",
+      href: "/tasks",
+      target: "tasks-head",
+      body: "For outreach events, an action shows up three weeks before to notify the police. Tap Fill in & send: we fill in the form from the event and your saved details, and email it to the police for you, with you CC'd.",
+    },
+    {
+      section: 2,
       icon: "🙋",
       tone: "bg-yellow",
       title: "Hand actions to your crew",

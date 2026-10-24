@@ -27,6 +27,13 @@ const STEPS = [
       "You look after a few actions, like posting photos or promoting events. They come to you every event with a reminder, under My actions.",
   },
   {
+    icon: "🚓",
+    tone: "bg-cyan",
+    title: () => "Police approval (Events Lead)",
+    body: () =>
+      "Before each outreach event, the police need notice. Tap Fill in & send on the action: the form fills itself in from the event and your details, and we email it for you.",
+  },
+  {
     icon: "🙋",
     tone: "bg-pink",
     title: () => "Busy? That's fine",
