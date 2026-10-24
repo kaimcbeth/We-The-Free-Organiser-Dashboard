@@ -18,6 +18,7 @@ import {
   type GraphicSize,
 } from "@/components/graphic-maker";
 import { MoveTask } from "@/components/move-task";
+import { ScriptButton } from "@/components/script-button";
 import { CopyMaker, type CopyPlatform } from "@/components/copy-maker";
 import { FbGroupsButton } from "@/components/fb-groups-button";
 import { inputClass } from "@/components/form";
@@ -59,6 +60,8 @@ export type TaskRow = {
   showFrom: string | null; // moved: hidden until then
   doneAt: string | null;
   eventTitle: string | null;
+  personId?: string | null; // actions about one person (a newcomer)
+  personName?: string | null;
   eventAt: string | null;
   fbEvent?: FbEventDetails | null; // "Facebook event created" tasks
   graphic?: { size: GraphicSize; event: GraphicEvent } | null; // promo actions
@@ -283,6 +286,17 @@ export function TaskCard({
               {task.eventAt ? `, ${formatEventDate(task.eventAt, tz)}` : ""}
             </p>
           )}
+          {task.personName && (
+            <p className="text-sm text-stone-500">
+              For{" "}
+              <a
+                href={`/people/${task.personId}`}
+                className="font-medium text-navy hover:underline"
+              >
+                {task.personName}
+              </a>
+            </p>
+          )}
           {task.description && !done && (
             <p className="mt-1 text-sm text-stone-600">{task.description}</p>
           )}
@@ -310,6 +324,24 @@ export function TaskCard({
                   Fill in &amp; send
                 </a>
               )}
+              {(task.kind === "ev_briefing" || task.kind === "ev_debrief") && (
+                <ScriptButton
+                  kind={task.kind}
+                  className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10"
+                />
+              )}
+              {task.personId &&
+                (task.kind === "com_buddies" ||
+                  task.kind === "com_onboarding") && (
+                  <a
+                    href={`/people/${task.personId}`}
+                    className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                  >
+                    {task.kind === "com_buddies"
+                      ? "Pick a regular →"
+                      : "Open profile →"}
+                  </a>
+                )}
               {task.kind === "ev_setup_team" && task.eventId && (
                 <a
                   href={`/invites/${task.eventId}?list=regulars`}

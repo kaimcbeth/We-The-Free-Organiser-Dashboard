@@ -188,6 +188,7 @@ export function TaskChooser({
                 weekly: "Weekly",
                 monthly: "Monthly",
                 quarterly: "Every 3 months",
+                newcomer: "Each newcomer",
               } as const;
               const row = (k: SetupKind) => {
                 const checked = on.has(k.kind);
@@ -259,6 +260,7 @@ export function TaskChooser({
                 weekly: 0,
                 monthly: 1,
                 quarterly: 2,
+                newcomer: 2.5,
                 before: 3,
                 during: 4,
                 after: 5,

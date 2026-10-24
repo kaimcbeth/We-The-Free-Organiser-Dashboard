@@ -33,10 +33,11 @@ type Raw = {
     team: { name: string } | null;
   } | null;
   assignee: { first_name: string; last_name: string | null } | null;
+  person: { id: string; first_name: string; last_name: string | null } | null;
 };
 
 const SELECT =
-  "id, team_id, due_at, show_from, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes, audience), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, event_type_id, event_type:event_types(name), team:teams(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name)";
+  "id, team_id, due_at, show_from, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes, audience), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, event_type_id, event_type:event_types(name), team:teams(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name), person:people!tasks_person_id_fkey(id, first_name, last_name)";
 
 // Promo actions that get a "Get graphic" button, and the size they need.
 const GRAPHIC_SIZE: Record<string, GraphicSize | undefined> = {
@@ -74,6 +75,10 @@ function toRow(t: Raw): TaskRow {
     showFrom: t.show_from,
     doneAt: t.done_at,
     eventTitle: t.event?.title ?? null,
+    personId: t.person?.id ?? null,
+    personName: t.person
+      ? [t.person.first_name, t.person.last_name].filter(Boolean).join(" ")
+      : null,
     eventAt: t.event?.starts_at ?? null,
     fbEvent:
       t.kind?.kind === "facebook_event" && t.event

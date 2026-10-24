@@ -6,7 +6,14 @@ export type SetupKind = {
   estimate: number; // minutes per event (middle of a range)
   label: string; // e.g. "5" or "5–10"
   blurb: string | null; // very short description
-  when: "before" | "during" | "after" | "weekly" | "monthly" | "quarterly";
+  when:
+    | "before"
+    | "during"
+    | "after"
+    | "weekly"
+    | "monthly"
+    | "quarterly"
+    | "newcomer";
   timesPerWeek: number | null; // weekly/monthly tasks; null = once per event
   custom: boolean; // made by this community's organisers
   defaultOn: boolean; // on until an organiser says otherwise (the newer role actions start off)
@@ -68,11 +75,15 @@ export async function loadTaskSetup(
           ? "monthly"
           : k.schedule === "quarterly"
             ? "quarterly"
-            : k.anchor === "end"
-              ? "after"
-              : k.due_after_hours > 0
-                ? "during"
-                : "before",
+            : k.schedule === "month_end"
+              ? "monthly"
+              : k.schedule === "newcomer"
+                ? "newcomer"
+                : k.anchor === "end"
+                  ? "after"
+                  : k.due_after_hours > 0
+                    ? "during"
+                    : "before",
     timesPerWeek:
       k.schedule === "weekly"
         ? 1
@@ -80,7 +91,11 @@ export async function loadTaskSetup(
           ? 0.25
           : k.schedule === "quarterly"
             ? 1 / 13
-            : null,
+            : k.schedule === "month_end"
+              ? 0.25
+              : k.schedule === "newcomer"
+                ? 0.5
+                : null,
     custom: !!k.team_id,
     defaultOn: k.default_enabled !== false,
     blurb: k.blurb ?? null,
