@@ -161,11 +161,10 @@ export function OrganiserTour({
       section: 2,
       icon: "📝",
       tone: "bg-yellow",
-      title: "Set up your actions",
+      title: "Pick your actions",
       href: "/tasks",
       target: "choose-tasks,nav-actions",
-      choose: true,
-      body: "First, tell us how much time you have and pick which actions you want for your community. You can change them any time. Then we'll show you how they work.",
+      body: "Actions are the regular jobs that keep a community growing. Tell us how much time you have each week and we'll suggest which ones to switch on. You'll pick yours at the end of the tour.",
     },
     {
       section: 2,
@@ -223,6 +222,16 @@ export function OrganiserTour({
       click: "bell",
       target: "bell-menu",
       body: "The bell keeps you in the loop: actions due, newcomers, and what your Core Team has picked up.",
+    },
+    {
+      section: 2,
+      icon: "📝",
+      tone: "bg-yellow",
+      title: "Set up your actions",
+      href: "/tasks",
+      target: "choose-tasks,nav-actions",
+      choose: true,
+      body: "Last step: tell us how much time you have and pick which actions you want for your community. You can change them any time.",
     },
   ];
 
