@@ -32,11 +32,13 @@ export function PhotoUploader({
   eventId,
   label = "Add photos",
   className = "rounded-xl bg-navy px-3 py-1.5 text-sm font-semibold text-white hover:bg-navy-2",
+  onUploaded,
 }: {
   teamId: string;
   eventId: string;
   label?: string;
   className?: string;
+  onUploaded?: () => void; // e.g. the graphics panel reloads its photos
 }) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
@@ -77,6 +79,7 @@ export function PhotoUploader({
         : `${done} photo${done === 1 ? "" : "s"} added ✓`,
     );
     router.refresh();
+    if (done) onUploaded?.();
   }
 
   return (

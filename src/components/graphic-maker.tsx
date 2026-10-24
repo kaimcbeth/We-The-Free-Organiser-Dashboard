@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { PhotoUploader } from "@/components/photo-uploader";
 import { Sheet } from "@/components/sheet";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -279,6 +280,7 @@ export function GraphicMaker({
   const [ownPhotos, setOwnPhotos] = useState<EventPhoto[]>([]);
   const [chosen, setChosen] = useState<string | null>(null); // photo id, "" = none
   const [imgs, setImgs] = useState<HTMLImageElement[]>([]);
+  const [reload, setReload] = useState(0); // bumped after an upload
   const canvas = useRef<HTMLCanvasElement>(null);
 
   // Load the community's photos when the panel opens.
@@ -302,7 +304,7 @@ export function GraphicMaker({
     return () => {
       live = false;
     };
-  }, [open, event.teamId, event.eventId]);
+  }, [open, event.teamId, event.eventId, reload]);
 
   // Which photos the current template uses.
   const pool = template === "recap" ? ownPhotos : promoPhotos;
@@ -448,10 +450,21 @@ export function GraphicMaker({
               </div>
             </div>
           )}
-          {event.teamId && promoPhotos.length === 0 && template === "promo" && (
-            <p className="mt-2 text-xs text-stone-500">
-              Add photos to your events and they&apos;ll appear here.
-            </p>
+          {event.teamId && event.eventId && (
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <PhotoUploader
+                teamId={event.teamId}
+                eventId={event.eventId}
+                label="Add photos"
+                className="rounded-lg px-2.5 py-1 text-xs font-semibold text-navy ring-1 ring-black/10 hover:bg-white"
+                onUploaded={() => setReload((n) => n + 1)}
+              />
+              {promoPhotos.length === 0 && template === "promo" && (
+                <span className="text-xs text-stone-500">
+                  Photos you add will appear here.
+                </span>
+              )}
+            </div>
           )}
 
           <button
