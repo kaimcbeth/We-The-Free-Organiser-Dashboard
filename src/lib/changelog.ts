@@ -31,7 +31,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "Add to calendar on each event (Google Calendar, or Apple and Outlook). On the Events page, Add all to calendar subscribes Google Calendar to all your community's events, and it keeps up as events change.",
+        text: "Add to your calendar on each event (Google Calendar, or Apple and Outlook). On the Events page, Add all to your calendar subscribes Google Calendar to all your community's events, and it keeps up as events change.",
       },
       {
         level: "organiser",

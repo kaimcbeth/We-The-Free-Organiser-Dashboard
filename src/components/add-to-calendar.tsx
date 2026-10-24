@@ -14,7 +14,7 @@ export function AddToCalendar({ event }: { event: CalEvent }) {
         onClick={() => setOpen(!open)}
         className="text-xs font-medium text-stone-500 hover:text-stone-800 hover:underline"
       >
-        Add to calendar
+        Add to your calendar
       </button>
       {open && (
         <span className="absolute left-0 top-6 z-20 flex w-52 flex-col rounded-xl bg-white p-1 text-sm shadow-lg ring-1 ring-black/10">
@@ -63,7 +63,7 @@ export function CalendarFeed({ token }: { token: string }) {
         onClick={() => setOpen(!open)}
         className="text-xs font-medium text-stone-500 hover:text-stone-800 hover:underline"
       >
-        Add all to calendar
+        Add all to your calendar
       </button>
       {open && (
         <span className="absolute right-0 top-6 z-20 flex w-64 flex-col rounded-xl bg-white p-1 text-sm shadow-lg ring-1 ring-black/10">
