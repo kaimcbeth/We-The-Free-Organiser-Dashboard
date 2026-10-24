@@ -5,6 +5,7 @@ import { Sheet } from "@/components/sheet";
 import {
   getInviteList,
   getNewcomersList,
+  getQuietList,
   getRegularsList,
 } from "@/app/actions";
 import { InviteList } from "@/app/invites/[id]/invite-list";
@@ -17,11 +18,13 @@ export function RegularsSheet({
   className,
   invites = false,
   newcomers = false,
+  quietTeamId,
 }: {
   eventId: string;
   className?: string;
   invites?: boolean; // the personal invite list instead of all regulars
   newcomers?: boolean; // the community's newcomers
+  quietTeamId?: string; // people not seen in a while (eventId = a key for ticks)
 }) {
   const [open, setOpen] = useState(false);
   const [list, setList] = useState<Invite[] | null>(null);
@@ -35,23 +38,26 @@ export function RegularsSheet({
           setOpen(true);
           if (!list)
             setList(
-              (
-                await (
-                  invites
-                    ? getInviteList
-                    : newcomers
-                      ? getNewcomersList
-                      : getRegularsList
-                )(eventId)
+              (quietTeamId
+                ? await getQuietList(quietTeamId)
+                : await (
+                    invites
+                      ? getInviteList
+                      : newcomers
+                        ? getNewcomersList
+                        : getRegularsList
+                  )(eventId)
               )?.invites ?? [],
             );
         }}
       >
-        {invites
-          ? "Open invite list"
-          : newcomers
-            ? "Message newcomers"
-            : "Message regulars"}
+        {quietTeamId
+          ? "Message them"
+          : invites
+            ? "Open invite list"
+            : newcomers
+              ? "Message newcomers"
+              : "Message regulars"}
       </button>
       {open && (
         <Sheet
@@ -65,9 +71,11 @@ export function RegularsSheet({
           onClose={() => setOpen(false)}
         >
           <p className="text-sm text-stone-600">
-            {invites || newcomers
-              ? "Open a chat with WhatsApp or Messenger, write your own message, then tick them off."
-              : "Ask your regulars who can help set up and pack down. Open a chat, write your own message, then tick them off."}
+            {quietTeamId
+              ? "A friendly hello, no pressure. Open a chat, write your own message, then tick them off."
+              : invites || newcomers
+                ? "Open a chat with WhatsApp or Messenger, write your own message, then tick them off."
+                : "Ask your regulars who can help set up and pack down. Open a chat, write your own message, then tick them off."}
           </p>
           {list ? (
             <InviteList eventId={eventId} invites={list} local={!invites} />

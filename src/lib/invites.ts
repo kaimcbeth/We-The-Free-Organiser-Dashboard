@@ -407,3 +407,55 @@ export async function loadRegularsList(
   invites.sort((a, b) => a.name.localeCompare(b.name));
   return { invites, eventTitle: event.title };
 }
+
+// People "not seen in a while" (by their own rhythm, not lapsed): for the
+// monthly "Quiet volunteers re-engaged" action.
+export async function loadQuietList(
+  supabase: SupabaseClient,
+  teamId: string,
+  now: number,
+  canEditAny = false,
+): Promise<Invite[]> {
+  const [{ data: people }, { data: roles }] = await Promise.all([
+    supabase
+      .from("people")
+      .select(
+        "id, first_name, last_name, phone, facebook_url, attended_before_app, pending_role, attendance(event:events(id, starts_at, event_type_id))",
+      )
+      .eq("team_id", teamId)
+      .eq("is_test", false)
+      .eq("no_messages", false)
+      .returns<Row[]>(),
+    supabase.rpc("list_roles"),
+  ]);
+  const withRole = new Set<string>(
+    ((roles as { person_id: string | null }[] | null) ?? []).flatMap((r) =>
+      r.person_id ? [r.person_id] : [],
+    ),
+  );
+  const out: Invite[] = [];
+  for (const p of people ?? []) {
+    const dates = p.attendance.flatMap((a) =>
+      a.event ? [a.event.starts_at] : [],
+    );
+    if (!dates.length || isLapsed(dates, now)) continue;
+    const drift = notSeenInAWhile(dates, now);
+    if (!drift) continue;
+    const role = withRole.has(p.id) || !!p.pending_role;
+    out.push({
+      personId: p.id,
+      name: [p.first_name, p.last_name].filter(Boolean).join(" "),
+      group: "priority",
+      reason: "drift",
+      detail: `Last came ${weeks(drift.sinceDays)} ago`,
+      kind: "invite",
+      sent: false,
+      whatsapp: whatsappLink(p.phone),
+      facebook: messengerLink(p.facebook_url),
+      phone: p.phone,
+      facebookUrl: p.facebook_url,
+      canEdit: canEditAny || role,
+    });
+  }
+  return out.sort((a, b) => a.name.localeCompare(b.name));
+}

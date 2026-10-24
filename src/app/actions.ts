@@ -1094,3 +1094,16 @@ export async function getNewcomersList(eventId: string) {
     true,
   );
 }
+
+// People not seen in a while (for Quiet volunteers re-engaged).
+export async function getQuietList(teamId: string) {
+  const { supabase, organiser } = await requireCore();
+  const { loadQuietList } = await import("@/lib/invites");
+  const invites = await loadQuietList(
+    supabase,
+    teamId,
+    Date.now(),
+    organiser.role === "god" || organiser.role === "regional_lead",
+  );
+  return { invites, eventTitle: "" };
+}

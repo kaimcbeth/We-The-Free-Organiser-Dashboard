@@ -379,6 +379,13 @@ export function TaskCard({
                   className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
                 />
               )}
+              {task.kind === "com_reengage" && (
+                <RegularsSheet
+                  eventId={`quiet-${task.id}`}
+                  quietTeamId={task.teamId}
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
+              )}
               {task.kind === "com_remind_new" && task.eventId && (
                 <RegularsSheet
                   eventId={task.eventId}
