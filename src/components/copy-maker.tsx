@@ -18,7 +18,7 @@ const PLACES: { id: CopyPlatform; label: string }[] = [
 
 type Example = { id: string; platform: string | null; body: string };
 
-function Option({ text }: { text: string }) {
+export function Option({ text }: { text: string }) {
   const [value, setValue] = useState(text);
   const [copied, setCopied] = useState(false);
   return (
@@ -55,7 +55,7 @@ function Option({ text }: { text: string }) {
   );
 }
 
-function VoiceExamples({ teamId }: { teamId: string }) {
+export function VoiceExamples({ teamId }: { teamId: string }) {
   const [list, setList] = useState<Example[] | null>(null);
   const [draft, setDraft] = useState("");
   const [platform, setPlatform] = useState<string>("");

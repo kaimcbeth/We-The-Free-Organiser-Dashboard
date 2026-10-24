@@ -1,6 +1,7 @@
 // Writes social media copy for an event: a few options per platform, in the
 // community's own voice (voice_examples) when it has some. Never posts
 // anything: it only returns text for a person to pick, edit and copy.
+// Also writes the quarterly volunteer feedback message ({ purpose: "feedback" }).
 //
 // Needs the Edge Function secret ANTHROPIC_API_KEY (optional ANTHROPIC_MODEL).
 
@@ -47,7 +48,9 @@ Deno.serve(async (req) => {
     const key = Deno.env.get("ANTHROPIC_API_KEY");
     if (!key) return json({ error: "The writing assistant isn't set up yet." }, 500);
 
-    const { eventId, platforms, note } = await req.json();
+    const body = await req.json();
+    if (body?.purpose === "feedback") return await feedbackCopy(asUser, user.id, key, body);
+    const { eventId, platforms, note } = body;
     const wanted = ((platforms as string[]) ?? []).filter((p) => p in PLATFORMS);
     if (!eventId || wanted.length === 0) return json({ error: "Pick at least one place to post." }, 400);
 
@@ -176,3 +179,72 @@ Reply with JSON only, no other text, shaped like {${wanted.map((p) => `"${p}": [
     return json({ error: "Couldn't write that. Please try again." }, 500);
   }
 });
+
+// The quarterly "how's it going?" message to the community chat, with the
+// link to the volunteer feedback form.
+// deno-lint-ignore no-explicit-any
+async function feedbackCopy(asUser: any, userId: string, key: string, body: any) {
+  const { teamId, link, note } = body ?? {};
+  if (!teamId || typeof link !== "string" || !link.includes("/feedback/"))
+    return json({ error: "Missing the form link." }, 400);
+  const url = Deno.env.get("SUPABASE_URL")!;
+  const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const { data: me } = await admin.from("organisers").select("access, team_id").eq("id", userId).maybeSingle();
+  if (!me || !(me.access === "god" || me.access === "regional_lead" || me.team_id === teamId))
+    return json({ error: "Only organisers and the Core Team can use this." }, 403);
+  const { data: team } = await asUser.from("teams").select("id, name").eq("id", teamId).maybeSingle();
+  if (!team) return json({ error: "Couldn't find that community." }, 404);
+
+  const since = new Date(Date.now() - 864e5).toISOString();
+  const { count } = await admin
+    .from("copy_generations")
+    .select("id", { count: "exact", head: true })
+    .eq("team_id", teamId)
+    .gte("created_at", since);
+  if ((count ?? 0) >= DAILY_LIMIT) return json({ error: "That's a lot of writing for one day. Try again tomorrow." }, 429);
+
+  const { data: voice } = await admin
+    .from("voice_examples")
+    .select("platform, body")
+    .eq("team_id", teamId)
+    .order("created_at", { ascending: false })
+    .limit(10);
+  const community = String(team.name).replace(/, (Australia|New Zealand)$/, "");
+  const prompt = `Write a WhatsApp message to the We The Free ${community} volunteer group chat asking volunteers to fill in a short feedback form about how volunteering with us is going. The form is 3 quick questions (how they're finding it, what's working, what would make it better) and their name is optional. Make clear every answer gets read and it helps make things better. Include this exact link on its own line: ${link}
+${note && String(note).trim() ? `\nFrom the organiser (work this in): ${String(note).slice(0, 600)}\n` : ""}
+${voice?.length ? `VOICE EXAMPLES (past posts by this community; match this voice)\n${voice.map((v: { body: string }, i: number) => `--- Example ${i + 1}\n${v.body}`).join("\n")}` : "No voice examples: use a friendly, down-to-earth grassroots voice."}
+
+WRITE 3 different options, each 25-70 words, casual, like a friend messaging the group, no hashtags.
+Reply with JSON only, no other text, shaped like {"whatsapp": ["...", "...", "..."]}.`;
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+    body: JSON.stringify({
+      model: Deno.env.get("ANTHROPIC_MODEL") ?? "claude-sonnet-5-5",
+      max_tokens: 1200,
+      system: RULES,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  if (!res.ok) {
+    console.error(res.status, await res.text());
+    return json({ error: "The writing assistant didn't answer. Try again in a moment." }, 502);
+  }
+  const out = await res.json();
+  const text: string = (out.content ?? []).map((c: { text?: string }) => c.text ?? "").join("");
+  const match = text.match(/\{[\s\S]*\}/);
+  let options: string[] = [];
+  try {
+    options = (JSON.parse(match ? match[0] : text).whatsapp ?? []) as string[];
+  } catch {
+    return json({ error: "That didn't come out right. Try again." }, 502);
+  }
+  // No dashes as punctuation, and make sure the link is there.
+  options = options
+    .map((s) => String(s).replace(/\s*[—–]\s*/g, ", ").trim())
+    .map((s) => (s.includes(link) ? s : `${s}\n${link}`))
+    .slice(0, 3);
+  await admin.from("copy_generations").insert({ team_id: teamId, event_id: null, user_id: userId });
+  return json({ options });
+}
