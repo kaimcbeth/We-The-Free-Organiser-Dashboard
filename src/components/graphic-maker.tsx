@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { PhotoUploader } from "@/components/photo-uploader";
+import { CarouselMaker } from "@/components/carousel-maker";
 import { Sheet } from "@/components/sheet";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -31,7 +32,7 @@ const SIZES: Record<GraphicSize, { label: string; w: number; h: number }> = {
   story: { label: "Story", w: 1080, h: 1920 },
   cover: { label: "Facebook event cover", w: 1920, h: 1005 },
 };
-type Template = "promo" | "recap";
+type Template = "promo" | "recap" | "carousel";
 
 const NAVY = "#071130";
 const PINK = "#ff47b9";
@@ -412,94 +413,111 @@ export function GraphicMaker({
               >
                 Thanks for coming
               </button>
+              <button
+                type="button"
+                onClick={() => setTemplate("carousel")}
+                className={chip(template === "carousel")}
+              >
+                Instagram carousel
+              </button>
             </div>
           )}
-          <div className="flex flex-wrap gap-1.5">
-            {(Object.keys(SIZES) as GraphicSize[]).map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setSize(s)}
-                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${
-                  size === s
-                    ? "bg-pink/20 text-pink-ink ring-pink/40"
-                    : "bg-white text-stone-500 ring-stone-300"
-                }`}
-              >
-                {SIZES[s].label}
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-3 flex justify-center rounded-2xl bg-stone-100 p-3">
-            <canvas
-              ref={canvas}
-              className="max-h-[48vh] w-auto max-w-full rounded-lg shadow"
+          {template === "carousel" ? (
+            <CarouselMaker
+              key={ownPhotos.map((p) => p.id).join()}
+              photos={ownPhotos}
+              title={event.title}
             />
-          </div>
-
-          {pool.length > 0 && (
-            <div className="mt-3">
-              <p className="mb-1.5 text-xs font-medium text-stone-500">
-                {template === "recap" ? "Lead photo" : "Photo"}
-              </p>
-              <div className="flex gap-1.5 overflow-x-auto pb-1">
-                {template === "promo" && (
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-1.5">
+                {(Object.keys(SIZES) as GraphicSize[]).map((s) => (
                   <button
+                    key={s}
                     type="button"
-                    onClick={() => setChosen("")}
-                    className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-navy text-[10px] font-semibold text-white ring-2 ${pickId === "" ? "ring-pink" : "ring-transparent"}`}
+                    onClick={() => setSize(s)}
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${
+                      size === s
+                        ? "bg-pink/20 text-pink-ink ring-pink/40"
+                        : "bg-white text-stone-500 ring-stone-300"
+                    }`}
                   >
-                    No photo
-                  </button>
-                )}
-                {pool.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setChosen(p.id)}
-                    className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg ring-2 ${pickId === p.id ? "ring-pink" : "ring-transparent"}`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
-                    <img
-                      src={p.url}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                    {p.favourite && (
-                      <span className="absolute left-0.5 top-0.5 text-[10px]">
-                        ⭐
-                      </span>
-                    )}
+                    {SIZES[s].label}
                   </button>
                 ))}
               </div>
-            </div>
-          )}
-          {event.teamId && event.eventId && (
-            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
-              <PhotoUploader
-                teamId={event.teamId}
-                eventId={event.eventId}
-                label="Add photos"
-                className="rounded-lg px-2.5 py-1 text-xs font-semibold text-navy ring-1 ring-black/10 hover:bg-white"
-                onUploaded={() => setReload((n) => n + 1)}
-              />
-              {promoPhotos.length === 0 && template === "promo" && (
-                <span className="text-xs text-stone-500">
-                  Photos you add will appear here.
-                </span>
-              )}
-            </div>
-          )}
 
-          <button
-            type="button"
-            onClick={download}
-            className="mt-3 w-full rounded-xl bg-pink px-4 py-2.5 font-semibold text-navy hover:bg-pink-strong"
-          >
-            Download PNG
-          </button>
+              <div className="mt-3 flex justify-center rounded-2xl bg-stone-100 p-3">
+                <canvas
+                  ref={canvas}
+                  className="max-h-[48vh] w-auto max-w-full rounded-lg shadow"
+                />
+              </div>
+
+              {pool.length > 0 && (
+                <div className="mt-3">
+                  <p className="mb-1.5 text-xs font-medium text-stone-500">
+                    {template === "recap" ? "Lead photo" : "Photo"}
+                  </p>
+                  <div className="flex gap-1.5 overflow-x-auto pb-1">
+                    {template === "promo" && (
+                      <button
+                        type="button"
+                        onClick={() => setChosen("")}
+                        className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-navy text-[10px] font-semibold text-white ring-2 ${pickId === "" ? "ring-pink" : "ring-transparent"}`}
+                      >
+                        No photo
+                      </button>
+                    )}
+                    {pool.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setChosen(p.id)}
+                        className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg ring-2 ${pickId === p.id ? "ring-pink" : "ring-transparent"}`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
+                        <img
+                          src={p.url}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                        {p.favourite && (
+                          <span className="absolute left-0.5 top-0.5 text-[10px]">
+                            ⭐
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {event.teamId && event.eventId && (
+                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <PhotoUploader
+                    teamId={event.teamId}
+                    eventId={event.eventId}
+                    label="Add photos"
+                    className="rounded-lg px-2.5 py-1 text-xs font-semibold text-navy ring-1 ring-black/10 hover:bg-white"
+                    onUploaded={() => setReload((n) => n + 1)}
+                  />
+                  {promoPhotos.length === 0 && template === "promo" && (
+                    <span className="text-xs text-stone-500">
+                      Photos you add will appear here.
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={download}
+                className="mt-3 w-full rounded-xl bg-pink px-4 py-2.5 font-semibold text-navy hover:bg-pink-strong"
+              >
+                Download PNG
+              </button>
+            </>
+          )}
         </Sheet>
       )}
     </>
