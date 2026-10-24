@@ -88,14 +88,6 @@ export function FeedbackSheet({
                 >
                   {copied ? "Copied ✓" : "Copy message"}
                 </button>
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(text)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={btn}
-                >
-                  Send in WhatsApp
-                </a>
                 {data.whatsappUrl && (
                   <a
                     href={data.whatsappUrl}
@@ -108,8 +100,7 @@ export function FeedbackSheet({
                 )}
               </div>
               <p className="text-xs text-stone-500">
-                Send in WhatsApp lets you pick the chat with the message ready.
-                Or copy it, open the community chat and paste.
+                Copy the message, open the community chat and paste.
               </p>
             </div>
           ) : count === 0 ? (
