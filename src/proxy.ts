@@ -9,6 +9,7 @@ const PUBLIC_PATHS = [
   "/join",
   "/invite",
   "/checkin",
+  "/feedback", // volunteer feedback form (secret link per community)
   "/calendar", // calendar feeds (secret link per community; apps can't log in)
 ];
 

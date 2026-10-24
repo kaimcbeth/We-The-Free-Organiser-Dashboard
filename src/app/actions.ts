@@ -1154,3 +1154,38 @@ export async function removeSuggestion(id: string) {
   await supabase.from("feature_suggestions").delete().eq("id", id);
   revalidatePath("/whats-new");
 }
+
+// "Volunteer feedback collected": the form link, the community chat, and responses.
+export type FeedbackResponse = {
+  id: string;
+  rating: number | null;
+  going_well: string | null;
+  better: string | null;
+  name: string | null;
+  created_at: string;
+};
+export async function getFeedback(teamId: string): Promise<{
+  token: string | null;
+  whatsappUrl: string | null;
+  responses: FeedbackResponse[];
+}> {
+  const { supabase } = await requireOrganiser();
+  const [{ data: team }, { data: responses }] = await Promise.all([
+    supabase
+      .from("teams")
+      .select("feedback_token, whatsapp_url")
+      .eq("id", teamId)
+      .maybeSingle(),
+    supabase
+      .from("volunteer_feedback")
+      .select("id, rating, going_well, better, name, created_at")
+      .eq("team_id", teamId)
+      .order("created_at", { ascending: false })
+      .limit(200),
+  ]);
+  return {
+    token: team?.feedback_token ?? null,
+    whatsappUrl: team?.whatsapp_url ?? null,
+    responses: (responses as FeedbackResponse[]) ?? [],
+  };
+}

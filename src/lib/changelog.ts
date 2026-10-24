@@ -11,6 +11,14 @@ export type Release = { date: string; title: string; changes: Change[] };
 // What's being worked on next (shown at the top of What's new).
 export const COMING_SOON: { title: string; text: string }[] = [
   {
+    title: "Recommended Movie Challenge prizes",
+    text: "A list of prizes that work well for the Movie Challenge, with rough costs and where to get them.",
+  },
+  {
+    title: "Planning guides for community events",
+    text: "Step-by-step guides for running socials, dinners, co-working and other community events.",
+  },
+  {
     title: "Volunteer accounts",
     text: "Volunteers log in to see their own events and history, say which events they're coming to, and choose how they hear from you.",
   },
@@ -39,7 +47,11 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Quiet volunteers re-engaged only comes up when someone has actually gone quiet. Regulars list checked is gone.",
+        text: "Quiet volunteers re-engaged only comes up when someone has actually gone quiet. Regulars list checked and Community social planned are gone for now.",
+      },
+      {
+        level: "organiser",
+        text: "Volunteer feedback (every 3 months): Ask for feedback gives you a ready message with a link to a short form for volunteers, to send in WhatsApp. See responses shows what they said.",
       },
     ],
   },
