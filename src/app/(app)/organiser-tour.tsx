@@ -125,7 +125,7 @@ export function OrganiserTour({
       title: "People",
       href: "/people",
       target: "people-search",
-      body: "Add a name and that's it. Members add their own details and photo when they connect with their QR code.",
+      body: "Add a name and that's it. Members can add their own details and photo when they connect with their QR code, or you can add their phone number or Facebook link for them.",
     },
     {
       section: 1,
