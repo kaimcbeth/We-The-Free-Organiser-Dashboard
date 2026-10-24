@@ -18,6 +18,7 @@ type Step = {
   follow?: { on: string; link: string };
   click?: string; // data-tour="…" button to press first (e.g. open a menu)
   whole?: boolean; // highlight all of it, even if it's tall
+  choose?: boolean; // Next opens the action picker, then the tour carries on
   target?: string; // data-tour="…" element(s) to spotlight, first found wins
 };
 
@@ -158,6 +159,16 @@ export function OrganiserTour({
     },
     {
       section: 2,
+      icon: "📝",
+      tone: "bg-yellow",
+      title: "Set up your actions",
+      href: "/tasks",
+      target: "choose-tasks,nav-actions",
+      choose: true,
+      body: "First, tell us how much time you have and pick which actions you want for your community. You can change them any time. Then we'll show you how they work.",
+    },
+    {
+      section: 2,
       icon: "✔️",
       tone: "bg-cyan",
       title: "Your action list",
@@ -213,20 +224,11 @@ export function OrganiserTour({
       target: "bell-menu",
       body: "The bell keeps you in the loop: actions due, newcomers, and what your Core Team has picked up.",
     },
-    {
-      section: 2,
-      icon: "📝",
-      tone: "bg-yellow",
-      title: "Set up your actions",
-      href: "/tasks",
-      target: "choose-tasks,nav-actions",
-      body: "Last step: tell us how much time you have and pick which actions you want for your community. You can change them any time.",
-    },
   ];
 
   const minutesLeft = (from: number) => {
     // The whole tour is billed as 5 minutes; count down in proportion to
-    // how much is left to read (plus the task picker at the end).
+    // how much is left to read (plus the task picker).
     const weight = (n: number) =>
       steps
         .slice(n)
@@ -370,18 +372,26 @@ export function OrganiserTour({
       <TaskChooser
         setup={setup}
         communityName={communityName}
-        onClose={() => finish()}
+        onClose={() => {
+          // Picked mid-tour: carry on with the next card.
+          if (i < steps.length - 1) {
+            setChoosing(false);
+            setI(i + 1);
+          } else finish();
+        }}
       />
     );
   }
   if (!open) return null;
   const step = steps[i];
   const last = i === steps.length - 1;
-  const nextLabel = last
+  const nextLabel = step.choose
     ? "Choose my actions"
-    : steps[i + 1].section !== step.section
-      ? `${i === 0 ? "Start with" : "Next:"} ${SECTIONS[steps[i + 1].section].name}`
-      : "Next";
+    : last
+      ? "Finish"
+      : steps[i + 1].section !== step.section
+        ? `${i === 0 ? "Start with" : "Next:"} ${SECTIONS[steps[i + 1].section].name}`
+        : "Next";
 
   // Spotlighting something: a small card tucked next to it, so the page
   // stays visible.
@@ -466,7 +476,9 @@ export function OrganiserTour({
               Back
             </button>
             <button
-              onClick={() => (last ? setChoosing(true) : setI(i + 1))}
+              onClick={() =>
+                step.choose ? setChoosing(true) : last ? finish() : setI(i + 1)
+              }
               className="rounded-xl bg-pink px-4 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
             >
               {nextLabel}
@@ -557,7 +569,9 @@ export function OrganiserTour({
             </button>
           )}
           <button
-            onClick={() => (last ? setChoosing(true) : setI(i + 1))}
+            onClick={() =>
+              step.choose ? setChoosing(true) : last ? finish() : setI(i + 1)
+            }
             className="flex-1 rounded-xl bg-pink px-4 py-3 font-semibold text-navy hover:bg-pink-strong"
           >
             {nextLabel}
