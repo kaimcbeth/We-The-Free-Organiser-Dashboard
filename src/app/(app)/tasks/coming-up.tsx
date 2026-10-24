@@ -48,7 +48,7 @@ function Card({ u, when }: { u: UpcomingAction; when: string }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
-  const go = (done: boolean) =>
+  const go = (done: boolean | "skip") =>
     start(async () => {
       const r = await startActionEarly(u.eventId, u.kind, done);
       setError(r.error ?? "");
@@ -92,6 +92,14 @@ function Card({ u, when }: { u: UpcomingAction; when: string }) {
               className="rounded-lg px-3 py-1.5 text-sm font-medium text-stone-600 ring-1 ring-stone-300 hover:bg-stone-50 disabled:opacity-60"
             >
               Already done ✓
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => go("skip")}
+              className="ml-auto rounded px-1 py-0.5 text-xs text-stone-400 hover:text-stone-700 hover:underline disabled:opacity-60"
+            >
+              Remove
             </button>
           </div>
           {error && <p className="mt-2 text-sm text-red-700">{error}</p>}

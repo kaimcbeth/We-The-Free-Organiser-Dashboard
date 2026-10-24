@@ -11,6 +11,20 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-24",
+    title: "Tidier role actions",
+    changes: [
+      {
+        level: "organiser",
+        text: "Tech check and Volunteers briefed only come up for outreach events, not socials. New volunteers welcomed only comes up when someone new checks in. Checked in with everyone who came has gone.",
+      },
+      {
+        level: "organiser",
+        text: "Actions that are coming up now have a Remove button, for when one isn't needed for that event.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-24",
     title: "Personal invites before events",
     changes: [
       {
@@ -49,7 +63,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "23 new actions from the Events, Promo and Community Lead role lists (set-up team, weather check, briefing, pack-down, photo consent, monthly recap, thank-you messages, buddies, re-engaging quiet volunteers and more). They start switched off: turn on the ones you want, or a Core Team member can take them on. Anything switched on with no Core Team member looking after it comes to the organisers.",
+        text: "22 new actions from the Events, Promo and Community Lead role lists (set-up team, weather check, briefing, pack-down, photo consent, monthly recap, thank-you messages, buddies, re-engaging quiet volunteers and more). They start switched off: turn on the ones you want, or a Core Team member can take them on. Anything switched on with no Core Team member looking after it comes to the organisers.",
       },
       {
         level: "organiser",

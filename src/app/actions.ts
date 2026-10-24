@@ -908,7 +908,7 @@ export async function setPersonFacebook(
 export async function startActionEarly(
   eventId: string,
   kind: string,
-  done: boolean,
+  done: boolean | "skip", // "skip": not needed for this event
 ): Promise<{ error?: string }> {
   const { supabase, organiser } = await requireOrganiser();
   if (organiser.tourPreview || organiser.exampleMode) return {}; // tutorial: example data stays as it is
@@ -933,15 +933,19 @@ export async function startActionEarly(
     event_id: event.id,
     kind,
     due_at: new Date(anchor + Number(k.due_after_hours) * 36e5).toISOString(),
-    ...(done
-      ? { done_at: new Date().toISOString(), done_by: organiser.id }
-      : {}),
+    ...(done === "skip"
+      ? { dismissed_at: new Date().toISOString() }
+      : done
+        ? { done_at: new Date().toISOString(), done_by: organiser.id }
+        : {}),
   });
   if (error)
     return {
       error:
         error.code === "23505"
-          ? "It's already on your list."
+          ? done === "skip"
+            ? "It's already on your list. Remove it there with ×."
+            : "It's already on your list."
           : "Couldn't do that. Please try again.",
     };
   revalidatePath("/tasks");
