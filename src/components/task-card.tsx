@@ -70,6 +70,7 @@ export type TaskRow = {
   showFrom: string | null; // moved: hidden until then
   doneAt: string | null;
   eventTitle: string | null;
+  repeats?: string | null; // "Every month": how often it comes round (not per event)
   eventFacebookUrl?: string | null; // pasted once, used by every Facebook action
   personId?: string | null; // actions about one person (a newcomer)
   personName?: string | null;
@@ -289,6 +290,14 @@ export function TaskCard({
                   className={`h-2 w-2 rounded-full ${due.dot}`}
                 />
                 {due.text}
+              </span>
+            )}
+            {task.repeats && (
+              <span
+                className="text-xs text-stone-400"
+                title="How often this action comes round"
+              >
+                ↻ {task.repeats}
               </span>
             )}
           </div>

@@ -19,6 +19,7 @@ type Raw = {
     estimate_minutes: number;
     estimate_max_minutes: number | null;
     audience: string;
+    schedule: string;
   } | null;
   event: {
     id: string;
@@ -39,7 +40,7 @@ type Raw = {
 };
 
 const SELECT =
-  "id, team_id, due_at, show_from, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes, audience), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, facebook_url, event_type_id, event_type:event_types(name), team:teams(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name), person:people!tasks_person_id_fkey(id, first_name, last_name)";
+  "id, team_id, due_at, show_from, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes, audience, schedule), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, facebook_url, event_type_id, event_type:event_types(name), team:teams(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name), person:people!tasks_person_id_fkey(id, first_name, last_name)";
 
 // Promo actions that get a "Get graphic" button, and the size they need.
 const GRAPHIC_SIZE: Record<string, GraphicSize | undefined> = {
@@ -77,6 +78,16 @@ function toRow(t: Raw): TaskRow {
     showFrom: t.show_from,
     doneAt: t.done_at,
     eventTitle: t.event?.title ?? null,
+    repeats:
+      (
+        {
+          weekly: "Every week",
+          monthly: "Every month",
+          month_end: "End of each month",
+          quarterly: "Every 3 months",
+          newcomer: "Each newcomer",
+        } as Record<string, string>
+      )[t.kind?.schedule ?? ""] ?? null,
     eventFacebookUrl: t.event?.facebook_url ?? null,
     personId: t.person?.id ?? null,
     personName: t.person
