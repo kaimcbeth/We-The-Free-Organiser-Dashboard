@@ -169,7 +169,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
   ).length;
   const weekTotal = weekDone + weekLeft;
 
-  // Actions on their way for the next week's events (shown quietly).
+  // Actions still to come for the next 3 weeks of events (shown quietly).
   const upcoming = await loadUpcomingActions(
     supabase,
     organiser.team_id,

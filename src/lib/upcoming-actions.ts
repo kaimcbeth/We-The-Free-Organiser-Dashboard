@@ -80,7 +80,9 @@ export async function loadUpcomingActions(
       );
       const appears = anchor + Number(k.appear_hours) * 36e5;
       // Just past: the hourly job hasn't made it yet, so keep it visible.
-      if (appears > now - HOUR && (only || appears <= now + 7 * DAY))
+      // Every action still to come for these events, however far ahead
+      // (they sit behind "Show N coming up").
+      if (appears > now - HOUR)
         out.push({
           eventId: e.id,
           kind: k.kind,
