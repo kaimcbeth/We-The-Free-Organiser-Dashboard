@@ -42,9 +42,24 @@ function ActionsLink({
   return (
     <Link
       href={`/tasks?event=${eventId}`}
-      className={`rounded-md px-1.5 py-0.5 text-xs font-semibold hover:underline ${className}`}
+      title="See this event's actions"
+      className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-semibold hover:underline ${className}`}
     >
-      {count} action{count === 1 ? "" : "s"} →
+      <svg
+        viewBox="0 0 16 16"
+        className="h-3 w-3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        aria-hidden
+      >
+        <path
+          d="M2 4l1.5 1.5L6 3M2 10l1.5 1.5L6 9M9 4.5h5M9 10.5h5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      {count} action{count === 1 ? "" : "s"}
     </Link>
   );
 }

@@ -176,7 +176,7 @@ export default async function EventCheckInPage({
               href={`/tasks?event=${event.id}`}
               className="rounded-full bg-pink/15 px-2.5 py-1 text-xs font-semibold text-pink-ink hover:bg-pink/25"
             >
-              {openActions} action{openActions === 1 ? "" : "s"} →
+              {openActions} action{openActions === 1 ? "" : "s"} to do
             </Link>
           )}
         </div>
