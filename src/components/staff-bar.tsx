@@ -7,7 +7,7 @@ import type { ViewRole } from "@/lib/roles";
 import { signInAsTestPerson } from "@/lib/test-login";
 
 type ViewOption = {
-  value: ViewRole | "new_organiser" | "new_core_team";
+  value: ViewRole | "new_organiser" | "new_organiser_new" | "new_core_team";
   label: string;
 };
 const ROLE_OPTIONS: ViewOption[] = [
@@ -18,7 +18,8 @@ const ROLE_OPTIONS: ViewOption[] = [
   { value: "member", label: "Member" },
 ];
 const TUTORIAL_OPTIONS: ViewOption[] = [
-  { value: "new_organiser", label: "New Organiser" },
+  { value: "new_organiser", label: "New Organiser (existing community)" },
+  { value: "new_organiser_new", label: "New Organiser (new community)" },
   { value: "new_core_team", label: "New Core Team Member" },
   { value: "new_member", label: "New Member" },
 ];
@@ -96,7 +97,7 @@ export function StaffBar({
                   return;
                 }
                 start(() =>
-                  setViewAs(v as ViewRole | "new_organiser" | "new_core_team"),
+                  setViewAs(v as ViewRole | "new_organiser" | "new_organiser_new" | "new_core_team"),
                 );
               }}
               className={`rounded-md px-1.5 py-0.5 font-medium ${viewingAs ? "bg-navy/10" : "bg-white/15"}`}

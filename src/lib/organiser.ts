@@ -93,10 +93,14 @@ export async function getStaff() {
 
   const rawAs = jar.get(VIEW_AS_COOKIE)?.value;
   // "New organiser" previews the organiser view with the welcome tour.
-  const newOrganiserView = row.access === "god" && rawAs === "new_organiser";
-  // After the tour, the preview carries on in the Practice Community, for real.
+  // "New Organiser (existing community)" / "(new community)": the tour, then
+  // their community. A new community is the Practice Community, set up for real.
+  const newOrganiserView =
+    row.access === "god" &&
+    (rawAs === "new_organiser" || rawAs === "new_organiser_new");
+  const tourDone = newOrganiserView && jar.get(PRACTICE_COOKIE)?.value === "1";
   let practice: Team | null = null;
-  if (newOrganiserView && jar.get(PRACTICE_COOKIE)?.value === "1") {
+  if (tourDone && rawAs === "new_organiser_new") {
     const { data } = await supabase
       .from("teams")
       .select("id, name, slug, whatsapp_url, region_id, timezone")
@@ -104,7 +108,7 @@ export async function getStaff() {
       .maybeSingle<Team>();
     practice = data;
   }
-  const tourPreview = newOrganiserView && !practice;
+  const tourPreview = newOrganiserView && !tourDone;
   const coreSetupPreview = row.access === "god" && rawAs === "new_core_team";
   const asCookie = (
     newOrganiserView ? "organiser" : coreSetupPreview ? "core_team" : rawAs
@@ -167,7 +171,7 @@ export async function getStaff() {
     role,
     viewingAs,
     viewValue: newOrganiserView
-      ? "new_organiser"
+      ? rawAs!
       : coreSetupPreview
         ? "new_core_team"
         : viewingAs,

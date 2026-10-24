@@ -83,7 +83,8 @@ function WebsiteLink({ url, className }: { url: string; className: string }) {
   );
 }
 
-export default async function EventsPage() {
+export default async function EventsPage({ searchParams }: PageProps<"/">) {
+  const { setup: justToured } = await searchParams;
   const { supabase, organiser } = await requireOrganiser();
   // Last time they chose the calendar view.
   if ((await cookies()).get("events_view")?.value === "calendar")
@@ -201,14 +202,17 @@ export default async function EventsPage() {
         (organiser.role === "organiser" ||
           organiser.role === "regional_lead" ||
           organiser.role === "god") && (
-          <SetupChecklist
-            teamId={organiser.team_id}
-            community={organiser.team.name.replace(
-              /, (Australia|New Zealand)$/,
-              "",
-            )}
-            status={setup}
-          />
+          <div>
+            <SetupChecklist
+              teamId={organiser.team_id}
+              community={organiser.team.name.replace(
+                /, (Australia|New Zealand)$/,
+                "",
+              )}
+              status={setup}
+              autoOpen={justToured === "1"}
+            />
+          </div>
         )}
 
       <ImportStatus

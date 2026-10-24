@@ -463,7 +463,7 @@ export async function setActiveTeam(teamId: string): Promise<void> {
 
 // God Mode: preview the app as another role (null = back to God Mode).
 export async function setViewAs(
-  role: ViewRole | "new_organiser" | "new_core_team" | null,
+  role: ViewRole | "new_organiser" | "new_organiser_new" | "new_core_team" | null,
 ): Promise<void> {
   const { supabase, organiser } = await getStaff();
   if (organiser?.access !== "god") return;
@@ -635,7 +635,8 @@ export async function saveTeamTasks(
 export async function finishOrganiserTour(): Promise<void> {
   const { supabase, organiser } = await requireOrganiser();
   if (organiser.tourPreview) {
-    // God Mode preview: carry on setting up a fresh Practice Community.
+    // God Mode preview: the tour's done for this preview. "New community"
+    // carries on in a fresh Practice Community; "existing" in the real one.
     await supabase.rpc("reset_practice_team");
     (await cookies()).set(PRACTICE_COOKIE, "1", {
       path: "/",

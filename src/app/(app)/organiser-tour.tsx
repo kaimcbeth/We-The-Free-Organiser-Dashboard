@@ -371,7 +371,7 @@ export function OrganiserTour({
     setChoosing(false);
     // Straight to the Events page, where "Get your community ready" waits.
     finishOrganiserTour().then(() => {
-      router.push("/");
+      router.push("/?setup=1");
       router.refresh();
     });
   }
