@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { zipSync } from "fflate";
 import type { EventPhoto } from "@/lib/event-photos";
 
@@ -22,19 +22,23 @@ const loadImage = (url: string) =>
     img.src = url;
   });
 
+type Pos = { x: number; y: number }; // 0–1: which part of the photo shows
+const CENTRE: Pos = { x: 0.5, y: 0.5 };
+
 async function renderSlide(
   photo: HTMLImageElement,
   mark: HTMLImageElement,
+  pos: Pos,
 ): Promise<Blob> {
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
-  // Fill the frame, cropping the middle.
+  // Fill the frame, cropped where they dragged it (like CSS object-position).
   const s = Math.max(W / photo.naturalWidth, H / photo.naturalHeight);
   const pw = photo.naturalWidth * s;
   const ph = photo.naturalHeight * s;
-  ctx.drawImage(photo, (W - pw) / 2, (H - ph) / 2, pw, ph);
+  ctx.drawImage(photo, (W - pw) * pos.x, (H - ph) * pos.y, pw, ph);
 
   // Logo bubble, top right.
   const mh = 72;
@@ -79,6 +83,35 @@ export function CarouselMaker({
   const [busy, setBusy] = useState("");
   const [note, setNote] = useState("");
   const [made, setMade] = useState<File[] | null>(null); // ready to share
+  const [pos, setPos] = useState<Record<string, Pos>>({});
+  const drag = useRef<{ id: string; x: number; y: number } | null>(null);
+
+  // Drag a slide to move the photo inside the frame.
+  function dragTo(e: React.PointerEvent<HTMLDivElement>) {
+    const d = drag.current;
+    const img = e.currentTarget.querySelector("img");
+    if (!d || !img?.naturalWidth) return;
+    const size = [img.naturalWidth, img.naturalHeight];
+    const box = e.currentTarget.getBoundingClientRect();
+    const s = Math.max(box.width / size[0], box.height / size[1]);
+    const overX = size[0] * s - box.width;
+    const overY = size[1] * s - box.height;
+    const dx = e.clientX - d.x;
+    const dy = e.clientY - d.y;
+    drag.current = { ...d, x: e.clientX, y: e.clientY };
+    const clamp = (n: number) => Math.min(1, Math.max(0, n));
+    setPos((all) => {
+      const p = all[d.id] ?? CENTRE;
+      return {
+        ...all,
+        [d.id]: {
+          x: overX > 0.5 ? clamp(p.x - dx / overX) : 0.5,
+          y: overY > 0.5 ? clamp(p.y - dy / overY) : 0.5,
+        },
+      };
+    });
+    setMade(null);
+  }
   const byId = new Map(photos.map((p) => [p.id, p]));
   const chosen = order.map((id) => byId.get(id)).filter((p) => !!p);
 
@@ -112,7 +145,7 @@ export function CarouselMaker({
     for (let i = 0; i < chosen.length; i++) {
       setBusy(`Making slide ${i + 1} of ${chosen.length}…`);
       const img = await loadImage(chosen[i].url);
-      const blob = await renderSlide(img, mark);
+      const blob = await renderSlide(img, mark, pos[chosen[i].id] ?? CENTRE);
       files.push(
         new File([blob], `${slug}-${String(i + 1).padStart(2, "0")}.jpg`, {
           type: "image/jpeg",
@@ -207,17 +240,30 @@ export function CarouselMaker({
       {chosen.length > 0 && (
         <>
           <p className="mt-4 text-xs font-medium text-stone-500">
-            Preview · swipe through
+            Preview · drag a photo to move it in the frame
           </p>
           <div className="mt-1.5 flex snap-x gap-2 overflow-x-auto rounded-2xl bg-stone-100 p-2">
             {chosen.map((p, i) => (
-              <div key={p.id} className="w-40 shrink-0 snap-start">
-                <div className="relative aspect-[4/5] overflow-hidden rounded-lg shadow">
+              <div key={p.id} className="w-44 shrink-0 snap-start">
+                <div
+                  className="relative aspect-[4/5] cursor-grab touch-none select-none overflow-hidden rounded-lg shadow active:cursor-grabbing"
+                  onPointerDown={(e) => {
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                    drag.current = { id: p.id, x: e.clientX, y: e.clientY };
+                  }}
+                  onPointerMove={dragTo}
+                  onPointerUp={() => (drag.current = null)}
+                  onPointerCancel={() => (drag.current = null)}
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
                   <img
                     src={p.url}
                     alt=""
-                    className="h-full w-full object-cover"
+                    draggable={false}
+                    style={{
+                      objectPosition: `${(pos[p.id] ?? CENTRE).x * 100}% ${(pos[p.id] ?? CENTRE).y * 100}%`,
+                    }}
+                    className="pointer-events-none h-full w-full object-cover"
                   />
                   {/* eslint-disable-next-line @next/next/no-img-element -- static logo */}
                   <img
@@ -264,7 +310,7 @@ export function CarouselMaker({
             onClick={share}
             className="flex-1 rounded-xl bg-pink px-4 py-2.5 font-semibold text-navy hover:bg-pink-strong"
           >
-            Share {made.length} slides
+            Share {made.length} slide{made.length === 1 ? "" : "s"}
           </button>
         ) : (
           <button
@@ -275,8 +321,8 @@ export function CarouselMaker({
           >
             {busy ||
               (made
-                ? `Download ${made.length} slides`
-                : `Make ${chosen.length} slides`)}
+                ? `Download ${made.length} slide${made.length === 1 ? "" : "s"}`
+                : `Make ${chosen.length} slide${chosen.length === 1 ? "" : "s"}`)}
           </button>
         )}
         <button

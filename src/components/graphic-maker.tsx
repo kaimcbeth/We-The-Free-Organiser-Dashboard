@@ -32,7 +32,7 @@ const SIZES: Record<GraphicSize, { label: string; w: number; h: number }> = {
   story: { label: "Story", w: 1080, h: 1920 },
   cover: { label: "Facebook event cover", w: 1920, h: 1005 },
 };
-type Template = "promo" | "recap" | "carousel";
+type Template = "promo" | "recap";
 
 const NAVY = "#071130";
 const PINK = "#ff47b9";
@@ -272,8 +272,9 @@ export function GraphicMaker({
   tz,
   initialSize = "post",
   initialTemplate,
-  label = "Make graphics",
+  label,
   className = "text-xs font-medium text-pink-ink hover:underline",
+  carousel = false,
 }: {
   event: GraphicEvent;
   tz: string;
@@ -281,6 +282,7 @@ export function GraphicMaker({
   initialTemplate?: Template;
   label?: string;
   className?: string;
+  carousel?: boolean; // a carousel of the event's photos instead of one graphic
 }) {
   const [open, setOpen] = useState(false);
   const [size, setSize] = useState<GraphicSize>(initialSize);
@@ -376,53 +378,21 @@ export function GraphicMaker({
     a.click();
   }
 
-  const chip = (on: boolean) =>
-    `rounded-full px-3 py-1 text-sm font-medium ring-1 ${
-      on
-        ? "bg-navy text-white ring-navy"
-        : "bg-white text-stone-600 ring-stone-300"
-    }`;
-
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} className={className}>
-        {label}
+        {label ?? (carousel ? "Make carousel" : "Make graphic")}
       </button>
       {open && (
-        <Sheet title="Event graphics" onClose={() => setOpen(false)}>
-          {/* Only a choice once the event has its own photos. */}
-          {ownPhotos.length > 0 && (
-            <div className="mb-2 flex flex-wrap gap-1.5">
-              <button
-                type="button"
-                onClick={() => {
-                  setTemplate("promo");
-                  setChosen(null);
-                }}
-                className={chip(template === "promo")}
-              >
-                Promote it
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setTemplate("recap");
-                  setChosen(null);
-                }}
-                className={chip(template === "recap")}
-              >
-                Thanks for coming
-              </button>
-              <button
-                type="button"
-                onClick={() => setTemplate("carousel")}
-                className={chip(template === "carousel")}
-              >
-                Carousel
-              </button>
-            </div>
-          )}
-          {template === "carousel" ? (
+        <Sheet
+          title={carousel ? "Carousel" : "Event graphic"}
+          onClose={() => setOpen(false)}
+        >
+          {carousel && ownPhotos.length === 0 ? (
+            <p className="mt-1 text-sm text-stone-600">
+              Add photos from this event and you can make a carousel from them.
+            </p>
+          ) : carousel ? (
             <CarouselMaker
               key={ownPhotos.map((p) => p.id).join()}
               photos={ownPhotos}
@@ -492,22 +462,6 @@ export function GraphicMaker({
                   </div>
                 </div>
               )}
-              {event.teamId && event.eventId && (
-                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <PhotoUploader
-                    teamId={event.teamId}
-                    eventId={event.eventId}
-                    label="Add photos"
-                    className="rounded-lg px-2.5 py-1 text-xs font-semibold text-navy ring-1 ring-black/10 hover:bg-white"
-                    onUploaded={() => setReload((n) => n + 1)}
-                  />
-                  {promoPhotos.length === 0 && template === "promo" && (
-                    <span className="text-xs text-stone-500">
-                      Photos you add will appear here.
-                    </span>
-                  )}
-                </div>
-              )}
 
               <button
                 type="button"
@@ -517,6 +471,22 @@ export function GraphicMaker({
                 Download PNG
               </button>
             </>
+          )}
+          {event.teamId && event.eventId && (
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <PhotoUploader
+                teamId={event.teamId}
+                eventId={event.eventId}
+                label="Add photos"
+                className="rounded-lg px-2.5 py-1 text-xs font-semibold text-navy ring-1 ring-black/10 hover:bg-white"
+                onUploaded={() => setReload((n) => n + 1)}
+              />
+              {promoPhotos.length === 0 && template === "promo" && (
+                <span className="text-xs text-stone-500">
+                  Photos you add will appear here.
+                </span>
+              )}
+            </div>
           )}
         </Sheet>
       )}

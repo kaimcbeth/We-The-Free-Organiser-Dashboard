@@ -177,6 +177,24 @@ export default async function EventCheckInPage({
               eventId: event.id,
             }}
           />
+          <GraphicMaker
+            carousel
+            tz={team.timezone}
+            event={{
+              title: event.title,
+              startsAt: event.starts_at,
+              endsAt: event.ends_at,
+              venue: event.venue,
+              address: event.address,
+              typeName:
+                (types.data ?? []).find((t) => t.id === event.event_type_id)
+                  ?.name ?? null,
+              community: team.name.replace(/, (Australia|New Zealand)$/, ""),
+              teamId: event.team_id,
+              eventId: event.id,
+            }}
+          />
+
           {!!openActions && (
             <Link
               href={`/tasks?event=${event.id}`}

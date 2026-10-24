@@ -290,7 +290,17 @@ export function TaskCard({
                   event={task.graphic.event}
                   tz={tz}
                   initialSize={task.graphic.size}
-                  label="Get graphic"
+                  // Posting a set of photos: a carousel suits it best.
+                  carousel={
+                    task.kind === "post_photos_instagram" ||
+                    task.kind === "post_photos_facebook"
+                  }
+                  label={
+                    task.kind === "post_photos_instagram" ||
+                    task.kind === "post_photos_facebook"
+                      ? "Make carousel"
+                      : "Get graphic"
+                  }
                   className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10"
                 />
               )}
