@@ -22,6 +22,7 @@ import { Avatar } from "@/components/avatar";
 import { signPhotos } from "@/lib/photos";
 import { RolePicker } from "@/components/role-picker";
 import { PhoneField } from "./phone-field";
+import { MoveCommunity } from "./move-community";
 import { MessengerButton } from "@/components/messenger-button";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import { GIVES, type Access, type CoreRole } from "@/lib/roles";
@@ -36,6 +37,7 @@ type Person = {
   user_id: string | null;
   pending_role: Access | null;
   pending_team_id: string | null;
+  team_id: string;
   facebook_url: string | null;
   linked_at: string | null;
   consent_marketing: boolean;
@@ -66,7 +68,7 @@ export default async function PersonPage({
   const { data: person } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, is_buddy, no_messages",
+      "id, team_id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, is_buddy, no_messages",
     )
     .eq("id", id)
     .or(
@@ -258,6 +260,20 @@ export default async function PersonPage({
           regions={regions ?? []}
         />
       </div>
+      {(organiser.role === "god" || organiser.role === "regional_lead") &&
+        organiser.teams.length > 1 && (
+          <MoveCommunity
+            personId={person.id}
+            firstName={person.first_name}
+            current={
+              organiser.teams.find((t) => t.id === person.team_id) ?? {
+                id: person.team_id,
+                name: "another community",
+              }
+            }
+            teams={organiser.teams}
+          />
+        )}
       {canEditContact && (
         <PhoneField
           personId={person.id}

@@ -1107,3 +1107,25 @@ export async function getQuietList(teamId: string) {
   );
   return { invites, eventTitle: "" };
 }
+
+// Move someone to another community (God Mode and Regional Support Leads,
+// who can see more than one). Their attendance history stays with them.
+export async function movePersonToTeam(
+  personId: string,
+  teamId: string,
+): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  if (organiser.role !== "god" && organiser.role !== "regional_lead")
+    return { error: "Only Regional Support Leads can move people." };
+  if (!organiser.teams.some((t) => t.id === teamId))
+    return { error: "You can't move people to that community." };
+  const { data, error } = await supabase
+    .from("people")
+    .update({ team_id: teamId })
+    .eq("id", personId)
+    .select("id");
+  if (error || !data?.length)
+    return { error: "Couldn't move them. Please try again." };
+  revalidatePath("/people", "layout");
+  return {};
+}
