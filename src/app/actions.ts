@@ -463,7 +463,8 @@ export async function setActiveTeam(teamId: string): Promise<void> {
 
 // God Mode: preview the app as another role (null = back to God Mode).
 export async function setViewAs(
-  role: ViewRole | "new_organiser" | "new_organiser_new" | "new_core_team" | null,
+  role:
+    ViewRole | "new_organiser" | "new_organiser_new" | "new_core_team" | null,
 ): Promise<void> {
   const { supabase, organiser } = await getStaff();
   if (organiser?.access !== "god") return;

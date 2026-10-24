@@ -31,19 +31,22 @@ export function ChooseTasks({
           </p>
           <button
             onClick={() => setOpen(true)}
+            data-tour="choose-open"
             className="rounded-xl bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-2"
           >
             Choose actions
           </button>
         </div>
       ) : (
-        <button
-          onClick={() => setOpen(true)}
-          data-tour="choose-tasks"
-          className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-navy ring-1 ring-stone-300 hover:bg-stone-50"
-        >
-          Choose actions ({onCount} on)
-        </button>
+        <span data-tour="choose-tasks" className="inline-flex">
+          <button
+            onClick={() => setOpen(true)}
+            data-tour="choose-open"
+            className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-navy ring-1 ring-stone-300 hover:bg-stone-50"
+          >
+            Choose actions ({onCount} on)
+          </button>
+        </span>
       )}
       {open && (
         <TaskChooser

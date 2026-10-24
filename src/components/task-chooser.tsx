@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { addCustomTask, removeCustomTask, saveTeamTasks } from "@/app/actions";
 import type { SetupKind, TaskSetup } from "@/lib/task-setup";
 import { inputClass } from "@/components/form";
@@ -96,10 +96,18 @@ export function TaskChooser({
     });
   }
 
+  // Escape closes it, like other pop-ups (the tour uses this too).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-navy/70 sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-navy/70 sm:items-center sm:p-4">
       <div
         role="dialog"
+        data-tour="task-chooser"
         aria-modal="true"
         aria-label="Choose your actions"
         className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-background p-6 pb-8 sm:max-w-md sm:rounded-3xl"

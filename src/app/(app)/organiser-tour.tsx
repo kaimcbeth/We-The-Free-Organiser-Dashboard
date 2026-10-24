@@ -172,7 +172,9 @@ export function OrganiserTour({
       tone: "bg-yellow",
       title: "Pick your actions",
       href: "/tasks",
-      target: "choose-tasks,nav-actions",
+      click: "choose-open",
+      target: "task-chooser,choose-tasks",
+      whole: true,
       body: "Actions are the regular jobs that keep a community growing. Tell us how much time you have each week and we'll suggest which ones to switch on. You'll pick yours at the end of the tour.",
     },
     {

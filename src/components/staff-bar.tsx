@@ -97,7 +97,13 @@ export function StaffBar({
                   return;
                 }
                 start(() =>
-                  setViewAs(v as ViewRole | "new_organiser" | "new_organiser_new" | "new_core_team"),
+                  setViewAs(
+                    v as
+                      | ViewRole
+                      | "new_organiser"
+                      | "new_organiser_new"
+                      | "new_core_team",
+                  ),
                 );
               }}
               className={`rounded-md px-1.5 py-0.5 font-medium ${viewingAs ? "bg-navy/10" : "bg-white/15"}`}
