@@ -31,6 +31,7 @@ type Row = Omit<
   | "engagement"
 > & {
   attended_before_app: boolean;
+  new_to_activism: boolean;
   user_id: string | null;
   pending_role: Access | null;
   pending_team_id: string | null;
@@ -49,7 +50,7 @@ export default async function PeoplePage({
   const { data, error } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, photo_updated_at, attended_before_app, attendance(event:events(starts_at))",
+      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, photo_updated_at, attended_before_app, new_to_activism, attendance(event:events(starts_at))",
     )
     // Also people made Organiser for this community whose profile is elsewhere.
     .or(

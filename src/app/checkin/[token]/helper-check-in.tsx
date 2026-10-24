@@ -87,6 +87,7 @@ export function HelperCheckIn({
       isOutreach={state.is_outreach}
       outreachBefore={state.outreach_before ?? {}}
       onMarkNotNew={onMarkNotNew}
+      linkToken={token}
       likely={state.likely ?? {}}
     />
   );

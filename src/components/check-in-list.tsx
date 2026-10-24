@@ -3,6 +3,7 @@
 import { useFindShortcut } from "@/lib/use-find-shortcut";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { inputClass } from "@/components/form";
+import { createClient } from "@/lib/supabase/client";
 import { Avatar } from "@/components/avatar";
 import { isMilestone, ordinal } from "@/lib/insights";
 
@@ -37,6 +38,7 @@ export function CheckInList({
   isOutreach = false,
   outreachBefore = {},
   onMarkNotNew,
+  linkToken,
   likely = {},
 }: {
   initialPeople: CheckInPerson[];
@@ -52,6 +54,7 @@ export function CheckInList({
   stickyTopClass?: string;
   isOutreach?: boolean; // does this event count towards outreach milestones?
   outreachBefore?: Record<string, number>; // each person's outreach count not counting this event
+  linkToken?: string; // helper check-in link (no login)
   onMarkNotNew?: (person: CheckInPerson) => Promise<boolean>; // tap "First event" to say they've been before
   likely?: Record<string, number>; // how likely each person is to come (higher = more likely)
 }) {
@@ -181,13 +184,19 @@ export function CheckInList({
     }
   }
 
-  async function add(first: string, last: string) {
+  async function add(first: string, last: string, newToActivism: boolean) {
     setError("");
     const person = await onAdd(first, last);
     if (!person) {
       setError("Couldn't add that person. Please try again.");
       return false;
     }
+    if (newToActivism)
+      void createClient().rpc("set_new_to_activism", {
+        p_person_id: person.id,
+        p_value: true,
+        p_token: linkToken ?? null,
+      });
     setPeople((prev) => [...prev, person].sort(byName));
     flip(person.id, true);
     setQuery("");
@@ -447,18 +456,23 @@ function QuickAdd({
 }: {
   initialName: string;
   onCancel: () => void;
-  onSave: (first: string, last: string) => Promise<boolean>;
+  onSave: (
+    first: string,
+    last: string,
+    newToActivism: boolean,
+  ) => Promise<boolean>;
 }) {
   const [first, ...rest] = initialName.trim().split(/\s+/);
   const [firstName, setFirstName] = useState(first ?? "");
   const [lastName, setLastName] = useState(rest.join(" "));
   const [saving, setSaving] = useState(false);
+  const [newToActivism, setNewToActivism] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!firstName.trim()) return;
     setSaving(true);
-    const ok = await onSave(firstName.trim(), lastName.trim());
+    const ok = await onSave(firstName.trim(), lastName.trim(), newToActivism);
     if (!ok) setSaving(false);
   }
 
@@ -486,6 +500,15 @@ function QuickAdd({
           className={inputClass}
         />
       </div>
+      <label className="flex items-center gap-2 text-sm text-stone-700">
+        <input
+          type="checkbox"
+          checked={newToActivism}
+          onChange={(e) => setNewToActivism(e.target.checked)}
+          className="h-4 w-4 accent-navy"
+        />
+        New to activism (never done any before)
+      </label>
       <div className="flex gap-2">
         <button
           type="submit"

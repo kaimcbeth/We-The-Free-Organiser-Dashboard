@@ -17,6 +17,7 @@ import { InviteButton } from "./invite-button";
 import { DeletePerson } from "./delete-person";
 import { AttendedBefore } from "./attended-before";
 import { NoMessages } from "./no-messages";
+import { NewToActivism } from "./new-to-activism";
 import { BuddyPicker, BuddySwitch, NewcomerPicker } from "./buddy-controls";
 import { Avatar } from "@/components/avatar";
 import { signPhotos } from "@/lib/photos";
@@ -46,6 +47,7 @@ type Person = {
   starting_outreach_count: number;
   photo_updated_at: string | null;
   attended_before_app: boolean;
+  new_to_activism: boolean;
   is_buddy: boolean;
   no_messages: boolean;
 };
@@ -68,7 +70,7 @@ export default async function PersonPage({
   const { data: person } = await supabase
     .from("people")
     .select(
-      "id, team_id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, is_buddy, no_messages",
+      "id, team_id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, new_to_activism, is_buddy, no_messages",
     )
     .eq("id", id)
     .or(
@@ -354,7 +356,7 @@ export default async function PersonPage({
       )}
       {status === "newcomer" && (
         <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-yellow px-3 py-1 text-sm font-semibold text-navy">
-          🌱 Newcomer
+          🌱 Newcomer{person.new_to_activism && " · New to activism"}
           <span className="font-normal">
             {recentEvents(eventDates, now)} of {REGULAR_EVENTS} events in 3
             months to become a Regular
@@ -380,6 +382,7 @@ export default async function PersonPage({
           personId={person.id}
           initial={person.attended_before_app}
         />
+        <NewToActivism personId={person.id} initial={person.new_to_activism} />
         <NoMessages personId={person.id} initial={person.no_messages} />
         {lastMessaged && (
           <p className="text-sm text-stone-500">

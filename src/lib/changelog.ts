@@ -11,6 +11,14 @@ export type Release = { date: string; title: string; changes: Change[] };
 // What's being worked on next (shown at the top of What's new).
 export const COMING_SOON: { title: string; text: string }[] = [
   {
+    title: "Outreach training framework",
+    text: "A step-by-step training path for new outreach volunteers, in Resources & Training.",
+  },
+  {
+    title: "3MMC equipment guide",
+    text: "What gear you need, how to set it up and how to pack it away.",
+  },
+  {
     title: "Recommended Movie Challenge prizes",
     text: "A list of prizes that work well for the Movie Challenge, with rough costs and where to get them.",
   },
@@ -40,6 +48,10 @@ export const CHANGELOG: Release[] = [
       {
         level: "organiser",
         text: "Suggest something: send ideas for the Hub from this page.",
+      },
+      {
+        level: "organiser",
+        text: "New to activism: a tag for newcomers who've never done any activism before. Tick it when adding someone at check-in, or on their profile.",
       },
       {
         level: "organiser",

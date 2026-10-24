@@ -32,6 +32,7 @@ export type PersonRow = {
   events: number;
   attendedBefore: boolean; // came before the app: never a first-timer
   status: Status | null; // First-timer, Newcomer, Regular, Occasional
+  new_to_activism: boolean;
   recent: number; // events in the last 3 months
   engagement: Engagement | null;
   drift: Drift | null; // "Not seen in a while"
@@ -247,6 +248,16 @@ export function PeopleList({
                             recent={p.recent}
                           />
                         )}
+                        {p.new_to_activism &&
+                          (p.status === "first_timer" ||
+                            p.status === "newcomer") && (
+                            <span
+                              title="Never done any activism before"
+                              className="shrink-0 rounded-full bg-cyan/20 px-2 py-0.5 text-xs font-semibold text-navy"
+                            >
+                              New to activism
+                            </span>
+                          )}
                       </p>
                       <p className="truncate text-sm text-stone-500">
                         {[p.suburb, p.email, p.phone]
