@@ -49,7 +49,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "22 new actions from the Events, Promo and Community Lead role lists (set-up team, weather check, briefing, pack-down, photo consent, monthly recap, thank-you messages, buddies, re-engaging quiet volunteers and more). They start switched off: turn on the ones you want, or a Core Team member can take them on. Anything switched on with no Core Team member looking after it comes to the organisers.",
+        text: "23 new actions from the Events, Promo and Community Lead role lists (set-up team, weather check, briefing, pack-down, photo consent, monthly recap, thank-you messages, buddies, re-engaging quiet volunteers and more). They start switched off: turn on the ones you want, or a Core Team member can take them on. Anything switched on with no Core Team member looking after it comes to the organisers.",
       },
       {
         level: "organiser",
