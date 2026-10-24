@@ -7,6 +7,67 @@ export type Script = {
 };
 
 export const SCRIPTS: Record<string, Script> = {
+  // Placeholders: basic tips for now, full guides come later.
+  ev_tech_check: {
+    title: "Tech check guide",
+    label: "Guide",
+    minutes: "About 5 minutes, the day before",
+    steps: [
+      {
+        heading: "Charge everything",
+        points: ["Screens, headphones and power banks charged overnight."],
+      },
+      {
+        heading: "Test the video",
+        points: [
+          "Play the video on each screen, start to finish, with headphones.",
+          "Download it to each device so you don't rely on the internet.",
+        ],
+      },
+      {
+        heading: "Pack the spares",
+        points: ["Spare cables, chargers and a backup set of headphones."],
+      },
+      {
+        heading: "Flag problems early",
+        points: [
+          "Anything broken or missing? Tell the Events Lead today, not on the day.",
+        ],
+      },
+    ],
+  },
+  ev_packdown: {
+    title: "Pack-down guide",
+    label: "Guide",
+    minutes: "10 to 15 minutes, after the event",
+    steps: [
+      {
+        heading: "Screens and headphones first",
+        points: [
+          "Turn off and pack the screens and headphones before anything else.",
+        ],
+      },
+      {
+        heading: "Count the gear",
+        points: [
+          "Check everything that came is going home: screens, headphones, banner, sign, table.",
+          "Note anything broken or missing in the event's Notes.",
+        ],
+      },
+      {
+        heading: "Leave it clean",
+        points: [
+          "Pick up any rubbish so the spot looks better than you found it.",
+        ],
+      },
+      {
+        heading: "Who's taking what",
+        points: [
+          "Agree who's taking the gear home and where it's stored until next time.",
+        ],
+      },
+    ],
+  },
   // Placeholder: basic tips for now, the full guide comes later.
   ev_setup: {
     title: "Set-up guide",
