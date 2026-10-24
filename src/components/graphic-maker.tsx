@@ -418,7 +418,7 @@ export function GraphicMaker({
                 onClick={() => setTemplate("carousel")}
                 className={chip(template === "carousel")}
               >
-                Instagram carousel
+                Carousel
               </button>
             </div>
           )}

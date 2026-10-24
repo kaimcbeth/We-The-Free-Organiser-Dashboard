@@ -11,11 +11,11 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-24",
-    title: "Instagram carousels",
+    title: "Carousels",
     changes: [
       {
         level: "organiser",
-        text: "Make graphics → Instagram carousel: pick up to 20 of the event's photos, put them in order, and get them as 4:5 slides with the logo top-right and www.activism.wtf bottom-left. On your phone, Share sends them straight to Instagram.",
+        text: "Make graphics → Carousel: pick up to 20 of the event's photos, put them in order, and get them as 4:5 slides with the logo top-right and www.activism.wtf bottom-left. On your phone, Share sends them straight to Instagram or Facebook.",
       },
     ],
   },

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { zipSync } from "fflate";
 import type { EventPhoto } from "@/lib/event-photos";
 
-// Instagram carousel from an event's photos: each photo full-bleed at 4:5,
+// Carousel (Instagram or Facebook) from an event's photos: each photo full-bleed at 4:5,
 // with the logo bubble top-right and www.activism.wtf bottom-left (like our
 // usual posts). Shared straight to Instagram on a phone, or downloaded.
 
@@ -289,8 +289,8 @@ export function CarouselMaker({
         </button>
       </div>
       <p className="mt-1.5 text-xs text-stone-500">
-        On your phone, Share lets you pick Instagram with every slide ready to
-        post.
+        On your phone, Share opens Instagram or Facebook with every slide ready
+        to post.
       </p>
     </div>
   );
