@@ -11,6 +11,16 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-24",
+    title: "Our logo, everywhere",
+    changes: [
+      {
+        level: "organiser",
+        text: "The We The Free logo is now in the header, on the login and join pages, as the app icon on your phone, and on every graphic you make.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-24",
     title: "The full Core Team role lists",
     changes: [
       {

@@ -11,7 +11,15 @@ export function AttendeeShell({
     <div className="flex flex-1 flex-col">
       <header className="bg-navy text-white">
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-          <EasterEggLogo className="text-sm font-bold uppercase tracking-wider text-pink" />
+          <span className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element -- small static logo */}
+            <img
+              src="/brand/wtf-logo.png"
+              alt="We The Free"
+              className="h-9 w-auto"
+            />
+            <EasterEggLogo className="text-xs font-bold uppercase tracking-wider text-pink" />
+          </span>
           {right}
         </div>
       </header>

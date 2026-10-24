@@ -12,8 +12,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || "We The Free", {
       body: data.body || "",
-      icon: "/icon.svg",
-      badge: "/icon.svg",
+      icon: "/brand/icon-192.png",
+      badge: "/brand/icon-192.png",
       data: { url: data.url || "/notifications" },
     }),
   );

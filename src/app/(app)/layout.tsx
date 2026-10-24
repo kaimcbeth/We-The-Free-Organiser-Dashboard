@@ -58,10 +58,21 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     <div className="flex flex-1 flex-col">
       <header className="sticky top-0 z-10 bg-navy text-white">
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 pt-3">
-          <Link href="/" className="min-w-0 leading-tight">
-            <EasterEggLogo className="block text-xs font-bold uppercase tracking-wider text-pink" />
-            <span className="block truncate text-sm font-medium text-white">
-              {organiser.team?.name ?? "Your community"}
+          <Link
+            href="/"
+            className="flex min-w-0 items-center gap-2.5 leading-tight"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- small static logo */}
+            <img
+              src="/brand/wtf-mark.png"
+              alt="We The Free"
+              className="h-9 w-auto shrink-0"
+            />
+            <span className="min-w-0">
+              <EasterEggLogo className="block text-xs font-bold uppercase tracking-wider text-pink" />
+              <span className="block truncate text-sm font-medium text-white">
+                {organiser.team?.name ?? "Your community"}
+              </span>
             </span>
           </Link>
           <div className="flex min-w-0 items-center gap-1">

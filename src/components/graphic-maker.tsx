@@ -112,6 +112,7 @@ function draw(
   tz: string,
   template: Template,
   imgs: HTMLImageElement[],
+  logo: HTMLImageElement | null,
 ) {
   const { w, h } = SIZES[size];
   canvas.width = w;
@@ -180,15 +181,27 @@ function draw(
     ctx.fill();
   }
 
-  // Brand.
+  // Brand: the logo, with the community name beside it.
   ctx.textBaseline = "top";
-  ctx.fillStyle = PINK;
-  ctx.font = `800 ${34 * u}px ${font}`;
-  ctx.fillText("WE THE FREE", pad, pad);
+  const logoH = 84 * u;
+  let nameX = pad;
+  if (logo) {
+    const logoW = (logo.width / logo.height) * logoH;
+    ctx.drawImage(logo, pad, pad, logoW, logoH);
+    nameX = pad + logoW + 20 * u;
+  } else {
+    ctx.fillStyle = PINK;
+    ctx.font = `800 ${34 * u}px ${font}`;
+    ctx.fillText("WE THE FREE", pad, pad);
+  }
   if (e.community) {
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.font = `500 ${30 * u}px ${font}`;
-    ctx.fillText(e.community, pad, pad + 44 * u);
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.font = `600 ${30 * u}px ${font}`;
+    if (logo) {
+      ctx.textBaseline = "middle";
+      ctx.fillText(e.community, nameX, pad + logoH / 2);
+      ctx.textBaseline = "top";
+    } else ctx.fillText(e.community, pad, pad + 44 * u);
   }
 
   // Where the text starts.
@@ -280,6 +293,7 @@ export function GraphicMaker({
   const [ownPhotos, setOwnPhotos] = useState<EventPhoto[]>([]);
   const [chosen, setChosen] = useState<string | null>(null); // photo id, "" = none
   const [imgs, setImgs] = useState<HTMLImageElement[]>([]);
+  const [logo, setLogo] = useState<HTMLImageElement | null>(null);
   const [reload, setReload] = useState(0); // bumped after an upload
   const canvas = useRef<HTMLCanvasElement>(null);
 
@@ -337,9 +351,20 @@ export function GraphicMaker({
   }, [urlKey]);
 
   useEffect(() => {
+    if (!open || logo) return;
+    let live = true;
+    loadImage("/brand/wtf-logo.png")
+      .then((l) => live && setLogo(l))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [open, logo]);
+
+  useEffect(() => {
     if (open && canvas.current)
-      draw(canvas.current, event, size, tz, template, imgs);
-  }, [open, size, event, tz, template, imgs]);
+      draw(canvas.current, event, size, tz, template, imgs, logo);
+  }, [open, size, event, tz, template, imgs, logo]);
 
   function download() {
     if (!canvas.current) return;
