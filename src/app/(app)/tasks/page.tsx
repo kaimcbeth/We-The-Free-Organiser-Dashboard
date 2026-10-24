@@ -23,6 +23,12 @@ import { CoreTeamTasks } from "./core-team-tasks";
 import { ActionSearch } from "./action-search";
 import { CORE_ROLE_LABEL, type CoreRole } from "@/lib/roles";
 
+// Under 100 minutes: "85 min"; 100 and over: "2 hr 42 min".
+const hoursMinutes = (m: number) =>
+  m < 60
+    ? `${m} min`
+    : `${Math.floor(m / 60)} hr${m % 60 ? ` ${m % 60} min` : ""}`;
+
 export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
   const { event: onlyEvent } = await searchParams;
   const { supabase, organiser } = await requireOrganiser();
@@ -231,7 +237,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         </h2>
         <span className="ml-auto shrink-0 text-xs text-stone-500">
           {g.tasks.length} to do · ~
-          {g.tasks.reduce((n, t) => n + t.estimateMinutes, 0)} min
+          {hoursMinutes(g.tasks.reduce((n, t) => n + t.estimateMinutes, 0))}
         </span>
         {g.key !== "other" && (
           <RemoveEventTasks eventId={g.key} count={g.tasks.length} />
@@ -288,7 +294,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         <p className="mt-1 text-sm text-stone-500">
           {groups.reduce((n, g) => n + g.tasks.length, 0) === 0
             ? "Nothing left for the organisers. New actions appear here after each event."
-            : `${groups.reduce((n, g) => n + g.tasks.length, 0)} for the organisers · about ${minutes} min in total`}
+            : `${groups.reduce((n, g) => n + g.tasks.length, 0)} for the organisers · about ${hoursMinutes(minutes)} in total`}
         </p>
         {weekTotal > 0 && (
           <div className="mt-4" data-tour="week-progress">

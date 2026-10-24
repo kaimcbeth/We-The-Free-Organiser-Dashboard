@@ -53,7 +53,8 @@ export async function loadUpcomingActions(
       .is("archived_at", null)
       .eq("audience", "community")
       .eq("schedule", "event")
-      .or(`team_id.is.null,team_id.eq.${teamId}`),
+      .or(`team_id.is.null,team_id.eq.${teamId}`)
+      .order("sort_order"),
   ]);
   if (!events?.length || !kinds?.length) return [];
   const { data: made } = await supabase
@@ -93,5 +94,6 @@ export async function loadUpcomingActions(
           appearsAt: new Date(appears).toISOString(),
         });
     }
+  // By when they show up; same time = the usual order (kinds come sorted).
   return out.sort((a, b) => a.appearsAt.localeCompare(b.appearsAt));
 }

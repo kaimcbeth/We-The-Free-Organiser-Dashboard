@@ -32,7 +32,16 @@ export function ComingUp({
         </button>
       )}
       {(show || searching) && (
-        <ul className="mt-2 grid items-start gap-2 sm:grid-cols-2">
+        // Two columns read top to bottom, left then right, so the order
+        // (before → on the day → after) reads naturally.
+        <ul
+          className="mt-2 grid items-start gap-2 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-[repeat(var(--rows),auto)]"
+          style={
+            {
+              "--rows": Math.ceil(items.length / 2),
+            } as React.CSSProperties
+          }
+        >
           {items.map((u) => (
             <Card
               key={`${u.eventId}|${u.kind}`}
