@@ -617,7 +617,8 @@ export async function saveTeamTasks(
   kinds: string[],
 ): Promise<{ error?: string }> {
   const { supabase, organiser } = await requireOrganiser();
-  if (organiser.viewingAs) return {}; // God Mode preview: don't change anything
+  // Only the tutorial preview saves nothing; "View as" still saves for real.
+  if (organiser.tourPreview) return {};
   const { data, error } = await supabase.rpc("set_team_tasks", {
     p_team_id: organiser.homeTeamId,
     p_kinds: kinds,
@@ -910,7 +911,7 @@ export async function startActionEarly(
   done: boolean,
 ): Promise<{ error?: string }> {
   const { supabase, organiser } = await requireOrganiser();
-  if (organiser.viewingAs) return {}; // God Mode preview: don't change anything
+  if (organiser.tourPreview || organiser.exampleMode) return {}; // tutorial: example data stays as it is
   const [{ data: event }, { data: k }] = await Promise.all([
     supabase
       .from("events")
