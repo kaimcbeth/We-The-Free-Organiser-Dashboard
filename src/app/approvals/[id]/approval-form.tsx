@@ -9,8 +9,8 @@ type Fields = Omit<FormFields, "signature" | "date">;
 
 const LABELS: Record<keyof Fields, string> = {
   name: "Your full legal name",
-  address: "Your street address",
-  postcode: "Postcode",
+  address: "Your street address and suburb",
+  postcode: "Postcode (4 digits)",
   phone: "Your phone",
   organisation: "On behalf of",
   day: "Day",
@@ -194,11 +194,22 @@ www.activism.wtf`,
     return render({ ...f, date: today, signature: await signature() });
   }
 
-  async function saveMine() {
+  // Returns true once saved (false + a message if something's missing).
+  async function saveMine(): Promise<boolean> {
     setError("");
-    if (!f.name.trim() || !f.address.trim() || !f.postcode.trim())
-      return setError("Add your name, address and postcode.");
-    if (!newSig && !sigBytes) return setError("Add your signature.");
+    const fail = (m: string) => {
+      setError(m);
+      return false;
+    };
+    if (f.name.trim().split(/\s+/).length < 2)
+      return fail(
+        "Add your full name (first and last), as the police need it.",
+      );
+    if (!f.address.trim()) return fail("Add your street address and suburb.");
+    if (!/^\d{4}$/.test(f.postcode.trim()))
+      return fail("The postcode should be 4 numbers, like 2000.");
+    if (!f.phone.trim()) return fail("Add your phone number.");
+    if (!newSig && !sigBytes) return fail("Add your signature.");
     setBusy(true);
     const supabase = createClient();
     let signature_path: string | undefined;
@@ -212,7 +223,7 @@ www.activism.wtf`,
         });
       if (up.error) {
         setBusy(false);
-        return setError("Couldn't save your signature. Please try again.");
+        return fail("Couldn't save your signature. Please try again.");
       }
       setSigBytes(new Uint8Array(await newSig.arrayBuffer()));
       setNewSig(null);
@@ -227,8 +238,9 @@ www.activism.wtf`,
       updated_at: new Date().toISOString(),
     });
     setBusy(false);
-    if (e) return setError("Couldn't save your details. Please try again.");
+    if (e) return fail("Couldn't save your details. Please try again.");
     setEditMine(false);
+    return true;
   }
 
   async function showPreview() {
@@ -249,7 +261,8 @@ www.activism.wtf`,
   async function send(test: boolean) {
     setError("");
     setStatus("");
-    if (editMine) return setError("Save your details first.");
+    // Not saved yet? Save them on the way.
+    if (editMine && !(await saveMine())) return;
     setBusy(true);
     try {
       const bytes = await build();
@@ -558,7 +571,7 @@ www.activism.wtf`,
             <>
               <button
                 type="button"
-                disabled={busy || editMine}
+                disabled={busy}
                 onClick={() => setConfirming(true)}
                 className="flex-1 rounded-xl bg-pink px-4 py-3 font-semibold text-navy hover:bg-pink-strong disabled:opacity-60"
               >
@@ -566,7 +579,7 @@ www.activism.wtf`,
               </button>
               <button
                 type="button"
-                disabled={busy || editMine}
+                disabled={busy}
                 onClick={() => send(true)}
                 className="rounded-xl px-4 py-3 text-sm font-semibold text-navy ring-1 ring-black/10 hover:bg-white disabled:opacity-60"
               >
