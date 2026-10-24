@@ -25,7 +25,7 @@ import { CORE_ROLE_LABEL, type CoreRole } from "@/lib/roles";
 
 // Under 100 minutes: "85 min"; 100 and over: "2 hr 42 min".
 const hoursMinutes = (m: number) =>
-  m < 60
+  m < 100
     ? `${m} min`
     : `${Math.floor(m / 60)} hr${m % 60 ? ` ${m % 60} min` : ""}`;
 
