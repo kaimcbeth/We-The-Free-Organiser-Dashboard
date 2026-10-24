@@ -83,6 +83,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Gear: in Resources & Training, list your community's kit and tap Handed to… to keep track of who has each thing.",
+      },
+      {
+        level: "organiser",
         text: "New to activism: a tag for newcomers who've never done any activism before. Tick it when adding someone at check-in, or on their profile.",
       },
       {

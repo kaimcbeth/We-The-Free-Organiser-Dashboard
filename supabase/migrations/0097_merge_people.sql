@@ -47,6 +47,8 @@ begin
   update person_invites set person_id = p_keep where person_id = p_drop and used_at is not null;
   delete from person_invites where person_id = p_drop;
 
+  update gear_items set holder_person_id = p_keep where holder_person_id = p_drop;
+
   -- Fill in what the kept person is missing.
   delete from people where id = p_drop;
   update people set

@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { RESOURCE_SECTIONS, RESOURCES_COMING_SOON } from "@/lib/resources";
+import { GearTracker } from "@/components/gear-tracker";
 
 const has = (q: string, ...text: (string | undefined)[]) =>
   !q || text.some((t) => t?.toLowerCase().includes(q));
 
 // The Resources & Training page (organisers and the Core Team).
-export function ResourcesList() {
+export function ResourcesList({ teamId }: { teamId: string | null }) {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const sections = RESOURCE_SECTIONS.map((s) => ({
@@ -24,7 +25,8 @@ export function ResourcesList() {
         Resources &amp; Training
       </h1>
       <p className="mt-1 text-sm text-stone-600">
-        Guides and documents for running events. More coming soon.
+        Guides and documents for running events, and your gear. More coming
+        soon.
       </p>
       <input
         type="search"
@@ -79,6 +81,7 @@ export function ResourcesList() {
           </ul>
         </section>
       ))}
+      {teamId && !q && <GearTracker teamId={teamId} />}
       {soon.length > 0 && (
         <section className="mt-6">
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
