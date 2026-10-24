@@ -21,6 +21,7 @@ import { RegionTasks } from "./region-tasks";
 import { GodOverview } from "./god-overview";
 import { CoreTeamTasks } from "./core-team-tasks";
 import { ActionSearch } from "./action-search";
+import { EventGroup } from "./event-group";
 import { CORE_ROLE_LABEL, type CoreRole } from "@/lib/roles";
 
 // Under 100 minutes: "85 min"; 100 and over: "2 hr 42 min".
@@ -225,65 +226,73 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
       data-search-group
       className="scroll-mt-24"
     >
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="min-w-0 truncate font-semibold">
-          {g.title}
-          {g.at && (
-            <span className="font-normal text-stone-500">
-              {" "}
-              · {formatEventDate(g.at)}
+      <EventGroup
+        id={g.key}
+        header={
+          <>
+            <h2 className="min-w-0 truncate font-semibold">
+              {g.title}
+              {g.at && (
+                <span className="font-normal text-stone-500">
+                  {" "}
+                  · {formatEventDate(g.at)}
+                </span>
+              )}
+            </h2>
+            <span className="ml-auto shrink-0 text-xs text-stone-500">
+              {g.tasks.length} to do · ~
+              {hoursMinutes(g.tasks.reduce((n, t) => n + t.estimateMinutes, 0))}
             </span>
-          )}
-        </h2>
-        <span className="ml-auto shrink-0 text-xs text-stone-500">
-          {g.tasks.length} to do · ~
-          {hoursMinutes(g.tasks.reduce((n, t) => n + t.estimateMinutes, 0))}
-        </span>
-        {g.key !== "other" && (
-          <RemoveEventTasks eventId={g.key} count={g.tasks.length} />
-        )}
-      </div>
-      {g.key !== "other" &&
-        (() => {
-          // This event's progress: everything for it, whoever has it.
-          const open = tasks.open.filter((t) => t.eventId === g.key).length;
-          const done = tasks.done.filter((t) => t.eventId === g.key).length;
-          const total = open + done;
-          if (total === 0) return null;
-          const COLOURS = [
-            "#2fd9df",
-            "#ffd90f",
-            "#a78bfa",
-            "#34d399",
-            "#fb923c",
-          ];
-          return (
-            <div className="-mt-1 mb-3 flex items-center gap-2">
-              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-stone-200">
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{
-                    width: `${(done / total) * 100}%`,
-                    background: COLOURS[n % COLOURS.length],
-                  }}
-                />
+            {g.key !== "other" && (
+              <RemoveEventTasks eventId={g.key} count={g.tasks.length} />
+            )}
+          </>
+        }
+        below={
+          g.key !== "other" &&
+          (() => {
+            // This event's progress: everything for it, whoever has it.
+            const open = tasks.open.filter((t) => t.eventId === g.key).length;
+            const done = tasks.done.filter((t) => t.eventId === g.key).length;
+            const total = open + done;
+            if (total === 0) return null;
+            const COLOURS = [
+              "#2fd9df",
+              "#ffd90f",
+              "#a78bfa",
+              "#34d399",
+              "#fb923c",
+            ];
+            return (
+              <div className="-mt-1 mb-3 flex items-center gap-2">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-stone-200">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${(done / total) * 100}%`,
+                      background: COLOURS[n % COLOURS.length],
+                    }}
+                  />
+                </div>
+                <span className="shrink-0 text-xs text-stone-500">
+                  {done} of {total} done
+                </span>
               </div>
-              <span className="shrink-0 text-xs text-stone-500">
-                {done} of {total} done
-              </span>
-            </div>
-          );
-        })()}
-      <ul className="space-y-3">
-        {g.tasks.map((t) => (
-          <TaskCard key={t.id} task={t} {...common} hideEvent />
-        ))}
-      </ul>
-      {upcomingFor(g.key).length > 0 && (
-        <>
-          <ComingUp items={upcomingFor(g.key)} whenLabel={whenLabel} />
-        </>
-      )}
+            );
+          })()
+        }
+      >
+        <ul className="space-y-3">
+          {g.tasks.map((t) => (
+            <TaskCard key={t.id} task={t} {...common} hideEvent />
+          ))}
+        </ul>
+        {upcomingFor(g.key).length > 0 && (
+          <>
+            <ComingUp items={upcomingFor(g.key)} whenLabel={whenLabel} />
+          </>
+        )}
+      </EventGroup>
     </section>
   );
 

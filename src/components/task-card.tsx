@@ -48,8 +48,6 @@ const COPY_FOR: Record<string, [CopyPlatform, boolean]> = {
 const FB_KINDS = new Set([
   "facebook_event",
   "facebook_invites",
-  "promote_facebook_groups",
-  "promote_whatsapp",
   "post_photos_facebook",
   "promo_answer_questions",
 ]);
