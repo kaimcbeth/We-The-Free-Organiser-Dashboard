@@ -177,6 +177,14 @@ export default async function EventCheckInPage({
               eventId: event.id,
             }}
           />
+          {isOutreach && (
+            <Link
+              href={`/approvals/${event.id}`}
+              className="text-xs font-medium text-pink-ink hover:underline"
+            >
+              Police approval
+            </Link>
+          )}
           <GraphicMaker
             carousel
             tz={team.timezone}
