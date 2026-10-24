@@ -232,6 +232,20 @@ export function TaskChooser({
                           </span>
                           {k.blurb ? ` · ${k.blurb}` : ""}
                         </span>
+                        {k.appliesTo && (
+                          <span
+                            className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                              k.appliesTo === "All events"
+                                ? "bg-stone-100 text-stone-500"
+                                : k.appliesTo === "Outreach events" ||
+                                    k.appliesTo.endsWith(" only")
+                                  ? "bg-pink/15 text-pink-ink"
+                                  : "bg-cyan/20 text-navy"
+                            }`}
+                          >
+                            {k.appliesTo}
+                          </span>
+                        )}
                       </span>
                       <span
                         className={`shrink-0 text-xs font-semibold text-stone-500 ${k.custom ? "pr-14" : ""}`}
@@ -336,6 +350,7 @@ export function TaskChooser({
                           timesPerWeek: null,
                           custom: true,
                           defaultOn: true,
+                          appliesTo: "All events",
                         },
                       ]);
                       setOn((o) => new Set(o).add(r.kind!));

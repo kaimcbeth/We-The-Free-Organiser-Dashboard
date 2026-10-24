@@ -17,6 +17,7 @@ export type SetupKind = {
   timesPerWeek: number | null; // weekly/monthly tasks; null = once per event
   custom: boolean; // made by this community's organisers
   defaultOn: boolean; // on until an organiser says otherwise (the newer role actions start off)
+  appliesTo: string | null; // which events it's made for ("All events", "Outreach events", a type)
 };
 
 export type TaskSetup = {
@@ -37,7 +38,7 @@ export async function loadTaskSetup(
     supabase
       .from("task_kinds")
       .select(
-        "kind, title, blurb, estimate_minutes, estimate_max_minutes, anchor, due_after_hours, team_id, schedule, default_enabled",
+        "kind, title, blurb, estimate_minutes, estimate_max_minutes, anchor, due_after_hours, team_id, schedule, default_enabled, outreach_only, needs_team_newcomers, needs_newcomers, event_type:event_types(name)",
       )
       .is("archived_at", null)
       .eq("audience", "community")
@@ -98,6 +99,18 @@ export async function loadTaskSetup(
                 : null,
     custom: !!k.team_id,
     defaultOn: k.default_enabled !== false,
+    appliesTo:
+      k.schedule !== "event"
+        ? null
+        : (k.event_type as unknown as { name: string } | null)?.name
+          ? `${(k.event_type as unknown as { name: string }).name} only`
+          : k.outreach_only
+            ? "Outreach events"
+            : k.needs_newcomers
+              ? "Events where someone new comes"
+              : k.needs_team_newcomers
+                ? "Events, when you have newcomers"
+                : "All events",
     blurb: k.blurb ?? null,
   }));
   const saved = new Map(rows.map((r) => [r.kind, r.enabled]));
