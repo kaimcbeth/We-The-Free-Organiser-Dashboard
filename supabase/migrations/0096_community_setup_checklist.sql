@@ -14,6 +14,7 @@ returns json language sql stable security definer set search_path = public as $$
   ) end;
 $$;
 
+-- (Superseded: dropped in 0101; the existing set_team_whatsapp(p_url, p_team_id) is used.)
 create function public.set_team_whatsapp(p_team_id uuid, p_url text)
 returns boolean language plpgsql security definer set search_path = public as $$
 begin

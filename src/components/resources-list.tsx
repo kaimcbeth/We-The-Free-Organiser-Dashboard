@@ -100,6 +100,17 @@ export function ResourcesList({ teamId }: { teamId: string | null }) {
           </ul>
         </section>
       )}
+      <p className="mt-10 text-xs text-stone-400">
+        The Movement Hub is open source.{" "}
+        <a
+          href="https://github.com/kaimcbeth/We-The-Free-Organiser-Dashboard"
+          target="_blank"
+          rel="noopener"
+          className="underline hover:text-stone-700"
+        >
+          Source code
+        </a>
+      </p>
       {q && !sections.length && !soon.length && (
         <p className="mt-6 text-sm text-stone-500">
           Nothing matches &ldquo;{query}&rdquo;.

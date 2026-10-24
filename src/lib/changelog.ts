@@ -11,6 +11,10 @@ export type Release = { date: string; title: string; changes: Change[] };
 // What's being worked on next (shown at the top of What's new).
 export const COMING_SOON: { title: string; text: string }[] = [
   {
+    title: "Better insights",
+    text: "Clearer trends for your community: how newcomers become regulars, who's drifting, turnout over time and what's working.",
+  },
+  {
     title: "Fuller briefing and debrief guides",
     text: "Much more detailed guides for running the volunteer briefing before outreach and the debrief after.",
   },

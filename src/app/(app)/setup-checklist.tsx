@@ -85,7 +85,9 @@ export function SetupChecklist({
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="font-semibold">Get {community} ready</h2>
+          <h2 className="font-semibold">
+            Get {preview ? "your community" : community} ready
+          </h2>
           <p className="text-sm text-stone-500">
             {doneCount} of {items.length} done
           </p>
@@ -135,9 +137,14 @@ export function SetupChecklist({
                 start(async () => {
                   const { data } = await createClient().rpc(
                     "set_team_whatsapp",
-                    { p_team_id: teamId, p_url: url },
+                    { p_url: url, p_team_id: teamId },
                   );
-                  if (!data) return setError("Couldn't save that. Try again?");
+                  if (data === "invalid")
+                    return setError(
+                      "That doesn't look like a WhatsApp invite link (it starts with https://chat.whatsapp.com/).",
+                    );
+                  if (data !== "ok")
+                    return setError("Couldn't save that. Try again?");
                   setWaDone(true);
                   router.refresh();
                 });
