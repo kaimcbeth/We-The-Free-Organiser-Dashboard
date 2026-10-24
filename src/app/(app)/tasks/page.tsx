@@ -174,6 +174,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
     upcoming.filter((u) => u.eventId === eventId);
   const when = (iso: string) => {
     const days = Math.round((Date.parse(iso) - now) / 864e5);
+    if (Date.parse(iso) <= now) return "any minute now";
     return days <= 0
       ? `today at ${formatTime(iso)}`
       : days === 1

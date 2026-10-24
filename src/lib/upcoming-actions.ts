@@ -22,6 +22,7 @@ export async function loadUpcomingActions(
   // One event, however far ahead (the event page) instead of the next week.
   only?: { eventId: string },
 ): Promise<UpcomingAction[]> {
+  const HOUR = 3600 * 1000;
   const DAY = 864e5;
   const eventsQuery = supabase
     .from("events")
@@ -62,7 +63,8 @@ export async function loadUpcomingActions(
         k.anchor === "end" ? (e.ends_at ?? e.starts_at) : e.starts_at,
       );
       const appears = anchor + Number(k.appear_hours) * 36e5;
-      if (appears > now && (only || appears <= now + 7 * DAY))
+      // Just past: the hourly job hasn't made it yet, so keep it visible.
+      if (appears > now - HOUR && (only || appears <= now + 7 * DAY))
         out.push({
           eventId: e.id,
           kind: k.kind,
