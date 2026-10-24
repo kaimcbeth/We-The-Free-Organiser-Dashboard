@@ -253,6 +253,7 @@ export default async function EventsPage() {
                 </span>
                 <Link
                   href={`/events/${e.id}`}
+                  data-follow
                   className="block rounded-2xl bg-navy p-5 text-white shadow-sm hover:bg-navy-2"
                 >
                   <p className="text-sm text-cyan">
@@ -319,6 +320,7 @@ function NextUp({ event: e, actions }: { event: EventRow; actions: number }) {
         </span>
         <Link
           href={`/events/${e.id}`}
+          data-follow
           className="block rounded-2xl bg-white p-5 shadow-sm ring-2 ring-pink transition-transform hover:-translate-y-0.5"
         >
           <div className="flex items-start justify-between gap-3">

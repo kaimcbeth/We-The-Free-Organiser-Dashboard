@@ -269,7 +269,14 @@ export function OrganiserTour({
             ...document.querySelectorAll<HTMLAnchorElement>(
               `a[data-tour="${k}"], [data-tour="${k}"] a`,
             ),
-          ].find((el) => el.getAttribute("href")?.startsWith("/")),
+          ]
+            // The card's main link (not e.g. its "N actions" link)…
+            .sort(
+              (x, y) =>
+                Number(y.hasAttribute("data-follow")) -
+                Number(x.hasAttribute("data-follow")),
+            )
+            .find((el) => el.getAttribute("href")?.startsWith("/")),
         )
         .find(Boolean);
       if (link?.getAttribute("href")) {
