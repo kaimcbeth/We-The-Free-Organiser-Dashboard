@@ -345,7 +345,9 @@ export function TaskCard({
                   Fill in &amp; send
                 </a>
               )}
-              {(task.kind === "ev_briefing" || task.kind === "ev_debrief") && (
+              {(task.kind === "ev_briefing" ||
+                task.kind === "ev_debrief" ||
+                task.kind === "ev_setup") && (
                 <ScriptButton
                   kind={task.kind}
                   className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10"

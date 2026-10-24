@@ -2,10 +2,52 @@
 export type Script = {
   title: string;
   minutes: string;
+  label?: string; // the button ("Script" by default)
   steps: { heading: string; points: string[] }[];
 };
 
 export const SCRIPTS: Record<string, Script> = {
+  // Placeholder: basic tips for now, the full guide comes later.
+  ev_setup: {
+    title: "Set-up guide",
+    label: "Guide",
+    minutes: "About 10 minutes, before people arrive",
+    steps: [
+      {
+        heading: "Arrive early",
+        points: [
+          "Get there 30 minutes before the start so you're set up before anyone arrives.",
+        ],
+      },
+      {
+        heading: "Pick your spot",
+        points: [
+          "Somewhere visible with lots of foot traffic, but keep footpaths and doorways clear.",
+          "Find some shade if you can, for people and for the screens.",
+        ],
+      },
+      {
+        heading: "Lay out the challenge space",
+        points: [
+          "Banner and sign facing the foot traffic.",
+          "Screens and headphones together, with space for people to stand and watch.",
+          "Prizes and resources on the table, the QR code where people can see it.",
+        ],
+      },
+      {
+        heading: "Check the gear",
+        points: [
+          "Screens on and charged, headphones working, spare power bank to hand.",
+        ],
+      },
+      {
+        heading: "Last look",
+        points: [
+          "Walk past it like a stranger would. Does it look inviting? Is anything in the way?",
+        ],
+      },
+    ],
+  },
   ev_briefing: {
     title: "Volunteer briefing",
     minutes: "About 5 minutes, before you start",

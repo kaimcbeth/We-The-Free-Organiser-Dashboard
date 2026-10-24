@@ -18,7 +18,7 @@ export function ScriptButton({
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} className={className}>
-        📋 Script
+        📋 {s.label ?? "Script"}
       </button>
       {open && (
         <Sheet title={s.title} onClose={() => setOpen(false)}>
