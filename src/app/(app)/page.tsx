@@ -295,7 +295,8 @@ function NextUp({ event: e, actions }: { event: EventRow; actions: number }) {
               .filter(Boolean)
               .join(" · ") || "No details yet"}
           </p>
-          <p className="mt-3 text-sm font-semibold text-navy">Open event →</p>
+          {/* Room for the actions / activism.wtf links in the corner. */}
+          <div className="h-6" aria-hidden />
         </Link>
       </div>
     </section>
