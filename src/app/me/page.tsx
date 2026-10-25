@@ -105,6 +105,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
   if (!me && organiser) {
     return (
       <AttendeeShell right={headerRight}>
+        <PreviewBanner />
         <h1 className="text-2xl font-semibold tracking-tight">
           Set up your profile
         </h1>
