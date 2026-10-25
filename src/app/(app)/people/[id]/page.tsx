@@ -19,6 +19,7 @@ import { MergePerson } from "./merge-person";
 import { AttendedBefore } from "./attended-before";
 import { NoMessages } from "./no-messages";
 import { NewToActivism } from "./new-to-activism";
+import { OriginEditor } from "@/components/origin-editor";
 import { BuddyPicker, BuddySwitch, NewcomerPicker } from "./buddy-controls";
 import { Avatar } from "@/components/avatar";
 import { signPhotos } from "@/lib/photos";
@@ -51,6 +52,10 @@ type Person = {
   new_to_activism: boolean;
   is_buddy: boolean;
   no_messages: boolean;
+  started_on: string | null;
+  found_via: string | null;
+  found_via_person_id: string | null;
+  found_via_note: string | null;
 };
 
 type Attended = {
@@ -71,13 +76,24 @@ export default async function PersonPage({
   const { data: person } = await supabase
     .from("people")
     .select(
-      "id, team_id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, new_to_activism, is_buddy, no_messages",
+      "id, team_id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, new_to_activism, is_buddy, no_messages, started_on, found_via, found_via_person_id, found_via_note",
     )
     .eq("id", id)
     .or(
       `team_id.eq.${organiser.team_id},pending_team_id.eq.${organiser.team_id}`,
     )
     .maybeSingle<Person>();
+  const { data: teamPeople } = person
+    ? await supabase
+        .from("people")
+        .select("id, first_name, last_name")
+        .eq("team_id", person.team_id)
+        .eq("is_test", false)
+        .order("first_name")
+        .returns<
+          { id: string; first_name: string; last_name: string | null }[]
+        >()
+    : { data: [] };
   if (!person) notFound();
 
   const { data: rows } = await supabase
@@ -373,6 +389,24 @@ export default async function PersonPage({
           <p className="text-3xl font-semibold tabular-nums">{outreach}</p>
           <p className="text-sm text-stone-500">outreach</p>
         </div>
+      </div>
+
+      <div className="mt-4">
+        <OriginEditor
+          personId={person.id}
+          initial={{
+            started_on: person.started_on,
+            found_via: person.found_via,
+            found_via_person_id: person.found_via_person_id,
+            found_via_note: person.found_via_note,
+          }}
+          people={(teamPeople ?? [])
+            .filter((p) => p.id !== person.id)
+            .map((p) => ({
+              id: p.id,
+              name: [p.first_name, p.last_name].filter(Boolean).join(" "),
+            }))}
+        />
       </div>
 
       <div className="mt-4 space-y-2">

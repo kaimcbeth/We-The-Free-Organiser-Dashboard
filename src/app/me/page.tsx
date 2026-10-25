@@ -1,3 +1,4 @@
+import { OriginEditor } from "@/components/origin-editor";
 import { cookies } from "next/headers";
 import { VIEW_AS_COOKIE } from "@/lib/organiser";
 import Link from "next/link";
@@ -27,6 +28,10 @@ type Me = {
   email: string | null;
   consent_marketing: boolean;
   starting_outreach_count: number;
+  started_on: string | null;
+  found_via: string | null;
+  found_via_person_id: string | null;
+  found_via_note: string | null;
   photo_updated_at: string | null;
   tutorial_done_at: string | null;
   team: {
@@ -58,7 +63,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     supabase
       .from("people")
       .select(
-        "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, photo_updated_at, tutorial_done_at, team:teams(name, whatsapp_url, timezone, activism_team_url)",
+        "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, started_on, found_via, found_via_person_id, found_via_note, photo_updated_at, tutorial_done_at, team:teams(name, whatsapp_url, timezone, activism_team_url)",
       )
       .eq("user_id", user.id)
       .maybeSingle<Me>(),
@@ -161,9 +166,10 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     .filter((e): e is NonNullable<Attended["event"]> => !!e)
     .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
   const photos = await signPhotos(supabase, [me]);
-  const [{ data: buddy }, myTasks] = await Promise.all([
+  const [{ data: buddy }, myTasks, { data: crew }] = await Promise.all([
     supabase.rpc("my_buddy_dashboard"),
     loadMyTasks(supabase, me.id),
+    supabase.rpc("my_team_crew"),
   ]);
   // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
   const now = Date.now();
@@ -189,6 +195,20 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
       <h1 className="text-3xl font-semibold tracking-tight">
         {[me.first_name, me.last_name].filter(Boolean).join(" ")}
       </h1>
+
+      <div className="mt-3">
+        <OriginEditor
+          self
+          personId={me.id}
+          initial={{
+            started_on: me.started_on,
+            found_via: me.found_via,
+            found_via_person_id: me.found_via_person_id,
+            found_via_note: me.found_via_note,
+          }}
+          people={(crew as { id: string; name: string }[] | null) ?? []}
+        />
+      </div>
 
       {me.team?.whatsapp_url && (
         <div className="mt-6">

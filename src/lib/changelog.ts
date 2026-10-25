@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "When someone started with We The Free, and how they found us (a person, outreach, Instagram…). Add it on their profile, or members add their own on their page.",
+      },
+      {
+        level: "organiser",
         text: "Organisers can add or fix anyone's phone number, email or Facebook link, from their profile or straight from the message lists. Members can still add their own.",
       },
       {
