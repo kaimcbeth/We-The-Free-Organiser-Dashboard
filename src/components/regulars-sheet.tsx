@@ -39,21 +39,22 @@ export function RegularsSheet({
         className={className}
         onClick={async () => {
           setOpen(true);
-          if (!list)
-            setList(
-              (quietTeamId
-                ? await getQuietList(quietTeamId)
-                : thanks
-                  ? await getAttendeesList(eventId)
-                  : await (
-                      invites
-                        ? getInviteList
-                        : newcomers
-                          ? getNewcomersList
-                          : getRegularsList
-                    )(eventId)
-              )?.invites ?? [],
-            );
+          // Fresh each time, so ticks from last time show.
+          setList(null);
+          setList(
+            (quietTeamId
+              ? await getQuietList(quietTeamId)
+              : thanks
+                ? await getAttendeesList(eventId)
+                : await (
+                    invites
+                      ? getInviteList
+                      : newcomers
+                        ? getNewcomersList
+                        : getRegularsList
+                  )(eventId)
+            )?.invites ?? [],
+          );
         }}
       >
         {quietTeamId
