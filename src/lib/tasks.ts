@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { TaskRow } from "@/components/task-card";
 import { signPhotos } from "@/lib/photos";
-import { loadQuietList, loadRegularsList } from "@/lib/invites";
+import { loadInviteList, loadQuietList, loadRegularsList } from "@/lib/invites";
 import type { GraphicSize } from "@/components/graphic-maker";
 
 type Raw = {
@@ -175,8 +175,30 @@ export async function loadTeamTasks(
   };
 }
 
-// "New volunteers reminded": name the newcomers to remind.
+// About 2 minutes per person still to message.
+const MIN_PER_MESSAGE = 2;
+
+// "New volunteers reminded": name the newcomers to remind. "Personal invites
+// sent": the time depends on how many people are left to message.
 async function attachNewcomers(supabase: SupabaseClient, rows: TaskRow[]) {
+  const inviteEvents = [
+    ...new Set(
+      rows
+        .filter((t) => t.kind === "personal_invites" && t.eventId)
+        .map((t) => t.eventId!),
+    ),
+  ];
+  for (const id of inviteEvents) {
+    const list = await loadInviteList(supabase, id, Date.now());
+    if (!list) continue;
+    const left = list.invites.filter((i) => !i.sent).length;
+    const mins = Math.max(1, left * MIN_PER_MESSAGE);
+    for (const t of rows)
+      if (t.kind === "personal_invites" && t.eventId === id) {
+        t.estimateMinutes = mins;
+        t.estimateLabel = String(mins);
+      }
+  }
   const ids = [
     ...new Set(
       rows
