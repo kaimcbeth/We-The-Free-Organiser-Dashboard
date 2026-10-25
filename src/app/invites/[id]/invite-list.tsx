@@ -2,12 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import {
-  markInvited,
-  setNoMessages,
-  setPersonFacebook,
-  setPersonPhone,
-} from "@/app/actions";
+import { markInvited, setPersonFacebook, setPersonPhone } from "@/app/actions";
 import { inputClass } from "@/components/form";
 import { messengerLink } from "@/lib/messenger";
 import { whatsappLink, type Invite, type InviteReason } from "@/lib/invites";
@@ -45,7 +40,6 @@ export function InviteList({
     }
     return new Set(invites.filter((i) => i.sent).map((i) => i.personId));
   });
-  const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
   // Contact details edited here: personId -> { phone, facebook } as saved.
   const [contact, setContact] = useState<
@@ -120,15 +114,7 @@ export function InviteList({
     });
   }
 
-  function optOut(i: Invite) {
-    setHidden((h) => new Set(h).add(i.personId));
-    start(async () => {
-      const r = await setNoMessages(i.personId, true);
-      if (r.error) setError(r.error);
-    });
-  }
-
-  const shown = invites.filter((i) => !hidden.has(i.personId));
+  const shown = invites;
   const groups = [
     {
       title: "Priority",
@@ -294,15 +280,6 @@ export function InviteList({
                               {l.whatsapp || l.facebook
                                 ? "Edit details"
                                 : "Add details"}
-                            </button>
-                          )}
-                          {!local && (
-                            <button
-                              type="button"
-                              onClick={() => optOut(i)}
-                              className="ml-auto text-xs text-stone-400 hover:text-stone-700 hover:underline"
-                            >
-                              Doesn&apos;t want messages
                             </button>
                           )}
                         </div>
