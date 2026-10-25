@@ -175,13 +175,19 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     .filter((e): e is NonNullable<Attended["event"]> => !!e)
     .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
   const photos = await signPhotos(supabase, [me]);
-  const [{ data: buddy }, myTasks, { data: crew }, { data: upcoming }] =
-    await Promise.all([
-      supabase.rpc("my_buddy_dashboard"),
-      loadMyTasks(supabase, me.id),
-      supabase.rpc("my_team_crew"),
-      supabase.rpc("my_upcoming_events"),
-    ]);
+  const [
+    { data: buddy },
+    myTasks,
+    { data: crew },
+    { data: upcoming },
+    { data: outreachToday },
+  ] = await Promise.all([
+    supabase.rpc("my_buddy_dashboard"),
+    loadMyTasks(supabase, me.id),
+    supabase.rpc("my_team_crew"),
+    supabase.rpc("my_upcoming_events"),
+    supabase.rpc("my_outreach_today"),
+  ]);
   // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
   const now = Date.now();
   const outreach =
@@ -226,6 +232,21 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
           <WhatsAppJoin url={me.team.whatsapp_url} />
         </div>
       )}
+
+      {outreachToday ? (
+        <Link
+          href="/me/guide"
+          className="mt-6 block rounded-2xl bg-pink p-4 text-navy shadow-sm hover:bg-pink-strong"
+        >
+          <span className="block text-lg font-semibold">
+            Out on outreach today? Outreach guide →
+          </span>
+          <span className="text-sm">
+            Ten seconds between conversations: how it went, a quick refresher,
+            and one thing to focus on next.
+          </span>
+        </Link>
+      ) : null}
 
       {(() => {
         const im = impact(
@@ -293,6 +314,14 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
               )}
               {sinceLabel && <li>With We The Free since {sinceLabel}.</li>}
             </ul>
+            {!outreachToday && (
+              <Link
+                href="/me/guide"
+                className="mt-3 inline-block text-sm font-medium text-pink-ink hover:underline"
+              >
+                Outreach guide →
+              </Link>
+            )}
           </section>
         );
       })()}

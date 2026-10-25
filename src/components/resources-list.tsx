@@ -36,6 +36,23 @@ export function ResourcesList({ teamId }: { teamId: string | null }) {
         aria-label="Search resources"
         className="mt-4 w-full rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
       />
+      {has(q, "outreach guide conversation questions objections ibc") && (
+        <a
+          href="/guide"
+          className="mt-6 flex items-center justify-between rounded-2xl bg-pink px-4 py-3 text-navy"
+        >
+          <span>
+            <span className="block font-semibold">Outreach guide</span>
+            <span className="block text-sm">
+              The IBC questions and objections, for a quick look between
+              conversations. Volunteers have it on their page too.
+            </span>
+          </span>
+          <span aria-hidden className="text-xl">
+            →
+          </span>
+        </a>
+      )}
       {sections.map((s) => (
         <section key={s.title} className="mt-6">
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">

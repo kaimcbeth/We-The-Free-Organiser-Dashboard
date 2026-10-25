@@ -77,6 +77,10 @@ export const CHANGELOG: Release[] = [
         level: "organiser",
         text: "Volunteers' pages now show their impact: events, outreach, hours at outreach, their next milestone, months in a row and when they started.",
       },
+      {
+        level: "organiser",
+        text: "Outreach guide, for between street conversations: a 10-second reflection (how it went, where it got stuck), the bit of the IBC method that helps, one thing to focus on next, plus a cheat sheet and objections. Volunteers see it on their page on outreach days; it's also in Resources & Training.",
+      },
     ],
   },
   {
