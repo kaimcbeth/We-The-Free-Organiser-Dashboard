@@ -1082,7 +1082,7 @@ export async function getRegularsList(eventId: string) {
     supabase,
     eventId,
     Date.now(),
-    organiser.role === "god" || organiser.role === "regional_lead",
+    organiser.role !== "core_team", // organisers and up: anyone's details
   );
 }
 
@@ -1094,7 +1094,7 @@ export async function getInviteList(eventId: string) {
     supabase,
     eventId,
     Date.now(),
-    organiser.role === "god" || organiser.role === "regional_lead",
+    organiser.role !== "core_team", // organisers and up: anyone's details
   );
 }
 
@@ -1106,7 +1106,7 @@ export async function getNewcomersList(eventId: string) {
     supabase,
     eventId,
     Date.now(),
-    organiser.role === "god" || organiser.role === "regional_lead",
+    organiser.role !== "core_team", // organisers and up: anyone's details
     true,
   );
 }
@@ -1119,7 +1119,7 @@ export async function getQuietList(teamId: string) {
     supabase,
     teamId,
     Date.now(),
-    organiser.role === "god" || organiser.role === "regional_lead",
+    organiser.role !== "core_team", // organisers and up: anyone's details
   );
   return { invites, eventTitle: "" };
 }
@@ -1294,7 +1294,7 @@ export async function getAttendeesList(eventId: string) {
     supabase,
     eventId,
     Date.now(),
-    organiser.role === "god" || organiser.role === "regional_lead",
+    organiser.role !== "core_team", // organisers and up: anyone's details
   );
   return { invites, eventTitle: "" };
 }

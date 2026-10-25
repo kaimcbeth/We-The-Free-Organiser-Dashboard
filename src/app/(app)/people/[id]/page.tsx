@@ -115,11 +115,8 @@ export default async function PersonPage({
       .filter((r) => organiser.role === "god" || r.role !== "god")
       .find((r) => r.person_id === person.id)?.role ?? null;
   const role = realRole ?? person.pending_role;
-  // Contact details: for people with a role; RSLs and God Mode for anyone.
-  const canEditContact =
-    (!!role && role !== "god") ||
-    organiser.role === "god" ||
-    organiser.role === "regional_lead";
+  // Contact details: organisers and up, for anyone in the community.
+  const canEditContact = organiser.role !== "core_team";
 
   // Buddy info: this person's buddy, who they look after, and who could be their buddy.
   const fullName = (p: { first_name: string; last_name: string | null }) =>

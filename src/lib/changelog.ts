@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Organisers can add or fix anyone's phone number, email or Facebook link, from their profile or straight from the message lists. Members can still add their own.",
+      },
+      {
+        level: "organiser",
         text: "Get your community ready: a short checklist on the Events page for new communities (community chat link, events, actions, Core Team). It ticks itself off.",
       },
       {
