@@ -17,7 +17,13 @@ import { PreviewBanner } from "@/components/preview-banner";
 import { TaskCard } from "@/components/task-card";
 import { loadMyTasks } from "@/lib/tasks";
 import { MemberTutorial, ReplayTour } from "./member-tutorial";
-import { BuddySection, type BuddyDashboard } from "./buddy-section";
+import {
+  BuddySection,
+  ReminderSetting,
+  type BuddyDashboard,
+} from "./buddy-section";
+import { MyEvents, type MyEvent } from "./my-events";
+import { impact } from "@/lib/impact";
 
 type Me = {
   id: string;
@@ -34,6 +40,7 @@ type Me = {
   found_via_note: string | null;
   photo_updated_at: string | null;
   tutorial_done_at: string | null;
+  notify_channel: "none" | "email" | "push";
   team: {
     name: string;
     whatsapp_url: string | null;
@@ -47,6 +54,7 @@ type Attended = {
     id: string;
     title: string;
     starts_at: string;
+    ends_at: string | null;
     event_type: { name: string; counts_as_outreach: boolean } | null;
   } | null;
 };
@@ -63,7 +71,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     supabase
       .from("people")
       .select(
-        "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, started_on, found_via, found_via_person_id, found_via_note, photo_updated_at, tutorial_done_at, team:teams(name, whatsapp_url, timezone, activism_team_url)",
+        "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, started_on, found_via, found_via_person_id, found_via_note, photo_updated_at, tutorial_done_at, notify_channel, team:teams(name, whatsapp_url, timezone, activism_team_url)",
       )
       .eq("user_id", user.id)
       .maybeSingle<Me>(),
@@ -157,7 +165,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
   const { data: rows } = await supabase
     .from("attendance")
     .select(
-      "event:events(id, title, starts_at, event_type:event_types(name, counts_as_outreach))",
+      "event:events(id, title, starts_at, ends_at, event_type:event_types(name, counts_as_outreach))",
     )
     .eq("person_id", me.id)
     .returns<Attended[]>();
@@ -167,11 +175,13 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     .filter((e): e is NonNullable<Attended["event"]> => !!e)
     .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
   const photos = await signPhotos(supabase, [me]);
-  const [{ data: buddy }, myTasks, { data: crew }] = await Promise.all([
-    supabase.rpc("my_buddy_dashboard"),
-    loadMyTasks(supabase, me.id),
-    supabase.rpc("my_team_crew"),
-  ]);
+  const [{ data: buddy }, myTasks, { data: crew }, { data: upcoming }] =
+    await Promise.all([
+      supabase.rpc("my_buddy_dashboard"),
+      loadMyTasks(supabase, me.id),
+      supabase.rpc("my_team_crew"),
+      supabase.rpc("my_upcoming_events"),
+    ]);
   // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
   const now = Date.now();
   const outreach =
@@ -217,20 +227,90 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
         </div>
       )}
 
-      <div className="mt-6 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-navy p-4 text-white">
-          <p className="text-3xl font-semibold tabular-nums">{events.length}</p>
-          <p className="text-sm text-white/75">
-            {events.length === 1 ? "event" : "events"}
-          </p>
-        </div>
-        <div className="rounded-2xl bg-navy p-4 text-white">
-          <p className="text-3xl font-semibold tabular-nums text-pink">
-            {outreach}
-          </p>
-          <p className="text-sm text-white/75">outreach</p>
-        </div>
-      </div>
+      {(() => {
+        const im = impact(
+          events.map((e) => ({
+            starts_at: e.starts_at,
+            ends_at: e.ends_at,
+            outreach: !!e.event_type?.counts_as_outreach,
+          })),
+          me.starting_outreach_count,
+          me.started_on,
+          now,
+        );
+        const sinceLabel = im.since
+          ? new Date(im.since + "T12:00:00Z").toLocaleDateString("en-AU", {
+              month: "long",
+              year: "numeric",
+            })
+          : null;
+        const toNext = im.next ? im.next - im.outreach : 0;
+        return (
+          <section className="mt-6">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+              Your impact
+            </h2>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-2xl bg-navy p-4 text-white">
+                <p className="text-3xl font-semibold tabular-nums">
+                  {events.length}
+                </p>
+                <p className="text-sm text-white/75">
+                  {events.length === 1 ? "event" : "events"}
+                </p>
+              </div>
+              <div className="rounded-2xl bg-navy p-4 text-white">
+                <p className="text-3xl font-semibold tabular-nums text-pink">
+                  {outreach}
+                </p>
+                <p className="text-sm text-white/75">outreach</p>
+              </div>
+              <div className="rounded-2xl bg-navy p-4 text-white">
+                <p className="text-3xl font-semibold tabular-nums text-cyan">
+                  {im.hours}
+                </p>
+                <p className="text-sm text-white/75">
+                  {im.hours === 1 ? "hour" : "hours"} at outreach
+                </p>
+              </div>
+            </div>
+            <ul className="mt-3 space-y-1.5 text-sm text-stone-700">
+              {im.next && (
+                <li>
+                  <span className="font-semibold text-navy">{toNext} more</span>{" "}
+                  outreach {toNext === 1 ? "event" : "events"} to your{" "}
+                  {im.next === 1 ? "first" : `${im.next}th`}
+                  {im.last ? ` (you passed ${im.last} already)` : ""}.
+                </li>
+              )}
+              {im.streak >= 2 && (
+                <li>
+                  <span className="font-semibold text-navy">
+                    {im.streak} months
+                  </span>{" "}
+                  in a row with at least one event.
+                </li>
+              )}
+              {sinceLabel && <li>With We The Free since {sinceLabel}.</li>}
+            </ul>
+          </section>
+        );
+      })()}
+
+      <section className="mt-8">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+          Coming up
+        </h2>
+        <MyEvents
+          events={(upcoming as MyEvent[] | null) ?? []}
+          tz={me.team?.timezone ?? DEFAULT_TZ}
+        />
+        <ReminderSetting
+          initial={me.notify_channel ?? "none"}
+          hasEmail={!!me.email}
+          intro="If you're going, we'll remind you the day before. You'll always see it in the app (the bell). Also send it by:"
+        />
+      </section>
 
       {myTasks.length > 0 && (
         <section id="tasks" className="mt-8 scroll-mt-4">
@@ -254,7 +334,6 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
       {buddy?.status === "ok" && (
         <BuddySection
           data={buddy as BuddyDashboard}
-          hasEmail={!!me.email}
           tz={me.team?.timezone ?? DEFAULT_TZ}
         />
       )}

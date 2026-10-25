@@ -51,8 +51,8 @@ export const COMING_SOON: { title: string; text: string }[] = [
     text: "Volunteers log in to see their own events and history, say which events they're coming to, and choose how they hear from you.",
   },
   {
-    title: "Text and email reminders for volunteers",
-    text: "Volunteers who've said they're coming get a reminder by text or email before the event, with when and where.",
+    title: "Text message reminders",
+    text: "Day-before reminders by text message too (email, phone notifications and the in-app bell already work).",
   },
   {
     title: "Write post: social media copy",
@@ -61,6 +61,24 @@ export const COMING_SOON: { title: string; text: string }[] = [
 ];
 
 export const CHANGELOG: Release[] = [
+  {
+    date: "2026-10-25",
+    title: "Volunteers: who's coming, reminders and impact",
+    changes: [
+      {
+        level: "organiser",
+        text: "Volunteers can say Going, Maybe or Can't for upcoming events on their own page. You see who's coming at the top of each event page.",
+      },
+      {
+        level: "organiser",
+        text: "Everyone who says Going gets a reminder the day before: in the app, plus email or a phone notification if they chose one.",
+      },
+      {
+        level: "organiser",
+        text: "Volunteers' pages now show their impact: events, outreach, hours at outreach, their next milestone, months in a row and when they started.",
+      },
+    ],
+  },
   {
     date: "2026-10-25",
     title: "Suggest a feature, and more events on Actions",

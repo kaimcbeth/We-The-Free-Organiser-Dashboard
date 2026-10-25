@@ -59,11 +59,9 @@ function inviteText(first: string, e: Upcoming, tz: string) {
 
 export function BuddySection({
   data,
-  hasEmail,
   tz,
 }: {
   data: BuddyDashboard;
-  hasEmail: boolean;
   tz: string; // the team's time zone
 }) {
   if (!data.is_buddy && data.pairs.length === 0) return null;
@@ -91,9 +89,7 @@ export function BuddySection({
       )}
 
       {data.is_buddy && <Available tz={tz} people={data.available} />}
-      {data.is_buddy && (
-        <ReminderSetting initial={data.notify_channel} hasEmail={hasEmail} />
-      )}
+      {/* Reminders: one setting for everything, under Coming up. */}
     </section>
   );
 }
@@ -280,12 +276,14 @@ const CHANNELS = [
   { value: "none", label: "Nothing else" },
 ] as const;
 
-function ReminderSetting({
+export function ReminderSetting({
   initial,
   hasEmail,
+  intro = "You always get them in the app (the bell). Also send them by:",
 }: {
   initial: BuddyDashboard["notify_channel"];
   hasEmail: boolean;
+  intro?: string;
 }) {
   const [channel, setChannel] = useState(initial);
   const [msg, setMsg] = useState("");
@@ -321,9 +319,7 @@ function ReminderSetting({
   return (
     <div className="mt-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
       <h3 className="font-semibold">Reminders</h3>
-      <p className="text-sm text-stone-500">
-        You always get them in the app (the bell). Also send them by:
-      </p>
+      <p className="text-sm text-stone-500">{intro}</p>
       <div
         className="mt-3 grid grid-cols-3 gap-2"
         role="radiogroup"

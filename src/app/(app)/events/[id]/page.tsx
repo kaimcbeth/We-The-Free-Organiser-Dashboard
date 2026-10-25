@@ -1,3 +1,4 @@
+import { WhosComing } from "./whos-coming";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
@@ -244,6 +245,8 @@ export default async function EventCheckInPage({
           )}
         </div>
       </div>
+
+      <WhosComing supabase={supabase} eventId={event.id} />
 
       <EventNotes eventId={event.id} initial={event.notes ?? ""} />
 
