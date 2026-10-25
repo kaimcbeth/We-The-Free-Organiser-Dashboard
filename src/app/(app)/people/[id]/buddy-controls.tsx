@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { assignBuddy, setIsBuddy } from "@/app/actions";
 import { formatEventDate } from "@/lib/time";
 import { Avatar } from "@/components/avatar";
@@ -82,8 +82,10 @@ export function BuddyPicker({
   current,
   options,
   tz,
+  focus = false,
 }: {
   tz: string;
+  focus?: boolean; // came from "Pick a regular": open the list straight away
   newcomerId: string;
   current: {
     buddyId: string;
@@ -98,6 +100,7 @@ export function BuddyPicker({
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [pending, start] = useTransition();
+  const focused = useRef(false);
 
   if (options.length === 0 && !current) {
     return (
@@ -129,6 +132,16 @@ export function BuddyPicker({
       )}
       <div className="flex gap-2">
         <select
+          autoFocus={focus}
+          ref={(el) => {
+            if (focus && el && !focused.current) {
+              focused.current = true;
+              el.scrollIntoView({ block: "center" });
+              try {
+                el.showPicker?.();
+              } catch {}
+            }
+          }}
           value={value}
           onChange={(e) => {
             setValue(e.target.value);

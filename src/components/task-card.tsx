@@ -369,7 +369,11 @@ export function TaskCard({
                 (task.kind === "com_buddies" ||
                   task.kind === "com_onboarding") && (
                   <a
-                    href={`/people/${task.personId}`}
+                    href={
+                      task.kind === "com_buddies"
+                        ? `/people/${task.personId}?pair=1#pair`
+                        : `/people/${task.personId}`
+                    }
                     className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
                   >
                     {task.kind === "com_buddies"

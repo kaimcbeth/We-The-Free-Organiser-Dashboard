@@ -69,8 +69,10 @@ type Attended = {
 
 export default async function PersonPage({
   params,
+  searchParams,
 }: PageProps<"/people/[id]">) {
   const { id } = await params;
+  const { pair } = await searchParams;
   const { supabase, organiser } = await requireOrganiser();
 
   const { data: person } = await supabase
@@ -432,8 +434,9 @@ export default async function PersonPage({
       {/* Who looks after this person (first-timers, or anyone who has someone). */}
       {(newcomer || myPairing) && (
         <section
+          id="pair"
           data-tour="buddy-section"
-          className="mt-5 scroll-mt-24 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
+          className={`mt-5 scroll-mt-24 rounded-2xl bg-white p-4 shadow-sm ${pair ? "ring-2 ring-pink" : "ring-1 ring-black/5"}`}
         >
           <h2 className="font-semibold text-navy">
             Connect a regular volunteer to help {person.first_name} feel welcome
@@ -458,6 +461,7 @@ export default async function PersonPage({
                 : null
             }
             options={buddyOptions}
+            focus={pair === "1"}
           />
         </section>
       )}
