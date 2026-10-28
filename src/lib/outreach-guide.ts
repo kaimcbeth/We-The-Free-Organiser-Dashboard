@@ -70,6 +70,7 @@ export const QUESTIONS: {
   },
 ];
 
+// Hidden from the cheat sheet for now (Kai, 29 Oct); kept to bring back.
 export const ATTITUDE = [
   "Pre-vegan, never abuser",
   "No contempt, even unspoken",

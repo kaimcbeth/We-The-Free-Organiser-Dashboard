@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
-  ATTITUDE,
   FOCUSES,
   FOUNDATIONS_URL,
   OBJECTIONS,
@@ -270,14 +269,6 @@ export function OutreachGuide({
 
       {tab === "sheet" && (
         <div className="mt-5 space-y-4">
-          <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-            <h2 className="font-semibold text-navy">Attitude</h2>
-            <ul className="mt-1.5 space-y-1 text-stone-700">
-              {ATTITUDE.map((a) => (
-                <li key={a}>{a}</li>
-              ))}
-            </ul>
-          </section>
           {STAGES.map((s) => (
             <section
               key={s.id}
