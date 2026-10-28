@@ -61,18 +61,24 @@ export const RESOURCES_COMING_SOON: { title: string; about: string }[] = [
 
 // The equipment guide: the basic kit recommended for every team, with where
 // to buy it. Australia only for now (add other countries as their own lists).
+// Which photo slot: the item, or one of its options (e.g. "table:best").
+export const photoKey = (itemKey: string, option?: { label: string }) =>
+  option ? `${itemKey}:${option.label.toLowerCase()}` : itemKey;
+
 export type EquipmentItem = {
   key: string; // stays the same, so gear added from the guide can find it
   name: string;
   about: string;
   shop: string;
   url: string;
+  image?: string; // a default photo (under /equipment); uploads replace it
   // Different versions of the same thing (e.g. budget and best), shown with
   // a toggle. The first is shown to start with; url above matches it.
   options?: {
     label: string;
     about: string;
     url: string;
+    image?: string; // a default photo for this option
     product?: string; // when the options are different products
     shop?: string; // when they're from a different shop
   }[];
@@ -106,6 +112,7 @@ export const EQUIPMENT_GUIDE: {
             about: "Rolls up small to carry.",
             shop: "4WD Supacentre",
             url: "https://www.4wdsupacentre.com.au/kings-aluminium-roll-up-camping-table-large-rechargeable-lithium-led-worklight.html",
+            image: "/equipment/table-kings.jpg",
           },
         ],
       },

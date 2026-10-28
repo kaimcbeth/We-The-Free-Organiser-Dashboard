@@ -75,7 +75,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Equipment guide and inventory in Resources & Training: the recommended base kit (table, signs, headphones and splitters) and upgrades (A-frame sign), with Budget and Best options and where to buy each in Australia. Tap We have it to add an item to your gear, and Add your own for anything else your community owns. Gear (who has what) now lives on the same page, and Hide recommendations shows just your inventory.",
+        text: "Equipment guide and inventory in Resources & Training: the recommended base kit (table, signs, headphones and splitters) and upgrades (A-frame sign), with Budget and Best options and where to buy each in Australia. Tick In community inventory to add an item to your gear, and Add your own for anything else your community owns. Gear (who has what) now lives on the same page, and Hide recommendations shows just your inventory. Regional Support Leads can add a photo to each item.",
       },
       {
         level: "organiser",

@@ -151,8 +151,9 @@ export function GearTracker({
         !adding && (
           <p className="rounded-2xl border border-dashed border-stone-300 px-4 py-4 text-sm text-stone-500">
             Everything your community owns, including things that aren&apos;t on
-            the list above (laptops, screens, gazebo…). Tap We have it on the
-            list, or Add your own, then keep track of who has each thing.
+            the list above (laptops, screens, gazebo…). Tick In community
+            inventory on the list above, or Add your own, then keep track of who
+            has each thing.
           </p>
         )
       ) : (

@@ -24,7 +24,12 @@ export default async function EquipmentPage() {
         already has, and who has it.
       </p>
       <div className="mt-5">
-        <Equipment teamId={teamId} />
+        <Equipment
+          teamId={teamId}
+          canEditPhotos={
+            organiser.role === "god" || organiser.role === "regional_lead"
+          }
+        />
       </div>
     </>
   );

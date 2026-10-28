@@ -7,9 +7,9 @@ import { createClient } from "@/lib/supabase/client";
 const MAX = 2000; // longest side, px
 
 // Shrinks a photo on the phone before it's uploaded (fast on mobile data).
-async function shrink(file: File) {
+export async function shrink(file: File, max = MAX) {
   const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, MAX / Math.max(bitmap.width, bitmap.height));
+  const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
   const w = Math.round(bitmap.width * scale);
   const h = Math.round(bitmap.height * scale);
   const canvas = document.createElement("canvas");
