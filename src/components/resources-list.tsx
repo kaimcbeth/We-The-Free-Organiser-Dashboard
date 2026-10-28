@@ -96,39 +96,29 @@ export function ResourcesList({
           </h2>
           <ul className="space-y-3">
             {s.items.map((r) => (
-              <li
-                key={r.file}
-                className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-semibold">{r.title}</h3>
-                  {r.area && (
-                    <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
-                      {r.area}
+              <li key={r.file}>
+                <a
+                  href={r.file}
+                  target="_blank"
+                  rel="noopener"
+                  className="block rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 hover:ring-pink"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-semibold">{r.title}</h3>
+                    {r.area && (
+                      <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
+                        {r.area}
+                      </span>
+                    )}
+                    <span aria-hidden className="ml-auto text-stone-400">
+                      ↗
                     </span>
+                  </div>
+                  <p className="mt-1 text-sm text-stone-600">{r.about}</p>
+                  {r.tip && (
+                    <p className="mt-1 text-xs text-stone-500">{r.tip}</p>
                   )}
-                </div>
-                <p className="mt-1 text-sm text-stone-600">{r.about}</p>
-                {r.tip && (
-                  <p className="mt-1 text-xs text-stone-500">{r.tip}</p>
-                )}
-                <div className="mt-3 flex gap-2">
-                  <a
-                    href={r.file}
-                    target="_blank"
-                    rel="noopener"
-                    className="rounded-xl bg-navy px-3 py-1.5 text-sm font-semibold text-white hover:bg-navy-2"
-                  >
-                    Open
-                  </a>
-                  <a
-                    href={r.file}
-                    download
-                    className="rounded-xl px-3 py-1.5 text-sm font-semibold text-navy ring-1 ring-black/10 hover:bg-white"
-                  >
-                    Download
-                  </a>
-                </div>
+                </a>
               </li>
             ))}
           </ul>
