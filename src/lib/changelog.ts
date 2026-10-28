@@ -79,6 +79,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Gear: optional model, where it's from (a link or a shop) and condition. Tap Handed to… then Edit details to add them to gear you've already listed. Anything that needs repair or is broken shows in red.",
+      },
+      {
+        level: "organiser",
         text: "Community photos in Resources & Training: upload good photos that aren't from an event in the app (like older ones) with a rough date, a year and month if you know them. They're used on your promo graphics too.",
       },
       {

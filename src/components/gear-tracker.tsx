@@ -11,7 +11,22 @@ type Gear = {
   holder_person_id: string | null;
   holder_note: string | null;
   moved_at: string | null;
+  model: string | null;
+  source: string | null;
+  condition: Condition | null;
 };
+type Condition = "new" | "good" | "worn" | "needs_repair" | "broken";
+const CONDITIONS: { id: Condition; label: string }[] = [
+  { id: "new", label: "New" },
+  { id: "good", label: "Good" },
+  { id: "worn", label: "Worn" },
+  { id: "needs_repair", label: "Needs repair" },
+  { id: "broken", label: "Broken" },
+];
+const COLS =
+  "id, name, notes, holder_person_id, holder_note, moved_at, model, source, condition";
+type Details = Pick<Gear, "name" | "notes" | "model" | "source" | "condition">;
+const isLink = (s: string) => /^https?:\/\//i.test(s.trim());
 type Person = { id: string; first_name: string; last_name: string | null };
 
 const full = (p: Person) =>
@@ -24,15 +39,13 @@ export function GearTracker({ teamId }: { teamId: string }) {
   const [gear, setGear] = useState<Gear[] | null>(null);
   const [people, setPeople] = useState<Person[]>([]);
   const [adding, setAdding] = useState(false);
-  const [name, setName] = useState("");
-  const [notes, setNotes] = useState("");
   const [moving, setMoving] = useState<Gear | null>(null);
-  const [error, setError] = useState("");
+  const [editing, setEditing] = useState<Gear | null>(null);
 
   useEffect(() => {
     const db = createClient();
     db.from("gear_items")
-      .select("id, name, notes, holder_person_id, holder_note, moved_at")
+      .select(COLS)
       .eq("team_id", teamId)
       .order("name")
       .then(({ data }) => setGear((data as Gear[]) ?? []));
@@ -46,26 +59,33 @@ export function GearTracker({ teamId }: { teamId: string }) {
 
   const byId = useMemo(() => new Map(people.map((p) => [p.id, p])), [people]);
 
-  async function add(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    if (!name.trim()) return;
+  async function add(d: Details) {
     const { data, error: err } = await createClient()
       .from("gear_items")
-      .insert({
-        team_id: teamId,
-        name: name.trim(),
-        notes: notes.trim() || null,
-      })
-      .select("id, name, notes, holder_person_id, holder_note, moved_at")
+      .insert({ team_id: teamId, ...d })
+      .select(COLS)
       .single();
-    if (err) return setError("Couldn't add that. Please try again.");
+    if (err) return "Couldn't add that. Please try again.";
     setGear((g) =>
       [...(g ?? []), data as Gear].sort((a, b) => a.name.localeCompare(b.name)),
     );
-    setName("");
-    setNotes("");
     setAdding(false);
+    return "";
+  }
+
+  async function save(item: Gear, d: Details) {
+    const { error: err } = await createClient()
+      .from("gear_items")
+      .update(d)
+      .eq("id", item.id);
+    if (err) return "Couldn't save that. Please try again.";
+    setGear((g) =>
+      (g ?? [])
+        .map((x) => (x.id === item.id ? { ...x, ...d } : x))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    );
+    setEditing(null);
+    return "";
   }
 
   async function move(
@@ -108,42 +128,11 @@ export function GearTracker({ teamId }: { teamId: string }) {
         )}
       </div>
       {adding && (
-        <form
+        <GearForm
+          submitLabel="Add"
           onSubmit={add}
-          className="mb-3 space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-2 ring-pink/50"
-        >
-          <input
-            autoFocus
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            maxLength={100}
-            placeholder="What is it? e.g. Laptop 1, TV screen, Gazebo"
-            className="w-full rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
-          />
-          <input
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            maxLength={500}
-            placeholder="Notes (optional), e.g. charger in the blue bag"
-            className="w-full rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
-          />
-          {error && <p className="text-sm text-red-700">{error}</p>}
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              className="rounded-xl bg-navy px-4 py-2 text-sm font-semibold text-white"
-            >
-              Add
-            </button>
-            <button
-              type="button"
-              onClick={() => setAdding(false)}
-              className="rounded-xl px-4 py-2 text-sm text-stone-600 hover:bg-black/5"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+          onCancel={() => setAdding(false)}
+        />
       )}
       {gear === null ? (
         <p className="text-sm text-stone-500">Loading…</p>
@@ -164,7 +153,27 @@ export function GearTracker({ teamId }: { teamId: string }) {
             return (
               <li key={g.id} className="flex items-center gap-3 px-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-navy">{g.name}</p>
+                  <p className="font-medium text-navy">
+                    {g.name}
+                    {g.model && (
+                      <span className="font-normal text-stone-500">
+                        {" "}
+                        · {g.model}
+                      </span>
+                    )}
+                    {g.condition && g.condition !== "good" && (
+                      <span
+                        className={`ml-2 rounded-full px-2 py-0.5 text-xs font-medium ${
+                          g.condition === "needs_repair" ||
+                          g.condition === "broken"
+                            ? "bg-red-50 text-red-700"
+                            : "bg-stone-100 text-stone-600"
+                        }`}
+                      >
+                        {CONDITIONS.find((c) => c.id === g.condition)?.label}
+                      </span>
+                    )}
+                  </p>
                   <p className="truncate text-sm text-stone-500">
                     {where ? (
                       <>
@@ -195,8 +204,22 @@ export function GearTracker({ teamId }: { teamId: string }) {
           people={people}
           onPick={(id, note) => move(moving, id, note)}
           onRemove={() => remove(moving)}
+          onEdit={() => {
+            setEditing(moving);
+            setMoving(null);
+          }}
           onClose={() => setMoving(null)}
         />
+      )}
+      {editing && (
+        <Sheet title={`Edit ${editing.name}`} onClose={() => setEditing(null)}>
+          <GearForm
+            initial={editing}
+            submitLabel="Save"
+            onSubmit={(d) => save(editing, d)}
+            onCancel={() => setEditing(null)}
+          />
+        </Sheet>
       )}
     </section>
   );
@@ -207,12 +230,14 @@ function HandOver({
   people,
   onPick,
   onRemove,
+  onEdit,
   onClose,
 }: {
   item: Gear;
   people: Person[];
   onPick: (personId: string | null, note: string | null) => void;
   onRemove: () => void;
+  onEdit: () => void;
   onClose: () => void;
 }) {
   const [q, setQ] = useState("");
@@ -223,6 +248,35 @@ function HandOver({
     .slice(0, 30);
   return (
     <Sheet title={`Who has the ${item.name}?`} onClose={onClose}>
+      {(item.model || item.source || item.condition || item.notes) && (
+        <div className="mb-3 space-y-0.5 text-sm text-stone-600">
+          {item.model && <p>Model: {item.model}</p>}
+          {item.condition && (
+            <p>
+              Condition:{" "}
+              {CONDITIONS.find((c) => c.id === item.condition)?.label}
+            </p>
+          )}
+          {item.source && (
+            <p className="truncate">
+              From:{" "}
+              {isLink(item.source) ? (
+                <a
+                  href={item.source.trim()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-navy underline"
+                >
+                  {item.source.trim().replace(/^https?:\/\/(www\.)?/i, "")}
+                </a>
+              ) : (
+                item.source
+              )}
+            </p>
+          )}
+          {item.notes && <p>{item.notes}</p>}
+        </div>
+      )}
       <input
         autoFocus
         value={q}
@@ -284,15 +338,136 @@ function HandOver({
             </button>
           </span>
         ) : (
-          <button
-            type="button"
-            onClick={() => setSure(true)}
-            className="text-stone-500 hover:text-stone-800 hover:underline"
-          >
-            Remove this item
-          </button>
+          <span className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={onEdit}
+              className="text-stone-500 hover:text-stone-800 hover:underline"
+            >
+              Edit details
+            </button>
+            <button
+              type="button"
+              onClick={() => setSure(true)}
+              className="text-stone-500 hover:text-stone-800 hover:underline"
+            >
+              Remove this item
+            </button>
+          </span>
         )}
       </div>
     </Sheet>
+  );
+}
+
+// Add or edit a piece of gear. Only the name is needed.
+function GearForm({
+  initial,
+  submitLabel,
+  onSubmit,
+  onCancel,
+}: {
+  initial?: Details;
+  submitLabel: string;
+  onSubmit: (d: Details) => Promise<string>; // "" when it worked, or an error
+  onCancel: () => void;
+}) {
+  const [name, setName] = useState(initial?.name ?? "");
+  const [notes, setNotes] = useState(initial?.notes ?? "");
+  const [model, setModel] = useState(initial?.model ?? "");
+  const [source, setSource] = useState(initial?.source ?? "");
+  const [condition, setCondition] = useState<Condition | "">(
+    initial?.condition ?? "",
+  );
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const field =
+    "w-full rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan";
+
+  return (
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (!name.trim() || busy) return;
+        setBusy(true);
+        setError(
+          await onSubmit({
+            name: name.trim(),
+            notes: notes.trim() || null,
+            model: model.trim() || null,
+            source: source.trim() || null,
+            condition: condition || null,
+          }),
+        );
+        setBusy(false);
+      }}
+      className={
+        initial
+          ? "space-y-2"
+          : "mb-3 space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-2 ring-pink/50"
+      }
+    >
+      <input
+        autoFocus={!initial}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        maxLength={100}
+        placeholder="What is it? e.g. Laptop 1, TV screen, Gazebo"
+        className={field}
+      />
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          value={model}
+          onChange={(e) => setModel(e.target.value)}
+          maxLength={100}
+          placeholder="Model (optional)"
+          className={`${field} min-w-0`}
+        />
+        <select
+          value={condition}
+          onChange={(e) => setCondition(e.target.value as Condition | "")}
+          aria-label="Condition"
+          className={`${field} min-w-0 ${condition ? "" : "text-stone-400"}`}
+        >
+          <option value="">Condition</option>
+          {CONDITIONS.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <input
+        value={source}
+        onChange={(e) => setSource(e.target.value)}
+        maxLength={500}
+        placeholder="Where it's from (optional), a link or a shop"
+        className={field}
+      />
+      <input
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        maxLength={500}
+        placeholder="Notes (optional), e.g. charger in the blue bag"
+        className={field}
+      />
+      {error && <p className="text-sm text-red-700">{error}</p>}
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={busy}
+          className="rounded-xl bg-navy px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+        >
+          {submitLabel}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="rounded-xl px-4 py-2 text-sm text-stone-600 hover:bg-black/5"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }
