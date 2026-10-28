@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Sheet } from "@/components/sheet";
 import { createClient } from "@/lib/supabase/client";
+import { PhotoSlot } from "@/components/photo-slot";
+import { shrink } from "@/components/photo-uploader";
 
 type Gear = {
   id: string;
@@ -14,6 +16,7 @@ type Gear = {
   model: string | null;
   source: string | null;
   condition: Condition | null;
+  photo_path: string | null;
 };
 type Condition = "new" | "good" | "worn" | "needs_repair" | "broken";
 const CONDITIONS: { id: Condition; label: string }[] = [
@@ -24,7 +27,7 @@ const CONDITIONS: { id: Condition; label: string }[] = [
   { id: "broken", label: "Broken" },
 ];
 const COLS =
-  "id, name, notes, holder_person_id, holder_note, moved_at, model, source, condition";
+  "id, name, notes, holder_person_id, holder_note, moved_at, model, source, condition, photo_path";
 type Details = Pick<Gear, "name" | "notes" | "model" | "source" | "condition">;
 const isLink = (s: string) => /^https?:\/\//i.test(s.trim());
 type Person = { id: string; first_name: string; last_name: string | null };
@@ -45,6 +48,7 @@ export function GearTracker({
   onChanged?: () => void; // after adding, editing or removing gear
 }) {
   const [gear, setGear] = useState<Gear[] | null>(null);
+  const [photos, setPhotos] = useState<Record<string, string>>({}); // by gear id
   const [people, setPeople] = useState<Person[]>([]);
   const [adding, setAdding] = useState(false);
   const [moving, setMoving] = useState<Gear | null>(null);
@@ -56,7 +60,27 @@ export function GearTracker({
       .select(COLS)
       .eq("team_id", teamId)
       .order("name")
-      .then(({ data }) => setGear((data as Gear[]) ?? []));
+      .then(async ({ data }) => {
+        const list = (data as Gear[]) ?? [];
+        setGear(list);
+        // Photos are private to the community: signed links, for an hour.
+        const withPhoto = list.filter((g) => g.photo_path);
+        if (!withPhoto.length) return setPhotos({});
+        const { data: signed } = await db.storage
+          .from("event-photos")
+          .createSignedUrls(
+            withPhoto.map((g) => g.photo_path!),
+            3600,
+          );
+        const byPath = new Map(
+          (signed ?? []).map((x) => [x.path, x.signedUrl]),
+        );
+        setPhotos(
+          Object.fromEntries(
+            withPhoto.map((g) => [g.id, byPath.get(g.photo_path!) ?? ""]),
+          ),
+        );
+      });
     db.from("people")
       .select("id, first_name, last_name")
       .eq("team_id", teamId)
@@ -96,6 +120,26 @@ export function GearTracker({
     setEditing(null);
     onChanged?.();
     return "";
+  }
+
+  async function addPhoto(item: Gear, file: File) {
+    const db = createClient();
+    const { blob } = await shrink(file, 800);
+    const path = `${teamId}/gear/${crypto.randomUUID()}.jpg`;
+    const up = await db.storage
+      .from("event-photos")
+      .upload(path, blob, { contentType: "image/jpeg" });
+    if (up.error) return false;
+    const row = await db
+      .from("gear_items")
+      .update({ photo_path: path })
+      .eq("id", item.id);
+    if (row.error) return false;
+    const { data } = await db.storage
+      .from("event-photos")
+      .createSignedUrl(path, 3600);
+    setPhotos((p) => ({ ...p, [item.id]: data?.signedUrl ?? "" }));
+    return true;
   }
 
   async function move(
@@ -165,6 +209,12 @@ export function GearTracker({
             const where = holder ? full(holder) : g.holder_note;
             return (
               <li key={g.id} className="flex items-center gap-3 px-4 py-3">
+                <PhotoSlot
+                  photo={photos[g.id] || null}
+                  alt={g.name}
+                  href={photos[g.id] || "#"}
+                  onUpload={(f) => addPhoto(g, f)}
+                />
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-navy">
                     {g.name}

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { GearTracker } from "@/components/gear-tracker";
 import { EQUIPMENT_GUIDE, photoKey, type EquipmentItem } from "@/lib/resources";
 import { shrink } from "@/components/photo-uploader";
+import { PhotoSlot } from "@/components/photo-slot";
 
 // Equipment: the recommended kit (base kit, then upgrades) with where to buy
 // it, which of it the community already has, and the community's gear list
@@ -326,66 +327,5 @@ function EquipmentRow({
         )}
       </div>
     </li>
-  );
-}
-
-// The photo beside an item. Staff (Regional Support Leads, God) can tap it to
-// add or change the photo; everyone else just sees it (or nothing).
-function PhotoSlot({
-  photo,
-  alt,
-  href,
-  onUpload,
-}: {
-  photo: string | null;
-  alt: string;
-  href: string;
-  onUpload?: (file: File) => Promise<boolean>;
-}) {
-  const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
-  const box =
-    "relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-black/10";
-  // eslint-disable-next-line @next/next/no-img-element -- product photo
-  const img = photo && (
-    <img src={photo} alt={alt} className="h-full w-full object-contain" />
-  );
-  if (!onUpload)
-    return photo ? (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={box}>
-        {img}
-      </a>
-    ) : null;
-  return (
-    <label
-      className={`${box} cursor-pointer ${photo ? "" : "border border-dashed border-stone-300 ring-0"}`}
-      title={photo ? "Change photo" : "Add photo"}
-    >
-      <input
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={async (e) => {
-          const f = e.target.files?.[0];
-          e.target.value = "";
-          if (!f) return;
-          setBusy(true);
-          setFailed(!(await onUpload(f)));
-          setBusy(false);
-        }}
-      />
-      {img}
-      {(!photo || busy || failed) && (
-        <span
-          className={`absolute inset-0 flex items-center justify-center px-1 text-center text-[10px] font-semibold ${photo ? "bg-white/80" : ""} ${failed ? "text-red-700" : "text-stone-500"}`}
-        >
-          {busy
-            ? "Uploading…"
-            : failed
-              ? "Didn't work, try again"
-              : "Add photo"}
-        </span>
-      )}
-    </label>
   );
 }
