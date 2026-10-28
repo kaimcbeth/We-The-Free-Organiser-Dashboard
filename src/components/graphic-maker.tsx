@@ -215,8 +215,17 @@ function draw(
   ctx.fillRect(pad, y, 120 * u, 14 * u);
   y += 50 * u;
 
+  // Movie Challenge promos: "3 Minute Movie Challenge" above "Vegan Outreach",
+  // rather than the event type and the calendar title.
+  const movie =
+    template === "promo" && e.typeName?.toLowerCase() === "movie challenge";
   const kicker =
-    template === "recap" ? "THANKS FOR COMING!" : e.typeName?.toUpperCase();
+    template === "recap"
+      ? "THANKS FOR COMING!"
+      : movie
+        ? "3 MINUTE MOVIE CHALLENGE"
+        : e.typeName?.toUpperCase();
+  const title = movie ? "Vegan Outreach" : e.title;
   if (kicker) {
     ctx.fillStyle = CYAN;
     ctx.font = `700 ${36 * u}px ${font}`;
@@ -227,7 +236,7 @@ function draw(
   const titleSize = (wide ? 96 : size === "story" ? 116 : 100) * u;
   ctx.fillStyle = "#ffffff";
   ctx.font = `800 ${titleSize}px ${font}`;
-  for (const l of lines(ctx, e.title, textW).slice(0, 3)) {
+  for (const l of lines(ctx, title, textW).slice(0, 3)) {
     ctx.fillText(l, pad, y);
     y += titleSize * 1.05;
   }

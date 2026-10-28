@@ -78,6 +78,10 @@ export const CHANGELOG: Release[] = [
         text: "WhatsApp posts for upcoming outreach now ask people to lock in, and end with a numbered sign-up list: everyone who's said Going so far, then empty lines up to the number you need (20 to start with, change it in Write post).",
       },
       {
+        level: "organiser",
+        text: "Movie Challenge graphics now say 3 Minute Movie Challenge above Vegan Outreach, instead of the calendar title.",
+      },
+      {
         level: "god",
         text: "write-copy v7: sign-up list built in the function from event_rsvps (going, by updated_at, first names plus last initial for repeats); the AI never sees names. Outreach events and WhatsApp only.",
       },
