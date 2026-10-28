@@ -62,6 +62,16 @@ export const COMING_SOON: { title: string; text: string }[] = [
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-10-29",
+    title: "Monthly recap carousel",
+    changes: [
+      {
+        level: "organiser",
+        text: "Monthly recap posted now has Make carousel: it gathers the month's event photos in event order, with your starred favourites already picked. Tap others to add them, drag to adjust, then share or download.",
+      },
+    ],
+  },
+  {
     date: "2026-10-28",
     title: "Welcome to We The Free",
     changes: [

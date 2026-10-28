@@ -69,14 +69,18 @@ async function renderSlide(
 export function CarouselMaker({
   photos,
   title,
+  onlyFavourites = false,
 }: {
   photos: EventPhoto[];
   title: string;
+  onlyFavourites?: boolean; // start with just the favourites, in given order
 }) {
-  // Favourites first, then the rest, up to 20.
+  // Favourites first, then the rest, up to 20 (or just the favourites).
   const [order, setOrder] = useState<string[]>(() =>
-    [...photos]
-      .sort((a, b) => Number(b.favourite) - Number(a.favourite))
+    (onlyFavourites
+      ? photos.filter((p) => p.favourite)
+      : [...photos].sort((a, b) => Number(b.favourite) - Number(a.favourite))
+    )
       .slice(0, MAX)
       .map((p) => p.id),
   );

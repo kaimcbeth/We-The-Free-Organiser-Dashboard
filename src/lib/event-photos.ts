@@ -114,3 +114,37 @@ export async function loadCommunityPhotos(
     .returns<Row[]>();
   return sign(supabase, data ?? []);
 }
+
+// Promo photos from a community's events in one month (in its time zone),
+// in event order. For the monthly recap carousel.
+export async function loadMonthPhotos(
+  supabase: SupabaseClient,
+  teamId: string,
+  year: number,
+  month: number, // 1-12
+  tz: string,
+): Promise<EventPhoto[]> {
+  // A day either side covers any time zone; the exact month is checked below.
+  const from = new Date(Date.UTC(year, month - 1, 1) - 864e5).toISOString();
+  const to = new Date(Date.UTC(year, month, 1) + 864e5).toISOString();
+  const { data } = await supabase
+    .from("event_photos")
+    .select(`${COLS}, event:events!inner(starts_at)`)
+    .eq("team_id", teamId)
+    .eq("no_promo", false)
+    .is("archived_at", null)
+    .gte("event.starts_at", from)
+    .lt("event.starts_at", to)
+    .returns<(Row & { event: { starts_at: string } })[]>();
+  const ym = (iso: string) =>
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+    }).format(new Date(iso));
+  const want = `${year}-${String(month).padStart(2, "0")}`;
+  const rows = (data ?? [])
+    .filter((r) => ym(r.event.starts_at) === want)
+    .sort((a, b) => a.event.starts_at.localeCompare(b.event.starts_at));
+  return sign(supabase, rows);
+}
