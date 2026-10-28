@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { RESOURCE_SECTIONS, RESOURCES_COMING_SOON } from "@/lib/resources";
 import { GearTracker } from "@/components/gear-tracker";
+import { CommunityPhotos } from "@/components/community-photos";
 
 const has = (q: string, ...text: (string | undefined)[]) =>
   !q || text.some((t) => t?.toLowerCase().includes(q));
@@ -116,6 +117,7 @@ export function ResourcesList({ teamId }: { teamId: string | null }) {
         </section>
       ))}
       {teamId && !q && <GearTracker teamId={teamId} />}
+      {teamId && !q && <CommunityPhotos teamId={teamId} />}
       {soon.length > 0 && (
         <section className="mt-6">
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">

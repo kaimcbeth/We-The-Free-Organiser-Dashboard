@@ -26,16 +26,23 @@ async function shrink(file: File) {
   return { blob, w, h };
 }
 
-// "Add photos": pick several from the camera roll, upload them to the event.
+// "Add photos": pick several from the camera roll, upload them to the event,
+// or with no event to the community's photos (with a rough date and a note).
 export function PhotoUploader({
   teamId,
   eventId,
+  extra,
   label = "Add photos",
   className = "rounded-xl bg-navy px-3 py-1.5 text-sm font-semibold text-white hover:bg-navy-2",
   onUploaded,
 }: {
   teamId: string;
-  eventId: string;
+  eventId: string | null;
+  extra?: {
+    taken_year: number | null;
+    taken_month: number | null;
+    caption: string | null;
+  };
   label?: string;
   className?: string;
   onUploaded?: () => void; // e.g. the graphics panel reloads its photos
@@ -54,7 +61,7 @@ export function PhotoUploader({
       try {
         const { blob, w, h } = await shrink(file);
         const id = crypto.randomUUID();
-        const path = `${teamId}/${eventId}/${id}.jpg`;
+        const path = `${teamId}/${eventId ?? "library"}/${id}.jpg`;
         const up = await supabase.storage
           .from("event-photos")
           .upload(path, blob, { contentType: "image/jpeg" });
@@ -66,6 +73,7 @@ export function PhotoUploader({
           path,
           width: w,
           height: h,
+          ...extra,
         });
         if (row.error) throw row.error;
         done++;

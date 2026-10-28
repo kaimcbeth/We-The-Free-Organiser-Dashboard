@@ -5,7 +5,10 @@ export type EventPhoto = {
   url: string; // signed, valid for an hour
   favourite: boolean;
   noPromo: boolean;
-  eventId: string;
+  eventId: string | null; // null: a community photo, not from one event
+  takenYear: number | null;
+  takenMonth: number | null; // 1-12
+  caption: string | null;
 };
 
 type Row = {
@@ -13,7 +16,10 @@ type Row = {
   path: string;
   favourite: boolean;
   no_promo: boolean;
-  event_id: string;
+  event_id: string | null;
+  taken_year: number | null;
+  taken_month: number | null;
+  caption: string | null;
 };
 
 async function sign(supabase: SupabaseClient, rows: Row[]) {
@@ -31,10 +37,14 @@ async function sign(supabase: SupabaseClient, rows: Row[]) {
       favourite: r.favourite,
       noPromo: r.no_promo,
       eventId: r.event_id,
+      takenYear: r.taken_year,
+      takenMonth: r.taken_month,
+      caption: r.caption,
     }));
 }
 
-const COLS = "id, path, favourite, no_promo, event_id";
+const COLS =
+  "id, path, favourite, no_promo, event_id, taken_year, taken_month, caption";
 
 // One event's photos, newest first.
 export async function loadEventPhotos(
@@ -67,6 +77,26 @@ export async function loadPromoPhotos(
     .order("favourite", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(limit)
+    .returns<Row[]>();
+  return sign(supabase, data ?? []);
+}
+
+// Community photos (not from one event): newest rough date first, then
+// undated ones.
+export async function loadCommunityPhotos(
+  supabase: SupabaseClient,
+  teamId: string,
+): Promise<EventPhoto[]> {
+  const { data } = await supabase
+    .from("event_photos")
+    .select(COLS)
+    .eq("team_id", teamId)
+    .is("event_id", null)
+    .is("archived_at", null)
+    .order("taken_year", { ascending: false, nullsFirst: false })
+    .order("taken_month", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false })
+    .limit(500)
     .returns<Row[]>();
   return sign(supabase, data ?? []);
 }

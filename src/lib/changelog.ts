@@ -79,6 +79,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Community photos in Resources & Training: upload good photos that aren't from an event in the app (like older ones) with a rough date, a year and month if you know them. They're used on your promo graphics too.",
+      },
+      {
+        level: "organiser",
         text: "Movie Challenge graphics now say 3 Minute Movie Challenge above Vegan Outreach, instead of the calendar title.",
       },
       {
