@@ -11,6 +11,10 @@ export type Release = { date: string; title: string; changes: Change[] };
 // What's being worked on next (shown at the top of What's new).
 export const COMING_SOON: { title: string; text: string }[] = [
   {
+    title: "Dealing with trolls and harassment at events",
+    text: "A guide for handling hecklers, trolls and harassment at events: how to stay calm, keep volunteers and the public safe, when to step in or walk away, and when to call for help.",
+  },
+  {
     title: "Fuller volunteer feedback form",
     text: "More questions for volunteers (training, events, how supported they feel), with results you can compare over time.",
   },
