@@ -50,6 +50,7 @@ export function EventPhotos({
             <PhotoTile
               key={p.id}
               p={p}
+              teamId={teamId}
               open={open === p.id}
               onToggle={() => setOpen(open === p.id ? null : p.id)}
               onChange={(c) => flag(p, c)}

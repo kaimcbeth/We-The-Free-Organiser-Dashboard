@@ -79,6 +79,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Crop photos: tap a photo, then Crop. Drag the box or its corners, or pick a shape (Square, Portrait 4:5, Story 9:16, Wide 16:9). The original is kept, so Reset to original undoes it.",
+      },
+      {
+        level: "organiser",
         text: "Photo tags: Outreach, Group photo, Volunteers and Watching. Tap any photo to tag it, pick tags for a batch when uploading Community photos, and filter by tag in Community photos and when choosing a photo for a graphic.",
       },
       {

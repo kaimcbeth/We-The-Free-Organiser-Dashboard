@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { PhotoCrop, resetCrop } from "@/components/photo-crop";
 import { createClient } from "@/lib/supabase/client";
 import { PHOTO_TAGS, type EventPhoto, type PhotoTag } from "@/lib/event-photos";
 
+// url and cropped are only updated on screen (cropping saves itself).
 export type PhotoChange = Partial<
-  Pick<EventPhoto, "favourite" | "noPromo" | "tags">
+  Pick<EventPhoto, "favourite" | "noPromo" | "tags" | "url" | "cropped">
 > & {
   remove?: boolean;
 };
@@ -27,12 +29,14 @@ export async function savePhoto(id: string, c: PhotoChange) {
 // (and remove, where that's allowed).
 export function PhotoTile({
   p,
+  teamId,
   open,
   onToggle,
   onChange,
   canRemove = false,
 }: {
   p: EventPhoto;
+  teamId: string;
   open: boolean;
   onToggle: () => void;
   onChange: (c: PhotoChange) => void;
@@ -40,6 +44,7 @@ export function PhotoTile({
 }) {
   const item = "block w-full rounded-lg px-2 py-1 text-left hover:bg-stone-100";
   const box = useRef<HTMLLIElement>(null);
+  const [cropping, setCropping] = useState(false);
 
   // An open menu closes when you tap anywhere else, or press Escape.
   useEffect(() => {
@@ -121,6 +126,29 @@ export function PhotoTile({
           >
             {p.noPromo ? "Use in promo again" : "Not for promo"}
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              onToggle();
+              setCropping(true);
+            }}
+            className={item}
+          >
+            Crop
+          </button>
+          {p.cropped && (
+            <button
+              type="button"
+              onClick={async () => {
+                onToggle();
+                const url = await resetCrop(p.id);
+                if (url) onChange({ url, cropped: false });
+              }}
+              className={item}
+            >
+              Reset to original
+            </button>
+          )}
           <a
             href={p.url}
             download
@@ -140,6 +168,16 @@ export function PhotoTile({
             </button>
           )}
         </div>
+      )}
+      {cropping && (
+        <PhotoCrop
+          photo={{ id: p.id, url: p.url, teamId, eventId: p.eventId }}
+          onSaved={(url) => {
+            setCropping(false);
+            onChange({ url, cropped: true });
+          }}
+          onClose={() => setCropping(false)}
+        />
       )}
     </li>
   );

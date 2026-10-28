@@ -193,6 +193,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                   <PhotoTile
                     key={p.id}
                     p={p}
+                    teamId={teamId}
                     open={open === p.id}
                     onToggle={() => setOpen(open === p.id ? null : p.id)}
                     onChange={(c) => change(p, c)}

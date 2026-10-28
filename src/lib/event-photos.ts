@@ -18,6 +18,7 @@ export type EventPhoto = {
   takenMonth: number | null; // 1-12
   caption: string | null;
   tags: PhotoTag[];
+  cropped: boolean; // the original is kept and can be restored
 };
 
 type Row = {
@@ -30,6 +31,7 @@ type Row = {
   taken_month: number | null;
   caption: string | null;
   tags: PhotoTag[] | null;
+  original_path: string | null;
 };
 
 async function sign(supabase: SupabaseClient, rows: Row[]) {
@@ -51,11 +53,12 @@ async function sign(supabase: SupabaseClient, rows: Row[]) {
       takenMonth: r.taken_month,
       caption: r.caption,
       tags: r.tags ?? [],
+      cropped: !!r.original_path,
     }));
 }
 
 const COLS =
-  "id, path, favourite, no_promo, event_id, taken_year, taken_month, caption, tags";
+  "id, path, favourite, no_promo, event_id, taken_year, taken_month, caption, tags, original_path";
 
 // One event's photos, newest first.
 export async function loadEventPhotos(
