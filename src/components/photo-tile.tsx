@@ -68,7 +68,7 @@ export function PhotoTile({
       <button
         type="button"
         onClick={onToggle}
-        className="block aspect-square w-full overflow-hidden rounded-xl bg-stone-200"
+        className={`block aspect-square w-full overflow-hidden rounded-xl bg-stone-200 ${open ? "ring-2 ring-pink ring-offset-2" : ""}`}
         title={p.caption ?? undefined}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
@@ -89,7 +89,7 @@ export function PhotoTile({
         </span>
       )}
       {open && (
-        <div className="absolute inset-x-1 bottom-1 z-10 space-y-1 rounded-xl bg-white p-1.5 text-xs shadow-lg ring-1 ring-black/10">
+        <div className="absolute inset-x-0 top-full z-20 mt-1 space-y-1 rounded-xl bg-white p-1.5 text-xs shadow-lg ring-1 ring-black/10">
           {p.caption && <p className="px-2 py-1 text-stone-500">{p.caption}</p>}
           <div className="flex flex-wrap gap-1 px-1 pb-1">
             {PHOTO_TAGS.map((t) => {
