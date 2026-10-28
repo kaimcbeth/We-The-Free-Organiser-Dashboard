@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import type { EventPhoto } from "@/lib/event-photos";
 import { PhotoUploader } from "@/components/photo-uploader";
+import {
+  PhotoTile,
+  savePhoto,
+  type PhotoChange,
+} from "@/components/photo-tile";
 
-// An event's photos: add more, star favourites (used first on graphics), or
-// keep one out of promo.
+// An event's photos: add more, tag them, star favourites (used first on
+// graphics), or keep one out of promo.
 export function EventPhotos({
   teamId,
   eventId,
@@ -19,17 +23,9 @@ export function EventPhotos({
   const [photos, setPhotos] = useState(initial);
   const [open, setOpen] = useState<string | null>(null);
 
-  async function flag(p: EventPhoto, change: Partial<EventPhoto>) {
-    setPhotos((all) =>
-      all.map((x) => (x.id === p.id ? { ...x, ...change } : x)),
-    );
-    await createClient()
-      .from("event_photos")
-      .update({
-        ...(change.favourite !== undefined && { favourite: change.favourite }),
-        ...(change.noPromo !== undefined && { no_promo: change.noPromo }),
-      })
-      .eq("id", p.id);
+  function flag(p: EventPhoto, c: PhotoChange) {
+    setPhotos((all) => all.map((x) => (x.id === p.id ? { ...x, ...c } : x)));
+    savePhoto(p.id, c);
   }
 
   return (
@@ -51,57 +47,13 @@ export function EventPhotos({
       ) : (
         <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
           {photos.map((p) => (
-            <li key={p.id} className="relative">
-              <button
-                type="button"
-                onClick={() => setOpen(open === p.id ? null : p.id)}
-                className="block aspect-square w-full overflow-hidden rounded-xl bg-stone-200"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
-                <img
-                  src={p.url}
-                  alt=""
-                  className={`h-full w-full object-cover ${p.noPromo ? "opacity-50" : ""}`}
-                />
-              </button>
-              {p.favourite && (
-                <span className="absolute left-1.5 top-1.5 rounded-full bg-white/90 px-1.5 text-xs">
-                  ⭐
-                </span>
-              )}
-              {p.noPromo && (
-                <span className="absolute right-1.5 top-1.5 rounded-full bg-white/90 px-1.5 text-xs">
-                  🚫
-                </span>
-              )}
-              {open === p.id && (
-                <div className="absolute inset-x-1 bottom-1 z-10 space-y-1 rounded-xl bg-white p-1.5 text-xs shadow-lg ring-1 ring-black/10">
-                  <button
-                    type="button"
-                    onClick={() => flag(p, { favourite: !p.favourite })}
-                    className="block w-full rounded-lg px-2 py-1 text-left hover:bg-stone-100"
-                  >
-                    {p.favourite ? "Unstar" : "⭐ Favourite"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => flag(p, { noPromo: !p.noPromo })}
-                    className="block w-full rounded-lg px-2 py-1 text-left hover:bg-stone-100"
-                  >
-                    {p.noPromo ? "Use in promo again" : "🚫 Not for promo"}
-                  </button>
-                  <a
-                    href={p.url}
-                    download
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block rounded-lg px-2 py-1 hover:bg-stone-100"
-                  >
-                    Download
-                  </a>
-                </div>
-              )}
-            </li>
+            <PhotoTile
+              key={p.id}
+              p={p}
+              open={open === p.id}
+              onToggle={() => setOpen(open === p.id ? null : p.id)}
+              onChange={(c) => flag(p, c)}
+            />
           ))}
         </ul>
       )}

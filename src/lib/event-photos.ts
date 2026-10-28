@@ -1,5 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+export type PhotoTag = "outreach" | "group" | "volunteers" | "watching";
+export const PHOTO_TAGS: { id: PhotoTag; label: string }[] = [
+  { id: "outreach", label: "Outreach" },
+  { id: "group", label: "Group photo" },
+  { id: "volunteers", label: "Volunteers" },
+  { id: "watching", label: "Watching" },
+];
+
 export type EventPhoto = {
   id: string;
   url: string; // signed, valid for an hour
@@ -9,6 +17,7 @@ export type EventPhoto = {
   takenYear: number | null;
   takenMonth: number | null; // 1-12
   caption: string | null;
+  tags: PhotoTag[];
 };
 
 type Row = {
@@ -20,6 +29,7 @@ type Row = {
   taken_year: number | null;
   taken_month: number | null;
   caption: string | null;
+  tags: PhotoTag[] | null;
 };
 
 async function sign(supabase: SupabaseClient, rows: Row[]) {
@@ -40,11 +50,12 @@ async function sign(supabase: SupabaseClient, rows: Row[]) {
       takenYear: r.taken_year,
       takenMonth: r.taken_month,
       caption: r.caption,
+      tags: r.tags ?? [],
     }));
 }
 
 const COLS =
-  "id, path, favourite, no_promo, event_id, taken_year, taken_month, caption";
+  "id, path, favourite, no_promo, event_id, taken_year, taken_month, caption, tags";
 
 // One event's photos, newest first.
 export async function loadEventPhotos(

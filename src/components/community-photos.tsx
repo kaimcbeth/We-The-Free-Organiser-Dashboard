@@ -2,8 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { loadCommunityPhotos, type EventPhoto } from "@/lib/event-photos";
+import {
+  loadCommunityPhotos,
+  PHOTO_TAGS,
+  type EventPhoto,
+  type PhotoTag,
+} from "@/lib/event-photos";
 import { PhotoUploader } from "@/components/photo-uploader";
+import {
+  PhotoTile,
+  savePhoto,
+  TagFilter,
+  type PhotoChange,
+} from "@/components/photo-tile";
 
 // Community photos: good photos that aren't from one event in the app (often
 // older ones), with a rough date. They're used on promo graphics like any
@@ -31,81 +42,6 @@ function when(p: EventPhoto) {
     : String(p.takenYear);
 }
 
-function PhotoTile({
-  p,
-  open,
-  onToggle,
-  onChange,
-}: {
-  p: EventPhoto;
-  open: boolean;
-  onToggle: () => void;
-  onChange: (change: Partial<EventPhoto> & { remove?: boolean }) => void;
-}) {
-  return (
-    <li className="relative">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="block aspect-square w-full overflow-hidden rounded-xl bg-stone-200"
-        title={p.caption ?? undefined}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
-        <img
-          src={p.url}
-          alt={p.caption ?? ""}
-          className={`h-full w-full object-cover ${p.noPromo ? "opacity-50" : ""}`}
-        />
-      </button>
-      {p.favourite && (
-        <span className="absolute left-1.5 top-1.5 rounded-full bg-white/90 px-1.5 text-xs">
-          ⭐
-        </span>
-      )}
-      {p.noPromo && (
-        <span className="absolute right-1.5 top-1.5 rounded-full bg-white/90 px-1.5 text-xs">
-          🚫
-        </span>
-      )}
-      {open && (
-        <div className="absolute inset-x-1 bottom-1 z-10 space-y-1 rounded-xl bg-white p-1.5 text-xs shadow-lg ring-1 ring-black/10">
-          {p.caption && <p className="px-2 py-1 text-stone-500">{p.caption}</p>}
-          <button
-            type="button"
-            onClick={() => onChange({ favourite: !p.favourite })}
-            className="block w-full rounded-lg px-2 py-1 text-left hover:bg-stone-100"
-          >
-            {p.favourite ? "Unstar" : "Favourite"}
-          </button>
-          <button
-            type="button"
-            onClick={() => onChange({ noPromo: !p.noPromo })}
-            className="block w-full rounded-lg px-2 py-1 text-left hover:bg-stone-100"
-          >
-            {p.noPromo ? "Use in promo again" : "Not for promo"}
-          </button>
-          <a
-            href={p.url}
-            download
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block rounded-lg px-2 py-1 hover:bg-stone-100"
-          >
-            Download
-          </a>
-          <button
-            type="button"
-            onClick={() => onChange({ remove: true })}
-            className="block w-full rounded-lg px-2 py-1 text-left text-red-700 hover:bg-stone-100"
-          >
-            Remove
-          </button>
-        </div>
-      )}
-    </li>
-  );
-}
-
 export function CommunityPhotos({ teamId }: { teamId: string }) {
   const [photos, setPhotos] = useState<EventPhoto[] | null>(null);
   const [reload, setReload] = useState(0);
@@ -113,6 +49,8 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
   const [year, setYear] = useState("");
   const [month, setMonth] = useState("");
   const [caption, setCaption] = useState("");
+  const [tags, setTags] = useState<PhotoTag[]>([]);
+  const [filter, setFilter] = useState<PhotoTag | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -124,24 +62,14 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
     };
   }, [teamId, reload]);
 
-  async function change(
-    p: EventPhoto,
-    c: Partial<EventPhoto> & { remove?: boolean },
-  ) {
-    setOpen(null);
+  function change(p: EventPhoto, c: PhotoChange) {
+    if (c.remove) setOpen(null);
     setPhotos((all) =>
       (all ?? [])
         .filter((x) => !(c.remove && x.id === p.id))
         .map((x) => (x.id === p.id ? { ...x, ...c } : x)),
     );
-    await createClient()
-      .from("event_photos")
-      .update({
-        ...(c.favourite !== undefined && { favourite: c.favourite }),
-        ...(c.noPromo !== undefined && { no_promo: c.noPromo }),
-        ...(c.remove && { archived_at: new Date().toISOString() }),
-      })
-      .eq("id", p.id);
+    savePhoto(p.id, c);
   }
 
   // eslint-disable-next-line react-hooks/purity -- only used for the year list
@@ -150,7 +78,9 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
 
   // Grouped by rough date, in the order they came back (newest first).
   const groups: { label: string; list: EventPhoto[] }[] = [];
-  for (const p of photos ?? []) {
+  for (const p of (photos ?? []).filter(
+    (x) => !filter || x.tags.includes(filter),
+  )) {
     const label = when(p);
     const g = groups.find((x) => x.label === label);
     if (g) g.list.push(p);
@@ -205,6 +135,24 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
             className="min-w-0 basis-full rounded-lg bg-white px-2 py-1.5 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
           />
         </div>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <span className="text-xs text-stone-500">Tags (optional):</span>
+          {PHOTO_TAGS.map((t) => {
+            const on = tags.includes(t.id);
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() =>
+                  setTags(on ? tags.filter((x) => x !== t.id) : [...tags, t.id])
+                }
+                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${on ? "bg-navy text-white ring-navy" : "bg-white text-stone-600 ring-stone-300"}`}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
         <div className="mt-2">
           <PhotoUploader
             teamId={teamId}
@@ -213,6 +161,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
               taken_year: year ? Number(year) : null,
               taken_month: year && month ? Number(month) : null,
               caption: caption.trim() || null,
+              tags,
             }}
             label="Upload photos"
             onUploaded={() => setReload((r) => r + 1)}
@@ -227,27 +176,33 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
           No community photos yet. Pick a rough date, then upload a few.
         </p>
       ) : (
-        groups.map((g) => (
-          <div key={g.label} className="mt-4">
-            <h3 className="mb-1.5 text-sm font-semibold text-navy">
-              {g.label}{" "}
-              <span className="font-normal text-stone-400">
-                {g.list.length}
-              </span>
-            </h3>
-            <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {g.list.map((p) => (
-                <PhotoTile
-                  key={p.id}
-                  p={p}
-                  open={open === p.id}
-                  onToggle={() => setOpen(open === p.id ? null : p.id)}
-                  onChange={(c) => change(p, c)}
-                />
-              ))}
-            </ul>
+        <>
+          <div className="mt-3">
+            <TagFilter photos={photos} value={filter} onChange={setFilter} />
           </div>
-        ))
+          {groups.map((g) => (
+            <div key={g.label} className="mt-4">
+              <h3 className="mb-1.5 text-sm font-semibold text-navy">
+                {g.label}{" "}
+                <span className="font-normal text-stone-400">
+                  {g.list.length}
+                </span>
+              </h3>
+              <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                {g.list.map((p) => (
+                  <PhotoTile
+                    key={p.id}
+                    p={p}
+                    open={open === p.id}
+                    onToggle={() => setOpen(open === p.id ? null : p.id)}
+                    onChange={(c) => change(p, c)}
+                    canRemove
+                  />
+                ))}
+              </ul>
+            </div>
+          ))}
+        </>
       )}
     </section>
   );

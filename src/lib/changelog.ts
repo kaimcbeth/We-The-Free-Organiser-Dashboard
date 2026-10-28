@@ -79,6 +79,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Photo tags: Outreach, Group photo, Volunteers and Watching. Tap any photo to tag it, pick tags for a batch when uploading Community photos, and filter by tag in Community photos and when choosing a photo for a graphic.",
+      },
+      {
+        level: "organiser",
         text: "Gear: optional model, where it's from (a link or a shop) and condition. Tap Handed to… then Edit details to add them to gear you've already listed. Anything that needs repair or is broken shows in red.",
       },
       {

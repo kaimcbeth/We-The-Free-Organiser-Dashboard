@@ -39,9 +39,10 @@ export function PhotoUploader({
   teamId: string;
   eventId: string | null;
   extra?: {
-    taken_year: number | null;
-    taken_month: number | null;
-    caption: string | null;
+    taken_year?: number | null;
+    taken_month?: number | null;
+    caption?: string | null;
+    tags?: string[];
   };
   label?: string;
   className?: string;

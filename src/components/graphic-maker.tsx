@@ -9,7 +9,9 @@ import {
   loadEventPhotos,
   loadPromoPhotos,
   type EventPhoto,
+  type PhotoTag,
 } from "@/lib/event-photos";
+import { TagFilter } from "@/components/photo-tile";
 
 // Event graphics, drawn in the browser on a canvas from the event's details
 // and the community's own photos, in We The Free colours, downloaded as PNG.
@@ -304,6 +306,7 @@ export function GraphicMaker({
   const [promoPhotos, setPromoPhotos] = useState<EventPhoto[]>([]);
   const [ownPhotos, setOwnPhotos] = useState<EventPhoto[]>([]);
   const [chosen, setChosen] = useState<string | null>(null); // photo id, "" = none
+  const [tag, setTag] = useState<PhotoTag | null>(null);
   const [imgs, setImgs] = useState<HTMLImageElement[]>([]);
   const [logo, setLogo] = useState<HTMLImageElement | null>(null);
   const [reload, setReload] = useState(0); // bumped after an upload
@@ -333,7 +336,8 @@ export function GraphicMaker({
   }, [open, event.teamId, event.eventId, reload]);
 
   // Which photos the current template uses.
-  const pool = template === "recap" ? ownPhotos : promoPhotos;
+  const all = template === "recap" ? ownPhotos : promoPhotos;
+  const pool = tag ? all.filter((p) => p.tags.includes(tag)) : all;
   const pickId = chosen === null ? (pool[0]?.id ?? "") : chosen;
   const urls =
     template === "recap"
@@ -433,11 +437,22 @@ export function GraphicMaker({
                 />
               </div>
 
-              {pool.length > 0 && (
+              {all.length > 0 && (
                 <div className="mt-3">
-                  <p className="mb-1.5 text-xs font-medium text-stone-500">
-                    {template === "recap" ? "Lead photo" : "Photo"}
-                  </p>
+                  <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                    <p className="text-xs font-medium text-stone-500">
+                      {template === "recap" ? "Lead photo" : "Photo"}
+                    </p>
+                    <TagFilter
+                      photos={all}
+                      value={tag}
+                      onChange={(t) => {
+                        setTag(t);
+                        setChosen(null);
+                      }}
+                      small
+                    />
+                  </div>
                   <div className="flex gap-1.5 overflow-x-auto pb-1">
                     {template === "promo" && (
                       <button
