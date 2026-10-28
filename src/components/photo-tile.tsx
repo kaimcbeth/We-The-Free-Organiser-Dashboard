@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PHOTO_TAGS, type EventPhoto, type PhotoTag } from "@/lib/event-photos";
 
@@ -38,8 +39,27 @@ export function PhotoTile({
   canRemove?: boolean;
 }) {
   const item = "block w-full rounded-lg px-2 py-1 text-left hover:bg-stone-100";
+  const box = useRef<HTMLLIElement>(null);
+
+  // An open menu closes when you tap anywhere else, or press Escape.
+  useEffect(() => {
+    if (!open) return;
+    const outside = (e: PointerEvent) => {
+      if (!box.current?.contains(e.target as Node)) onToggle();
+    };
+    const escape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onToggle();
+    };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [open, onToggle]);
+
   return (
-    <li className="relative">
+    <li ref={box} className="relative">
       <button
         type="button"
         onClick={onToggle}
