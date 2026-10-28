@@ -71,7 +71,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "What's new has moved from the tabs to the sparkle button next to the bell (with a pink dot when there's something new), making room for a Funding section.",
+        text: "What's new has moved from the tabs to the sparkle button next to the bell (with a pink dot when there's something new), making room for a new Funding tab (coming soon). Hover over the sparkle to see what it is.",
       },
       {
         level: "organiser",

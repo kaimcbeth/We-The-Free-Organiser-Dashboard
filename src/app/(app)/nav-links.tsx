@@ -45,6 +45,11 @@ export function NavLinks({
     label: "Resources",
     match: (p: string) => p.startsWith("/resources"),
   });
+  links.push({
+    href: "/funding",
+    label: "Funding",
+    match: (p: string) => p.startsWith("/funding"),
+  });
   if (isGod)
     links.push({
       href: "/facebook-groups",

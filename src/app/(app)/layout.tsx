@@ -85,10 +85,15 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
               aria-label={
                 whatsNew ? "What's new (something new)" : "What's new"
               }
-              title="What's new"
               data-tour="whats-new"
-              className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/85 hover:bg-white/10"
+              className="group relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/85 hover:bg-white/10"
             >
+              <span
+                aria-hidden
+                className="pointer-events-none absolute left-1/2 top-full z-50 mt-1 -translate-x-1/2 whitespace-nowrap rounded-lg bg-white px-2 py-1 text-xs font-medium text-navy opacity-0 shadow-md ring-1 ring-black/10 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+              >
+                What&apos;s new{whatsNew ? " (new updates)" : ""}
+              </span>
               <svg
                 viewBox="0 0 24 24"
                 className="h-5 w-5"
