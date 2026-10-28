@@ -244,7 +244,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
 
       {outreachToday ? (
         <Link
-          href="/me/guide"
+          href="/guide"
           className="mt-6 block rounded-2xl bg-pink p-4 text-navy shadow-sm hover:bg-pink-strong"
         >
           <span className="block text-lg font-semibold">
@@ -331,7 +331,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
             </Link>
             {!outreachToday && (
               <Link
-                href="/me/guide"
+                href="/guide"
                 className="mt-3 inline-block text-sm font-medium text-pink-ink hover:underline"
               >
                 Outreach guide →

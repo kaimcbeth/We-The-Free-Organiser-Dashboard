@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "The Outreach guide is now just the conversation questions, and anyone can open it without logging in. In Resources & Training, Show QR code for newcomers gives a code they scan to open it on their phone. If they don't have an account, a small prompt above the questions invites them to create one (it never blocks the questions). Members can show the QR from the bottom of the guide too.",
+      },
+      {
+        level: "organiser",
         text: "Monthly recap posted now has Make carousel: it gathers the month's event photos in event order, with your starred favourites already picked. Tap others to add them, drag to adjust, then share or download.",
       },
     ],

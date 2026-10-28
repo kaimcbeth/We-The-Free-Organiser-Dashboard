@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   "/checkin",
   "/feedback", // volunteer feedback form (secret link per community)
   "/calendar", // calendar feeds (secret link per community; apps can't log in)
+  "/guide", // Outreach guide questions (newcomers scan a QR code for it)
 ];
 
 export async function proxy(request: NextRequest) {

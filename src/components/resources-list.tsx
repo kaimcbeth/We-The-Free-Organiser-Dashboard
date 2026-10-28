@@ -4,12 +4,19 @@ import { useState } from "react";
 import { RESOURCE_SECTIONS, RESOURCES_COMING_SOON } from "@/lib/resources";
 import { GearTracker } from "@/components/gear-tracker";
 import { CommunityPhotos } from "@/components/community-photos";
+import { GuideShare } from "@/components/guide-share";
 
 const has = (q: string, ...text: (string | undefined)[]) =>
   !q || text.some((t) => t?.toLowerCase().includes(q));
 
 // The Resources & Training page (organisers and the Core Team).
-export function ResourcesList({ teamId }: { teamId: string | null }) {
+export function ResourcesList({
+  teamId,
+  teamSlug,
+}: {
+  teamId: string | null;
+  teamSlug: string | null;
+}) {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const sections = RESOURCE_SECTIONS.map((s) => ({
@@ -39,13 +46,13 @@ export function ResourcesList({ teamId }: { teamId: string | null }) {
       />
       {has(q, "outreach guide conversation questions objections ibc") && (
         <a
-          href="/me/guide"
+          href="/guide"
           className="mt-6 flex items-center justify-between rounded-2xl bg-pink px-4 py-3 text-navy"
         >
           <span>
             <span className="block font-semibold">Outreach guide</span>
             <span className="block text-sm">
-              The IBC questions and objections, for a quick look between
+              The conversation questions, for a quick look between
               conversations. Volunteers have it on their page too.
             </span>
           </span>
@@ -54,6 +61,16 @@ export function ResourcesList({ teamId }: { teamId: string | null }) {
           </span>
         </a>
       )}
+      {teamSlug &&
+        has(q, "outreach guide conversation questions qr newcomer") && (
+          <div className="mt-2 text-right">
+            <GuideShare
+              slug={teamSlug}
+              label="Show QR code for newcomers"
+              className="text-sm font-medium text-pink-ink hover:underline"
+            />
+          </div>
+        )}
       {has(q, "welcome mission values onboarding new members first event") && (
         <a
           href="/me/welcome"
