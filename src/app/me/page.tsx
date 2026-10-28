@@ -198,9 +198,18 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     <AttendeeShell right={headerRight}>
       <PreviewBanner />
       {welcome && (
-        <p className="mb-6 rounded-2xl bg-cyan/20 px-4 py-3 text-sm font-medium text-navy">
-          You&apos;re connected. Welcome to We The Free!
-        </p>
+        <Link
+          href="/me/welcome"
+          className="mb-6 block rounded-2xl bg-pink p-4 text-navy shadow-sm hover:bg-pink-strong"
+        >
+          <span className="block text-lg font-semibold">
+            You&apos;re connected. Welcome to We The Free!
+          </span>
+          <span className="text-sm">
+            Start here: who we are, what we stand for and your first event (2
+            minutes) →
+          </span>
+        </Link>
       )}
       <PhotoPicker
         personId={me.id}
@@ -314,6 +323,12 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
               )}
               {sinceLabel && <li>With We The Free since {sinceLabel}.</li>}
             </ul>
+            <Link
+              href="/me/welcome"
+              className="mr-4 mt-3 inline-block text-sm font-medium text-pink-ink hover:underline"
+            >
+              Welcome to We The Free →
+            </Link>
             {!outreachToday && (
               <Link
                 href="/me/guide"
@@ -326,7 +341,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
         );
       })()}
 
-      <section className="mt-8">
+      <section id="coming-up" className="mt-8 scroll-mt-4">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
           Coming up
         </h2>

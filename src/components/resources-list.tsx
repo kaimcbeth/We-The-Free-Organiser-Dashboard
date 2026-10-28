@@ -38,7 +38,7 @@ export function ResourcesList({ teamId }: { teamId: string | null }) {
       />
       {has(q, "outreach guide conversation questions objections ibc") && (
         <a
-          href="/guide"
+          href="/me/guide"
           className="mt-6 flex items-center justify-between rounded-2xl bg-pink px-4 py-3 text-navy"
         >
           <span>
@@ -46,6 +46,23 @@ export function ResourcesList({ teamId }: { teamId: string | null }) {
             <span className="block text-sm">
               The IBC questions and objections, for a quick look between
               conversations. Volunteers have it on their page too.
+            </span>
+          </span>
+          <span aria-hidden className="text-xl">
+            →
+          </span>
+        </a>
+      )}
+      {has(q, "welcome mission values onboarding new members first event") && (
+        <a
+          href="/me/welcome"
+          className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+        >
+          <span>
+            <span className="block font-semibold">Welcome to We The Free</span>
+            <span className="block text-sm text-stone-600">
+              Mission, values and what to expect at a first event, in five short
+              cards. New members see it when they connect.
             </span>
           </span>
           <span aria-hidden className="text-xl">

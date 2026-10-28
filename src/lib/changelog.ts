@@ -62,6 +62,20 @@ export const COMING_SOON: { title: string; text: string }[] = [
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-10-28",
+    title: "Welcome to We The Free",
+    changes: [
+      {
+        level: "organiser",
+        text: "New members get a short welcome when they connect: our mission, why we do it, our values, how we show up, and what to expect at a first event. It's also in Resources & Training to share.",
+      },
+      {
+        level: "organiser",
+        text: "Fixed: the Outreach guide link in Resources & Training.",
+      },
+    ],
+  },
+  {
     date: "2026-10-25",
     title: "Volunteers: who's coming, reminders and impact",
     changes: [
