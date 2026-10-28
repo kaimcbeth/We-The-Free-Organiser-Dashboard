@@ -26,7 +26,10 @@ export function Option({ text }: { text: string }) {
       <textarea
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        rows={Math.min(10, Math.max(2, Math.ceil(value.length / 55)))}
+        rows={Math.min(
+          24,
+          Math.max(2, value.split("\n").length, Math.ceil(value.length / 55)),
+        )}
         className="w-full resize-y bg-transparent text-sm leading-relaxed text-stone-800 focus:outline-none"
       />
       <div className="mt-1 flex justify-end gap-2">
@@ -182,6 +185,28 @@ export function CopyMaker({
   const [options, setOptions] = useState<Record<string, string[]> | null>(null);
   const [round, setRound] = useState(0);
   const [showVoice, setShowVoice] = useState(false);
+  const [outreach, setOutreach] = useState(false);
+  const [target, setTarget] = useState("20");
+
+  // Upcoming outreach: WhatsApp posts get a sign-up list of who's coming.
+  useEffect(() => {
+    if (!open || past) return;
+    createClient()
+      .from("events")
+      .select("event_type:event_types(counts_as_outreach)")
+      .eq("id", eventId)
+      .maybeSingle()
+      .then(({ data }) => {
+        const t = data?.event_type as
+          | { counts_as_outreach: boolean }
+          | { counts_as_outreach: boolean }[]
+          | null
+          | undefined;
+        const one = Array.isArray(t) ? t[0] : t;
+        setOutreach(!!one?.counts_as_outreach);
+      });
+  }, [open, past, eventId]);
+  const signUp = outreach && !past && places.has("whatsapp");
 
   async function write() {
     setError("");
@@ -189,7 +214,12 @@ export function CopyMaker({
     const { data, error: e } = await createClient().functions.invoke(
       "write-copy",
       {
-        body: { eventId, platforms: [...places], note },
+        body: {
+          eventId,
+          platforms: [...places],
+          note,
+          target: signUp ? Number(target) || 20 : undefined,
+        },
       },
     );
     setBusy(false);
@@ -256,6 +286,26 @@ export function CopyMaker({
               className="mt-1 w-full rounded-xl bg-white p-2 text-sm font-normal ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
             />
           </label>
+          {signUp && (
+            <label className="mt-3 flex items-center gap-2 text-sm font-medium text-stone-700">
+              How many people do you need?
+              <input
+                type="number"
+                min={1}
+                max={100}
+                inputMode="numeric"
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
+                className="w-16 rounded-lg bg-white px-2 py-1 text-sm font-normal ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
+              />
+            </label>
+          )}
+          {signUp && (
+            <p className="mt-1 text-xs text-stone-500">
+              The WhatsApp post ends with a numbered list: everyone who&apos;s
+              said Going so far, then empty lines up to this number.
+            </p>
+          )}
           <button
             type="button"
             disabled={busy || places.size === 0}

@@ -51,6 +51,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     if (body?.purpose === "feedback") return await feedbackCopy(asUser, user.id, key, body);
     const { eventId, platforms, note } = body;
+    const target = Math.min(100, Math.max(1, Math.round(Number(body?.target) || 20)));
     const wanted = ((platforms as string[]) ?? []).filter((p) => p in PLATFORMS);
     if (!eventId || wanted.length === 0) return json({ error: "Pick at least one place to post." }, 400);
 
@@ -124,6 +125,34 @@ Deno.serve(async (req) => {
             .join("\n")}`,
         );
     }
+    // Upcoming outreach on WhatsApp: a sign-up list of who's said Going so far,
+    // then empty numbered lines up to the target. Built here, not by the AI,
+    // so no names are invented or left out. WhatsApp only: it's the private
+    // community chat, not a public post.
+    let signUp = "";
+    if (!past && ev.event_type?.counts_as_outreach && wanted.includes("whatsapp")) {
+      const { data: going } = await admin
+        .from("event_rsvps")
+        .select("updated_at, person:people(first_name, last_name)")
+        .eq("event_id", ev.id)
+        .eq("status", "going")
+        .order("updated_at");
+      // deno-lint-ignore no-explicit-any
+      const ppl = (going ?? []).map((g: any) => g.person).filter(Boolean) as { first_name: string; last_name: string | null }[];
+      const firstCount = new Map<string, number>();
+      for (const p of ppl) firstCount.set(p.first_name.trim().toLowerCase(), (firstCount.get(p.first_name.trim().toLowerCase()) ?? 0) + 1);
+      // Two Ryans: add a last initial so people can tell them apart.
+      const names = ppl.map((p) => {
+        const f = p.first_name.trim();
+        const dup = (firstCount.get(f.toLowerCase()) ?? 0) > 1 && p.last_name?.trim();
+        return dup ? `${f} ${p.last_name!.trim()[0].toUpperCase()}` : f;
+      });
+      const slots = Math.max(target, names.length + 2);
+      signUp = Array.from({ length: slots }, (_, i) => `${i + 1}. ${names[i] ?? ""}`.trimEnd()).join("\n");
+      facts.push(
+        `WhatsApp only: this is a sign-up call-out. Ask people to lock in whether they're coming, and say we're aiming for ${target} people. ${names.length ? `${names.length} ${names.length === 1 ? "has" : "have"} said they're coming so far.` : "Nobody has said they're coming yet."} End by asking them to add their name to the list below. Don't write the list or any names: it's added after your message.`,
+      );
+    }
     if (note && String(note).trim()) facts.push(`From the organiser (use this, it's the heart of the post): ${String(note).slice(0, 600)}`);
 
     const { data: voice } = await admin
@@ -171,6 +200,7 @@ Reply with JSON only, no other text, shaped like {${wanted.map((p) => `"${p}": [
     // Belt and braces: no dashes as punctuation.
     for (const p of Object.keys(options))
       options[p] = (options[p] ?? []).map((s) => String(s).replace(/\s*[—–]\s*/g, ", ").trim()).slice(0, 3);
+    if (signUp && options.whatsapp) options.whatsapp = options.whatsapp.map((s) => `${s}\n\n${signUp}`);
 
     await admin.from("copy_generations").insert({ team_id: ev.team_id, event_id: ev.id, user_id: user.id });
     return json({ options, past });
