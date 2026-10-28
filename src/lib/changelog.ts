@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "What's new has moved from the tabs to the sparkle button next to the bell (with a pink dot when there's something new), making room for a Funding section.",
+      },
+      {
+        level: "organiser",
         text: "The Outreach guide is now just the conversation questions, and anyone can open it without logging in. In Resources & Training, Show QR code for newcomers gives a code they scan to open it on their phone. If they don't have an account, a small prompt above the questions invites them to create one (it never blocks the questions). Members can show the QR from the bottom of the guide too.",
       },
       {

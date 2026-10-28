@@ -54,6 +54,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     ? [me.first_name, me.last_name].filter(Boolean).join(" ")
     : organiser.name;
 
+  const whatsNew =
+    (await cookies()).get("whats_new_seen")?.value !== LATEST_CHANGE;
   return (
     <div className="flex flex-1 flex-col">
       <header className="sticky top-0 z-10 bg-navy text-white">
@@ -76,6 +78,34 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             </span>
           </Link>
           <div className="flex min-w-0 items-center gap-1">
+            {/* What's new: a small link by the bell (not a tab), with a dot
+                when something's changed since they last looked. */}
+            <Link
+              href="/whats-new"
+              aria-label={
+                whatsNew ? "What's new (something new)" : "What's new"
+              }
+              title="What's new"
+              data-tour="whats-new"
+              className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/85 hover:bg-white/10"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z" />
+                <path d="M19 15l.8 1.7 1.7.8-1.7.8L19 20l-.8-1.7-1.7-.8 1.7-.8z" />
+              </svg>
+              {whatsNew && (
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-pink ring-2 ring-navy" />
+              )}
+            </Link>
             <NotificationBell
               supabase={supabase}
               userId={user.id}
@@ -103,13 +133,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             </Link>
           </div>
         </div>
-        <NavLinks
-          openTasks={openTasks ?? 0}
-          isGod={organiser.role === "god"}
-          whatsNew={
-            (await cookies()).get("whats_new_seen")?.value !== LATEST_CHANGE
-          }
-        />
+        <NavLinks openTasks={openTasks ?? 0} isGod={organiser.role === "god"} />
       </header>
       <StaffBar
         teams={organiser.teams.map((t) => ({ id: t.id, name: t.name }))}

@@ -25,11 +25,9 @@ const LINKS = [
 export function NavLinks({
   openTasks = 0,
   isGod = false,
-  whatsNew = false,
 }: {
   openTasks?: number;
   isGod?: boolean;
-  whatsNew?: boolean; // something new since they last looked
 }) {
   const path = usePathname();
   // Calendar lives inside Events (List | Calendar switch on the page).
@@ -46,11 +44,6 @@ export function NavLinks({
     href: "/resources",
     label: "Resources",
     match: (p: string) => p.startsWith("/resources"),
-  });
-  links.push({
-    href: "/whats-new",
-    label: "What's new",
-    match: (p: string) => p.startsWith("/whats-new"),
   });
   if (isGod)
     links.push({
@@ -74,12 +67,6 @@ export function NavLinks({
             }`}
           >
             {l.label}
-            {l.href === "/whats-new" && whatsNew && (
-              <span
-                aria-label="New"
-                className="ml-1 inline-block h-2 w-2 rounded-full bg-pink align-middle"
-              />
-            )}
             {l.href === "/tasks" && openTasks > 0 && (
               <span className="ml-1.5 rounded-full bg-pink px-1.5 py-0.5 text-[10px] font-bold text-navy">
                 {openTasks}
