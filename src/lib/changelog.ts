@@ -39,8 +39,8 @@ export const COMING_SOON: { title: string; text: string }[] = [
     text: "A step-by-step training path for new outreach volunteers, in Resources & Training.",
   },
   {
-    title: "3MMC equipment guide",
-    text: "What gear you need, how to set it up and how to pack it away.",
+    title: "Equipment set-up and pack-down",
+    text: "How to set up the Movie Challenge gear and pack it away (what to buy is in the Equipment guide now).",
   },
   {
     title: "Recommended Movie Challenge prizes",
@@ -69,6 +69,10 @@ export const CHANGELOG: Release[] = [
     date: "2026-10-29",
     title: "Monthly recap carousel",
     changes: [
+      {
+        level: "organiser",
+        text: "Equipment guide in Resources & Training: the basic kit recommended for every team (table, signs, headphones and splitters), with where to buy each in Australia.",
+      },
       {
         level: "organiser",
         text: "What's new has moved from the tabs to the sparkle button next to the bell (with a pink dot when there's something new), making room for a new Funding tab (coming soon). Hover over the sparkle to see what it is.",

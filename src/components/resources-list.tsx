@@ -5,6 +5,7 @@ import { RESOURCE_SECTIONS, RESOURCES_COMING_SOON } from "@/lib/resources";
 import { GearTracker } from "@/components/gear-tracker";
 import { CommunityPhotos } from "@/components/community-photos";
 import { GuideShare } from "@/components/guide-share";
+import { EQUIPMENT_GUIDE } from "@/lib/resources";
 
 const has = (q: string, ...text: (string | undefined)[]) =>
   !q || text.some((t) => t?.toLowerCase().includes(q));
@@ -133,6 +134,53 @@ export function ResourcesList({
           </ul>
         </section>
       ))}
+      {has(
+        q,
+        "equipment guide gear buy table signs headphones splitters kit australia",
+      ) && (
+        <section id="equipment" className="mt-6">
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
+            Equipment guide
+          </h2>
+          {EQUIPMENT_GUIDE.map((g) => (
+            <div
+              key={g.area}
+              className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="font-semibold">The basic kit for every team</h3>
+                <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
+                  {g.area}
+                </span>
+              </div>
+              <ul className="mt-2 divide-y divide-black/5">
+                {g.items.map((i) => (
+                  <li key={i.url} className="py-2.5">
+                    <a
+                      href={i.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-start justify-between gap-3"
+                    >
+                      <span>
+                        <span className="block font-medium text-navy group-hover:underline">
+                          {i.name}
+                        </span>
+                        <span className="block text-sm text-stone-600">
+                          {i.about}
+                        </span>
+                      </span>
+                      <span className="shrink-0 pt-0.5 text-xs text-stone-500">
+                        {i.shop} ↗
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </section>
+      )}
       {teamId && !q && <GearTracker teamId={teamId} />}
       {teamId && !q && <CommunityPhotos teamId={teamId} />}
       {soon.length > 0 && (
