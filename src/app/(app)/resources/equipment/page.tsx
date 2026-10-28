@@ -16,7 +16,9 @@ export default async function EquipmentPage() {
       >
         ← Resources &amp; Training
       </Link>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight">Equipment</h1>
+      <h1 className="mt-2 text-2xl font-semibold tracking-tight">
+        Equipment guide and inventory
+      </h1>
       <p className="mt-1 text-stone-600">
         What to buy for the Movie Challenge and where, what your community
         already has, and who has it.

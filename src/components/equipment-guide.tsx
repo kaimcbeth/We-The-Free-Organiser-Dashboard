@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { GearTracker } from "@/components/gear-tracker";
 import { EQUIPMENT_GUIDE, type EquipmentItem } from "@/lib/resources";
@@ -8,7 +8,34 @@ import { EQUIPMENT_GUIDE, type EquipmentItem } from "@/lib/resources";
 // Equipment: the recommended kit (base kit, then upgrades) with where to buy
 // it, which of it the community already has, and the community's gear list
 // (who has what). "We have it" adds the item to the gear list.
+// Hiding the recommendations is remembered on this device.
+const HIDE_KEY = "equipment-hide-recommendations";
+const listeners = new Set<() => void>();
+function readHidden() {
+  try {
+    return localStorage.getItem(HIDE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+function setHidden(v: boolean) {
+  try {
+    if (v) localStorage.setItem(HIDE_KEY, "1");
+    else localStorage.removeItem(HIDE_KEY);
+  } catch {}
+  listeners.forEach((l) => l());
+}
+function subscribe(l: () => void) {
+  listeners.add(l);
+  return () => {
+    listeners.delete(l);
+  };
+}
+
 export function Equipment({ teamId }: { teamId: string | null }) {
+  const stored = useSyncExternalStore(subscribe, readHidden, () => false);
+  // Only an inventory to show if there's a community to keep one for.
+  const hidden = !!teamId && stored;
   const [version, setVersion] = useState(0);
   const [have, setHave] = useState<Set<string>>(new Set());
   const bump = () => setVersion((v) => v + 1);
@@ -50,40 +77,35 @@ export function Equipment({ teamId }: { teamId: string | null }) {
 
   return (
     <div className="space-y-6">
-      {EQUIPMENT_GUIDE.map((g) => (
-        <div key={g.area} className="space-y-6">
-          <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="font-semibold">Base kit</h2>
-              <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
-                {g.area}
-              </span>
-              {teamId && (
-                <span className="ml-auto text-sm text-stone-500">
-                  You have {g.items.filter((i) => have.has(i.key)).length} of{" "}
-                  {g.items.length}
-                </span>
-              )}
-            </div>
-            <ul className="mt-2 divide-y divide-black/5">
-              {g.items.map((i) => (
-                <EquipmentRow
-                  key={i.key}
-                  item={i}
-                  has={have.has(i.key)}
-                  onHave={teamId ? (opt) => add(i, opt) : undefined}
-                />
-              ))}
-            </ul>
-          </section>
-          {g.upgrades.length > 0 && (
+      {teamId && (
+        <div className="-mt-2 text-right">
+          <button
+            type="button"
+            onClick={() => setHidden(!hidden)}
+            className="text-sm font-medium text-stone-500 hover:text-stone-800 hover:underline"
+          >
+            {hidden ? "Show recommendations" : "Hide recommendations"}
+          </button>
+        </div>
+      )}
+      {!hidden &&
+        EQUIPMENT_GUIDE.map((g) => (
+          <div key={g.area} className="space-y-6">
             <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-              <h2 className="font-semibold">Upgrades</h2>
-              <p className="text-sm text-stone-500">
-                Nice to have once the base kit is sorted.
-              </p>
-              <ul className="mt-1 divide-y divide-black/5">
-                {g.upgrades.map((i) => (
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-semibold">Base kit</h2>
+                <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
+                  {g.area}
+                </span>
+                {teamId && (
+                  <span className="ml-auto text-sm text-stone-500">
+                    You have {g.items.filter((i) => have.has(i.key)).length} of{" "}
+                    {g.items.length}
+                  </span>
+                )}
+              </div>
+              <ul className="mt-2 divide-y divide-black/5">
+                {g.items.map((i) => (
                   <EquipmentRow
                     key={i.key}
                     item={i}
@@ -93,9 +115,26 @@ export function Equipment({ teamId }: { teamId: string | null }) {
                 ))}
               </ul>
             </section>
-          )}
-        </div>
-      ))}
+            {g.upgrades.length > 0 && (
+              <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+                <h2 className="font-semibold">Upgrades</h2>
+                <p className="text-sm text-stone-500">
+                  Nice to have once the base kit is sorted.
+                </p>
+                <ul className="mt-1 divide-y divide-black/5">
+                  {g.upgrades.map((i) => (
+                    <EquipmentRow
+                      key={i.key}
+                      item={i}
+                      has={have.has(i.key)}
+                      onHave={teamId ? (opt) => add(i, opt) : undefined}
+                    />
+                  ))}
+                </ul>
+              </section>
+            )}
+          </div>
+        ))}
       {teamId && (
         <GearTracker teamId={teamId} version={version} onChanged={bump} />
       )}

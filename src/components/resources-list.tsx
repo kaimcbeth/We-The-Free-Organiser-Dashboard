@@ -136,7 +136,7 @@ export function ResourcesList({
       ))}
       {has(
         q,
-        "equipment guide gear buy table signs headphones splitters a-frame kit australia",
+        "equipment guide inventory gear buy table signs headphones splitters a-frame kit australia",
       ) && (
         <a
           href={`${path.replace(/\/$/, "")}/equipment`}
@@ -144,7 +144,9 @@ export function ResourcesList({
         >
           <span>
             <span className="flex flex-wrap items-center gap-2">
-              <span className="font-semibold">Equipment</span>
+              <span className="font-semibold">
+                Equipment guide and inventory
+              </span>
               <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
                 Australia
               </span>
