@@ -35,7 +35,15 @@ const since = (iso: string) =>
   new Date(iso).toLocaleDateString("en-AU", { day: "numeric", month: "short" });
 
 // Your community's kit and who has it right now.
-export function GearTracker({ teamId }: { teamId: string }) {
+export function GearTracker({
+  teamId,
+  version = 0,
+  onChanged,
+}: {
+  teamId: string;
+  version?: number; // bump to reload (e.g. after the guide adds something)
+  onChanged?: () => void; // after adding, editing or removing gear
+}) {
   const [gear, setGear] = useState<Gear[] | null>(null);
   const [people, setPeople] = useState<Person[]>([]);
   const [adding, setAdding] = useState(false);
@@ -55,7 +63,7 @@ export function GearTracker({ teamId }: { teamId: string }) {
       .eq("is_test", false)
       .order("first_name")
       .then(({ data }) => setPeople((data as Person[]) ?? []));
-  }, [teamId]);
+  }, [teamId, version]);
 
   const byId = useMemo(() => new Map(people.map((p) => [p.id, p])), [people]);
 
@@ -70,6 +78,7 @@ export function GearTracker({ teamId }: { teamId: string }) {
       [...(g ?? []), data as Gear].sort((a, b) => a.name.localeCompare(b.name)),
     );
     setAdding(false);
+    onChanged?.();
     return "";
   }
 
@@ -85,6 +94,7 @@ export function GearTracker({ teamId }: { teamId: string }) {
         .sort((a, b) => a.name.localeCompare(b.name)),
     );
     setEditing(null);
+    onChanged?.();
     return "";
   }
 
@@ -109,13 +119,14 @@ export function GearTracker({ teamId }: { teamId: string }) {
     setGear((g) => (g ?? []).filter((x) => x.id !== item.id));
     setMoving(null);
     await createClient().from("gear_items").delete().eq("id", item.id);
+    onChanged?.();
   }
 
   return (
     <section id="gear" className="mt-6">
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-          Gear
+          Your gear
         </h2>
         {!adding && (
           <button
@@ -123,7 +134,7 @@ export function GearTracker({ teamId }: { teamId: string }) {
             onClick={() => setAdding(true)}
             className="text-sm font-semibold text-pink-ink hover:underline"
           >
-            + Add gear
+            + Add your own
           </button>
         )}
       </div>
@@ -139,8 +150,9 @@ export function GearTracker({ teamId }: { teamId: string }) {
       ) : gear.length === 0 ? (
         !adding && (
           <p className="rounded-2xl border border-dashed border-stone-300 px-4 py-4 text-sm text-stone-500">
-            Add your community&apos;s kit (laptops, screens, gazebo, signs) and
-            keep track of who has each thing.
+            Everything your community owns, including things that aren&apos;t on
+            the list above (laptops, screens, gazebo…). Tap We have it on the
+            list, or Add your own, then keep track of who has each thing.
           </p>
         )
       ) : (

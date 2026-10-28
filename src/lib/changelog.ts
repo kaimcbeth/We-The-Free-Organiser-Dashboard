@@ -71,7 +71,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "Equipment guide in Resources & Training: the basic kit recommended for every team (table, signs, headphones and splitters), with where to buy each in Australia.",
+        text: "Equipment in Resources & Training: the recommended base kit (table, signs, headphones and splitters) and upgrades (A-frame sign), with Budget and Best options and where to buy each in Australia. Tap We have it to add an item to your gear, and Add your own for anything else your community owns. Gear (who has what) now lives on the same page.",
       },
       {
         level: "organiser",

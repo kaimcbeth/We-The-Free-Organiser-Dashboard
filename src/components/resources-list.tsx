@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { RESOURCE_SECTIONS, RESOURCES_COMING_SOON } from "@/lib/resources";
-import { GearTracker } from "@/components/gear-tracker";
 import { CommunityPhotos } from "@/components/community-photos";
 import { GuideShare } from "@/components/guide-share";
-import { EQUIPMENT_GUIDE } from "@/lib/resources";
 
 const has = (q: string, ...text: (string | undefined)[]) =>
   !q || text.some((t) => t?.toLowerCase().includes(q));
@@ -18,6 +17,7 @@ export function ResourcesList({
   teamId: string | null;
   teamSlug: string | null;
 }) {
+  const path = usePathname();
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const sections = RESOURCE_SECTIONS.map((s) => ({
@@ -136,52 +136,29 @@ export function ResourcesList({
       ))}
       {has(
         q,
-        "equipment guide gear buy table signs headphones splitters kit australia",
+        "equipment guide gear buy table signs headphones splitters a-frame kit australia",
       ) && (
-        <section id="equipment" className="mt-6">
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
-            Equipment guide
-          </h2>
-          {EQUIPMENT_GUIDE.map((g) => (
-            <div
-              key={g.area}
-              className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
-            >
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="font-semibold">The basic kit for every team</h3>
-                <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
-                  {g.area}
-                </span>
-              </div>
-              <ul className="mt-2 divide-y divide-black/5">
-                {g.items.map((i) => (
-                  <li key={i.url} className="py-2.5">
-                    <a
-                      href={i.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group flex items-start justify-between gap-3"
-                    >
-                      <span>
-                        <span className="block font-medium text-navy group-hover:underline">
-                          {i.name}
-                        </span>
-                        <span className="block text-sm text-stone-600">
-                          {i.about}
-                        </span>
-                      </span>
-                      <span className="shrink-0 pt-0.5 text-xs text-stone-500">
-                        {i.shop} ↗
-                      </span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </section>
+        <a
+          href={`${path.replace(/\/$/, "")}/equipment`}
+          className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+        >
+          <span>
+            <span className="flex flex-wrap items-center gap-2">
+              <span className="font-semibold">Equipment</span>
+              <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
+                Australia
+              </span>
+            </span>
+            <span className="block text-sm text-stone-600">
+              The base kit, upgrades and where to buy them. Mark what your
+              community has, and keep track of who has each thing.
+            </span>
+          </span>
+          <span aria-hidden className="text-xl">
+            →
+          </span>
+        </a>
       )}
-      {teamId && !q && <GearTracker teamId={teamId} />}
       {teamId && !q && <CommunityPhotos teamId={teamId} />}
       {soon.length > 0 && (
         <section className="mt-6">
