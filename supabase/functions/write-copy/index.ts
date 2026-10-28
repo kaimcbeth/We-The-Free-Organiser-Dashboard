@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
         );
     }
     // Upcoming outreach on WhatsApp: a sign-up list of who's said Going so far,
-    // then empty numbered lines up to the target. Built here, not by the AI,
+    // then numbered blanks (__________) up to the target. Built here, not by the AI,
     // so no names are invented or left out. WhatsApp only: it's the private
     // community chat, not a public post.
     let signUp = "";
@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
         return dup ? `${f} ${p.last_name!.trim()[0].toUpperCase()}` : f;
       });
       const slots = Math.max(target, names.length + 2);
-      signUp = Array.from({ length: slots }, (_, i) => `${i + 1}. ${names[i] ?? ""}`.trimEnd()).join("\n");
+      signUp = Array.from({ length: slots }, (_, i) => `${i + 1}. ${names[i] ?? "__________"}`).join("\n");
       facts.push(
         `WhatsApp only: this is a sign-up call-out. Ask people to lock in whether they're coming, and say we're aiming for ${target} people. ${names.length ? `${names.length} ${names.length === 1 ? "has" : "have"} said they're coming so far.` : "Nobody has said they're coming yet."} End by asking them to add their name to the list below. Don't write the list or any names: it's added after your message.`,
       );
