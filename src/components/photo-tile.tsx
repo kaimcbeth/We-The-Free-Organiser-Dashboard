@@ -34,6 +34,8 @@ export function PhotoTile({
   onToggle,
   onChange,
   canRemove = false,
+  selected,
+  onSelect,
 }: {
   p: EventPhoto;
   teamId: string;
@@ -41,6 +43,9 @@ export function PhotoTile({
   onToggle: () => void;
   onChange: (c: PhotoChange) => void;
   canRemove?: boolean;
+  // Select mode (bulk changes): tapping ticks the photo instead.
+  selected?: boolean;
+  onSelect?: () => void;
 }) {
   const item = "block w-full rounded-lg px-2 py-1 text-left hover:bg-stone-100";
   const box = useRef<HTMLLIElement>(null);
@@ -67,8 +72,9 @@ export function PhotoTile({
     <li ref={box} className="relative">
       <button
         type="button"
-        onClick={onToggle}
-        className={`block aspect-square w-full overflow-hidden rounded-xl bg-stone-200 ${open ? "ring-2 ring-pink ring-offset-2" : ""}`}
+        onClick={onSelect ?? onToggle}
+        aria-pressed={onSelect ? !!selected : undefined}
+        className={`block aspect-square w-full overflow-hidden rounded-xl bg-stone-200 ${open || selected ? "ring-2 ring-pink ring-offset-2" : ""}`}
         title={p.caption ?? undefined}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
@@ -88,7 +94,15 @@ export function PhotoTile({
           🚫
         </span>
       )}
-      {open && (
+      {onSelect && (
+        <span
+          aria-hidden
+          className={`pointer-events-none absolute bottom-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ring-2 ring-white ${selected ? "bg-pink text-navy" : "bg-black/30 text-transparent"}`}
+        >
+          ✓
+        </span>
+      )}
+      {open && !onSelect && (
         <div className="absolute inset-x-0 top-full z-20 mt-1 space-y-1 rounded-xl bg-white p-1.5 text-xs shadow-lg ring-1 ring-black/10">
           {p.caption && <p className="px-2 py-1 text-stone-500">{p.caption}</p>}
           <div className="flex flex-wrap gap-1 px-1 pb-1">
@@ -222,6 +236,131 @@ export function TagFilter({
           {t.label} <span className="opacity-60">{t.n}</span>
         </button>
       ))}
+    </div>
+  );
+}
+
+// Bulk changes for the photos ticked in select mode: tags (on for all, or off
+// for all if they all have it already), favourite, not for promo, remove.
+export function BulkBar({
+  photos,
+  total,
+  onApply,
+  onSelectAll,
+  onDone,
+  canRemove = false,
+}: {
+  photos: EventPhoto[]; // the selected ones
+  total: number; // how many could be selected
+  onApply: (change: (p: EventPhoto) => PhotoChange) => void;
+  onSelectAll: () => void;
+  onDone: () => void;
+  canRemove?: boolean;
+}) {
+  const [sure, setSure] = useState(false);
+  const n = photos.length;
+  const chip =
+    "rounded-full px-2.5 py-1 text-xs font-medium ring-1 disabled:opacity-40";
+  const allFav = n > 0 && photos.every((p) => p.favourite);
+  const allNoPromo = n > 0 && photos.every((p) => p.noPromo);
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-white/95 px-4 pb-5 pt-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur">
+      <div className="mx-auto max-w-2xl space-y-2">
+        <div className="flex items-center justify-between gap-3 text-sm">
+          <span className="font-semibold text-navy">
+            {n} selected
+            {n < total && (
+              <button
+                type="button"
+                onClick={onSelectAll}
+                className="ml-3 font-medium text-pink-ink hover:underline"
+              >
+                Select all {total}
+              </button>
+            )}
+          </span>
+          <button
+            type="button"
+            onClick={onDone}
+            className="rounded-lg px-3 py-1 font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50"
+          >
+            Done
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {PHOTO_TAGS.map((t) => {
+            const all = n > 0 && photos.every((p) => p.tags.includes(t.id));
+            return (
+              <button
+                key={t.id}
+                type="button"
+                disabled={n === 0}
+                onClick={() =>
+                  onApply((p) => ({
+                    tags: all
+                      ? p.tags.filter((x) => x !== t.id)
+                      : p.tags.includes(t.id)
+                        ? p.tags
+                        : [...p.tags, t.id],
+                  }))
+                }
+                className={`${chip} ${all ? "bg-navy text-white ring-navy" : "bg-white text-stone-600 ring-stone-300"}`}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            disabled={n === 0}
+            onClick={() => onApply(() => ({ favourite: !allFav }))}
+            className={`${chip} bg-white text-stone-700 ring-stone-300`}
+          >
+            {allFav ? "Unstar" : "Favourite"}
+          </button>
+          <button
+            type="button"
+            disabled={n === 0}
+            onClick={() => onApply(() => ({ noPromo: !allNoPromo }))}
+            className={`${chip} bg-white text-stone-700 ring-stone-300`}
+          >
+            {allNoPromo ? "Use in promo again" : "Not for promo"}
+          </button>
+          {canRemove &&
+            (sure ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSure(false);
+                    onApply(() => ({ remove: true }));
+                  }}
+                  className={`${chip} bg-red-700 text-white ring-red-700`}
+                >
+                  Remove {n}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSure(false)}
+                  className={`${chip} bg-white text-stone-600 ring-stone-300`}
+                >
+                  Keep
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                disabled={n === 0}
+                onClick={() => setSure(true)}
+                className={`${chip} bg-white text-red-700 ring-stone-300`}
+              >
+                Remove
+              </button>
+            ))}
+        </div>
+      </div>
     </div>
   );
 }

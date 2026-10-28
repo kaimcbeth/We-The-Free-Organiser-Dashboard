@@ -10,6 +10,7 @@ import {
 } from "@/lib/event-photos";
 import { PhotoUploader } from "@/components/photo-uploader";
 import {
+  BulkBar,
   PhotoTile,
   savePhoto,
   TagFilter,
@@ -51,6 +52,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
   const [caption, setCaption] = useState("");
   const [tags, setTags] = useState<PhotoTag[]>([]);
   const [filter, setFilter] = useState<PhotoTag | null>(null);
+  const [sel, setSel] = useState<Set<string> | null>(null); // select mode
 
   useEffect(() => {
     let live = true;
@@ -70,6 +72,12 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
         .map((x) => (x.id === p.id ? { ...x, ...c } : x)),
     );
     savePhoto(p.id, c);
+  }
+
+  function bulk(make: (p: EventPhoto) => PhotoChange) {
+    const chosen = (photos ?? []).filter((x) => sel?.has(x.id));
+    for (const p of chosen) change(p, make(p));
+    if (chosen.length && make(chosen[0]).remove) setSel(new Set());
   }
 
   // eslint-disable-next-line react-hooks/purity -- only used for the year list
@@ -178,7 +186,21 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
       ) : (
         <>
           <div className="mt-3">
-            <TagFilter photos={photos} value={filter} onChange={setFilter} />
+            <div className="flex items-start justify-between gap-3">
+              <TagFilter photos={photos} value={filter} onChange={setFilter} />
+              {photos.length > 1 && !sel && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(null);
+                    setSel(new Set());
+                  }}
+                  className="ml-auto shrink-0 text-sm font-medium text-stone-500 hover:text-stone-800 hover:underline"
+                >
+                  Select
+                </button>
+              )}
+            </div>
           </div>
           {groups.map((g) => (
             <div key={g.label} className="mt-4">
@@ -198,11 +220,46 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                     onToggle={() => setOpen(open === p.id ? null : p.id)}
                     onChange={(c) => change(p, c)}
                     canRemove
+                    selected={sel?.has(p.id)}
+                    onSelect={
+                      sel
+                        ? () =>
+                            setSel((s) => {
+                              const n = new Set(s);
+                              if (n.has(p.id)) n.delete(p.id);
+                              else n.add(p.id);
+                              return n;
+                            })
+                        : undefined
+                    }
                   />
                 ))}
               </ul>
             </div>
           ))}
+        </>
+      )}
+      {sel && photos && (
+        <>
+          <div className="h-40" aria-hidden />
+          <BulkBar
+            photos={photos.filter((p) => sel.has(p.id))}
+            total={
+              photos.filter((x) => !filter || x.tags.includes(filter)).length
+            }
+            onApply={bulk}
+            onSelectAll={() =>
+              setSel(
+                new Set(
+                  photos
+                    .filter((x) => !filter || x.tags.includes(filter))
+                    .map((p) => p.id),
+                ),
+              )
+            }
+            onDone={() => setSel(null)}
+            canRemove
+          />
         </>
       )}
     </section>

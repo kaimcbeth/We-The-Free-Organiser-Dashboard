@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Bulk changes for photos: tap Select on an event's photos or Community photos, tick the ones you want (or Select all), then tag, favourite, mark not for promo or remove them all at once.",
+      },
+      {
+        level: "organiser",
         text: "Equipment guide and inventory in Resources & Training: the recommended base kit (table, signs, headphones and splitters) and upgrades (A-frame sign), with Budget and Best options and where to buy each in Australia. Tap We have it to add an item to your gear, and Add your own for anything else your community owns. Gear (who has what) now lives on the same page, and Hide recommendations shows just your inventory.",
       },
       {
