@@ -11,6 +11,7 @@ import { DEFAULT_TEAM_SLUG } from "@/lib/teams";
 import { DEFAULT_TZ, formatEventDate, setRequestTz } from "@/lib/time";
 import { ProfileForm } from "./profile-form";
 import { PhotoPicker } from "@/components/photo-picker";
+import { Avatar } from "@/components/avatar";
 import { signPhotos } from "@/lib/photos";
 import { NotificationBell } from "@/components/notification-bell";
 import { WhatsAppJoin } from "@/components/whatsapp";
@@ -192,7 +193,53 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
   const now = Date.now();
 
   return (
-    <AttendeeShell right={headerRight}>
+    <AttendeeShell
+      community={
+        (me.team?.name ?? "").replace(/, (Australia|New Zealand)$/, "") || null
+      }
+      right={
+        <div className="flex min-w-0 items-center gap-1">
+          <NotificationBell supabase={supabase} userId={user.id} />
+          {staffLink && (
+            <Link
+              href="/"
+              className="hidden rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10 sm:inline-block"
+            >
+              {organiser!.access === "core_team"
+                ? "Take attendance"
+                : "Organiser view"}
+            </Link>
+          )}
+          <a
+            href="#details"
+            className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pl-3 pr-1 hover:bg-white/10"
+            aria-label="Your details"
+          >
+            <span className="min-w-0 text-right leading-tight">
+              <span className="block truncate text-sm font-medium text-white">
+                {[me.first_name, me.last_name].filter(Boolean).join(" ")}
+              </span>
+              <span className="block truncate text-xs text-cyan">
+                {organiser?.access === "core_team" && !previewingAttendee
+                  ? "Core Team"
+                  : "Member"}
+              </span>
+            </span>
+            <Avatar
+              name={[me.first_name, me.last_name].filter(Boolean).join(" ")}
+              url={photos[me.id] ?? null}
+              size={36}
+              className="ring-2 ring-white/20"
+            />
+          </a>
+          <form action={signOut}>
+            <button className="rounded-lg px-2 py-2 text-xs text-white/60 hover:bg-white/10 hover:text-white">
+              Sign out
+            </button>
+          </form>
+        </div>
+      }
+    >
       <PreviewBanner />
       {welcome && (
         <Link
@@ -350,7 +397,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
         )}
       </section>
 
-      <section className="mt-8">
+      <section id="details" className="mt-8 scroll-mt-4">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
           Your details
         </h2>

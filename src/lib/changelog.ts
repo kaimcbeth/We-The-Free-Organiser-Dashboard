@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Members' page has a top bar like the organiser Hub: community name, version, the bell, and their name and photo (tap to jump to their details). The carousel maker shows one set of photos now: chosen first in order (drag to reorder, tap to take out), the rest faded below.",
+      },
+      {
+        level: "organiser",
         text: "Carousel maker: Write caption writes Instagram and Facebook captions from what the photos show (event types, tags, notes, dates), in your community's voice, with an invite to your next events. Members' Photo Hub no longer shows the little tag labels.",
       },
       {
