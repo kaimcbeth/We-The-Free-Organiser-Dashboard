@@ -71,7 +71,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "Funding tab: a first look, with example numbers (your community's monthly amount and next payment) until it's connected to the We The Free website.",
+        text: "Funding tab: a first look, with example numbers (banked funds, monthly amount, last 4 months) until it's connected to the We The Free website.",
       },
       {
         level: "organiser",
