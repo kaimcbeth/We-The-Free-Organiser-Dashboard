@@ -9,9 +9,9 @@ Also read AGENTS.md (this Next.js version differs from training data).
 - Live: https://wtf-organiser.vercel.app (Vercel team `we-the-free`, project `wtf-organiser`). Pushing to `main` deploys automatically.
 - Repo: github.com/kaimcbeth/We-The-Free-Organiser-Dashboard
 - Supabase project: `jmslxbygvmjtwwxuzkrt` (use the Supabase MCP tools).
-- `src/app/(app)`: organiser Hub tabs (Events, Actions, People, Insights, Resources, Funding [blank for now]); What's new is the sparkle button by the bell. Resources has `/resources/equipment` (equipment guide + gear inventory) and Photo Hub (community photos). `src/app/attendance`: Core Team. `src/app/me`: volunteers (their page, Coming up/RSVPs, impact, `/me/welcome`). Public: `/guide` (Outreach guide questions; QR for newcomers), `/join`, `/invite`, `/checkin`, `/calendar`, `/feedback`.
+- `src/app/(app)`: organiser Hub tabs (Events, Actions, People, Insights, Resources, Funding [blank for now]); What's new is the sparkle button by the bell. Resources has `/resources/equipment` (equipment guide + gear inventory) and Photo Hub (community photos). God-only: `/usage` (page_views via log_page_view; section names in `src/lib/usage.ts`), `/test-accounts`. `src/app/attendance`: Core Team. `src/app/me`: volunteers (their page, Coming up/RSVPs, impact, `/me/welcome`). Public: `/guide` (Outreach guide questions; QR for newcomers), `/join`, `/invite`, `/checkin`, `/calendar`, `/feedback`.
 - `src/app/actions.ts`: server actions. `src/lib/`: logic (tasks, invites, engagement, impact, outreach-guide, welcome, changelog, resources…).
-- `supabase/migrations`: numbered SQL, one file per change (latest 0121). Apply with `apply_migration`/`execute_sql`, then save the same SQL as the next numbered file.
+- `supabase/migrations`: numbered SQL, one file per change (latest 0127). Apply with `apply_migration`/`execute_sql`, then save the same SQL as the next numbered file.
 - `supabase/functions`: Edge Functions (import-events, buddy-reminders, event-reminders, send-approval, write-copy, test-login). Deploy with the MCP tool.
 - Secrets live only in Supabase (Edge Functions → Secrets): `ANTHROPIC_API_KEY` is set; `SMTP_USER`/`SMTP_PASS`/`SMTP_FROM` are not yet (email features say "not set up"). Never ask for or accept secrets in chat.
 
