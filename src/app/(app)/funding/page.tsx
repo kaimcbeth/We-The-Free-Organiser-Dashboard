@@ -1,13 +1,21 @@
 import { requireOrganiser } from "@/lib/organiser";
+import {
+  MOCK_BANKED,
+  MOCK_FUNDING,
+  MOCK_SAVING,
+  gearSuggestions,
+  loadOwnedGear,
+} from "@/lib/funding";
+import { GearSuggestions } from "@/components/gear-suggestions";
 
 // Funding: a home for reimbursements, grants and fundraising. For now a mock
 // with example numbers, until funding comes in from the main website.
-const MOCK_MONTHLY = 400;
-const MOCK_SPENT = 250; // each month
-const MOCK_MONTHS = 4;
+const MOCK_MONTHLY = MOCK_FUNDING.monthly;
+const MOCK_SPENT = MOCK_FUNDING.spent; // each month
+const MOCK_MONTHS = MOCK_FUNDING.months;
 
 export default async function FundingPage() {
-  const { organiser } = await requireOrganiser();
+  const { supabase, organiser } = await requireOrganiser();
   const community = organiser.team.name.replace(
     /, (Australia|New Zealand)$/,
     "",
@@ -26,7 +34,12 @@ export default async function FundingPage() {
       1,
     ).toLocaleDateString("en-AU", { month: "long" }),
   );
-  const banked = MOCK_MONTHS * (MOCK_MONTHLY - MOCK_SPENT);
+  const banked = MOCK_BANKED;
+  const owned =
+    organiser.allCommunities || organiser.exampleMode
+      ? new Set<string>()
+      : await loadOwnedGear(supabase, organiser.team_id);
+  const gear = gearSuggestions(owned, MOCK_BANKED, MOCK_SAVING);
 
   return (
     <div className="space-y-6">
@@ -77,6 +90,13 @@ export default async function FundingPage() {
           ))}
         </ul>
       </section>
+
+      <GearSuggestions
+        list={gear}
+        banked={MOCK_BANKED}
+        saving={MOCK_SAVING}
+        showLink
+      />
 
       <p className="rounded-2xl border border-dashed border-stone-300 px-4 py-6 text-center text-sm text-stone-500">
         Spending, receipts and fundraising will show here once funding is

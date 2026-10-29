@@ -281,6 +281,39 @@ export const EQUIPMENT_GUIDE: {
         ],
       },
       {
+        key: "hand_trolley",
+        name: "Hand trolley",
+        about:
+          "Folding trolley for carrying the gear. More details coming soon.",
+        shop: "Bunnings",
+        price: "$85",
+      },
+      {
+        key: "video_player_box",
+        name: "Video player box",
+        about:
+          "A fabric storage box to sit the screen in. More details coming soon.",
+        shop: "IKEA or Kmart",
+        price: "$5 each",
+      },
+      {
+        key: "disinfectant_spray",
+        name: "Disinfectant spray",
+        about:
+          "For wiping down the headphones between people. More details coming soon.",
+        shop: "Woolworths",
+        price: "$9.50",
+      },
+      {
+        key: "spring_clamps",
+        name: "Spring clamps",
+        about:
+          "Clamp the video stations to the table so they stay put in high wind.",
+        shop: "Bunnings",
+        url: "https://www.bunnings.com.au/trojan-100mm-spring-clamp_p0319718",
+        price: "$8.48 each (Trojan 100mm)",
+      },
+      {
         key: "lanyards",
         name: "Lanyards",
         about:

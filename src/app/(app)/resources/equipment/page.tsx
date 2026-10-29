@@ -1,13 +1,27 @@
 import Link from "next/link";
 import { requireOrganiser } from "@/lib/organiser";
 import { Equipment } from "@/components/equipment-guide";
+import { GearSuggestions } from "@/components/gear-suggestions";
+import {
+  MOCK_BANKED,
+  MOCK_SAVING,
+  gearSuggestions,
+  loadOwnedGear,
+} from "@/lib/funding";
 
 export default async function EquipmentPage() {
-  const { organiser } = await requireOrganiser();
+  const { supabase, organiser } = await requireOrganiser();
   const teamId =
     organiser.allCommunities || organiser.exampleMode
       ? null
       : organiser.team_id;
+  const gear = teamId
+    ? gearSuggestions(
+        await loadOwnedGear(supabase, teamId),
+        MOCK_BANKED,
+        MOCK_SAVING,
+      )
+    : null;
   return (
     <>
       <Link
@@ -23,6 +37,16 @@ export default async function EquipmentPage() {
         What to buy for the Movie Challenge and where, what your community
         already has, and who has it.
       </p>
+      {gear && (
+        <div className="mt-5">
+          <GearSuggestions
+            list={gear}
+            banked={MOCK_BANKED}
+            saving={MOCK_SAVING}
+            limit={3}
+          />
+        </div>
+      )}
       <div className="mt-5">
         <Equipment
           teamId={teamId}

@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "What to get next (Funding page and the equipment guide): the gear your community doesn't have yet, base kit first, as the ✨ Best version, with Can get now or Enough in about N months from your banked funding (example numbers for now). Hand trolley, Video player box, Disinfectant spray and Spring clamps (for windy days) added to upgrades.",
+      },
+      {
+        level: "organiser",
         text: "New action after each outreach event: Debrief video posted (due 2 days after). Switch it off in Choose actions if you don't do one.",
       },
       {
