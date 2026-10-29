@@ -280,7 +280,11 @@ const invKey = (item: EquipmentItem, opt?: Option) =>
 
 // Shown on the Budget / Best toggle (Kai asked for these, despite the usual
 // no-emoji-on-buttons rule).
-const OPTION_EMOJI: Record<string, string> = { Budget: "✅", Best: "✨" };
+const OPTION_EMOJI: Record<string, string> = {
+  Budget: "✅",
+  Best: "✨",
+  DIY: "🛠️",
+};
 
 // One piece of kit, linking to where to buy it. With options (like budget
 // and best), a small toggle switches between them. ticking "In community inventory" adds it to
