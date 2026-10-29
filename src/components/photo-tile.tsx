@@ -9,7 +9,10 @@ import { PHOTO_TAGS, type EventPhoto, type PhotoTag } from "@/lib/event-photos";
 
 // url and cropped are only updated on screen (cropping saves itself).
 export type PhotoChange = Partial<
-  Pick<EventPhoto, "favourite" | "noPromo" | "tags" | "url" | "cropped">
+  Pick<
+    EventPhoto,
+    "favourite" | "noPromo" | "tags" | "url" | "cropped" | "eventKind"
+  >
 > & {
   remove?: boolean;
 };
@@ -22,6 +25,7 @@ export async function savePhoto(id: string, c: PhotoChange) {
       ...(c.favourite !== undefined && { favourite: c.favourite }),
       ...(c.noPromo !== undefined && { no_promo: c.noPromo }),
       ...(c.tags !== undefined && { tags: c.tags }),
+      ...(c.eventKind !== undefined && { event_kind: c.eventKind }),
       ...(c.remove && { archived_at: new Date().toISOString() }),
     })
     .eq("id", id);
@@ -40,7 +44,9 @@ export function PhotoTile({
   selected,
   onSelect,
   onModSelect,
+  kinds,
 }: {
+  kinds?: string[]; // event kinds to choose from (Photo Hub)
   p: EventPhoto;
   teamId: string;
   open: boolean;
@@ -119,11 +125,16 @@ export function PhotoTile({
       >
         ⭐
       </button>
-      {p.tags.length > 0 && (
+      {(p.tags.length > 0 || p.eventKind) && (
         <span
-          aria-label={`Tags: ${p.tags.join(", ")}`}
+          aria-label={`Tags: ${[p.eventKind, ...p.tags].filter(Boolean).join(", ")}`}
           className="pointer-events-none absolute bottom-1 left-1 flex max-w-[75%] flex-wrap gap-0.5"
         >
+          {p.eventKind && (
+            <span className="rounded bg-navy/60 px-1 text-[9px] font-medium leading-[14px] text-white/90">
+              {p.eventKind}
+            </span>
+          )}
           {PHOTO_TAGS.filter((t) => p.tags.includes(t.id)).map((t) => (
             <span
               key={t.id}
@@ -166,6 +177,21 @@ export function PhotoTile({
               );
             })}
           </div>
+          {kinds && kinds.length > 0 && (
+            <select
+              value={p.eventKind ?? ""}
+              onChange={(e) => onChange({ eventKind: e.target.value || null })}
+              aria-label="Event type"
+              className={`mx-1 mb-1 w-[calc(100%-0.5rem)] rounded-lg bg-white px-1.5 py-1 text-xs ring-1 ring-black/10 ${p.eventKind ? "text-navy" : "text-stone-400"}`}
+            >
+              <option value="">Event type…</option>
+              {kinds.map((k) => (
+                <option key={k} value={k}>
+                  {k}
+                </option>
+              ))}
+            </select>
+          )}
           <button
             type="button"
             onClick={() => {
@@ -246,9 +272,14 @@ export function PhotoTile({
 // "All / Outreach / Group photo / Volunteers" filter, with counts. Hidden
 // when no photo has a tag yet.
 // A photo filter: a tag, or just the favourites.
-export type PhotoFilter = PhotoTag | "favourite" | null;
+export type PhotoFilter = PhotoTag | "favourite" | `kind:${string}` | null;
 export const matchesFilter = (p: EventPhoto, f: PhotoFilter) =>
-  !f || (f === "favourite" ? p.favourite : p.tags.includes(f));
+  !f ||
+  (f === "favourite"
+    ? p.favourite
+    : f.startsWith("kind:")
+      ? p.eventKind === f.slice(5)
+      : p.tags.includes(f as PhotoTag));
 
 export function TagFilter({
   photos,
@@ -262,11 +293,16 @@ export function TagFilter({
   small?: boolean;
 }) {
   const favourites = photos.filter((p) => p.favourite).length;
+  const kindCounts = new Map<string, number>();
+  for (const p of photos)
+    if (p.eventKind)
+      kindCounts.set(p.eventKind, (kindCounts.get(p.eventKind) ?? 0) + 1);
   const counts = PHOTO_TAGS.map((t) => ({
     ...t,
     n: photos.filter((p) => p.tags.includes(t.id)).length,
   })).filter((t) => t.n > 0);
-  if (counts.length === 0 && favourites === 0) return null;
+  if (counts.length === 0 && favourites === 0 && kindCounts.size === 0)
+    return null;
   const chip = (on: boolean) =>
     `rounded-full ${small ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm"} font-medium ring-1 ${on ? "bg-navy text-white ring-navy" : "bg-white text-stone-600 ring-stone-300"}`;
   return (
@@ -287,6 +323,16 @@ export function TagFilter({
           ⭐ Favourites <span className="opacity-60">{favourites}</span>
         </button>
       )}
+      {[...kindCounts.entries()].map(([k, n]) => (
+        <button
+          key={k}
+          type="button"
+          onClick={() => onChange(value === `kind:${k}` ? null : `kind:${k}`)}
+          className={chip(value === `kind:${k}`)}
+        >
+          {k} <span className="opacity-60">{n}</span>
+        </button>
+      ))}
       {counts.map((t) => (
         <button
           key={t.id}
@@ -310,7 +356,9 @@ export function BulkBar({
   onSelectAll,
   onDone,
   canRemove = false,
+  kinds,
 }: {
+  kinds?: string[]; // event kinds to set (Photo Hub)
   photos: EventPhoto[]; // the selected ones
   total: number; // how many could be selected
   onApply: (change: (p: EventPhoto) => PhotoChange) => void;
@@ -325,109 +373,132 @@ export function BulkBar({
     "rounded-full px-2.5 py-1 text-xs font-medium ring-1 disabled:opacity-40";
   const allFav = n > 0 && photos.every((p) => p.favourite);
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-white/95 px-4 pb-5 pt-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur">
-      <div className="mx-auto max-w-2xl space-y-2">
-        <div className="flex items-center justify-between gap-3 text-sm">
-          <span className="font-semibold text-navy">
-            {n} selected
-            {n < total && (
-              <button
-                type="button"
-                onClick={onSelectAll}
-                className="ml-3 font-medium text-pink-ink hover:underline"
+    <>
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-white/95 px-4 pb-5 pt-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur">
+        <div className="mx-auto max-w-2xl space-y-2">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="font-semibold text-navy">
+              {n} selected
+              {n < total && (
+                <button
+                  type="button"
+                  onClick={onSelectAll}
+                  className="ml-3 font-medium text-pink-ink hover:underline"
+                >
+                  Select all {total}
+                </button>
+              )}
+            </span>
+            <button
+              type="button"
+              onClick={onDone}
+              className="rounded-lg px-3 py-1 font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50"
+            >
+              Done
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {PHOTO_TAGS.map((t) => {
+              const all = n > 0 && photos.every((p) => p.tags.includes(t.id));
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  disabled={n === 0}
+                  onClick={() =>
+                    onApply((p) => ({
+                      tags: all
+                        ? p.tags.filter((x) => x !== t.id)
+                        : p.tags.includes(t.id)
+                          ? p.tags
+                          : [...p.tags, t.id],
+                    }))
+                  }
+                  className={`${chip} ${all ? "bg-navy text-white ring-navy" : "bg-white text-stone-600 ring-stone-300"}`}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {kinds && kinds.length > 0 && (
+              <select
+                value=""
+                disabled={n === 0}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v) onApply(() => ({ eventKind: v === "-" ? null : v }));
+                }}
+                aria-label="Set event type"
+                className={`${chip} bg-white text-stone-700 ring-stone-300`}
               >
-                Select all {total}
-              </button>
+                <option value="">Event type…</option>
+                {kinds.map((k) => (
+                  <option key={k} value={k}>
+                    {k}
+                  </option>
+                ))}
+                <option value="-">No event type</option>
+              </select>
             )}
-          </span>
-          <button
-            type="button"
-            onClick={onDone}
-            className="rounded-lg px-3 py-1 font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50"
-          >
-            Done
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {PHOTO_TAGS.map((t) => {
-            const all = n > 0 && photos.every((p) => p.tags.includes(t.id));
-            return (
-              <button
-                key={t.id}
-                type="button"
-                disabled={n === 0}
-                onClick={() =>
-                  onApply((p) => ({
-                    tags: all
-                      ? p.tags.filter((x) => x !== t.id)
-                      : p.tags.includes(t.id)
-                        ? p.tags
-                        : [...p.tags, t.id],
-                  }))
-                }
-                className={`${chip} ${all ? "bg-navy text-white ring-navy" : "bg-white text-stone-600 ring-stone-300"}`}
-              >
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            disabled={n === 0 || n > 20}
-            onClick={() => setCarousel(true)}
-            title={n > 20 ? "A carousel can have up to 20 photos" : undefined}
-            className={`${chip} bg-navy text-white ring-navy`}
-          >
-            {n > 20 ? "Carousel: 20 max" : "Make carousel"}
-          </button>
-          <button
-            type="button"
-            disabled={n === 0}
-            onClick={() => onApply(() => ({ favourite: !allFav }))}
-            className={`${chip} bg-white text-stone-700 ring-stone-300`}
-          >
-            {allFav ? "Unstar" : "Favourite"}
-          </button>
-          {canRemove &&
-            (sure ? (
-              <>
+            <button
+              type="button"
+              disabled={n === 0 || n > 20}
+              onClick={() => setCarousel(true)}
+              title={n > 20 ? "A carousel can have up to 20 photos" : undefined}
+              className={`${chip} bg-navy text-white ring-navy`}
+            >
+              {n > 20 ? "Carousel: 20 max" : "Make carousel"}
+            </button>
+            <button
+              type="button"
+              disabled={n === 0}
+              onClick={() => onApply(() => ({ favourite: !allFav }))}
+              className={`${chip} bg-white text-stone-700 ring-stone-300`}
+            >
+              {allFav ? "Unstar" : "Favourite"}
+            </button>
+            {canRemove &&
+              (sure ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSure(false);
+                      onApply(() => ({ remove: true }));
+                    }}
+                    className={`${chip} bg-red-700 text-white ring-red-700`}
+                  >
+                    Remove {n}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSure(false)}
+                    className={`${chip} bg-white text-stone-600 ring-stone-300`}
+                  >
+                    Keep
+                  </button>
+                </>
+              ) : (
                 <button
                   type="button"
-                  onClick={() => {
-                    setSure(false);
-                    onApply(() => ({ remove: true }));
-                  }}
-                  className={`${chip} bg-red-700 text-white ring-red-700`}
+                  disabled={n === 0}
+                  onClick={() => setSure(true)}
+                  className={`${chip} bg-white text-red-700 ring-stone-300`}
                 >
-                  Remove {n}
+                  Remove
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setSure(false)}
-                  className={`${chip} bg-white text-stone-600 ring-stone-300`}
-                >
-                  Keep
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                disabled={n === 0}
-                onClick={() => setSure(true)}
-                className={`${chip} bg-white text-red-700 ring-stone-300`}
-              >
-                Remove
-              </button>
-            ))}
+              ))}
+          </div>
         </div>
       </div>
+      {/* Outside the bar: its blur would otherwise trap the sheet inside it. */}
       {carousel && (
         <Sheet title="Carousel" onClose={() => setCarousel(false)}>
           <CarouselMaker photos={photos} title="carousel" keepOrder />
         </Sheet>
       )}
-    </div>
+    </>
   );
 }

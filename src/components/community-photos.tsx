@@ -11,6 +11,7 @@ import {
 } from "@/lib/event-photos";
 import { PhotoUploader } from "@/components/photo-uploader";
 import { Sheet } from "@/components/sheet";
+import { loadEventKinds } from "@/lib/event-kinds";
 import {
   BulkBar,
   PhotoTile,
@@ -58,6 +59,18 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
   const [filter, setFilter] = useState<PhotoFilter>(null);
   const [sel, setSel] = useState<Set<string> | null>(null); // select mode
   const [trash, setTrash] = useState<EventPhoto[] | null>(null); // Removed, open
+  const [kinds, setKinds] = useState<string[]>([]); // from the event listings
+  const [kind, setKind] = useState(""); // for the next upload
+
+  useEffect(() => {
+    let live = true;
+    loadEventKinds(createClient(), teamId).then((k) => {
+      if (live) setKinds(k);
+    });
+    return () => {
+      live = false;
+    };
+  }, [teamId]);
 
   useEffect(() => {
     let live = true;
@@ -146,6 +159,21 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
             className="min-w-0 basis-full rounded-lg bg-white px-2 py-1.5 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
           />
         </div>
+        {kinds.length > 0 && (
+          <select
+            value={kind}
+            onChange={(e) => setKind(e.target.value)}
+            aria-label="Event type"
+            className={`mt-2 rounded-lg bg-white px-2 py-1.5 text-sm ring-1 ring-black/10 ${kind ? "" : "text-stone-400"}`}
+          >
+            <option value="">Event type (optional)</option>
+            {kinds.map((k) => (
+              <option key={k} value={k}>
+                {k}
+              </option>
+            ))}
+          </select>
+        )}
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <span className="text-xs text-stone-500">Tags (optional):</span>
           {PHOTO_TAGS.map((t) => {
@@ -173,6 +201,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
               taken_month: year && month ? Number(month) : null,
               caption: caption.trim() || null,
               tags,
+              event_kind: kind || null,
             }}
             label="Upload photos"
             onUploaded={() => setReload((r) => r + 1)}
@@ -223,6 +252,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                     onToggle={() => setOpen(open === p.id ? null : p.id)}
                     onChange={(c) => change(p, c)}
                     canRemove
+                    kinds={kinds}
                     selected={sel?.has(p.id)}
                     onModSelect={() => {
                       setOpen(null);
@@ -269,6 +299,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
             }
             onDone={() => setSel(null)}
             canRemove
+            kinds={kinds}
           />
         </>
       )}

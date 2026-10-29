@@ -43,6 +43,7 @@ export function PhotoUploader({
     taken_month?: number | null;
     caption?: string | null;
     tags?: string[];
+    event_kind?: string | null;
   };
   label?: string;
   className?: string;

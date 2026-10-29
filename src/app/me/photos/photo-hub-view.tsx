@@ -98,8 +98,13 @@ export function PhotoHubView({ teamId }: { teamId: string }) {
                     className="h-full w-full object-cover"
                   />
                 </button>
-                {p.tags.length > 0 && (
+                {(p.tags.length > 0 || p.eventKind) && (
                   <span className="pointer-events-none absolute bottom-1 left-1 flex max-w-[75%] flex-wrap gap-0.5">
+                    {p.eventKind && (
+                      <span className="rounded bg-navy/60 px-1 text-[9px] font-medium leading-[14px] text-white/90">
+                        {p.eventKind}
+                      </span>
+                    )}
                     {PHOTO_TAGS.filter((t) => p.tags.includes(t.id)).map(
                       (t) => (
                         <span

@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Photo Hub: give photos an event type (Potluck, Social, Movie Challenge, Coworking and others from your event listings), when uploading, from a photo's menu or in bulk. Filter by it too. Fixed: Make carousel opened stuck at the bottom of the screen.",
+      },
+      {
+        level: "organiser",
         text: "People: a Recently added filter shows everyone added in the last 30 days, newest first.",
       },
       {

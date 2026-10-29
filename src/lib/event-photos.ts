@@ -30,6 +30,7 @@ export type EventPhoto = {
   caption: string | null;
   tags: PhotoTag[];
   cropped: boolean; // the original is kept and can be restored
+  eventKind: string | null; // e.g. Potluck (see event-kinds)
 };
 
 type Row = {
@@ -43,6 +44,7 @@ type Row = {
   caption: string | null;
   tags: PhotoTag[] | null;
   original_path: string | null;
+  event_kind: string | null;
 };
 
 async function sign(supabase: SupabaseClient, rows: Row[]) {
@@ -65,11 +67,12 @@ async function sign(supabase: SupabaseClient, rows: Row[]) {
       caption: r.caption,
       tags: r.tags ?? [],
       cropped: !!r.original_path,
+      eventKind: r.event_kind,
     }));
 }
 
 const COLS =
-  "id, path, favourite, no_promo, event_id, taken_year, taken_month, caption, tags, original_path";
+  "id, path, favourite, no_promo, event_id, taken_year, taken_month, caption, tags, original_path, event_kind";
 
 // One event's photos, newest first.
 export async function loadEventPhotos(
