@@ -19,10 +19,11 @@ type Gear = {
   condition: Condition | null;
   photo_path: string | null;
   quantity: number;
+  guide_key: string | null;
 };
 
 const COLS =
-  "id, name, notes, holder_person_id, holder_note, moved_at, model, source, condition, photo_path, quantity";
+  "id, name, notes, holder_person_id, holder_note, moved_at, model, source, condition, photo_path, quantity, guide_key";
 type Details = Pick<
   Gear,
   "name" | "notes" | "model" | "source" | "condition" | "quantity"
@@ -40,8 +41,10 @@ export function GearTracker({
   teamId,
   version = 0,
   onChanged,
+  guidePhotos = {},
 }: {
   teamId: string;
+  guidePhotos?: Record<string, string>; // recommended-list photos, by guide key
   version?: number; // bump to reload (e.g. after the guide adds something)
   onChanged?: () => void; // after adding, editing or removing gear
 }) {
@@ -208,9 +211,13 @@ export function GearTracker({
             return (
               <li key={g.id} className="flex items-center gap-3 px-4 py-3">
                 <PhotoSlot
-                  photo={photos[g.id] || null}
+                  // Their own photo, or the recommended list's for that item.
+                  photo={
+                    photos[g.id] ||
+                    (g.guide_key ? guidePhotos[g.guide_key] : null) ||
+                    null
+                  }
                   alt={g.name}
-                  href={photos[g.id] || "#"}
                   onUpload={(f) => addPhoto(g, f)}
                 />
                 <div className="min-w-0 flex-1">

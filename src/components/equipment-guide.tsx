@@ -179,6 +179,16 @@ export function Equipment({
     bump();
   }
 
+  // The recommended list's photo for each inventory entry (uploaded, or the
+  // built-in one), so gear added from the list shows the same picture.
+  const guidePhotos: Record<string, string> = {};
+  for (const g of EQUIPMENT_GUIDE)
+    for (const i of [...g.items, ...g.upgrades])
+      for (const o of i.options ?? [undefined]) {
+        const pic = photos[photoKey(i.key, o)] ?? o?.image ?? i.image;
+        if (pic) guidePhotos[invKey(i, o)] = pic;
+      }
+
   // An item counts as had if any version of it is in the inventory.
   const hasAny = (i: EquipmentItem) =>
     i.options ? i.options.some((o) => have.has(invKey(i, o))) : have.has(i.key);
@@ -264,7 +274,12 @@ export function Equipment({
           </div>
         ))}
       {teamId && (
-        <GearTracker teamId={teamId} version={version} onChanged={bump} />
+        <GearTracker
+          teamId={teamId}
+          version={version}
+          onChanged={bump}
+          guidePhotos={guidePhotos}
+        />
       )}
     </div>
   );
