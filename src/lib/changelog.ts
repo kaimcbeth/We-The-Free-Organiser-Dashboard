@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Members' Photo Hub no longer shows the Favourites filter (organisers still have it).",
+      },
+      {
+        level: "organiser",
         text: "Funding tab: a first look, with example numbers (banked funds, monthly amount, last 4 months) until it's connected to the We The Free website.",
       },
       {

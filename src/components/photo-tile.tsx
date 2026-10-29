@@ -286,13 +286,17 @@ export function TagFilter({
   value,
   onChange,
   small = false,
+  showFavourites = true,
 }: {
   photos: EventPhoto[];
   value: PhotoFilter;
   onChange: (t: PhotoFilter) => void;
   small?: boolean;
+  showFavourites?: boolean; // members don't see favourites
 }) {
-  const favourites = photos.filter((p) => p.favourite).length;
+  const favourites = showFavourites
+    ? photos.filter((p) => p.favourite).length
+    : 0;
   const kindCounts = new Map<string, number>();
   for (const p of photos)
     if (p.eventKind)

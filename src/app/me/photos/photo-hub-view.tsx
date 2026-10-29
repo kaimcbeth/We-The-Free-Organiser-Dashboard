@@ -72,7 +72,12 @@ export function PhotoHubView({ teamId }: { teamId: string }) {
 
   return (
     <div>
-      <TagFilter photos={photos} value={filter} onChange={setFilter} />
+      <TagFilter
+        photos={photos}
+        value={filter}
+        onChange={setFilter}
+        showFavourites={false}
+      />
       {groups.map((g) => (
         <div key={g.label} className="mt-4">
           <h2 className="mb-1.5 text-sm font-semibold text-navy">
