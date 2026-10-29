@@ -254,6 +254,10 @@ export function Equipment({
 
 type Option = NonNullable<EquipmentItem["options"]>[number];
 
+// Shown on the Budget / Best toggle (Kai asked for these, despite the usual
+// no-emoji-on-buttons rule).
+const OPTION_EMOJI: Record<string, string> = { Budget: "✅", Best: "✨" };
+
 // One piece of kit, linking to where to buy it. With options (like budget
 // and best), a small toggle switches between them. ticking "In community inventory" adds it to
 // the community's gear (the option showing is the one recorded).
@@ -326,6 +330,11 @@ function EquipmentRow({
                   onClick={() => setPick(n)}
                   className={`rounded-full px-3 py-0.5 text-xs font-semibold ${pick === n ? "bg-navy text-white" : "text-stone-600 hover:text-navy"}`}
                 >
+                  {OPTION_EMOJI[o.label] && (
+                    <span aria-hidden className="mr-1">
+                      {OPTION_EMOJI[o.label]}
+                    </span>
+                  )}
                   {o.label}
                 </button>
               ))}
