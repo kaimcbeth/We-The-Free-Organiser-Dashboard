@@ -81,6 +81,8 @@ export type EquipmentItem = {
   about: string;
   shop?: string; // no shop or link: there's a purchasing guide instead
   url?: string;
+  // Made from several parts bought separately (each with its own link).
+  parts?: { name: string; shop: string; url: string }[];
   // Tips for buying it, shown in a pop-up (instead of a shop link).
   guide?: { label: string; text: string }[];
   image?: string; // a default photo (under /equipment); uploads replace it
@@ -230,6 +232,28 @@ export const EQUIPMENT_GUIDE: {
           "For people to ring when they finish the video. Great for busy and chaotic outreach events.",
         shop: "AliExpress",
         url: "https://www.aliexpress.com/item/1005003770913674.html",
+      },
+      {
+        key: "sign_poles",
+        name: "Sign poles",
+        about: "Hold signs up high. Made from a few parts:",
+        parts: [
+          {
+            name: "Tuscan Path 280mm black garden edging pegs (10 pack)",
+            shop: "Bunnings",
+            url: "https://www.bunnings.com.au/tuscan-path-280mm-black-garden-edging-peg-10-pack-black_p0238074",
+          },
+          {
+            name: "Hy-Clor 1.2m to 3.6m extension pole (3 piece)",
+            shop: "Bunnings",
+            url: "https://www.bunnings.com.au/hy-clor-1-2m-3-6m-extension-pole-3-piece-1-2-3-6m_p0293231",
+          },
+          {
+            name: "Holman 16 to 27mm stainless steel hose clamp",
+            shop: "Bunnings",
+            url: "https://www.bunnings.com.au/holman-16-27mm-stainless-steel-hose-clamp_p0779876",
+          },
+        ],
       },
     ],
   },

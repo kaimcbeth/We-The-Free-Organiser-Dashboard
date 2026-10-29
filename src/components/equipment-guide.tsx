@@ -338,6 +338,25 @@ function EquipmentRow({
               <span className="block font-medium text-navy">{item.name}</span>
             )}
             <span className="block text-sm text-stone-600">{item.about}</span>
+            {item.parts && (
+              <ul className="mt-1 space-y-0.5">
+                {item.parts.map((part) => (
+                  <li key={part.url} className="text-sm">
+                    <a
+                      href={part.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-navy hover:underline"
+                    >
+                      {part.name}
+                    </a>{" "}
+                    <span className="text-xs text-stone-500">
+                      {part.shop} ↗
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </span>
           <span className="flex shrink-0 flex-col items-end gap-1">
             {url && (
