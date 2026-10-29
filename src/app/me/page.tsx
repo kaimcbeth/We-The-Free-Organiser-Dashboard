@@ -261,6 +261,12 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
         >
           Welcome to We The Free →
         </Link>
+        <Link
+          href="/me/photos"
+          className="mr-4 inline-block text-sm font-medium text-pink-ink hover:underline"
+        >
+          Photo Hub →
+        </Link>
         {!outreachToday && (
           <Link
             href="/guide"

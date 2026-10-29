@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Members and Core Team can open the Photo Hub from their page: browse, filter and download your community's photos. Only organisers can add, tag, crop or remove them.",
+      },
+      {
+        level: "organiser",
         text: "Volunteers' page: Your impact is gone, Coming up shows the next 3 events (Show more for the rest), and New member support has WhatsApp, Call and Save contact for the newcomer they're supporting.",
       },
       {
