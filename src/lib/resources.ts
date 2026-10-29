@@ -20,7 +20,6 @@ export const RESOURCE_SECTIONS: { title: string; items: Resource[] }[] = [
         about:
           "For police who come by: explains the right to peaceful protest, the limits on move-on directions (LEPRA s 200) and the test for “offensive” conduct.",
         file: "/resources/notice-of-legal-protections-nsw.pdf",
-        tip: "Print a copy for the event kit, and keep it on your phone.",
       },
     ],
   },

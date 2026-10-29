@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Photo Hub: select photos and Attach to event… to move them onto an event listing. Photos on an event (uploaded there or moved) are tagged automatically: the event type from the listing, plus Community event or Outreach.",
+      },
+      {
+        level: "organiser",
         text: "Photo Hub: give photos an event type (Potluck, Social, Movie Challenge, Coworking and others from your event listings), when uploading, from a photo's menu or in bulk. Filter by it too. Fixed: Make carousel opened stuck at the bottom of the screen.",
       },
       {

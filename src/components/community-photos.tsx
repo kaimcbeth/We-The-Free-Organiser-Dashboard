@@ -61,12 +61,31 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
   const [trash, setTrash] = useState<EventPhoto[] | null>(null); // Removed, open
   const [kinds, setKinds] = useState<string[]>([]); // from the event listings
   const [kind, setKind] = useState(""); // for the next upload
+  const [events, setEvents] = useState<{ id: string; label: string }[]>([]);
+  const [moved, setMoved] = useState(""); // after attaching to an event
 
   useEffect(() => {
     let live = true;
     loadEventKinds(createClient(), teamId).then((k) => {
       if (live) setKinds(k);
     });
+    // Events to attach photos to: the last 6 months and the next month.
+    createClient()
+      .from("events")
+      .select("id, title, starts_at")
+      .eq("team_id", teamId)
+      .gte("starts_at", new Date(Date.now() - 183 * 864e5).toISOString())
+      .lte("starts_at", new Date(Date.now() + 31 * 864e5).toISOString())
+      .order("starts_at", { ascending: false })
+      .then(({ data }) => {
+        if (live)
+          setEvents(
+            (data ?? []).map((e) => ({
+              id: e.id as string,
+              label: `${new Date(e.starts_at as string).toLocaleDateString("en-AU", { day: "numeric", month: "short" })}: ${e.title}`,
+            })),
+          );
+      });
     return () => {
       live = false;
     };
@@ -217,6 +236,11 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
         </p>
       ) : (
         <>
+          {moved && (
+            <p className="mt-3 rounded-xl bg-cyan/15 px-3 py-2 text-sm text-navy">
+              {moved}
+            </p>
+          )}
           <div className="mt-3">
             <div className="flex items-start justify-between gap-3">
               <TagFilter photos={photos} value={filter} onChange={setFilter} />
@@ -300,6 +324,20 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
             onDone={() => setSel(null)}
             canRemove
             kinds={kinds}
+            events={events}
+            onAttach={async (eventId) => {
+              const ids = [...sel];
+              const ev = events.find((e) => e.id === eventId);
+              await createClient()
+                .from("event_photos")
+                .update({ event_id: eventId })
+                .in("id", ids);
+              setSel(null);
+              setMoved(
+                `${ids.length} photo${ids.length === 1 ? "" : "s"} moved to ${ev?.label ?? "the event"}. Find them on that event's page.`,
+              );
+              setReload((r) => r + 1);
+            }}
           />
         </>
       )}

@@ -357,8 +357,13 @@ export function BulkBar({
   onDone,
   canRemove = false,
   kinds,
+  events,
+  onAttach,
 }: {
   kinds?: string[]; // event kinds to set (Photo Hub)
+  // Photo Hub: move the selected photos onto an event listing.
+  events?: { id: string; label: string }[];
+  onAttach?: (eventId: string) => void;
   photos: EventPhoto[]; // the selected ones
   total: number; // how many could be selected
   onApply: (change: (p: EventPhoto) => PhotoChange) => void;
@@ -422,6 +427,22 @@ export function BulkBar({
             })}
           </div>
           <div className="flex flex-wrap gap-1.5">
+            {events && events.length > 0 && onAttach && (
+              <select
+                value=""
+                disabled={n === 0}
+                onChange={(e) => e.target.value && onAttach(e.target.value)}
+                aria-label="Attach to event"
+                className={`${chip} max-w-56 bg-white text-stone-700 ring-stone-300`}
+              >
+                <option value="">Attach to event…</option>
+                {events.map((ev) => (
+                  <option key={ev.id} value={ev.id}>
+                    {ev.label}
+                  </option>
+                ))}
+              </select>
+            )}
             {kinds && kinds.length > 0 && (
               <select
                 value=""
