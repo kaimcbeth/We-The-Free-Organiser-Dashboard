@@ -12,6 +12,18 @@ export default function MemberResourcesPage() {
       <p className="mt-1 text-stone-600">
         Handy to have on your phone at events.
       </p>
+      <a
+        href="/me/resources/signs"
+        className="mt-6 block rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 hover:ring-pink"
+      >
+        <p className="font-semibold">
+          <span className="mr-1.5">🖨️</span>Sign splitter
+        </p>
+        <p className="mt-1 text-sm text-stone-600">
+          Print a big sign on A4 or A3 sheets at home, with a guide for taping
+          them together.
+        </p>
+      </a>
       {groups.map((g) => (
         <section key={g}>
           <h2 className="mb-3 mt-6 text-sm font-semibold uppercase tracking-wide text-stone-500">

@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "🖨️ Sign splitter in Resources (for members too): print the A1 Movie Challenge sign (or upload your own PDF or image) on A4 or A3 sheets at home. Choose exact size or fewer sheets slightly smaller; the PDF has a guide page and tick marks for lining the sheets up.",
+      },
+      {
+        level: "organiser",
         text: "New weekly action for Throwback Thursday: Throwback photo posted. Find a throwback shows Photo Hub photos from this month 1, 2, 5... years ago (like Facebook memories), with a download button and a couple of captions.",
       },
       {
