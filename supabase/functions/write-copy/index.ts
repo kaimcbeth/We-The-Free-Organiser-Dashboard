@@ -1,7 +1,8 @@
 // Writes social media copy for an event: a few options per platform, in the
 // community's own voice (voice_examples) when it has some. Never posts
 // anything: it only returns text for a person to pick, edit and copy.
-// Also writes the quarterly volunteer feedback message ({ purpose: "feedback" }).
+// Also writes the quarterly volunteer feedback message ({ purpose: "feedback" })
+// and the incident report form reminder ({ purpose: "incident" }).
 //
 // Needs the Edge Function secret ANTHROPIC_API_KEY (optional ANTHROPIC_MODEL).
 
@@ -14,6 +15,8 @@ const cors = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
+const INCIDENT_FORM =
+  "https://docs.google.com/forms/d/e/1FAIpQLSeTH5tQQFNhgtFqllx_uMjCaO7JhGKwKjXQiiNvnF8RfXExQw/viewform";
 const DAILY_LIMIT = 40; // generations per community per day
 
 const PLATFORMS: Record<string, string> = {
@@ -50,6 +53,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     if (body?.purpose === "feedback") return await feedbackCopy(asUser, user.id, key, body);
+    if (body?.purpose === "incident") return await feedbackCopy(asUser, user.id, key, body, true);
     if (body?.purpose === "carousel") return await carouselCopy(asUser, user.id, key, body);
     const { eventId, platforms, note } = body;
     const target = Math.min(100, Math.max(1, Math.round(Number(body?.target) || 20)));
@@ -212,11 +216,13 @@ Reply with JSON only, no other text, shaped like {${wanted.map((p) => `"${p}": [
 });
 
 // The quarterly "how's it going?" message to the community chat, with the
-// link to the volunteer feedback form.
+// link to the volunteer feedback form. With incident = true: the quarterly
+// reminder that the incident report form exists (link fixed to WTF's form).
 // deno-lint-ignore no-explicit-any
-async function feedbackCopy(asUser: any, userId: string, key: string, body: any) {
-  const { teamId, link, note } = body ?? {};
-  if (!teamId || typeof link !== "string" || !link.includes("/feedback/"))
+async function feedbackCopy(asUser: any, userId: string, key: string, body: any, incident = false) {
+  const { teamId, note } = body ?? {};
+  const link = incident ? INCIDENT_FORM : body?.link;
+  if (!teamId || typeof link !== "string" || (!incident && !link.includes("/feedback/")))
     return json({ error: "Missing the form link." }, 400);
   const url = Deno.env.get("SUPABASE_URL")!;
   const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -241,7 +247,15 @@ async function feedbackCopy(asUser: any, userId: string, key: string, body: any)
     .order("created_at", { ascending: false })
     .limit(10);
   const community = String(team.name).replace(/, (Australia|New Zealand)$/, "");
-  const prompt = `Write a WhatsApp message to the We The Free ${community} volunteer group chat asking volunteers to fill in a short feedback form about how volunteering with us is going. The form is 3 quick questions (how they're finding it, what's working, what would make it better) and their name is optional. Make clear every answer gets read and it helps make things better. Include this exact link on its own line: ${link}
+  const ask = incident
+    ? `Write a WhatsApp message to the We The Free ${community} volunteer group chat letting everyone know about our incident report form. It's a calm, low-key heads-up (nothing has happened): if anything ever goes wrong at an event, like harassment, someone getting hurt, or trouble with the public or police, they can report it with this form so it gets followed up properly. Make clear it's there to look after everyone and they can also talk to an organiser. Include this exact link on its own line: ${link}`
+    : null;
+  const prompt = ask ? `${ask}
+${note && String(note).trim() ? `\nFrom the organiser (work this in): ${String(note).slice(0, 600)}\n` : ""}
+${voice?.length ? `VOICE EXAMPLES (past posts by this community; match this voice)\n${voice.map((v: { body: string }, i: number) => `--- Example ${i + 1}\n${v.body}`).join("\n")}` : "No voice examples: use a friendly, down-to-earth grassroots voice."}
+
+WRITE 3 different options, each 25-70 words, casual, like a friend messaging the group, no hashtags.
+Reply with JSON only, no other text, shaped like {"whatsapp": ["...", "...", "..."]}.` : `Write a WhatsApp message to the We The Free ${community} volunteer group chat asking volunteers to fill in a short feedback form about how volunteering with us is going. The form is 3 quick questions (how they're finding it, what's working, what would make it better) and their name is optional. Make clear every answer gets read and it helps make things better. Include this exact link on its own line: ${link}
 ${note && String(note).trim() ? `\nFrom the organiser (work this in): ${String(note).slice(0, 600)}\n` : ""}
 ${voice?.length ? `VOICE EXAMPLES (past posts by this community; match this voice)\n${voice.map((v: { body: string }, i: number) => `--- Example ${i + 1}\n${v.body}`).join("\n")}` : "No voice examples: use a friendly, down-to-earth grassroots voice."}
 

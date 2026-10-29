@@ -10,6 +10,7 @@ import {
 } from "@/app/actions";
 import { formatEventDate } from "@/lib/time";
 import { FeedbackSheet } from "@/components/feedback-sheet";
+import { IncidentFormSheet } from "@/components/incident-form-sheet";
 import { Sheet } from "@/components/sheet";
 import { Avatar } from "@/components/avatar";
 import { PhotoUploader } from "@/components/photo-uploader";
@@ -414,6 +415,12 @@ export function TaskCard({
               )}
               {task.kind === "com_feedback" && (
                 <FeedbackSheet
+                  teamId={task.teamId}
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
+              )}
+              {task.kind === "com_incident_form" && (
+                <IncidentFormSheet
                   teamId={task.teamId}
                   className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
                 />

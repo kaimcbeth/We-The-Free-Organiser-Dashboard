@@ -10,6 +10,10 @@ export type Resource = {
   tip?: string;
 };
 
+// We The Free's incident report form (Google Form).
+export const INCIDENT_FORM_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSeTH5tQQFNhgtFqllx_uMjCaO7JhGKwKjXQiiNvnF8RfXExQw/viewform";
+
 export const RESOURCE_SECTIONS: { title: string; items: Resource[] }[] = [
   {
     title: "At outreach events",
@@ -28,7 +32,7 @@ export const RESOURCE_SECTIONS: { title: string; items: Resource[] }[] = [
         emoji: "📝",
         about:
           "Something happened at an event (harassment, an injury, trouble with the public or police)? Report it here so it can be followed up.",
-        file: "https://docs.google.com/forms/d/e/1FAIpQLSeTH5tQQFNhgtFqllx_uMjCaO7JhGKwKjXQiiNvnF8RfXExQw/viewform",
+        file: INCIDENT_FORM_URL,
         members: "Incidents",
       },
     ],
@@ -56,12 +60,6 @@ export const RESOURCES_COMING_SOON: {
   {
     title: "Code of conduct",
     about: "How we look after each other at events and online.",
-  },
-  {
-    title: "Group chat discussion prompts",
-    about:
-      "Questions and conversation starters to keep your community chat lively between events.",
-    organisersOnly: true,
   },
   {
     title: "Fundraising guide",

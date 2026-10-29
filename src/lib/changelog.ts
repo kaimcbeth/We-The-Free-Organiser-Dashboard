@@ -70,6 +70,18 @@ export const CHANGELOG: Release[] = [
     title: "Monthly recap carousel",
     changes: [
       {
+        level: "organiser",
+        text: "New action after each outreach event: Debrief video posted (due 2 days after). Switch it off in Choose actions if you don't do one.",
+      },
+      {
+        level: "organiser",
+        text: "🗨️ Group chat discussion prompts in Resources: 72 questions for your community chat. Pick one for me, Copy, and tick Posted so you don't repeat them.",
+      },
+      {
+        level: "organiser",
+        text: "New action every 3 months: Incident report form shared, with a Write message button (ready-made messages, or write new ones in your community's voice).",
+      },
+      {
         level: "god",
         text: "FB groups moved from its own tab into Resources (God Mode only).",
       },

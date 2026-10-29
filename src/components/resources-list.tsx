@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { RESOURCE_SECTIONS, RESOURCES_COMING_SOON } from "@/lib/resources";
 import { CommunityPhotos } from "@/components/community-photos";
 import { GuideShare } from "@/components/guide-share";
+import { DISCUSSION_PROMPTS } from "@/lib/discussion-prompts";
 
 const has = (q: string, ...text: (string | undefined)[]) =>
   !q || text.some((t) => t?.toLowerCase().includes(q));
@@ -173,6 +174,32 @@ export function ResourcesList({
           </span>
         </a>
       )}
+      {!path.startsWith("/attendance") &&
+        has(
+          q,
+          "group chat discussion prompts questions whatsapp community",
+        ) && (
+          <a
+            href="/resources/prompts"
+            className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+          >
+            <span>
+              <span className="block font-semibold">
+                <span aria-hidden className="mr-1.5">
+                  🗨️
+                </span>
+                Group chat discussion prompts
+              </span>
+              <span className="block text-sm text-stone-600">
+                {DISCUSSION_PROMPTS.length} questions to post in your community
+                chat between events. Pick one, copy it, mark it posted.
+              </span>
+            </span>
+            <span aria-hidden className="text-xl">
+              →
+            </span>
+          </a>
+        )}
       {isGod && has(q, "facebook fb groups promote local vegan community") && (
         <a
           href="/facebook-groups"
