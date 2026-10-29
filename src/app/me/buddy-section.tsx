@@ -8,6 +8,7 @@ import {
 } from "@/app/buddy-actions";
 import { enablePush } from "@/lib/push-client";
 import { formatEventDate, formatTime, nowIso } from "@/lib/time";
+import { waLink } from "@/lib/whatsapp-link";
 
 type Prompt = {
   id: string;
@@ -18,7 +19,12 @@ type Prompt = {
 type Pair = {
   pairing_id: string;
   since: string;
-  newcomer: { id: string; first_name: string; last_name: string | null };
+  newcomer: {
+    id: string;
+    first_name: string;
+    last_name: string | null;
+    phone: string | null; // shared only with whoever is supporting them
+  };
   events: number;
   last_seen: string | null;
   prompts: Prompt[];
@@ -148,6 +154,7 @@ function PairCard({
           ? ` · last seen ${formatEventDate(pair.last_seen, tz)}`
           : ""}
       </p>
+      <Contact person={n} tz={tz} />
 
       {due && !done ? (
         <div className="mt-3 rounded-xl bg-yellow/30 p-3">
@@ -344,6 +351,54 @@ export function ReminderSetting({
         ))}
       </div>
       {msg && <p className="mt-2 text-sm text-stone-600">{msg}</p>}
+    </div>
+  );
+}
+
+// Get in touch with them: WhatsApp (opens an empty chat), call, or save them
+// to your phone's contacts.
+function Contact({ person, tz }: { person: Pair["newcomer"]; tz: string }) {
+  const btn =
+    "rounded-lg px-2.5 py-1 text-xs font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50";
+  if (!person.phone)
+    return (
+      <p className="mt-2 text-xs text-stone-400">
+        No phone number for {person.first_name} yet. Ask an organiser.
+      </p>
+    );
+  const wa = waLink(person.phone, tz);
+  function saveContact() {
+    const name = [person.first_name, person.last_name]
+      .filter(Boolean)
+      .join(" ");
+    const card = [
+      "BEGIN:VCARD",
+      "VERSION:3.0",
+      `FN:${name}`,
+      `N:${person.last_name ?? ""};${person.first_name};;;`,
+      `TEL;TYPE=CELL:${person.phone}`,
+      "NOTE:We The Free",
+      "END:VCARD",
+    ].join("\r\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([card], { type: "text/vcard" }));
+    a.download = `${name.replace(/[^a-z0-9]+/gi, "-")}.vcf`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+  }
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {wa && (
+        <a href={wa} target="_blank" rel="noopener noreferrer" className={btn}>
+          WhatsApp
+        </a>
+      )}
+      <a href={`tel:${person.phone.replace(/[^\d+]/g, "")}`} className={btn}>
+        Call
+      </a>
+      <button type="button" onClick={saveContact} className={btn}>
+        Save contact
+      </button>
     </div>
   );
 }

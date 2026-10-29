@@ -23,8 +23,11 @@ const CHOICES = [
 ] as const;
 
 // Upcoming events in their community, with Going / Maybe / Can't.
+const SHOW = 3; // events shown before "Show more"
+
 export function MyEvents({ events, tz }: { events: MyEvent[]; tz: string }) {
   const [list, setList] = useState(events);
+  const [all, setAll] = useState(false); // the next few, unless they ask for more
   const [error, setError] = useState("");
   const [, start] = useTransition();
   const fmt = (iso: string, o: Intl.DateTimeFormatOptions) =>
@@ -62,7 +65,7 @@ export function MyEvents({ events, tz }: { events: MyEvent[]; tz: string }) {
     <div>
       {error && <p className="mb-2 text-sm text-red-700">{error}</p>}
       <ul className="space-y-3">
-        {list.map((e) => (
+        {(all ? list : list.slice(0, SHOW)).map((e) => (
           <li
             key={e.id}
             className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
@@ -122,6 +125,15 @@ export function MyEvents({ events, tz }: { events: MyEvent[]; tz: string }) {
           </li>
         ))}
       </ul>
+      {list.length > SHOW && (
+        <button
+          type="button"
+          onClick={() => setAll(!all)}
+          className="mt-3 text-sm font-medium text-stone-500 hover:text-stone-800 hover:underline"
+        >
+          {all ? "Show fewer" : `Show ${list.length - SHOW} more`}
+        </button>
+      )}
     </div>
   );
 }

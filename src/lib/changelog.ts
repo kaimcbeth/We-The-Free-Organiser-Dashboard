@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Volunteers' page: Your impact is gone, Coming up shows the next 3 events (Show more for the rest), and New member support has WhatsApp, Call and Save contact for the newcomer they're supporting.",
+      },
+      {
+        level: "organiser",
         text: "Volunteers have a Feedback box on their own page: open feedback to their organisers, with their name or anonymously. It shows with the rest of your volunteer feedback.",
       },
       {

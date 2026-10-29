@@ -24,7 +24,6 @@ import {
   type BuddyDashboard,
 } from "./buddy-section";
 import { MyEvents, type MyEvent } from "./my-events";
-import { impact } from "@/lib/impact";
 
 type Me = {
   id: string;
@@ -191,9 +190,6 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
   ]);
   // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
   const now = Date.now();
-  const outreach =
-    events.filter((e) => e.event_type?.counts_as_outreach).length +
-    me.starting_outreach_count;
 
   return (
     <AttendeeShell right={headerRight}>
@@ -258,89 +254,22 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
         </Link>
       ) : null}
 
-      {(() => {
-        const im = impact(
-          events.map((e) => ({
-            starts_at: e.starts_at,
-            ends_at: e.ends_at,
-            outreach: !!e.event_type?.counts_as_outreach,
-          })),
-          me.starting_outreach_count,
-          me.started_on,
-          now,
-        );
-        const sinceLabel = im.since
-          ? new Date(im.since + "T12:00:00Z").toLocaleDateString("en-AU", {
-              month: "long",
-              year: "numeric",
-            })
-          : null;
-        const toNext = im.next ? im.next - im.outreach : 0;
-        return (
-          <section className="mt-6">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
-              Your impact
-            </h2>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-2xl bg-navy p-4 text-white">
-                <p className="text-3xl font-semibold tabular-nums">
-                  {events.length}
-                </p>
-                <p className="text-sm text-white/75">
-                  {events.length === 1 ? "event" : "events"}
-                </p>
-              </div>
-              <div className="rounded-2xl bg-navy p-4 text-white">
-                <p className="text-3xl font-semibold tabular-nums text-pink">
-                  {outreach}
-                </p>
-                <p className="text-sm text-white/75">outreach</p>
-              </div>
-              <div className="rounded-2xl bg-navy p-4 text-white">
-                <p className="text-3xl font-semibold tabular-nums text-cyan">
-                  {im.hours}
-                </p>
-                <p className="text-sm text-white/75">
-                  {im.hours === 1 ? "hour" : "hours"} at outreach
-                </p>
-              </div>
-            </div>
-            <ul className="mt-3 space-y-1.5 text-sm text-stone-700">
-              {im.next && (
-                <li>
-                  <span className="font-semibold text-navy">{toNext} more</span>{" "}
-                  outreach {toNext === 1 ? "event" : "events"} to your{" "}
-                  {im.next === 1 ? "first" : `${im.next}th`}
-                  {im.last ? ` (you passed ${im.last} already)` : ""}.
-                </li>
-              )}
-              {im.streak >= 2 && (
-                <li>
-                  <span className="font-semibold text-navy">
-                    {im.streak} months
-                  </span>{" "}
-                  in a row with at least one event.
-                </li>
-              )}
-              {sinceLabel && <li>With We The Free since {sinceLabel}.</li>}
-            </ul>
-            <Link
-              href="/me/welcome"
-              className="mr-4 mt-3 inline-block text-sm font-medium text-pink-ink hover:underline"
-            >
-              Welcome to We The Free →
-            </Link>
-            {!outreachToday && (
-              <Link
-                href="/guide"
-                className="mt-3 inline-block text-sm font-medium text-pink-ink hover:underline"
-              >
-                Outreach guide →
-              </Link>
-            )}
-          </section>
-        );
-      })()}
+      <div className="mt-6">
+        <Link
+          href="/me/welcome"
+          className="mr-4 inline-block text-sm font-medium text-pink-ink hover:underline"
+        >
+          Welcome to We The Free →
+        </Link>
+        {!outreachToday && (
+          <Link
+            href="/guide"
+            className="inline-block text-sm font-medium text-pink-ink hover:underline"
+          >
+            Outreach guide →
+          </Link>
+        )}
+      </div>
 
       <section id="coming-up" className="mt-8 scroll-mt-4">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
