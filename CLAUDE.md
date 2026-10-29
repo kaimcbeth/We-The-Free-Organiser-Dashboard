@@ -9,7 +9,7 @@ Also read AGENTS.md (this Next.js version differs from training data).
 - Live: https://wtf-organiser.vercel.app (Vercel team `we-the-free`, project `wtf-organiser`). Pushing to `main` deploys automatically.
 - Repo: github.com/kaimcbeth/We-The-Free-Organiser-Dashboard
 - Supabase project: `jmslxbygvmjtwwxuzkrt` (use the Supabase MCP tools).
-- `src/app/(app)`: organiser Hub tabs (Events, Actions, People, Insights, Resources, Funding [blank for now]); What's new is the sparkle button by the bell. Resources has `/resources/equipment` (equipment guide + gear inventory), `/resources/prompts` (group chat discussion prompts, `src/lib/discussion-prompts.ts`), `/resources/signs` (sign splitter, `src/lib/sign-splitter.ts`; built-in signs in `public/resources/signs`) and Photo Hub (community photos). Special events (`/events/special`, God + RSLs; suggestions on Events page via `suggested_events`; `src/lib/special-events.ts`). God-only: `/usage` (page_views via log_page_view; section names in `src/lib/usage.ts`), `/test-accounts`. `src/app/attendance`: Core Team. `src/app/me`: members, with their own top bar + tabs in `me/layout.tsx` (Events `/me`, Outreach `/me/guide`, Photo Hub `/me/photos`, New members `/me/support`, Resources `/me/resources`; `/me/welcome`). Public: `/guide` (Outreach guide questions; QR for newcomers), `/join`, `/invite`, `/checkin`, `/calendar`, `/feedback`.
+- `src/app/(app)`: organiser Hub tabs (Events, Actions, People, Insights, Resources, Funding [mock: $600 banked, $400/month, last 4 months, "What to get next"; mock numbers in `src/lib/funding.ts`]); What's new is the sparkle button by the bell. Resources has `/resources/equipment` (equipment guide + gear inventory), `/resources/prompts` (group chat discussion prompts, `src/lib/discussion-prompts.ts`), `/resources/signs` (sign splitter, `src/lib/sign-splitter.ts`; built-in signs in `public/resources/signs`) and Photo Hub (community photos). Special events (`/events/special`, God + RSLs; suggestions on Events page via `suggested_events`; `src/lib/special-events.ts`). God-only: `/usage` (page_views via log_page_view; section names in `src/lib/usage.ts`), `/test-accounts`. `src/app/attendance`: Core Team. `src/app/me`: members, with their own top bar + tabs in `me/layout.tsx` (Events `/me`, Outreach `/me/guide`, Photo Hub `/me/photos`, New members `/me/support`, Resources `/me/resources`; `/me/welcome`). Public: `/guide` (Outreach guide questions; QR for newcomers), `/join`, `/invite`, `/checkin`, `/calendar`, `/feedback`.
 - `src/app/actions.ts`: server actions. `src/lib/`: logic (tasks, invites, engagement, impact, outreach-guide, welcome, changelog, resources…).
 - `supabase/migrations`: numbered SQL, one file per change (latest 0133). Apply with `apply_migration`/`execute_sql`, then save the same SQL as the next numbered file.
 - `supabase/functions`: Edge Functions (import-events, buddy-reminders, event-reminders, send-approval, write-copy, test-login). Deploy with the MCP tool.
@@ -44,10 +44,22 @@ git push origin main
 - Events import hourly from each team's activism.wtf calendar. RLS everywhere; anything cross-cutting goes through `security definer` functions that check the caller.
 - The organiser's community setup checklist pops up after the tour. Volunteers RSVP (Going/Maybe/Can't), get a day-before reminder, see their impact, and use the Outreach guide (questions only now) between street conversations.
 
+## Recent features (29 Oct 2026)
+
+- Members: own top bar + tabs (Events, Outreach, Photo Hub, New members, Resources). No Favourites filter in their Photo Hub. Sign out at the bottom of /me.
+- Special events: God sets them anywhere, RSLs have full control in their region. A faded "Suggested" card on Events about 2 months before (lead time is set per event) shows teams on board in the region and worldwide, with "Plan it" (opens mystats.wtf/events/new), "Plan later" (adds a "Plan your …" action, schedule `special`) or × (hidden until next year). Teams switch suggestions on/off on Events and in Get ready. Seeded: 🎃 Halloween Movie Challenge (31 Oct), 🎄 Christmas social (13 Dec).
+- Funding → gear: "What to get next" on Funding and the equipment page. Gaps first (base kit, then upgrades), always the ✨ Best version, labelled "Can get now" or "Enough in about N months" from banked funds and monthly saving. No nudges.
+- New actions: Incident report form shared (quarterly, Write message via write-copy `incident`), Debrief video posted (after outreach), Throwback photo posted (weekly on Thursday; `throwback_photos` RPC finds photos from this month in past years).
+- Resources: 📝 incident report form (also on members' tab), 🗨️ discussion prompts (72 questions, Copy / Write post via write-copy `prompt`, posted is tracked per community), 🖨️ sign splitter (organisers, Core and members), Outreach guide card with the QR link inside it, 👥 FB groups (God-only card, no longer a tab).
+- God `/usage` page. Version tag is washed-out yellow in alpha and turns blue in beta (`STAGE_TAG`). PDFs skip the login check (proxy matcher).
+
 ## Open threads
 
-- Equipment guide data lives in `src/lib/resources.ts` (items, Budget/Best options, prices checked 29 Oct 2026, purchasing guides). AliExpress prices and the large Kings table price still to come from Kai; table banner DIY instructions link to come.
-
+- Funding is a mock until it's integrated from the main WTF website.
+- Equipment (data in `src/lib/resources.ts`, prices checked 29 Oct 2026): details still to come for Video station covers (possibly the same as Video player box: ask Kai), Lanyards, VR headset, Lav mic, Hand trolley, Video player box and Disinfectant spray. Also AliExpress prices, the large Kings table price, the table banner DIY instructions link and sign-pole assembly steps.
+- Throwback suggestions need photos with a month and year set (none of Sydney's 48 photos has one yet).
+- Not yet tested live: write-copy "Write new options" for prompt/incident, Find a throwback, Plan later, and a real print of the sign splitter output.
+- Never answered by Kai: tutorial steps for the new features; whether sharing the buddy's phone number is OK; the A-frame notes.
 - Leftover empty table `conversation_logs` (from an abandoned version) can be dropped; Supabase asks Kai to approve.
 - Welcome cards use activism.wtf photos; Kai may send Sydney photos to swap in (`src/lib/welcome.ts`).
 - Ideas not built: duplicate warning at check-in, weather heads-up, cancel event, upcoming milestones, away mode, on-the-day screen, roster, "N going" on the Events list, Japanese translation (start with volunteer screens), nearby communities sharing volunteers.
