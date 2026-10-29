@@ -1231,7 +1231,7 @@ export async function findMergeCandidates(
   let req = supabase
     .from("people")
     .select(
-      "id, first_name, last_name, email, phone, suburb, user_id, team:teams(name), attendance(count)",
+      "id, first_name, last_name, email, phone, suburb, user_id, team:teams!people_team_id_fkey(name), attendance(count)",
     )
     .in("team_id", teamIds)
     .eq("is_test", false)

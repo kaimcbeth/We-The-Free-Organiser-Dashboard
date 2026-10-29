@@ -71,6 +71,14 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Fixed: members' own page (and the Outreach guide) couldn't find their profile since 23 October, so it asked them to set one up. Their page works again.",
+      },
+      {
+        level: "god",
+        text: "people has two FKs to teams (team_id, pending_team_id since 23 Oct), so team:teams(...) embeds from people were ambiguous (PGRST201) and returned nothing. Now team:teams!people_team_id_fkey(...) in /me, /guide and the people export.",
+      },
+      {
+        level: "organiser",
         text: "Logging in is now just a link: enter your email, tap the link in the email and you're in. It works on phones even when the email opens in a different browser. No more codes.",
       },
       {

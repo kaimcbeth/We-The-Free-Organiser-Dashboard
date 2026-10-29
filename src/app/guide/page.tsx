@@ -18,7 +18,7 @@ export default async function GuidePage({ searchParams }: PageProps<"/guide">) {
   const { data: me } = user
     ? await supabase
         .from("people")
-        .select("id, team:teams(slug)")
+        .select("id, team:teams!people_team_id_fkey(slug)")
         .eq("user_id", user.id)
         .maybeSingle<{ id: string; team: { slug: string } | null }>()
     : { data: null };
