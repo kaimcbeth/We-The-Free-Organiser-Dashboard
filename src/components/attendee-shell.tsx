@@ -1,6 +1,6 @@
 // Simple branded frame for attendee-facing pages (join, invite, my profile).
 import { EasterEggLogo } from "@/components/easter-egg-logo";
-import { STAGE, VERSION, BUILD } from "@/lib/changelog";
+import { STAGE, STAGE_TAG, VERSION, BUILD } from "@/lib/changelog";
 
 // With `community`, the header matches the organiser Hub's (mark, Movement Hub
 // and version, community name).
@@ -30,7 +30,7 @@ export function AttendeeShell({
                   <EasterEggLogo className="block text-xs font-bold uppercase tracking-wider text-pink" />
                   <span
                     title={`${STAGE} ${VERSION}, build ${BUILD}`}
-                    className="rounded bg-white/10 px-1 text-[10px] font-medium leading-4 text-white/60"
+                    className={`rounded px-1 text-[10px] font-semibold leading-4 ${STAGE_TAG}`}
                   >
                     {STAGE} {VERSION}
                   </span>

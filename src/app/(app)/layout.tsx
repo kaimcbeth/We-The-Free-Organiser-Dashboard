@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { EasterEggLogo } from "@/components/easter-egg-logo";
 import { cookies } from "next/headers";
-import { LATEST_CHANGE, STAGE, VERSION, BUILD } from "@/lib/changelog";
+import {
+  LATEST_CHANGE,
+  STAGE,
+  STAGE_TAG,
+  VERSION,
+  BUILD,
+} from "@/lib/changelog";
 import { requireOrganiser, ROLE_LABEL } from "@/lib/organiser";
 import { StaffBar } from "@/components/staff-bar";
 import { signPhotos } from "@/lib/photos";
@@ -75,7 +81,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
                 <EasterEggLogo className="block text-xs font-bold uppercase tracking-wider text-pink" />
                 <span
                   title={`${STAGE} ${VERSION}, build ${BUILD}`}
-                  className="rounded bg-white/10 px-1 text-[10px] font-medium leading-4 text-white/60"
+                  className={`rounded px-1 text-[10px] font-semibold leading-4 ${STAGE_TAG}`}
                 >
                   {STAGE} {VERSION}
                 </span>

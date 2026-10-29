@@ -789,6 +789,14 @@ export const CHANGELOG: Release[] = [
 // number is how many releases there have been, the build is how many changes
 // in total. Still alpha (see the stage below); bump STAGE when that changes.
 export const STAGE = "Alpha";
+
+// Colour of the version tag: yellow while in alpha, blue once in beta.
+export const STAGE_TAG: string =
+  STAGE === "Alpha"
+    ? "bg-yellow text-navy"
+    : STAGE === "Beta"
+      ? "bg-cyan text-navy"
+      : "bg-white/10 text-white/60";
 export const VERSION = `0.${CHANGELOG.length}`;
 export const BUILD = CHANGELOG.reduce((n, r) => n + r.changes.length, 0);
 
