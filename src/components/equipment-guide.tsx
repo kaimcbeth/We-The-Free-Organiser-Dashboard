@@ -133,7 +133,7 @@ export function Equipment({
       .from("gear_items")
       .insert({
         team_id: teamId,
-        name: opt ? `${item.name} (${opt.label})` : item.name,
+        name: item.name,
         model: opt?.product ?? null,
         source: opt?.url ?? item.url ?? null,
         guide_key: key,
