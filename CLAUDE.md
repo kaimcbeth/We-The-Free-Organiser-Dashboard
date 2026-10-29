@@ -33,7 +33,7 @@ git push origin main
 
 - Australian spelling. Say "actions", not "tasks". Keep questions short; go section by section.
 - No pre-filled personal DMs (message links open an empty chat). Subtle UI for secondary links. No emoji on buttons (Kai's own exceptions: ✅ Budget / ✨ Best / 🛠️ DIY on the equipment toggle; emoji on Resources cards).
-- Max 6 nav tabs (God also sees FB groups).
+- Max 6 nav tabs (FB groups is a God-only card in Resources).
 - Ask in one line whether a new feature should go in the tutorial (organiser tour: `src/app/(app)/organiser-tour.tsx`).
 - Privacy: profile photos are member-only; home address/signature visible only to the owner; only God sees the God role and test people. Organisers can edit anyone's contact details in their community.
 

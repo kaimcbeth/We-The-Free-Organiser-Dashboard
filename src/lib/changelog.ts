@@ -70,6 +70,10 @@ export const CHANGELOG: Release[] = [
     title: "Monthly recap carousel",
     changes: [
       {
+        level: "god",
+        text: "FB groups moved from its own tab into Resources (God Mode only).",
+      },
+      {
         level: "organiser",
         text: "📝 Incident report form added to Resources, for organisers and on members' Resources tab. Group chat discussion prompts are under Coming soon (organisers only). The Outreach guide card matches the other resources.",
       },

@@ -17,5 +17,11 @@ export default async function ResourcesPage() {
         .eq("id", teamId)
         .maybeSingle<{ slug: string }>()
     : { data: null };
-  return <ResourcesList teamId={teamId} teamSlug={team?.slug ?? null} />;
+  return (
+    <ResourcesList
+      teamId={teamId}
+      teamSlug={team?.slug ?? null}
+      isGod={organiser.role === "god"}
+    />
+  );
 }

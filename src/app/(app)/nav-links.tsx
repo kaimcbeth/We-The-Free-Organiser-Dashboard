@@ -24,10 +24,9 @@ const LINKS = [
 
 export function NavLinks({
   openTasks = 0,
-  isGod = false,
 }: {
   openTasks?: number;
-  isGod?: boolean;
+  isGod?: boolean; // FB groups moved to Resources; kept for callers
 }) {
   const path = usePathname();
   // Calendar lives inside Events (List | Calendar switch on the page).
@@ -43,19 +42,15 @@ export function NavLinks({
   links.push({
     href: "/resources",
     label: "Resources",
-    match: (p: string) => p.startsWith("/resources"),
+    // FB groups (God Mode) opens from Resources.
+    match: (p: string) =>
+      p.startsWith("/resources") || p.startsWith("/facebook-groups"),
   });
   links.push({
     href: "/funding",
     label: "Funding",
     match: (p: string) => p.startsWith("/funding"),
   });
-  if (isGod)
-    links.push({
-      href: "/facebook-groups",
-      label: "FB groups",
-      match: (p: string) => p.startsWith("/facebook-groups"),
-    });
   return (
     <nav className="mx-auto flex max-w-2xl gap-1 overflow-x-auto whitespace-nowrap px-4 pt-2 [scrollbar-width:none]">
       {links.map((l) => {
