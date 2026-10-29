@@ -61,6 +61,14 @@ export const RESOURCES_COMING_SOON: { title: string; about: string }[] = [
 
 // The equipment guide: the basic kit recommended for every team, with where
 // to buy it. Australia only for now (add other countries as their own lists).
+// How a piece of gear is holding up.
+export type Condition = "good" | "fair" | "needs_replacing";
+export const CONDITIONS: { id: Condition; label: string }[] = [
+  { id: "good", label: "Good" },
+  { id: "fair", label: "Fair" },
+  { id: "needs_replacing", label: "Needs replacing" },
+];
+
 // Which photo slot: the item, or one of its options (e.g. "table:best").
 export const photoKey = (itemKey: string, option?: { label: string }) =>
   option ? `${itemKey}:${option.label.toLowerCase()}` : itemKey;

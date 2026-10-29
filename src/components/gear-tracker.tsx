@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Sheet } from "@/components/sheet";
 import { createClient } from "@/lib/supabase/client";
 import { PhotoSlot } from "@/components/photo-slot";
+import { CONDITIONS, type Condition } from "@/lib/resources";
 import { shrink } from "@/components/photo-uploader";
 
 type Gear = {
@@ -18,14 +19,7 @@ type Gear = {
   condition: Condition | null;
   photo_path: string | null;
 };
-type Condition = "new" | "good" | "worn" | "needs_repair" | "broken";
-const CONDITIONS: { id: Condition; label: string }[] = [
-  { id: "new", label: "New" },
-  { id: "good", label: "Good" },
-  { id: "worn", label: "Worn" },
-  { id: "needs_repair", label: "Needs repair" },
-  { id: "broken", label: "Broken" },
-];
+
 const COLS =
   "id, name, notes, holder_person_id, holder_note, moved_at, model, source, condition, photo_path";
 type Details = Pick<Gear, "name" | "notes" | "model" | "source" | "condition">;
@@ -227,8 +221,7 @@ export function GearTracker({
                     {g.condition && g.condition !== "good" && (
                       <span
                         className={`ml-2 rounded-full px-2 py-0.5 text-xs font-medium ${
-                          g.condition === "needs_repair" ||
-                          g.condition === "broken"
+                          g.condition === "needs_replacing"
                             ? "bg-red-50 text-red-700"
                             : "bg-stone-100 text-stone-600"
                         }`}

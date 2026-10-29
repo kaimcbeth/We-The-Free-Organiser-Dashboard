@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Equipment: once an item is ticked In community inventory, pick its condition (Good, Fair or Needs replacing) right there. Gear uses the same three conditions now (New became Good, Worn became Fair, Needs repair and Broken became Needs replacing).",
+      },
+      {
+        level: "organiser",
         text: "Bulk changes for photos: tap Select on an event's photos or Community photos, tick the ones you want (or Select all), then tag, favourite, mark not for promo or remove them all at once.",
       },
       {

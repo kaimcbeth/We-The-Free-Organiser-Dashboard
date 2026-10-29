@@ -3,7 +3,13 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { GearTracker } from "@/components/gear-tracker";
-import { EQUIPMENT_GUIDE, photoKey, type EquipmentItem } from "@/lib/resources";
+import {
+  CONDITIONS,
+  EQUIPMENT_GUIDE,
+  photoKey,
+  type Condition,
+  type EquipmentItem,
+} from "@/lib/resources";
 import { shrink } from "@/components/photo-uploader";
 import { PhotoSlot } from "@/components/photo-slot";
 
@@ -46,7 +52,8 @@ export function Equipment({
   // Only an inventory to show if there's a community to keep one for.
   const hidden = !!teamId && stored;
   const [version, setVersion] = useState(0);
-  const [have, setHave] = useState<Set<string>>(new Set());
+  // Guide items the community has, with the condition of (the first of) it.
+  const [have, setHave] = useState<Map<string, Condition | null>>(new Map());
   const bump = () => setVersion((v) => v + 1);
   const [photos, setPhotos] = useState<Record<string, string>>({});
 
@@ -97,12 +104,17 @@ export function Equipment({
     let live = true;
     createClient()
       .from("gear_items")
-      .select("guide_key")
+      .select("guide_key, condition")
       .eq("team_id", teamId)
       .not("guide_key", "is", null)
+      .order("created_at")
       .then(({ data }) => {
-        if (live)
-          setHave(new Set((data ?? []).map((r) => r.guide_key as string)));
+        if (!live) return;
+        const m = new Map<string, Condition | null>();
+        for (const r of data ?? [])
+          if (!m.has(r.guide_key as string))
+            m.set(r.guide_key as string, r.condition as Condition | null);
+        setHave(m);
       });
     return () => {
       live = false;
@@ -114,7 +126,7 @@ export function Equipment({
     opt: NonNullable<EquipmentItem["options"]>[number] | undefined,
   ) {
     if (!teamId) return;
-    setHave((h) => new Set([...h, item.key]));
+    setHave((h) => new Map(h).set(item.key, null));
     await createClient()
       .from("gear_items")
       .insert({
@@ -127,10 +139,21 @@ export function Equipment({
     bump();
   }
 
+  async function setCondition(item: EquipmentItem, c: Condition | null) {
+    if (!teamId) return;
+    setHave((h) => new Map(h).set(item.key, c));
+    await createClient()
+      .from("gear_items")
+      .update({ condition: c })
+      .eq("team_id", teamId)
+      .eq("guide_key", item.key);
+    bump();
+  }
+
   async function removeFromInventory(item: EquipmentItem) {
     if (!teamId) return;
     setHave((h) => {
-      const n = new Set(h);
+      const n = new Map(h);
       n.delete(item.key);
       return n;
     });
@@ -177,6 +200,8 @@ export function Equipment({
                     key={i.key}
                     item={i}
                     has={have.has(i.key)}
+                    condition={have.get(i.key) ?? null}
+                    onCondition={teamId ? (c) => setCondition(i, c) : undefined}
                     onHave={
                       teamId
                         ? (opt, on) =>
@@ -201,6 +226,10 @@ export function Equipment({
                       key={i.key}
                       item={i}
                       has={have.has(i.key)}
+                      condition={have.get(i.key) ?? null}
+                      onCondition={
+                        teamId ? (c) => setCondition(i, c) : undefined
+                      }
                       onHave={
                         teamId
                           ? (opt, on) =>
@@ -232,11 +261,15 @@ function EquipmentRow({
   item,
   has,
   onHave,
+  condition,
+  onCondition,
   photos,
   onUpload,
 }: {
   item: EquipmentItem;
   has: boolean;
+  condition: Condition | null;
+  onCondition?: (c: Condition | null) => void;
   onHave?: (opt: Option | undefined, on: boolean) => void;
   photos: Record<string, string>; // uploaded, by photo key
   onUpload?: (key: string, file: File) => Promise<boolean>; // staff only
@@ -315,15 +348,40 @@ function EquipmentRow({
           </div>
         )}
         {onHave && (
-          <label className="mt-2 flex w-fit cursor-pointer items-center gap-2 text-sm text-stone-700">
-            <input
-              type="checkbox"
-              checked={has}
-              onChange={(e) => onHave(opt, e.target.checked)}
-              className="h-4 w-4 accent-navy"
-            />
-            In community inventory
-          </label>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-stone-700">
+              <input
+                type="checkbox"
+                checked={has}
+                onChange={(e) => onHave(opt, e.target.checked)}
+                className="h-4 w-4 accent-navy"
+              />
+              In community inventory
+            </label>
+            {has && onCondition && (
+              <select
+                value={condition ?? ""}
+                onChange={(e) =>
+                  onCondition((e.target.value || null) as Condition | null)
+                }
+                aria-label={`${item.name} condition`}
+                className={`rounded-lg bg-white px-2 py-0.5 text-sm ring-1 ring-black/10 ${
+                  condition === "needs_replacing"
+                    ? "text-red-700"
+                    : condition
+                      ? "text-stone-700"
+                      : "text-stone-400"
+                }`}
+              >
+                <option value="">Condition</option>
+                {CONDITIONS.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
         )}
       </div>
     </li>
