@@ -229,102 +229,21 @@ export function CarouselMaker({
 
   return (
     <div className="mt-3">
-      <p className="text-xs font-medium text-stone-500">
-        Tap photos to add them, in order (up to {MAX}). {chosen.length} chosen.
-      </p>
-      <div className="mt-1.5 grid grid-cols-5 gap-1.5 sm:grid-cols-6">
-        {photos.map((p) => {
-          const n = order.indexOf(p.id);
-          return (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => toggle(p.id)}
-              className={`relative aspect-square overflow-hidden rounded-lg ring-2 ${n >= 0 ? "ring-pink" : "opacity-60 ring-transparent"}`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
-              <img src={p.url} alt="" className="h-full w-full object-cover" />
-              {n >= 0 && (
-                <span className="absolute right-1 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-pink px-1 text-[11px] font-bold text-navy">
-                  {n + 1}
-                </span>
-              )}
-              {p.favourite && (
-                <span className="absolute bottom-0.5 left-0.5 text-[10px]">
-                  ⭐
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {editing && byId.get(editing) && (
-        <div
-          role="dialog"
-          aria-label="Zoom and crop"
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-navy/70 p-4"
-        >
-          <div className="w-full max-w-sm rounded-3xl bg-background p-4">
-            <p className="mb-2 text-sm font-semibold text-navy">
-              Drag to move · slide to zoom
-            </p>
-            <SlideFrame
-              photo={byId.get(editing)!}
-              pos={pos[editing] ?? CENTRE}
-              onPos={(np) => setOne(editing, np)}
-              className="rounded-xl shadow"
-              aspect={W / slideH}
-            />
-            <input
-              type="range"
-              min={1}
-              max={3}
-              step={0.01}
-              value={(pos[editing] ?? CENTRE).z ?? 1}
-              onChange={(e) =>
-                setOne(editing, {
-                  ...(pos[editing] ?? CENTRE),
-                  z: Number(e.target.value),
-                })
-              }
-              aria-label="Zoom"
-              className="mt-3 w-full accent-pink"
-            />
-            <div className="mt-3 flex justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => setOne(editing, CENTRE)}
-                className="rounded-xl px-4 py-2 text-sm font-medium text-stone-600 ring-1 ring-black/10 hover:bg-white"
-              >
-                Reset
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditing(null)}
-                className="rounded-xl bg-navy px-5 py-2 text-sm font-semibold text-white"
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {chosen.length > 1 && (
-        <OrderStrip
-          photos={chosen}
-          onMove={(from, to) => {
-            setMade(null);
-            setOrder((o) => {
-              const n = [...o];
-              const [x] = n.splice(from, 1);
-              n.splice(to, 0, x);
-              return n;
-            });
-          }}
-        />
-      )}
+      <PhotoPicker
+        photos={photos}
+        order={order}
+        max={MAX}
+        onToggle={toggle}
+        onMove={(from, to) => {
+          setMade(null);
+          setOrder((o) => {
+            const n = [...o];
+            const [x] = n.splice(from, 1);
+            n.splice(to, 0, x);
+            return n;
+          });
+        }}
+      />
 
       {chosen.length > 0 && (
         <>
@@ -606,16 +525,28 @@ function CaptionWriter({
   );
 }
 
-// The chosen photos in slide order: drag one (mouse or finger) to a new spot.
-function OrderStrip({
+// One set of photos: the chosen ones first, in slide order (drag to
+// reorder, tap to take out), then the rest, faded (tap to add).
+function PhotoPicker({
   photos,
+  order,
+  max,
+  onToggle,
   onMove,
 }: {
   photos: EventPhoto[];
+  order: string[];
+  max: number;
+  onToggle: (id: string) => void;
   onMove: (from: number, to: number) => void;
 }) {
   const [from, setFrom] = useState<number | null>(null);
   const [over, setOver] = useState<number | null>(null);
+  const [dragging, setDragging] = useState(false); // moved past a tap
+  const start = useRef<{ x: number; y: number; moved: boolean } | null>(null);
+  const byId = new Map(photos.map((p) => [p.id, p]));
+  const chosen = order.map((id) => byId.get(id)).filter((p) => !!p);
+  const rest = photos.filter((p) => !order.includes(p.id));
 
   const indexAt = (x: number, y: number) => {
     for (const el of document.elementsFromPoint(x, y)) {
@@ -624,45 +555,60 @@ function OrderStrip({
     }
     return null;
   };
+  const end = () => {
+    setFrom(null);
+    setOver(null);
+    setDragging(false);
+    start.current = null;
+  };
 
   return (
-    <div className="mt-3">
+    <div>
       <p className="text-xs font-medium text-stone-500">
-        Order · drag to rearrange
+        Tap to add or take out, drag to reorder (up to {max}). {chosen.length}{" "}
+        chosen.
       </p>
-      <div className="mt-1.5 flex flex-wrap gap-1.5">
-        {photos.map((p, i) => (
+      <div className="mt-1.5 grid grid-cols-5 gap-1.5 sm:grid-cols-6">
+        {chosen.map((p, i) => (
           <div
             key={p.id}
             data-slide={i}
+            role="button"
+            aria-label={`Slide ${i + 1}: drag to move, tap to take out`}
             onPointerDown={(e) => {
               e.preventDefault();
               (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+              start.current = { x: e.clientX, y: e.clientY, moved: false };
               setFrom(i);
               setOver(i);
             }}
             onPointerMove={(e) => {
-              if (from === null) return;
+              const st = start.current;
+              if (!st || from === null) return;
+              if (
+                !st.moved &&
+                Math.hypot(e.clientX - st.x, e.clientY - st.y) > 6
+              )
+                st.moved = true;
+              if (!st.moved) return;
               const at = indexAt(e.clientX, e.clientY);
               if (at !== null) setOver(at);
             }}
             onPointerUp={() => {
-              if (from !== null && over !== null && over !== from)
+              const st = start.current;
+              if (st && !st.moved) onToggle(p.id);
+              else if (from !== null && over !== null && over !== from)
                 onMove(from, over);
-              setFrom(null);
-              setOver(null);
+              end();
             }}
-            onPointerCancel={() => {
-              setFrom(null);
-              setOver(null);
-            }}
+            onPointerCancel={end}
             style={{ touchAction: "none" }}
-            className={`relative h-14 w-14 cursor-grab select-none overflow-hidden rounded-lg ring-2 transition active:cursor-grabbing ${
-              from === i
+            className={`relative aspect-square cursor-grab select-none overflow-hidden rounded-lg ring-2 transition active:cursor-grabbing ${
+              from === i && dragging
                 ? "opacity-40 ring-pink"
-                : over === i && from !== null
+                : over === i && from !== null && from !== i
                   ? "scale-105 ring-navy"
-                  : "ring-transparent"
+                  : "ring-pink"
             }`}
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
@@ -672,10 +618,27 @@ function OrderStrip({
               draggable={false}
               className="pointer-events-none h-full w-full object-cover"
             />
-            <span className="pointer-events-none absolute left-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[10px] font-bold text-navy">
+            <span className="pointer-events-none absolute right-1 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-pink px-1 text-[11px] font-bold text-navy">
               {i + 1}
             </span>
           </div>
+        ))}
+        {rest.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => onToggle(p.id)}
+            disabled={chosen.length >= max}
+            className="relative aspect-square overflow-hidden rounded-lg opacity-50 ring-2 ring-transparent hover:opacity-80"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
+            <img src={p.url} alt="" className="h-full w-full object-cover" />
+            {p.favourite && (
+              <span className="absolute bottom-0.5 left-0.5 text-[10px]">
+                ⭐
+              </span>
+            )}
+          </button>
         ))}
       </div>
     </div>
