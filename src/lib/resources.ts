@@ -2,6 +2,7 @@
 // (files go in public/resources/).
 export type Resource = {
   title: string;
+  emoji?: string; // shown before the title
   about: string;
   file: string; // under /resources
   area?: string; // e.g. "NSW" when it only applies there
@@ -14,6 +15,7 @@ export const RESOURCE_SECTIONS: { title: string; items: Resource[] }[] = [
     items: [
       {
         title: "Notice of legal protections",
+        emoji: "⚖️",
         area: "NSW",
         about:
           "For police who come by: explains the right to peaceful protest, the limits on move-on directions (LEPRA s 200) and the test for “offensive” conduct.",

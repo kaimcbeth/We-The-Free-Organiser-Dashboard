@@ -51,7 +51,12 @@ export function ResourcesList({
           className="mt-6 flex items-center justify-between rounded-2xl bg-pink px-4 py-3 text-navy"
         >
           <span>
-            <span className="block font-semibold">Outreach guide</span>
+            <span className="block font-semibold">
+              <span aria-hidden className="mr-1.5">
+                💬
+              </span>
+              Outreach guide
+            </span>
             <span className="block text-sm">
               The conversation questions, for a quick look between
               conversations. Volunteers have it on their page too.
@@ -78,7 +83,12 @@ export function ResourcesList({
           className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
         >
           <span>
-            <span className="block font-semibold">Welcome to We The Free</span>
+            <span className="block font-semibold">
+              <span aria-hidden className="mr-1.5">
+                👋
+              </span>
+              Welcome to We The Free
+            </span>
             <span className="block text-sm text-stone-600">
               Mission, values and what to expect at a first event, in five short
               cards. New members see it when they connect.
@@ -104,7 +114,14 @@ export function ResourcesList({
                   className="block rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 hover:ring-pink"
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-semibold">{r.title}</h3>
+                    <h3 className="font-semibold">
+                      {r.emoji && (
+                        <span aria-hidden className="mr-1.5">
+                          {r.emoji}
+                        </span>
+                      )}
+                      {r.title}
+                    </h3>
                     {r.area && (
                       <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
                         {r.area}
@@ -135,6 +152,9 @@ export function ResourcesList({
           <span>
             <span className="flex flex-wrap items-center gap-2">
               <span className="font-semibold">
+                <span aria-hidden className="mr-1.5">
+                  🧰
+                </span>
                 Equipment guide and inventory
               </span>
               <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
