@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { PhotoCrop, resetCrop } from "@/components/photo-crop";
+import { CarouselMaker } from "@/components/carousel-maker";
+import { Sheet } from "@/components/sheet";
 import { createClient } from "@/lib/supabase/client";
 import { PHOTO_TAGS, type EventPhoto, type PhotoTag } from "@/lib/event-photos";
 
@@ -25,7 +27,7 @@ export async function savePhoto(id: string, c: PhotoChange) {
     .eq("id", id);
 }
 
-// One photo in a grid. Tap it for: tags, favourite, not for promo, download
+// One photo in a grid. Tap it for: tags, favourite, crop, download
 // (and remove, where that's allowed).
 export function PhotoTile({
   p,
@@ -36,6 +38,7 @@ export function PhotoTile({
   canRemove = false,
   selected,
   onSelect,
+  onModSelect,
 }: {
   p: EventPhoto;
   teamId: string;
@@ -46,10 +49,20 @@ export function PhotoTile({
   // Select mode (bulk changes): tapping ticks the photo instead.
   selected?: boolean;
   onSelect?: () => void;
+  // Cmd/Ctrl-click: tick this photo (starting select mode if need be).
+  onModSelect?: () => void;
 }) {
   const item = "block w-full rounded-lg px-2 py-1 text-left hover:bg-stone-100";
   const box = useRef<HTMLLIElement>(null);
   const [cropping, setCropping] = useState(false);
+  const [big, setBig] = useState(false); // double-click: full screen
+
+  useEffect(() => {
+    if (!big) return;
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setBig(false);
+    document.addEventListener("keydown", esc);
+    return () => document.removeEventListener("keydown", esc);
+  }, [big]);
 
   // An open menu closes when you tap anywhere else, or press Escape.
   useEffect(() => {
@@ -72,7 +85,14 @@ export function PhotoTile({
     <li ref={box} className="relative">
       <button
         type="button"
-        onClick={onSelect ?? onToggle}
+        onClick={(e) => {
+          if ((e.metaKey || e.ctrlKey) && onModSelect) return onModSelect();
+          (onSelect ?? onToggle)();
+        }}
+        onDoubleClick={() => {
+          if (open) onToggle();
+          setBig(true);
+        }}
         aria-pressed={onSelect ? !!selected : undefined}
         className={`block aspect-square w-full overflow-hidden rounded-xl bg-stone-200 ${open || selected ? "ring-2 ring-pink ring-offset-2" : ""}`}
         title={p.caption ?? undefined}
@@ -81,7 +101,7 @@ export function PhotoTile({
         <img
           src={p.url}
           alt={p.caption ?? ""}
-          className={`h-full w-full object-cover ${p.noPromo ? "opacity-50" : ""}`}
+          className="h-full w-full object-cover"
         />
       </button>
       {p.favourite && (
@@ -89,9 +109,19 @@ export function PhotoTile({
           ⭐
         </span>
       )}
-      {p.noPromo && (
-        <span className="absolute right-1.5 top-1.5 rounded-full bg-white/90 px-1.5 text-xs">
-          🚫
+      {p.tags.length > 0 && (
+        <span
+          aria-label={`Tags: ${p.tags.join(", ")}`}
+          className="pointer-events-none absolute bottom-1 left-1 flex max-w-[75%] flex-wrap gap-0.5"
+        >
+          {PHOTO_TAGS.filter((t) => p.tags.includes(t.id)).map((t) => (
+            <span
+              key={t.id}
+              className="rounded bg-black/35 px-1 text-[9px] font-medium leading-[14px] text-white/85"
+            >
+              {t.short}
+            </span>
+          ))}
         </span>
       )}
       {onSelect && (
@@ -135,13 +165,6 @@ export function PhotoTile({
           </button>
           <button
             type="button"
-            onClick={() => onChange({ noPromo: !p.noPromo })}
-            className={item}
-          >
-            {p.noPromo ? "Use in promo again" : "Not for promo"}
-          </button>
-          <button
-            type="button"
             onClick={() => {
               onToggle();
               setCropping(true);
@@ -180,6 +203,26 @@ export function PhotoTile({
             >
               Remove
             </button>
+          )}
+        </div>
+      )}
+      {big && (
+        <div
+          role="dialog"
+          aria-label="Photo"
+          onClick={() => setBig(false)}
+          className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/85 p-4"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
+          <img
+            src={p.url}
+            alt={p.caption ?? ""}
+            className="max-h-[92vh] max-w-full rounded-lg object-contain shadow-2xl"
+          />
+          {p.caption && (
+            <p className="absolute inset-x-0 bottom-4 text-center text-sm text-white/80">
+              {p.caption}
+            </p>
           )}
         </div>
       )}
@@ -241,7 +284,7 @@ export function TagFilter({
 }
 
 // Bulk changes for the photos ticked in select mode: tags (on for all, or off
-// for all if they all have it already), favourite, not for promo, remove.
+// for all if they all have it already), favourite, remove.
 export function BulkBar({
   photos,
   total,
@@ -258,11 +301,11 @@ export function BulkBar({
   canRemove?: boolean;
 }) {
   const [sure, setSure] = useState(false);
+  const [carousel, setCarousel] = useState(false);
   const n = photos.length;
   const chip =
     "rounded-full px-2.5 py-1 text-xs font-medium ring-1 disabled:opacity-40";
   const allFav = n > 0 && photos.every((p) => p.favourite);
-  const allNoPromo = n > 0 && photos.every((p) => p.noPromo);
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-white/95 px-4 pb-5 pt-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur">
       <div className="mx-auto max-w-2xl space-y-2">
@@ -314,19 +357,20 @@ export function BulkBar({
         <div className="flex flex-wrap gap-1.5">
           <button
             type="button"
+            disabled={n === 0 || n > 20}
+            onClick={() => setCarousel(true)}
+            title={n > 20 ? "A carousel can have up to 20 photos" : undefined}
+            className={`${chip} bg-navy text-white ring-navy`}
+          >
+            {n > 20 ? "Carousel: 20 max" : "Make carousel"}
+          </button>
+          <button
+            type="button"
             disabled={n === 0}
             onClick={() => onApply(() => ({ favourite: !allFav }))}
             className={`${chip} bg-white text-stone-700 ring-stone-300`}
           >
             {allFav ? "Unstar" : "Favourite"}
-          </button>
-          <button
-            type="button"
-            disabled={n === 0}
-            onClick={() => onApply(() => ({ noPromo: !allNoPromo }))}
-            className={`${chip} bg-white text-stone-700 ring-stone-300`}
-          >
-            {allNoPromo ? "Use in promo again" : "Not for promo"}
           </button>
           {canRemove &&
             (sure ? (
@@ -361,6 +405,11 @@ export function BulkBar({
             ))}
         </div>
       </div>
+      {carousel && (
+        <Sheet title="Carousel" onClose={() => setCarousel(false)}>
+          <CarouselMaker photos={photos} title="carousel" keepOrder />
+        </Sheet>
+      )}
     </div>
   );
 }

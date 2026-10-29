@@ -70,16 +70,21 @@ export function CarouselMaker({
   photos,
   title,
   onlyFavourites = false,
+  keepOrder = false,
 }: {
   photos: EventPhoto[];
   title: string;
   onlyFavourites?: boolean; // start with just the favourites, in given order
+  keepOrder?: boolean; // start with all of them, in the order given
 }) {
-  // Favourites first, then the rest, up to 20 (or just the favourites).
+  // Favourites first, then the rest, up to 20 (or just the favourites, or
+  // all of them as given).
   const [order, setOrder] = useState<string[]>(() =>
-    (onlyFavourites
-      ? photos.filter((p) => p.favourite)
-      : [...photos].sort((a, b) => Number(b.favourite) - Number(a.favourite))
+    (keepOrder
+      ? photos
+      : onlyFavourites
+        ? photos.filter((p) => p.favourite)
+        : [...photos].sort((a, b) => Number(b.favourite) - Number(a.favourite))
     )
       .slice(0, MAX)
       .map((p) => p.id),

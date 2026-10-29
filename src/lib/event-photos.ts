@@ -1,11 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type PhotoTag = "outreach" | "group" | "volunteers" | "watching";
-export const PHOTO_TAGS: { id: PhotoTag; label: string }[] = [
-  { id: "outreach", label: "Outreach" },
-  { id: "group", label: "Group photo" },
-  { id: "volunteers", label: "Volunteers" },
-  { id: "watching", label: "Watching" },
+export type PhotoTag =
+  "outreach" | "group" | "volunteers" | "watching" | "community" | "sign";
+// short: the tiny label on photo thumbnails.
+export const PHOTO_TAGS: { id: PhotoTag; label: string; short: string }[] = [
+  { id: "outreach", label: "Outreach", short: "Outreach" },
+  { id: "group", label: "Group photo", short: "Group" },
+  { id: "volunteers", label: "Volunteers", short: "Volunteers" },
+  { id: "watching", label: "Watching", short: "Watching" },
+  { id: "community", label: "Community event", short: "Community" },
+  { id: "sign", label: "Holding sign", short: "Sign" },
 ];
 
 export type EventPhoto = {
@@ -147,4 +151,21 @@ export async function loadMonthPhotos(
     .filter((r) => ym(r.event.starts_at) === want)
     .sort((a, b) => a.event.starts_at.localeCompare(b.event.starts_at));
   return sign(supabase, rows);
+}
+
+// Community photos that were removed (kept, so they can be restored).
+export async function loadRemovedCommunityPhotos(
+  supabase: SupabaseClient,
+  teamId: string,
+): Promise<EventPhoto[]> {
+  const { data } = await supabase
+    .from("event_photos")
+    .select(COLS)
+    .eq("team_id", teamId)
+    .is("event_id", null)
+    .not("archived_at", "is", null)
+    .order("archived_at", { ascending: false })
+    .limit(200)
+    .returns<Row[]>();
+  return sign(supabase, data ?? []);
 }

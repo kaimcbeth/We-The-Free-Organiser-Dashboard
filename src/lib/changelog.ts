@@ -79,7 +79,11 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Bulk changes for photos: tap Select on an event's photos or Community photos, tick the ones you want (or Select all), then tag, favourite, mark not for promo or remove them all at once.",
+        text: "Photos: hold Cmd (Mac) or Ctrl (Windows) and click to select several at once for bulk changes; double-click a photo to see it full screen; Make carousel from up to 20 selected photos; Removed photos (under Community photos) to restore anything removed. New tags: Community event and Holding sign, and each photo shows its tags small in the corner. Not for promo is gone (any photos marked that way are back to normal).",
+      },
+      {
+        level: "organiser",
+        text: "Bulk changes for photos: tap Select on an event's photos or Community photos, tick the ones you want (or Select all), then tag, favourite or remove them all at once.",
       },
       {
         level: "organiser",

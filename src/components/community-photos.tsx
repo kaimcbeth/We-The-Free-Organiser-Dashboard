@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   loadCommunityPhotos,
+  loadRemovedCommunityPhotos,
   PHOTO_TAGS,
   type EventPhoto,
   type PhotoTag,
 } from "@/lib/event-photos";
 import { PhotoUploader } from "@/components/photo-uploader";
+import { Sheet } from "@/components/sheet";
 import {
   BulkBar,
   PhotoTile,
@@ -53,6 +55,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
   const [tags, setTags] = useState<PhotoTag[]>([]);
   const [filter, setFilter] = useState<PhotoTag | null>(null);
   const [sel, setSel] = useState<Set<string> | null>(null); // select mode
+  const [trash, setTrash] = useState<EventPhoto[] | null>(null); // Removed, open
 
   useEffect(() => {
     let live = true;
@@ -221,6 +224,15 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                     onChange={(c) => change(p, c)}
                     canRemove
                     selected={sel?.has(p.id)}
+                    onModSelect={() => {
+                      setOpen(null);
+                      setSel((s) => {
+                        const n = new Set(s ?? []);
+                        if (n.has(p.id)) n.delete(p.id);
+                        else n.add(p.id);
+                        return n;
+                      });
+                    }}
                     onSelect={
                       sel
                         ? () =>
@@ -261,6 +273,56 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
             canRemove
           />
         </>
+      )}
+      <div className="mt-4 text-right">
+        <button
+          type="button"
+          onClick={() =>
+            loadRemovedCommunityPhotos(createClient(), teamId).then(setTrash)
+          }
+          className="text-xs font-medium text-stone-400 hover:text-stone-700 hover:underline"
+        >
+          Removed photos
+        </button>
+      </div>
+      {trash && (
+        <Sheet title="Removed photos" onClose={() => setTrash(null)}>
+          {trash.length === 0 ? (
+            <p className="text-sm text-stone-500">Nothing removed.</p>
+          ) : (
+            <>
+              <p className="mb-3 text-sm text-stone-600">
+                Tap Restore to put a photo back.
+              </p>
+              <ul className="grid grid-cols-3 gap-2">
+                {trash.map((p) => (
+                  <li key={p.id} className="space-y-1">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
+                    <img
+                      src={p.url}
+                      alt={p.caption ?? ""}
+                      className="aspect-square w-full rounded-xl object-cover opacity-70"
+                    />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setTrash((t) => (t ?? []).filter((x) => x.id !== p.id));
+                        await createClient()
+                          .from("event_photos")
+                          .update({ archived_at: null })
+                          .eq("id", p.id);
+                        setReload((r) => r + 1);
+                      }}
+                      className="w-full rounded-lg py-1 text-xs font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50"
+                    >
+                      Restore
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </Sheet>
       )}
     </section>
   );

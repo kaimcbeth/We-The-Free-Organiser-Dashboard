@@ -75,6 +75,15 @@ export function EventPhotos({
               onToggle={() => setOpen(open === p.id ? null : p.id)}
               onChange={(c) => flag(p, c)}
               selected={sel?.has(p.id)}
+              onModSelect={() => {
+                setOpen(null);
+                setSel((s) => {
+                  const n = new Set(s ?? []);
+                  if (n.has(p.id)) n.delete(p.id);
+                  else n.add(p.id);
+                  return n;
+                });
+              }}
               onSelect={
                 sel
                   ? () =>
