@@ -51,38 +51,42 @@ export function ResourcesList({
         aria-label="Search resources"
         className="mt-4 w-full rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
       />
-      {has(q, "outreach guide conversation questions objections ibc") && (
-        <a
-          href="/guide"
-          className="mt-6 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
-        >
-          <span>
-            <span className="block font-semibold">
-              <span aria-hidden className="mr-1.5">
-                💬
+      {has(
+        q,
+        "outreach guide conversation questions objections ibc qr newcomer",
+      ) && (
+        <div className="relative mt-6 rounded-2xl bg-white text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink">
+          <a
+            href="/guide"
+            className="flex items-center justify-between px-4 pb-8 pt-3"
+          >
+            <span>
+              <span className="block font-semibold">
+                <span aria-hidden className="mr-1.5">
+                  💬
+                </span>
+                Outreach guide
               </span>
-              Outreach guide
+              <span className="block text-sm text-stone-600">
+                The conversation questions, for a quick look between
+                conversations. Volunteers have it on their page too.
+              </span>
             </span>
-            <span className="block text-sm text-stone-600">
-              The conversation questions, for a quick look between
-              conversations. Volunteers have it on their page too.
+            <span aria-hidden className="text-xl">
+              →
             </span>
-          </span>
-          <span aria-hidden className="text-xl">
-            →
-          </span>
-        </a>
+          </a>
+          {teamSlug && (
+            <span className="absolute bottom-2.5 left-4">
+              <GuideShare
+                slug={teamSlug}
+                label="Show QR code for newcomers"
+                className="text-xs text-stone-400 hover:text-navy hover:underline"
+              />
+            </span>
+          )}
+        </div>
       )}
-      {teamSlug &&
-        has(q, "outreach guide conversation questions qr newcomer") && (
-          <div className="mt-2 text-right">
-            <GuideShare
-              slug={teamSlug}
-              label="Show QR code for newcomers"
-              className="text-xs text-stone-400 hover:text-navy hover:underline"
-            />
-          </div>
-        )}
       {has(q, "welcome mission values onboarding new members first event") && (
         <a
           href="/me/welcome"

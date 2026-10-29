@@ -22,8 +22,41 @@ export function IncidentFormSheet({
   teamId: string;
   className?: string;
 }) {
+  return (
+    <ChatMessageSheet
+      teamId={teamId}
+      className={className}
+      purpose="incident"
+      title="Incident report form"
+      presets={PRESETS}
+      placeholder="e.g. Ash and Priya are the people to talk to at events"
+    />
+  );
+}
+
+// A message for the community chat: ready-made options, plus "Write new
+// options" (write-copy with the given purpose, in the community's voice).
+export function ChatMessageSheet({
+  teamId,
+  className,
+  purpose,
+  extra = {},
+  title,
+  presets,
+  label = "Write message",
+  placeholder,
+}: {
+  teamId: string | null;
+  className?: string;
+  purpose: string;
+  extra?: Record<string, string>;
+  title: string;
+  presets: string[];
+  label?: string;
+  placeholder: string;
+}) {
   const [open, setOpen] = useState(false);
-  const [options, setOptions] = useState<string[]>(PRESETS);
+  const [options, setOptions] = useState<string[]>(presets);
   const [round, setRound] = useState(0);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
@@ -33,6 +66,7 @@ export function IncidentFormSheet({
 
   async function show() {
     setOpen(true);
+    if (!teamId) return;
     const { data } = await createClient()
       .from("teams")
       .select("whatsapp_url")
@@ -42,11 +76,12 @@ export function IncidentFormSheet({
   }
 
   async function write() {
+    if (!teamId) return setError("Pick a community first.");
     setError("");
     setBusy(true);
     const { data: d, error: e } = await createClient().functions.invoke(
       "write-copy",
-      { body: { purpose: "incident", teamId, note } },
+      { body: { ...extra, purpose, teamId, note } },
     );
     setBusy(false);
     let msg = d?.error as string | undefined;
@@ -64,10 +99,10 @@ export function IncidentFormSheet({
   return (
     <>
       <button type="button" onClick={show} className={className}>
-        Write message
+        {label}
       </button>
       {open && (
-        <Sheet title="Incident report form" onClose={() => setOpen(false)}>
+        <Sheet title={title} onClose={() => setOpen(false)}>
           <div className="space-y-3">
             <p className="text-sm text-stone-600">
               Pick one, tweak it, copy it and post it in your community chat.
@@ -94,7 +129,7 @@ export function IncidentFormSheet({
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 rows={2}
-                placeholder="e.g. Ash and Priya are the people to talk to at events"
+                placeholder={placeholder}
                 className="mt-1 w-full rounded-xl bg-white p-2 text-sm font-normal ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
               />
             </label>
@@ -116,7 +151,7 @@ export function IncidentFormSheet({
                 ? "Hide voice examples ▴"
                 : "Sound more like us: add examples of our voice ▾"}
             </button>
-            {showVoice && <VoiceExamples teamId={teamId} />}
+            {showVoice && teamId && <VoiceExamples teamId={teamId} />}
           </div>
         </Sheet>
       )}

@@ -2,12 +2,20 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { ChatMessageSheet } from "@/components/incident-form-sheet";
 import {
   DISCUSSION_PROMPTS,
   PROMPT_TYPES,
   type DiscussionPrompt,
   type PromptType,
 } from "@/lib/discussion-prompts";
+
+// Ready-made posts around a question (work without the writing assistant).
+const presetsFor = (q: string) => [
+  `Question of the week: ${q} Would love to hear from everyone, big or small answers welcome.`,
+  `Hey everyone! Something to chat about: ${q}`,
+  `${q}\n\nDrop your thoughts below, keen to hear what you all think.`,
+];
 
 const fmt = (iso: string) =>
   new Date(iso).toLocaleDateString("en-AU", {
@@ -158,6 +166,16 @@ export function DiscussionPrompts({
                 >
                   {copied === p.id ? "Copied" : "Copy"}
                 </button>
+                <ChatMessageSheet
+                  teamId={teamId}
+                  purpose="prompt"
+                  extra={{ question: p.text }}
+                  title="Discussion prompt"
+                  label="Write post"
+                  presets={presetsFor(p.text)}
+                  placeholder="e.g. mention Saturday's outreach"
+                  className="text-stone-500 hover:text-navy hover:underline"
+                />
                 <label className="ml-auto flex items-center gap-1.5 text-xs text-stone-500">
                   <input
                     type="checkbox"

@@ -1,8 +1,9 @@
 // Writes social media copy for an event: a few options per platform, in the
 // community's own voice (voice_examples) when it has some. Never posts
 // anything: it only returns text for a person to pick, edit and copy.
-// Also writes the quarterly volunteer feedback message ({ purpose: "feedback" })
-// and the incident report form reminder ({ purpose: "incident" }).
+// Also writes the quarterly volunteer feedback message ({ purpose: "feedback" }),
+// the incident report form reminder ({ purpose: "incident" }) and posts for
+// group chat discussion questions ({ purpose: "prompt", question }).
 //
 // Needs the Edge Function secret ANTHROPIC_API_KEY (optional ANTHROPIC_MODEL).
 
@@ -53,7 +54,8 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     if (body?.purpose === "feedback") return await feedbackCopy(asUser, user.id, key, body);
-    if (body?.purpose === "incident") return await feedbackCopy(asUser, user.id, key, body, true);
+    if (body?.purpose === "incident") return await feedbackCopy(asUser, user.id, key, body, "incident");
+    if (body?.purpose === "prompt") return await feedbackCopy(asUser, user.id, key, body, "prompt");
     if (body?.purpose === "carousel") return await carouselCopy(asUser, user.id, key, body);
     const { eventId, platforms, note } = body;
     const target = Math.min(100, Math.max(1, Math.round(Number(body?.target) || 20)));
@@ -216,13 +218,17 @@ Reply with JSON only, no other text, shaped like {${wanted.map((p) => `"${p}": [
 });
 
 // The quarterly "how's it going?" message to the community chat, with the
-// link to the volunteer feedback form. With incident = true: the quarterly
-// reminder that the incident report form exists (link fixed to WTF's form).
+// link to the volunteer feedback form. Also "incident" (the quarterly reminder
+// that the incident report form exists, link fixed to WTF's form) and
+// "prompt" (a post for a group chat discussion question, no link).
 // deno-lint-ignore no-explicit-any
-async function feedbackCopy(asUser: any, userId: string, key: string, body: any, incident = false) {
+async function feedbackCopy(asUser: any, userId: string, key: string, body: any, mode: "feedback" | "incident" | "prompt" = "feedback") {
   const { teamId, note } = body ?? {};
-  const link = incident ? INCIDENT_FORM : body?.link;
-  if (!teamId || typeof link !== "string" || (!incident && !link.includes("/feedback/")))
+  const incident = mode === "incident";
+  const question = mode === "prompt" ? String(body?.question ?? "").trim().slice(0, 300) : "";
+  if (mode === "prompt" && !question) return json({ error: "Missing the question." }, 400);
+  const link = incident ? INCIDENT_FORM : mode === "prompt" ? "" : body?.link;
+  if (!teamId || typeof link !== "string" || (mode === "feedback" && !link.includes("/feedback/")))
     return json({ error: "Missing the form link." }, 400);
   const url = Deno.env.get("SUPABASE_URL")!;
   const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -247,7 +253,9 @@ async function feedbackCopy(asUser: any, userId: string, key: string, body: any,
     .order("created_at", { ascending: false })
     .limit(10);
   const community = String(team.name).replace(/, (Australia|New Zealand)$/, "");
-  const ask = incident
+  const ask = question
+    ? `Write a WhatsApp message to the We The Free ${community} volunteer group chat posting this discussion question to get people chatting between events: "${question}". Keep the question itself clear (you can phrase it naturally), invite everyone to share, and keep it light and welcoming so newer people feel they can answer too.`
+    : incident
     ? `Write a WhatsApp message to the We The Free ${community} volunteer group chat letting everyone know about our incident report form. It's a calm, low-key heads-up (nothing has happened): if anything ever goes wrong at an event, like harassment, someone getting hurt, or trouble with the public or police, they can report it with this form so it gets followed up properly. Make clear it's there to look after everyone and they can also talk to an organiser. Include this exact link on its own line: ${link}`
     : null;
   const prompt = ask ? `${ask}
@@ -288,7 +296,7 @@ Reply with JSON only, no other text, shaped like {"whatsapp": ["...", "...", "..
   // No dashes as punctuation, and make sure the link is there.
   options = options
     .map((s) => String(s).replace(/\s*[—–]\s*/g, ", ").trim())
-    .map((s) => (s.includes(link) ? s : `${s}\n${link}`))
+    .map((s) => (!link || s.includes(link) ? s : `${s}\n${link}`))
     .slice(0, 3);
   await admin.from("copy_generations").insert({ team_id: teamId, event_id: null, user_id: userId });
   return json({ options });
