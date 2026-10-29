@@ -71,7 +71,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "📝 Incident report form added to Resources, for organisers and on members' Resources tab. Group chat discussion prompts are under Coming soon (organisers only).",
+        text: "📝 Incident report form added to Resources, for organisers and on members' Resources tab. Group chat discussion prompts are under Coming soon (organisers only). The Outreach guide card matches the other resources.",
       },
       {
         level: "organiser",

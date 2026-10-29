@@ -24,16 +24,15 @@ export default async function GuidePage({ searchParams }: PageProps<"/guide">) {
         .maybeSingle<{ id: string; team: { slug: string } | null }>()
     : { data: null };
   // Organisers without a member profile can still share their community's QR.
-  const { data: org } =
-    user && !me
-      ? await supabase
-          .from("organisers")
-          .select("team:teams(slug)")
-          .eq("id", user.id)
-          .maybeSingle<{ team: { slug: string } | null }>()
-      : { data: null };
-  if (me) redirect("/me/guide"); // members get it as a tab
-  const slug = org?.team?.slug ?? asked;
+  const { data: org } = user
+    ? await supabase
+        .from("organisers")
+        .select("team:teams(slug)")
+        .eq("id", user.id)
+        .maybeSingle<{ team: { slug: string } | null }>()
+    : { data: null };
+  if (me && !org) redirect("/me/guide"); // members get it as a tab
+  const slug = me?.team?.slug ?? org?.team?.slug ?? asked;
 
   return (
     <AttendeeShell

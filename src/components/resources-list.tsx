@@ -51,7 +51,7 @@ export function ResourcesList({
       {has(q, "outreach guide conversation questions objections ibc") && (
         <a
           href="/guide"
-          className="mt-6 flex items-center justify-between rounded-2xl bg-pink px-4 py-3 text-navy"
+          className="mt-6 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
         >
           <span>
             <span className="block font-semibold">
@@ -60,7 +60,7 @@ export function ResourcesList({
               </span>
               Outreach guide
             </span>
-            <span className="block text-sm">
+            <span className="block text-sm text-stone-600">
               The conversation questions, for a quick look between
               conversations. Volunteers have it on their page too.
             </span>
@@ -76,7 +76,7 @@ export function ResourcesList({
             <GuideShare
               slug={teamSlug}
               label="Show QR code for newcomers"
-              className="text-sm font-medium text-pink-ink hover:underline"
+              className="text-xs text-stone-400 hover:text-navy hover:underline"
             />
           </div>
         )}
