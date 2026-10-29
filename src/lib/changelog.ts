@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'Equipment guide: Video station covers added to upgrades (details to come). The "Synced from activism.wtf" note on Events is now a quiet line (still a yellow box if the import fails).',
+      },
+      {
+        level: "organiser",
         text: 'Suggested events come up 2 months before now, and have Plan later: pick tomorrow, next week or a few weeks away, and "Plan your …" turns up in Actions that morning.',
       },
       {

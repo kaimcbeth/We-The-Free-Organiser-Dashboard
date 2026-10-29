@@ -242,6 +242,11 @@ export const EQUIPMENT_GUIDE: {
         url: "https://www.aliexpress.com/item/1005003770913674.html",
       },
       {
+        key: "video_station_covers",
+        name: "Video station covers",
+        about: "More details coming soon.",
+      },
+      {
         key: "sign_poles",
         name: "Sign poles",
         about: "Hold signs up high. Made from a few parts:",

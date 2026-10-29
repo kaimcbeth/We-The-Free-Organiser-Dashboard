@@ -45,17 +45,33 @@ export function ImportStatus({
     router.refresh();
   }
 
+  // Normally just a quiet line; a box only when the import is failing.
+  if (!warning)
+    return (
+      <p
+        data-tour="import-status"
+        className="flex flex-wrap items-center gap-x-2 text-xs text-stone-400"
+      >
+        <span>{text}</span>
+        <span aria-hidden>·</span>
+        <button
+          onClick={importNow}
+          disabled={busy}
+          className="hover:text-navy hover:underline disabled:opacity-60"
+        >
+          {busy ? "Checking…" : "Import now"}
+        </button>
+        {note && <span className="text-stone-500">{note}</span>}
+      </p>
+    );
+
   return (
     <div
       data-tour="import-status"
-      className={`flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-sm ${
-        warning
-          ? "bg-yellow/30 ring-1 ring-yellow"
-          : "bg-white ring-1 ring-black/5"
-      }`}
+      className="flex items-center justify-between gap-3 rounded-xl bg-yellow/30 px-3.5 py-2.5 text-sm ring-1 ring-yellow"
     >
       <p className="min-w-0 text-stone-600">
-        <span className={warning ? "font-semibold text-navy" : ""}>{text}</span>
+        <span className="font-semibold text-navy">{text}</span>
         {note && <span className="block text-navy">{note}</span>}
       </p>
       <button
