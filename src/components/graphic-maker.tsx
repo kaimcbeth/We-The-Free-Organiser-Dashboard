@@ -414,6 +414,8 @@ export function GraphicMaker({
               key={ownPhotos.map((p) => p.id).join()}
               photos={ownPhotos}
               title={event.title}
+              teamId={event.teamId}
+              eventId={event.eventId}
             />
           ) : (
             <>

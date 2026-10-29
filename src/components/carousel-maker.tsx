@@ -2,7 +2,9 @@
 
 import { useRef, useState } from "react";
 import { zipSync } from "fflate";
-import type { EventPhoto } from "@/lib/event-photos";
+import { PHOTO_TAGS, type EventPhoto } from "@/lib/event-photos";
+import { createClient } from "@/lib/supabase/client";
+import { Option } from "@/components/copy-maker";
 
 // Carousel (Instagram or Facebook) from an event's photos: each photo full-bleed at 4:5,
 // with the logo bubble top-right and www.activism.wtf bottom-left (like our
@@ -89,7 +91,11 @@ export function CarouselMaker({
   title,
   onlyFavourites = false,
   keepOrder = false,
+  teamId,
+  eventId,
 }: {
+  teamId?: string; // to write a caption (organisers)
+  eventId?: string; // the photos are from this event
   photos: EventPhoto[];
   title: string;
   onlyFavourites?: boolean; // start with just the favourites, in given order
@@ -421,6 +427,181 @@ export function CarouselMaker({
         On your phone, Share opens Instagram or Facebook with every slide ready
         to post.
       </p>
+      {teamId && chosen.length > 0 && (
+        <CaptionWriter teamId={teamId} eventId={eventId} photos={chosen} />
+      )}
+    </div>
+  );
+}
+
+const MONTH_NAMES = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+// Write a caption to post with the carousel, from what the photos show
+// (their event types, tags, notes and dates).
+function CaptionWriter({
+  teamId,
+  eventId,
+  photos,
+}: {
+  teamId: string;
+  eventId?: string;
+  photos: EventPhoto[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [places, setPlaces] = useState<Set<"instagram" | "facebook">>(
+    new Set(["instagram"]),
+  );
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [options, setOptions] = useState<Record<string, string[]> | null>(null);
+  const [round, setRound] = useState(0);
+
+  function context() {
+    const count = (xs: string[]) => {
+      const m = new Map<string, number>();
+      for (const x of xs) m.set(x, (m.get(x) ?? 0) + 1);
+      return [...m.entries()].map(([k, n]) => (n > 1 ? `${k} (${n})` : k));
+    };
+    const kinds = count(
+      photos.flatMap((p) => (p.eventKind ? [p.eventKind] : [])),
+    );
+    const tags = count(
+      photos.flatMap((p) =>
+        p.tags.map((t) => PHOTO_TAGS.find((x) => x.id === t)?.label ?? t),
+      ),
+    );
+    const notes = [
+      ...new Set(photos.flatMap((p) => (p.caption ? [p.caption] : []))),
+    ];
+    const dates = [
+      ...new Set(
+        photos.flatMap((p) =>
+          p.takenYear
+            ? [
+                `${p.takenMonth ? MONTH_NAMES[p.takenMonth - 1] + " " : ""}${p.takenYear}`,
+              ]
+            : [],
+        ),
+      ),
+    ];
+    return [
+      `${photos.length} photos`,
+      kinds.length ? `events: ${kinds.join(", ")}` : "",
+      tags.length ? `showing: ${tags.join(", ")}` : "",
+      notes.length ? `notes: ${notes.join("; ")}` : "",
+      dates.length ? `taken: ${dates.join(", ")}` : "",
+    ]
+      .filter(Boolean)
+      .join(". ");
+  }
+
+  async function write() {
+    setError("");
+    setBusy(true);
+    const { data, error: e } = await createClient().functions.invoke(
+      "write-copy",
+      {
+        body: {
+          purpose: "carousel",
+          teamId,
+          eventId,
+          platforms: [...places],
+          note,
+          context: context(),
+        },
+      },
+    );
+    setBusy(false);
+    let msg = data?.error as string | undefined;
+    if (!msg && e && "context" in e) {
+      try {
+        msg = (await (e.context as Response).json()).error;
+      } catch {}
+    }
+    if (e || msg)
+      return setError(msg ?? "Couldn't write that. Please try again.");
+    setOptions(data.options);
+    setRound((r) => r + 1);
+  }
+
+  if (!open)
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-3 w-full rounded-xl px-3 py-2.5 text-sm font-semibold text-navy ring-1 ring-black/10 hover:bg-white"
+      >
+        Write caption
+      </button>
+    );
+
+  return (
+    <div className="mt-3 rounded-2xl bg-white p-3 ring-1 ring-black/5">
+      <div className="flex flex-wrap gap-1.5">
+        {(["instagram", "facebook"] as const).map((pl) => {
+          const on = places.has(pl);
+          return (
+            <button
+              key={pl}
+              type="button"
+              onClick={() => {
+                const n = new Set(places);
+                if (on) n.delete(pl);
+                else n.add(pl);
+                setPlaces(n);
+              }}
+              className={`rounded-full px-3 py-1 text-sm font-medium ring-1 ${on ? "bg-navy text-white ring-navy" : "bg-white text-stone-600 ring-stone-300"}`}
+            >
+              {pl === "instagram" ? "Instagram" : "Facebook"}
+            </button>
+          );
+        })}
+      </div>
+      <textarea
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        rows={2}
+        placeholder="Anything to mention? (optional) e.g. our biggest coworking day yet"
+        className="mt-2 w-full rounded-xl bg-white p-2 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
+      />
+      <button
+        type="button"
+        disabled={busy || places.size === 0}
+        onClick={write}
+        className="mt-2 w-full rounded-xl bg-pink px-4 py-2 text-sm font-semibold text-navy hover:bg-pink-strong disabled:opacity-60"
+      >
+        {busy ? "Writing…" : options ? "Write new options" : "Write it"}
+      </button>
+      {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
+      {options &&
+        (["instagram", "facebook"] as const)
+          .filter((pl) => options[pl]?.length)
+          .map((pl) => (
+            <section key={`${pl}-${round}`} className="mt-3">
+              <h3 className="mb-1.5 text-sm font-semibold">
+                {pl === "instagram" ? "Instagram" : "Facebook"}
+              </h3>
+              <ul className="space-y-2">
+                {options[pl].map((t, i) => (
+                  <Option key={i} text={t} />
+                ))}
+              </ul>
+            </section>
+          ))}
     </div>
   );
 }

@@ -325,6 +325,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
             canRemove
             kinds={kinds}
             events={events}
+            teamId={teamId}
             onAttach={async (eventId) => {
               const ids = [...sel];
               const ev = events.find((e) => e.id === eventId);

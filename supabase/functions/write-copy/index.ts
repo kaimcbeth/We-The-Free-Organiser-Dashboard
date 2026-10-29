@@ -50,6 +50,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     if (body?.purpose === "feedback") return await feedbackCopy(asUser, user.id, key, body);
+    if (body?.purpose === "carousel") return await carouselCopy(asUser, user.id, key, body);
     const { eventId, platforms, note } = body;
     const target = Math.min(100, Math.max(1, Math.round(Number(body?.target) || 20)));
     const wanted = ((platforms as string[]) ?? []).filter((p) => p in PLATFORMS);
@@ -276,5 +277,102 @@ Reply with JSON only, no other text, shaped like {"whatsapp": ["...", "...", "..
     .map((s) => (s.includes(link) ? s : `${s}\n${link}`))
     .slice(0, 3);
   await admin.from("copy_generations").insert({ team_id: teamId, event_id: null, user_id: userId });
+  return json({ options });
+}
+
+// A caption to go with a photo carousel (Photo Hub, an event's photos or the
+// monthly recap). The app sends what the photos show (event types, tags,
+// notes, dates); we add the community's voice and its next events.
+// deno-lint-ignore no-explicit-any
+async function carouselCopy(asUser: any, userId: string, key: string, body: any) {
+  const { teamId, platforms, note, context, eventId } = body ?? {};
+  const wanted = ((platforms as string[]) ?? []).filter((p) => p in PLATFORMS);
+  if (!teamId || wanted.length === 0) return json({ error: "Pick at least one place to post." }, 400);
+  const url = Deno.env.get("SUPABASE_URL")!;
+  const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const { data: me } = await admin.from("organisers").select("access, team_id").eq("id", userId).maybeSingle();
+  if (!me || !(me.access === "god" || me.access === "regional_lead" || me.team_id === teamId))
+    return json({ error: "Only organisers and the Core Team can use this." }, 403);
+  const { data: team } = await asUser.from("teams").select("id, name, timezone").eq("id", teamId).maybeSingle();
+  if (!team) return json({ error: "Couldn't find that community." }, 404);
+
+  const since = new Date(Date.now() - 864e5).toISOString();
+  const { count } = await admin
+    .from("copy_generations")
+    .select("id", { count: "exact", head: true })
+    .eq("team_id", teamId)
+    .gte("created_at", since);
+  if ((count ?? 0) >= DAILY_LIMIT) return json({ error: "That's a lot of writing for one day. Try again tomorrow." }, 429);
+
+  const tz = team.timezone ?? "Australia/Sydney";
+  const fmt = (iso: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-AU", { timeZone: tz, ...o }).format(new Date(iso));
+  const when = (e: { starts_at: string }) => `${fmt(e.starts_at, { weekday: "long", day: "numeric", month: "long" })}, ${fmt(e.starts_at, { hour: "numeric", minute: "2-digit" })}`;
+  const community = String(team.name).replace(/, (Australia|New Zealand)$/, "");
+  const facts: string[] = [`Community: We The Free ${community}`];
+  if (eventId) {
+    const { data: ev } = await asUser.from("events").select("title, starts_at, venue").eq("id", eventId).maybeSingle();
+    if (ev) facts.push(`The photos are from: ${ev.title}, ${when(ev)}${ev.venue ? `, ${ev.venue}` : ""}`);
+  }
+  if (context && String(context).trim()) facts.push(`What the photos show (from their tags and notes): ${String(context).slice(0, 800)}`);
+  const { data: next } = await admin
+    .from("events")
+    .select("title, starts_at, venue, source_url")
+    .eq("team_id", teamId)
+    .gt("starts_at", new Date().toISOString())
+    .order("starts_at")
+    .limit(2);
+  if (next?.length)
+    facts.push(
+      `Upcoming events to invite people to (end with a clear, friendly call to action for these):\n${next
+        .map((n) => `- ${n.title}, ${when(n)}${n.venue ? `, ${n.venue}` : ""}${n.source_url ? ` (${n.source_url})` : ""}`)
+        .join("\n")}`,
+    );
+  if (note && String(note).trim()) facts.push(`From the organiser (use this, it's the heart of the post): ${String(note).slice(0, 600)}`);
+
+  const { data: voice } = await admin
+    .from("voice_examples")
+    .select("platform, body")
+    .eq("team_id", teamId)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  const prompt = `Write a post to go with a carousel of photos from our community (the photos go with it, so don't describe each one). Share the feeling of what we've been up to and invite people along.
+
+FACTS
+${facts.join("\n")}
+
+${voice?.length ? `VOICE EXAMPLES (past posts by this community; match this voice)\n${voice.map((v: { platform: string | null; body: string }, i: number) => `--- Example ${i + 1}${v.platform ? ` (${v.platform})` : ""}\n${v.body}`).join("\n")}` : "No voice examples: use a friendly, down-to-earth grassroots voice."}
+
+WRITE 3 different options for each of these:
+${wanted.map((p) => `- ${p}: ${PLATFORMS[p]}`).join("\n")}
+
+Reply with JSON only, no other text, shaped like {${wanted.map((p) => `"${p}": ["...", "...", "..."]`).join(", ")}}.`;
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+    body: JSON.stringify({
+      model: Deno.env.get("ANTHROPIC_MODEL") ?? "claude-sonnet-5-5",
+      max_tokens: 2500,
+      system: RULES,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  if (!res.ok) {
+    console.error(res.status, await res.text());
+    return json({ error: "The writing assistant didn't answer. Try again in a moment." }, 502);
+  }
+  const out = await res.json();
+  const text: string = (out.content ?? []).map((c: { text?: string }) => c.text ?? "").join("");
+  const match = text.match(/\{[\s\S]*\}/);
+  let options: Record<string, string[]> = {};
+  try {
+    options = JSON.parse(match ? match[0] : text);
+  } catch {
+    return json({ error: "That didn't come out right. Try again." }, 502);
+  }
+  for (const p of Object.keys(options))
+    options[p] = (options[p] ?? []).map((s) => String(s).replace(/\s*[—–]\s*/g, ", ").trim()).slice(0, 3);
+  await admin.from("copy_generations").insert({ team_id: teamId, event_id: eventId ?? null, user_id: userId });
   return json({ options });
 }

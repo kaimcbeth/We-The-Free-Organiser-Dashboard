@@ -66,6 +66,7 @@ export function MonthCarousel({
                 photos={photos}
                 title={`${name} recap`}
                 onlyFavourites={favourites > 0}
+                teamId={teamId}
               />
             </>
           )}

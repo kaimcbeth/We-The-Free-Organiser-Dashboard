@@ -359,7 +359,9 @@ export function BulkBar({
   kinds,
   events,
   onAttach,
+  teamId,
 }: {
+  teamId?: string; // lets the carousel write a caption
   kinds?: string[]; // event kinds to set (Photo Hub)
   // Photo Hub: move the selected photos onto an event listing.
   events?: { id: string; label: string }[];
@@ -517,7 +519,12 @@ export function BulkBar({
       {/* Outside the bar: its blur would otherwise trap the sheet inside it. */}
       {carousel && (
         <Sheet title="Carousel" onClose={() => setCarousel(false)}>
-          <CarouselMaker photos={photos} title="carousel" keepOrder />
+          <CarouselMaker
+            photos={photos}
+            title="carousel"
+            keepOrder
+            teamId={teamId}
+          />
         </Sheet>
       )}
     </>

@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Carousel maker: Write caption writes Instagram and Facebook captions from what the photos show (event types, tags, notes, dates), in your community's voice, with an invite to your next events. Members' Photo Hub no longer shows the little tag labels.",
+      },
+      {
+        level: "organiser",
         text: "Carousel maker: drag photos in the new Order row to rearrange the slides (the arrows still work); double-click a slide to zoom, crop and reposition it; pick the shape for every slide: Portrait 4:5, Square or Original (the first photo's own shape, as Instagram allows).",
       },
       {

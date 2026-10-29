@@ -103,6 +103,7 @@ export function EventPhotos({
         <>
           <div className="h-40" aria-hidden />
           <BulkBar
+            teamId={teamId}
             photos={photos.filter((p) => sel.has(p.id))}
             total={photos.length}
             onApply={bulk}
