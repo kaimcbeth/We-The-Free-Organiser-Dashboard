@@ -6,24 +6,17 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/actions";
-import { AttendeeShell } from "@/components/attendee-shell";
 import { DEFAULT_TEAM_SLUG } from "@/lib/teams";
 import { DEFAULT_TZ, formatEventDate, setRequestTz } from "@/lib/time";
 import { ProfileForm } from "./profile-form";
 import { PhotoPicker } from "@/components/photo-picker";
-import { Avatar } from "@/components/avatar";
 import { signPhotos } from "@/lib/photos";
-import { NotificationBell } from "@/components/notification-bell";
 import { WhatsAppJoin } from "@/components/whatsapp";
 import { PreviewBanner } from "@/components/preview-banner";
 import { TaskCard } from "@/components/task-card";
 import { loadMyTasks } from "@/lib/tasks";
 import { MemberTutorial, ReplayTour } from "./member-tutorial";
-import {
-  BuddySection,
-  ReminderSetting,
-  type BuddyDashboard,
-} from "./buddy-section";
+import { ReminderSetting, type BuddyDashboard } from "./buddy-section";
 import { MyEvents, type MyEvent } from "./my-events";
 
 type Me = {
@@ -89,31 +82,10 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
   const previewingAttendee = ["member", "new_member"].includes(viewAs);
   // God Mode "View as New member" runs the tour every time (and saves nothing).
   const previewNewMember = viewAs === "new_member" && !!organiser;
-  const staffLink = !!organiser && !previewingAttendee;
-  const headerRight = (
-    <div className="flex items-center gap-1">
-      <NotificationBell supabase={supabase} userId={user.id} />
-      {staffLink && (
-        <Link
-          href="/"
-          className="rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10"
-        >
-          {organiser!.access === "core_team"
-            ? "Take attendance"
-            : "Organiser view"}
-        </Link>
-      )}
-      <form action={signOut}>
-        <button className="rounded-lg px-3 py-2 text-sm text-white/75 hover:bg-white/10 hover:text-white">
-          Sign out
-        </button>
-      </form>
-    </div>
-  );
 
   if (!me && organiser) {
     return (
-      <AttendeeShell right={headerRight}>
+      <>
         <PreviewBanner />
         <h1 className="text-2xl font-semibold tracking-tight">
           Set up your profile
@@ -129,13 +101,13 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
         >
           Create my profile
         </Link>
-      </AttendeeShell>
+      </>
     );
   }
 
   if (!me) {
     return (
-      <AttendeeShell right={headerRight}>
+      <>
         <h1 className="text-2xl font-semibold tracking-tight">
           You&apos;re logged in
         </h1>
@@ -159,7 +131,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
             .
           </li>
         </ul>
-      </AttendeeShell>
+      </>
     );
   }
 
@@ -193,53 +165,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
   const now = Date.now();
 
   return (
-    <AttendeeShell
-      community={
-        (me.team?.name ?? "").replace(/, (Australia|New Zealand)$/, "") || null
-      }
-      right={
-        <div className="flex min-w-0 items-center gap-1">
-          <NotificationBell supabase={supabase} userId={user.id} />
-          {staffLink && (
-            <Link
-              href="/"
-              className="hidden rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10 sm:inline-block"
-            >
-              {organiser!.access === "core_team"
-                ? "Take attendance"
-                : "Organiser view"}
-            </Link>
-          )}
-          <a
-            href="#details"
-            className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pl-3 pr-1 hover:bg-white/10"
-            aria-label="Your details"
-          >
-            <span className="min-w-0 text-right leading-tight">
-              <span className="block truncate text-sm font-medium text-white">
-                {[me.first_name, me.last_name].filter(Boolean).join(" ")}
-              </span>
-              <span className="block truncate text-xs text-cyan">
-                {organiser?.access === "core_team" && !previewingAttendee
-                  ? "Core Team"
-                  : "Member"}
-              </span>
-            </span>
-            <Avatar
-              name={[me.first_name, me.last_name].filter(Boolean).join(" ")}
-              url={photos[me.id] ?? null}
-              size={36}
-              className="ring-2 ring-white/20"
-            />
-          </a>
-          <form action={signOut}>
-            <button className="rounded-lg px-2 py-2 text-xs text-white/60 hover:bg-white/10 hover:text-white">
-              Sign out
-            </button>
-          </form>
-        </div>
-      }
-    >
+    <>
       <PreviewBanner />
       {welcome && (
         <Link
@@ -288,7 +214,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
 
       {outreachToday ? (
         <Link
-          href="/guide"
+          href="/me/guide"
           className="mt-6 block rounded-2xl bg-pink p-4 text-navy shadow-sm hover:bg-pink-strong"
         >
           <span className="block text-lg font-semibold">
@@ -304,24 +230,10 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
       <div className="mt-6">
         <Link
           href="/me/welcome"
-          className="mr-4 inline-block text-sm font-medium text-pink-ink hover:underline"
+          className="inline-block text-sm font-medium text-pink-ink hover:underline"
         >
           Welcome to We The Free →
         </Link>
-        <Link
-          href="/me/photos"
-          className="mr-4 inline-block text-sm font-medium text-pink-ink hover:underline"
-        >
-          Photo Hub →
-        </Link>
-        {!outreachToday && (
-          <Link
-            href="/guide"
-            className="inline-block text-sm font-medium text-pink-ink hover:underline"
-          >
-            Outreach guide →
-          </Link>
-        )}
       </div>
 
       <section id="coming-up" className="mt-8 scroll-mt-4">
@@ -359,10 +271,17 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
       )}
 
       {buddy?.status === "ok" && (
-        <BuddySection
-          data={buddy as BuddyDashboard}
-          tz={me.team?.timezone ?? DEFAULT_TZ}
-        />
+        <Link
+          href="/me/support"
+          className="mt-8 block rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 hover:ring-pink"
+        >
+          <span className="block font-semibold">
+            You&apos;re supporting a new member
+          </span>
+          <span className="text-sm text-stone-600">
+            See who and how to help in New members →
+          </span>
+        </Link>
       )}
 
       <section className="mt-8">
@@ -411,8 +330,13 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
         <OpenFeedback preview={previewingAttendee && !!organiser} />
       </section>
 
-      <div className="mt-10 text-center">
+      <div className="mt-10 flex items-center justify-center gap-4">
         <ReplayTour />
+        <form action={signOut}>
+          <button className="text-sm text-stone-400 hover:text-navy hover:underline">
+            Sign out
+          </button>
+        </form>
       </div>
       <MemberTutorial
         firstName={me.first_name}
@@ -424,6 +348,6 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
         autoOpen={previewNewMember || !me.tutorial_done_at}
         preview={previewNewMember}
       />
-    </AttendeeShell>
+    </>
   );
 }

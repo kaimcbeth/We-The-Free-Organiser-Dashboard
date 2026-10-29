@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AttendeeShell } from "@/components/attendee-shell";
 import { QuestionSheet } from "@/components/question-sheet";
@@ -31,7 +32,8 @@ export default async function GuidePage({ searchParams }: PageProps<"/guide">) {
           .eq("id", user.id)
           .maybeSingle<{ team: { slug: string } | null }>()
       : { data: null };
-  const slug = me?.team?.slug ?? org?.team?.slug ?? asked;
+  if (me) redirect("/me/guide"); // members get it as a tab
+  const slug = org?.team?.slug ?? asked;
 
   return (
     <AttendeeShell

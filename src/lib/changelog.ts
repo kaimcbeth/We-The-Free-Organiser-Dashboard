@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Members get the same top bar as the Hub, with their own tabs: Events, Outreach (the guide), Photo Hub, New members (who they're supporting) and Resources (starting with legal). Sign out is at the bottom of their Events page.",
+      },
+      {
+        level: "organiser",
         text: "Members' Photo Hub no longer shows the Favourites filter (organisers still have it).",
       },
       {
@@ -79,7 +83,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: 'Equipment guide: Stand-up banner (✅ Budget Officeworks pull-up, ✨ Best Easy Signs fabric stand) and Video station covers (details to come) added to upgrades. The "Synced from activism.wtf" note on Events is now a quiet line (still a yellow box if the import fails).',
+        text: 'Equipment guide: Stand-up banner (✅ Budget Officeworks pull-up, ✨ Best Easy Signs fabric stand) Video station covers, Lanyards, VR headset and Lav mic (details to come) added to upgrades. The "Synced from activism.wtf" note on Events is now a quiet line (still a yellow box if the import fails).',
       },
       {
         level: "organiser",

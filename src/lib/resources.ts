@@ -268,6 +268,23 @@ export const EQUIPMENT_GUIDE: {
         ],
       },
       {
+        key: "lanyards",
+        name: "Lanyards",
+        about:
+          "So people can tell who's with the team. More details coming soon.",
+      },
+      {
+        key: "vr_headset",
+        name: "VR headset",
+        about: "For showing footage in 360°. More details coming soon.",
+      },
+      {
+        key: "lav_mic",
+        name: "Lav mic",
+        about:
+          "A small clip-on microphone for filming conversations and talks. More details coming soon.",
+      },
+      {
         key: "video_station_covers",
         name: "Video station covers",
         about: "More details coming soon.",
