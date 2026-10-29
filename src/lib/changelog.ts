@@ -71,7 +71,11 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: 'Equipment guide: Video station covers added to upgrades (details to come). The "Synced from activism.wtf" note on Events is now a quiet line (still a yellow box if the import fails).',
+        text: "Funding tab: a first look, with example numbers (your community's monthly amount and next payment) until it's connected to the We The Free website.",
+      },
+      {
+        level: "organiser",
+        text: 'Equipment guide: Stand-up banner (✅ Budget Officeworks pull-up, ✨ Best Easy Signs fabric stand) and Video station covers (details to come) added to upgrades. The "Synced from activism.wtf" note on Events is now a quiet line (still a yellow box if the import fails).',
       },
       {
         level: "organiser",
