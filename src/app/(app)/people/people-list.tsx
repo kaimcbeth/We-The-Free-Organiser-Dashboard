@@ -37,6 +37,7 @@ export type PersonRow = {
   engagement: Engagement | null;
   drift: Drift | null; // "Not seen in a while"
   role: Access | null;
+  created_at: string; // when they were added
 };
 
 export function PeopleList({
@@ -69,7 +70,13 @@ export function PeopleList({
   const [filter, setFilter] = useState<Filter>(initialFilter);
 
   const counts = useMemo(() => {
-    const c = { all: people.length, roles: 0, newcomers: 0, drift: 0 };
+    const c = {
+      all: people.length,
+      roles: 0,
+      newcomers: 0,
+      drift: 0,
+      added: 0,
+    };
     for (const p of people)
       for (const f of FILTERS) if (f.id !== "all" && f.match(p)) c[f.id]++;
     if (regionRoles) c.roles = regionRoles.length;
@@ -79,7 +86,14 @@ export function PeopleList({
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     const f = FILTERS.find((x) => x.id === filter)!;
-    const shown = filter === "all" ? people : people.filter(f.match);
+    const shown =
+      filter === "all"
+        ? people
+        : filter === "added"
+          ? people
+              .filter(f.match)
+              .sort((a, b) => b.created_at.localeCompare(a.created_at))
+          : people.filter(f.match);
     if (!q) return shown;
     return shown.filter((p) =>
       [p.first_name, p.last_name, p.suburb, p.email]
@@ -320,7 +334,9 @@ export function PeopleList({
   );
 }
 
-type Filter = "all" | "roles" | "newcomers" | "drift";
+type Filter = "all" | "roles" | "newcomers" | "drift" | "added";
+// "Recently added": added in the last 30 days (newest first).
+const RECENT_DAYS = 30;
 const FILTERS: {
   id: Filter;
   label: string;
@@ -338,6 +354,13 @@ const FILTERS: {
     match: (p) => p.status === "first_timer" || p.status === "newcomer",
   },
   { id: "drift", label: "Not seen in a while", match: (p) => !!p.drift },
+  {
+    id: "added",
+    label: "Recently added",
+    match: (p) =>
+      Date.parse(p.created_at) >
+      Date.parse(new Date().toISOString()) - RECENT_DAYS * 864e5,
+  },
 ];
 
 export type RegionRole = {

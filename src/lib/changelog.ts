@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "People: a Recently added filter shows everyone added in the last 30 days, newest first.",
+      },
+      {
+        level: "organiser",
         text: "Members and Core Team can open the Photo Hub from their page: browse, filter and download your community's photos. Only organisers can add, tag, crop or remove them.",
       },
       {

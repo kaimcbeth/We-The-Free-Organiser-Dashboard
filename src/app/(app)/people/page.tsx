@@ -50,7 +50,7 @@ export default async function PeoplePage({
   const { data, error } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, photo_updated_at, attended_before_app, new_to_activism, attendance(event:events(starts_at))",
+      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, photo_updated_at, attended_before_app, new_to_activism, created_at, attendance(event:events(starts_at))",
     )
     // Also people made Organiser for this community whose profile is elsewhere.
     .or(
@@ -217,7 +217,10 @@ export default async function PeoplePage({
       )}
       <PeopleList
         initialFilter={
-          show === "roles" || show === "newcomers" || show === "drift"
+          show === "roles" ||
+          show === "newcomers" ||
+          show === "drift" ||
+          show === "added"
             ? show
             : "all"
         }
