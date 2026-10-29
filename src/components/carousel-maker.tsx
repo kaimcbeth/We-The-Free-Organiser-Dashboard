@@ -10,7 +10,22 @@ import type { EventPhoto } from "@/lib/event-photos";
 
 const MAX = 20;
 const W = 1080;
-const H = 1350;
+const H = 1350; // portrait 4:5; other shapes work out their own height
+
+// Every slide in an Instagram carousel has the first slide's shape: portrait
+// 4:5, square, or the first photo's own shape (kept within 4:5 to 1.91:1).
+type Shape = "portrait" | "square" | "original";
+const SHAPES: { id: Shape; label: string }[] = [
+  { id: "portrait", label: "Portrait 4:5" },
+  { id: "square", label: "Square" },
+  { id: "original", label: "Original" },
+];
+const heightFor = (shape: Shape, firstRatio: number | null) =>
+  shape === "square"
+    ? W
+    : shape === "original" && firstRatio
+      ? Math.round(W / Math.min(1.91, Math.max(0.8, firstRatio)))
+      : H;
 const URL_TEXT = "www.activism.wtf";
 
 const loadImage = (url: string) =>
@@ -22,20 +37,23 @@ const loadImage = (url: string) =>
     img.src = url;
   });
 
-type Pos = { x: number; y: number }; // 0–1: which part of the photo shows
-const CENTRE: Pos = { x: 0.5, y: 0.5 };
+// x, y 0–1: which part of the photo shows; z: zoom (1 = just fills the frame).
+type Pos = { x: number; y: number; z?: number };
+const CENTRE: Pos = { x: 0.5, y: 0.5, z: 1 };
 
 async function renderSlide(
   photo: HTMLImageElement,
   mark: HTMLImageElement,
   pos: Pos,
+  H: number,
 ): Promise<Blob> {
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
   // Fill the frame, cropped where they dragged it (like CSS object-position).
-  const s = Math.max(W / photo.naturalWidth, H / photo.naturalHeight);
+  const s =
+    Math.max(W / photo.naturalWidth, H / photo.naturalHeight) * (pos.z ?? 1);
   const pw = photo.naturalWidth * s;
   const ph = photo.naturalHeight * s;
   ctx.drawImage(photo, (W - pw) * pos.x, (H - ph) * pos.y, pw, ph);
@@ -93,36 +111,20 @@ export function CarouselMaker({
   const [note, setNote] = useState("");
   const [made, setMade] = useState<File[] | null>(null); // ready to share
   const [pos, setPos] = useState<Record<string, Pos>>({});
-  const drag = useRef<{ id: string; x: number; y: number } | null>(null);
-
-  // Drag a slide to move the photo inside the frame.
-  function dragTo(e: React.PointerEvent<HTMLDivElement>) {
-    const d = drag.current;
-    const img = e.currentTarget.querySelector("img");
-    if (!d || !img?.naturalWidth) return;
-    const size = [img.naturalWidth, img.naturalHeight];
-    const box = e.currentTarget.getBoundingClientRect();
-    const s = Math.max(box.width / size[0], box.height / size[1]);
-    const overX = size[0] * s - box.width;
-    const overY = size[1] * s - box.height;
-    const dx = e.clientX - d.x;
-    const dy = e.clientY - d.y;
-    drag.current = { ...d, x: e.clientX, y: e.clientY };
-    const clamp = (n: number) => Math.min(1, Math.max(0, n));
-    setPos((all) => {
-      const p = all[d.id] ?? CENTRE;
-      return {
-        ...all,
-        [d.id]: {
-          x: overX > 0.5 ? clamp(p.x - dx / overX) : 0.5,
-          y: overY > 0.5 ? clamp(p.y - dy / overY) : 0.5,
-        },
-      };
-    });
+  const [editing, setEditing] = useState<string | null>(null); // double-clicked slide
+  const [shape, setShape] = useState<Shape>("portrait");
+  const [ratios, setRatios] = useState<Record<string, number>>({}); // w / h, as loaded
+  const setOne = (id: string, p: Pos) => {
+    setPos((all) => ({ ...all, [id]: p }));
     setMade(null);
-  }
+  };
+
   const byId = new Map(photos.map((p) => [p.id, p]));
   const chosen = order.map((id) => byId.get(id)).filter((p) => !!p);
+  const slideH = heightFor(
+    shape,
+    chosen[0] ? (ratios[chosen[0].id] ?? null) : null,
+  );
 
   function toggle(id: string) {
     setNote("");
@@ -154,7 +156,12 @@ export function CarouselMaker({
     for (let i = 0; i < chosen.length; i++) {
       setBusy(`Making slide ${i + 1} of ${chosen.length}…`);
       const img = await loadImage(chosen[i].url);
-      const blob = await renderSlide(img, mark, pos[chosen[i].id] ?? CENTRE);
+      const blob = await renderSlide(
+        img,
+        mark,
+        pos[chosen[i].id] ?? CENTRE,
+        slideH,
+      );
       files.push(
         new File([blob], `${slug}-${String(i + 1).padStart(2, "0")}.jpg`, {
           type: "image/jpeg",
@@ -246,6 +253,58 @@ export function CarouselMaker({
         })}
       </div>
 
+      {editing && byId.get(editing) && (
+        <div
+          role="dialog"
+          aria-label="Zoom and crop"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-navy/70 p-4"
+        >
+          <div className="w-full max-w-sm rounded-3xl bg-background p-4">
+            <p className="mb-2 text-sm font-semibold text-navy">
+              Drag to move · slide to zoom
+            </p>
+            <SlideFrame
+              photo={byId.get(editing)!}
+              pos={pos[editing] ?? CENTRE}
+              onPos={(np) => setOne(editing, np)}
+              className="rounded-xl shadow"
+              aspect={W / slideH}
+            />
+            <input
+              type="range"
+              min={1}
+              max={3}
+              step={0.01}
+              value={(pos[editing] ?? CENTRE).z ?? 1}
+              onChange={(e) =>
+                setOne(editing, {
+                  ...(pos[editing] ?? CENTRE),
+                  z: Number(e.target.value),
+                })
+              }
+              aria-label="Zoom"
+              className="mt-3 w-full accent-pink"
+            />
+            <div className="mt-3 flex justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setOne(editing, CENTRE)}
+                className="rounded-xl px-4 py-2 text-sm font-medium text-stone-600 ring-1 ring-black/10 hover:bg-white"
+              >
+                Reset
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditing(null)}
+                className="rounded-xl bg-navy px-5 py-2 text-sm font-semibold text-white"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {chosen.length > 1 && (
         <OrderStrip
           photos={chosen}
@@ -263,42 +322,42 @@ export function CarouselMaker({
 
       {chosen.length > 0 && (
         <>
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+            <span className="text-xs font-medium text-stone-500">Shape:</span>
+            {SHAPES.map((sh) => (
+              <button
+                key={sh.id}
+                type="button"
+                onClick={() => {
+                  setShape(sh.id);
+                  setMade(null);
+                }}
+                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${shape === sh.id ? "bg-navy text-white ring-navy" : "bg-white text-stone-600 ring-stone-300"}`}
+              >
+                {sh.label}
+              </button>
+            ))}
+          </div>
           <p className="mt-4 text-xs font-medium text-stone-500">
-            Preview · drag a photo to move it in the frame
+            Preview · drag a photo to move it, double-click to zoom and crop
           </p>
           <div className="mt-1.5 flex snap-x gap-2 overflow-x-auto rounded-2xl bg-stone-100 p-2">
             {chosen.map((p, i) => (
               <div key={p.id} className="w-44 shrink-0 snap-start">
-                <div
-                  className="relative aspect-[4/5] cursor-grab touch-none select-none overflow-hidden rounded-lg shadow active:cursor-grabbing"
-                  onPointerDown={(e) => {
-                    e.currentTarget.setPointerCapture(e.pointerId);
-                    drag.current = { id: p.id, x: e.clientX, y: e.clientY };
-                  }}
-                  onPointerMove={dragTo}
-                  onPointerUp={() => (drag.current = null)}
-                  onPointerCancel={() => (drag.current = null)}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
-                  <img
-                    src={p.url}
-                    alt=""
-                    draggable={false}
-                    style={{
-                      objectPosition: `${(pos[p.id] ?? CENTRE).x * 100}% ${(pos[p.id] ?? CENTRE).y * 100}%`,
-                    }}
-                    className="pointer-events-none h-full w-full object-cover"
-                  />
-                  {/* eslint-disable-next-line @next/next/no-img-element -- static logo */}
-                  <img
-                    src="/brand/wtf-mark.png"
-                    alt=""
-                    className="absolute right-[4%] top-[3.3%] h-[5.3%] w-auto drop-shadow"
-                  />
-                  <span className="absolute bottom-[4%] left-[6.3%] text-[5px] font-medium text-white drop-shadow sm:text-[5.5px]">
-                    {URL_TEXT}
-                  </span>
-                </div>
+                <SlideFrame
+                  photo={p}
+                  pos={pos[p.id] ?? CENTRE}
+                  onPos={(np) => setOne(p.id, np)}
+                  onDoubleClick={() => setEditing(p.id)}
+                  className="rounded-lg shadow"
+                  small
+                  aspect={W / slideH}
+                  onRatio={(r) =>
+                    setRatios((all) =>
+                      all[p.id] === r ? all : { ...all, [p.id]: r },
+                    )
+                  }
+                />
                 <div className="mt-1 flex items-center justify-between text-xs text-stone-500">
                   <button
                     type="button"
@@ -438,6 +497,95 @@ function OrderStrip({
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// One slide at 4:5, as it'll come out: drag to move the photo in the frame.
+// Zoom (pos.z) scales around the same point the canvas uses, so it matches.
+function SlideFrame({
+  photo,
+  pos,
+  onPos,
+  onDoubleClick,
+  className = "",
+  small = false,
+  aspect,
+  onRatio,
+}: {
+  aspect: number; // width / height of the slide
+  onRatio?: (r: number) => void; // the photo's own shape, once loaded
+  photo: EventPhoto;
+  pos: Pos;
+  onPos: (p: Pos) => void;
+  onDoubleClick?: () => void;
+  className?: string;
+  small?: boolean;
+}) {
+  const drag = useRef<{ x: number; y: number } | null>(null);
+  const z = pos.z ?? 1;
+  return (
+    <div
+      style={{ aspectRatio: aspect }}
+      className={`relative cursor-grab touch-none select-none overflow-hidden active:cursor-grabbing ${className}`}
+      onPointerDown={(e) => {
+        e.currentTarget.setPointerCapture(e.pointerId);
+        drag.current = { x: e.clientX, y: e.clientY };
+      }}
+      onPointerMove={(e) => {
+        const d = drag.current;
+        const img = e.currentTarget.querySelector("img");
+        if (!d || !img?.naturalWidth) return;
+        const box = e.currentTarget.getBoundingClientRect();
+        const s =
+          Math.max(
+            box.width / img.naturalWidth,
+            box.height / img.naturalHeight,
+          ) * z;
+        const overX = img.naturalWidth * s - box.width;
+        const overY = img.naturalHeight * s - box.height;
+        const dx = e.clientX - d.x;
+        const dy = e.clientY - d.y;
+        drag.current = { x: e.clientX, y: e.clientY };
+        const clamp = (n: number) => Math.min(1, Math.max(0, n));
+        onPos({
+          z,
+          x: overX > 0.5 ? clamp(pos.x - dx / overX) : 0.5,
+          y: overY > 0.5 ? clamp(pos.y - dy / overY) : 0.5,
+        });
+      }}
+      onPointerUp={() => (drag.current = null)}
+      onPointerCancel={() => (drag.current = null)}
+      onDoubleClick={onDoubleClick}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
+      <img
+        src={photo.url}
+        alt=""
+        draggable={false}
+        onLoad={(e) =>
+          onRatio?.(
+            e.currentTarget.naturalWidth / e.currentTarget.naturalHeight,
+          )
+        }
+        style={{
+          objectPosition: `${pos.x * 100}% ${pos.y * 100}%`,
+          transform: z !== 1 ? `scale(${z})` : undefined,
+          transformOrigin: `${pos.x * 100}% ${pos.y * 100}%`,
+        }}
+        className="pointer-events-none h-full w-full object-cover"
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element -- static logo */}
+      <img
+        src="/brand/wtf-mark.png"
+        alt=""
+        className="absolute right-[4%] top-[3.3%] h-[5.3%] w-auto drop-shadow"
+      />
+      <span
+        className={`absolute bottom-[4%] left-[6.3%] font-medium text-white drop-shadow ${small ? "text-[5px] sm:text-[5.5px]" : "text-[9px]"}`}
+      >
+        {URL_TEXT}
+      </span>
     </div>
   );
 }

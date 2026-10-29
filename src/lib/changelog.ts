@@ -71,7 +71,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "Carousel maker: drag photos in the new Order row to rearrange the slides (the arrows still work).",
+        text: "Carousel maker: drag photos in the new Order row to rearrange the slides (the arrows still work); double-click a slide to zoom, crop and reposition it; pick the shape for every slide: Portrait 4:5, Square or Original (the first photo's own shape, as Instagram allows).",
       },
       {
         level: "organiser",
