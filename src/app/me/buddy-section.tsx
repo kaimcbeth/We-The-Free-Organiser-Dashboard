@@ -393,9 +393,6 @@ function Contact({ person, tz }: { person: Pair["newcomer"]; tz: string }) {
           WhatsApp
         </a>
       )}
-      <a href={`tel:${person.phone.replace(/[^\d+]/g, "")}`} className={btn}>
-        Call
-      </a>
       <button type="button" onClick={saveContact} className={btn}>
         Save contact
       </button>

@@ -9,6 +9,8 @@ import { describeImport } from "@/lib/import-status";
 import { requireOrganiser } from "@/lib/organiser";
 import { RegionEvents } from "./region-events";
 import { SetupChecklist, type SetupStatus } from "./setup-checklist";
+import { SuggestedEvents } from "./suggested-events";
+import type { Suggestion } from "@/lib/special-events";
 import {
   dayBoundsUtc,
   daysUntilLabel,
@@ -175,6 +177,17 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
     ? { data: null }
     : await supabase.rpc("team_setup_status", { p_team_id: organiser.team_id });
   const setup = setupData as SetupStatus | null;
+  const [{ data: suggestData }, { data: suggestOn }] = await Promise.all([
+    supabase.rpc("suggested_events", { p_team_id: organiser.team_id }),
+    supabase
+      .from("teams")
+      .select("suggest_events")
+      .eq("id", organiser.team_id)
+      .maybeSingle(),
+  ]);
+  const suggestions = (suggestData ?? []) as Suggestion[];
+  const canManageSpecial =
+    organiser.role === "god" || organiser.role === "regional_lead";
 
   return (
     <div className="space-y-8">
@@ -273,6 +286,13 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
       </section>
 
       {next && <NextUp event={next} actions={actionsFor.get(next.id) ?? 0} />}
+
+      <SuggestedEvents
+        teamId={organiser.team_id}
+        suggestions={suggestions}
+        on={suggestOn?.suggest_events ?? true}
+        canManage={canManageSpecial}
+      />
 
       <EventList
         title="Upcoming"

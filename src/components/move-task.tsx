@@ -69,6 +69,8 @@ export function MoveTask({
     plain("tomorrow", "Tomorrow", addDays(today, 1)),
     plain("3days", "In 3 days", addDays(today, 3)),
     plain("week", "Next week", addDays(today, 7)),
+    plain("2weeks", "In 2 weeks", addDays(today, 14)),
+    plain("month", "In a month", addDays(today, 30)),
   ];
 
   const go = (o: Option) =>

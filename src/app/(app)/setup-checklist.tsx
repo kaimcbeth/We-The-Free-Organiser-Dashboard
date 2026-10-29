@@ -11,6 +11,7 @@ export type SetupStatus = {
   events: boolean;
   actions: boolean;
   core_team: boolean;
+  suggestions?: boolean;
   dismissed: boolean;
 };
 
@@ -67,6 +68,7 @@ export function SetupChecklist({
   const [wa, setWa] = useState("");
   const [waOpen, setWaOpen] = useState(false);
   const [waDone, setWaDone] = useState(status.whatsapp);
+  const [suggestDone, setSuggestDone] = useState(status.suggestions ?? true);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
 
@@ -75,6 +77,7 @@ export function SetupChecklist({
     { key: "events", done: status.events },
     { key: "actions", done: status.actions },
     { key: "core_team", done: status.core_team },
+    { key: "suggestions", done: suggestDone },
   ];
   const doneCount = items.filter((i) => i.done).length;
   if (hidden || doneCount === items.length) return null;
@@ -204,6 +207,37 @@ export function SetupChecklist({
               <Link href="/roles" className={link}>
                 Go to Roles
               </Link>
+            </Row>
+            <Row
+              done={suggestDone}
+              title="Special event suggestions"
+              text="A few weeks before special events like Halloween, the Hub can suggest one on your Events page, and show how many other teams are doing it. Never required: hide any you don't want. You can change this later on the Events page."
+            >
+              <span className="flex gap-4">
+                {[
+                  { on: true, label: "Show them" },
+                  { on: false, label: "No thanks" },
+                ].map((o) => (
+                  <button
+                    key={o.label}
+                    type="button"
+                    className={link}
+                    onClick={() => {
+                      setSuggestDone(true);
+                      if (preview) return;
+                      start(async () => {
+                        await createClient().rpc("set_suggest_events", {
+                          p_team_id: teamId,
+                          p_on: o.on,
+                        });
+                        router.refresh();
+                      });
+                    }}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </span>
             </Row>
           </ul>
           <div className="mt-6 flex items-center justify-between">

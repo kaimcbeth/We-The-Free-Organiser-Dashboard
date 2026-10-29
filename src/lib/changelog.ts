@@ -70,6 +70,22 @@ export const CHANGELOG: Release[] = [
     title: "Monthly recap carousel",
     changes: [
       {
+        level: "organiser",
+        text: "Moving an action: two more choices, In 2 weeks and In a month.",
+      },
+      {
+        level: "organiser",
+        text: "Suggested events: a few weeks before special events like the Halloween Movie Challenge or a Christmas social, a faded card shows in Events with how many teams in your region and worldwide are on board. Plan it (opens activism.wtf to create it) or × to hide it until next year. Switch suggestions off on the Events page or in Get ready.",
+      },
+      {
+        level: "regional_lead",
+        text: "Special events (link on the Events page): add, edit or remove the special events suggested to teams in your region, and see which teams are on board.",
+      },
+      {
+        level: "organiser",
+        text: "New member support: the Call button is gone (WhatsApp and Save contact stay).",
+      },
+      {
         level: "god",
         text: "Usage page (God Mode, top bar): which parts of the app people open and how often, split by members, Core Team, organisers and RSLs. Counting starts today.",
       },
