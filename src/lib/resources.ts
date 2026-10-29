@@ -71,6 +71,9 @@ export const CONDITIONS: { id: Condition; label: string }[] = [
   { id: "needs_replacing", label: "Needs replacing" },
 ];
 
+// When the prices in the guide were taken from the shops' listings.
+export const PRICES_CHECKED = "29 October 2026";
+
 // Which photo slot: the item, or one of its options (e.g. "table:best").
 export const photoKey = (itemKey: string, option?: { label: string }) =>
   option ? `${itemKey}:${option.label.toLowerCase()}` : itemKey;
@@ -81,8 +84,9 @@ export type EquipmentItem = {
   about: string;
   shop?: string; // no shop or link: there's a purchasing guide instead
   url?: string;
+  price?: string; // from the listing, inc GST, e.g. "$69" (see PRICES_CHECKED)
   // Made from several parts bought separately (each with its own link).
-  parts?: { name: string; shop: string; url: string }[];
+  parts?: { name: string; shop: string; url: string; price?: string }[];
   // Tips for buying it, shown in a pop-up (instead of a shop link).
   guide?: { label: string; text: string }[];
   image?: string; // a default photo (under /equipment); uploads replace it
@@ -92,6 +96,7 @@ export type EquipmentItem = {
     label: string;
     about: string;
     url?: string; // where to buy it (if you can)
+    price?: string;
     instructions?: string; // DIY: link to how-to ("" = coming soon)
     contactLead?: string; // get it from your Regional Support Lead (pop-up text)
     image?: string; // a default photo for this option
@@ -121,6 +126,7 @@ export const EQUIPMENT_GUIDE: {
             about: "A standard 6ft trestle table.",
             shop: "Bunnings",
             url: "https://www.bunnings.com.au/lifetime-6ft-standard-blow-mould-trestle-table_p3192212",
+            price: "$69",
           },
           {
             label: "Best",
@@ -139,6 +145,7 @@ export const EQUIPMENT_GUIDE: {
           "Light, weatherproof signs inviting people to take the challenge.",
         shop: "Easy Signs",
         url: "https://www.easysigns.com.au/products/details/signflute-corrugated-plastic-signs",
+        price: "$137.50 for 4 (600 × 900mm)",
         guide: [
           {
             label: "When you order",
@@ -217,11 +224,13 @@ export const EQUIPMENT_GUIDE: {
             label: "Budget",
             about: "Corrugated plastic panels that slot into the frame.",
             url: "https://www.easysigns.com.au/products/details/signflute-insertable-a-frame-sandwich-board",
+            price: "$132.44 with 2 printed signs",
           },
           {
             label: "Best",
             about: "Full-colour digital print with lamination.",
             url: "https://www.easysigns.com.au/products/details/a-frame-with-full-colour-digital-print-lamination",
+            price: "$192.50",
           },
         ],
       },
@@ -242,16 +251,19 @@ export const EQUIPMENT_GUIDE: {
             name: "Tuscan Path 280mm black garden edging pegs (10 pack)",
             shop: "Bunnings",
             url: "https://www.bunnings.com.au/tuscan-path-280mm-black-garden-edging-peg-10-pack-black_p0238074",
+            price: "$13.98",
           },
           {
             name: "Hy-Clor 1.2m to 3.6m extension pole (3 piece)",
             shop: "Bunnings",
             url: "https://www.bunnings.com.au/hy-clor-1-2m-3-6m-extension-pole-3-piece-1-2-3-6m_p0293231",
+            price: "$22",
           },
           {
             name: "Holman 16 to 27mm stainless steel hose clamp",
             shop: "Bunnings",
             url: "https://www.bunnings.com.au/holman-16-27mm-stainless-steel-hose-clamp_p0779876",
+            price: "$1.62",
           },
         ],
       },

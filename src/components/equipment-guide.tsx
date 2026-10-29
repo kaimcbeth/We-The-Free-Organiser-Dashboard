@@ -6,6 +6,7 @@ import { GearTracker } from "@/components/gear-tracker";
 import {
   CONDITIONS,
   EQUIPMENT_GUIDE,
+  PRICES_CHECKED,
   photoKey,
   type Condition,
   type EquipmentItem,
@@ -273,6 +274,12 @@ export function Equipment({
             )}
           </div>
         ))}
+      {!hidden && (
+        <p className="-mt-3 text-xs text-stone-500">
+          Prices are from each shop&apos;s listing on {PRICES_CHECKED},
+          including GST but not shipping. They change, so check before you buy.
+        </p>
+      )}
       {teamId && (
         <GearTracker
           teamId={teamId}
@@ -353,6 +360,11 @@ function EquipmentRow({
               <span className="block font-medium text-navy">{item.name}</span>
             )}
             <span className="block text-sm text-stone-600">{item.about}</span>
+            {(opt ? opt.price : item.price) && (
+              <span className="mt-0.5 block text-sm font-semibold text-navy">
+                {opt ? opt.price : item.price}
+              </span>
+            )}
             {item.parts && (
               <ul className="mt-1 space-y-0.5">
                 {item.parts.map((part) => (
@@ -366,6 +378,11 @@ function EquipmentRow({
                       {part.name}
                     </a>{" "}
                     <span className="text-xs text-stone-500">
+                      {part.price && (
+                        <span className="font-semibold text-navy">
+                          {part.price} ·{" "}
+                        </span>
+                      )}
                       {part.shop} ↗
                     </span>
                   </li>
