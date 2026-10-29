@@ -1,23 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { createClient as createPlainClient } from "@supabase/supabase-js";
 import { inputClass } from "@/components/form";
 
-// Log in with an emailed 6-digit code (the email also has a link as a backup).
-// `next` is where to go once signed in.
+// Log in with a link in an email. The link carries the login itself (not a
+// code tied to this browser), so it works wherever it opens, e.g. a phone's
+// mail app opening a different browser. AuthFromLink signs them in when they
+// land. `next` is where to go once signed in.
 export function EmailCodeLogin({
   next,
-  buttonLabel = "Email me a code",
+  buttonLabel = "Email me a login link",
 }: {
   next: string;
   buttonLabel?: string;
 }) {
-  const router = useRouter();
-  const [step, setStep] = useState<"email" | "code">("email");
+  const [step, setStep] = useState<"email" | "sent">("email");
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [providers, setProviders] = useState({
@@ -61,9 +61,22 @@ export function EmailCodeLogin({
     e.preventDefault();
     setBusy(true);
     setError("");
-    // Remember where to go if they use the link instead of the code.
+    // Remember where to go after they tap the link.
     document.cookie = `after_login=${encodeURIComponent(next)}; path=/; max-age=3600; samesite=lax`;
-    const { error } = await createClient().auth.signInWithOtp({
+    // The link-carries-the-login kind of email (not tied to this browser).
+    const linkClient = createPlainClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+      {
+        auth: {
+          flowType: "implicit",
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+        },
+      },
+    );
+    const { error } = await linkClient.auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: `${window.location.origin}/auth/confirm` },
     });
@@ -75,75 +88,32 @@ export function EmailCodeLogin({
           : "Couldn't send the email. Check the address and try again.",
       );
     } else {
-      setStep("code");
+      setStep("sent");
     }
   }
 
-  async function verify(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    setError("");
-    const { error } = await createClient().auth.verifyOtp({
-      email: email.trim(),
-      token: code.replace(/\s/g, ""),
-      type: "email",
-    });
-    if (error) {
-      setBusy(false);
-      setError("That code didn't work. Check it, or send a new one.");
-      return;
-    }
-    router.replace(next);
-    router.refresh();
-  }
-
-  if (step === "code") {
+  if (step === "sent") {
     return (
-      <form onSubmit={verify} className="space-y-3">
-        <p className="text-sm text-stone-600">
-          We emailed a code to{" "}
-          <span className="font-medium text-stone-900">{email}</span>. Enter it
-          below, or tap the link in the email.
+      <div className="space-y-3">
+        <p className="rounded-2xl bg-white p-4 text-stone-700 shadow-sm ring-1 ring-black/5">
+          Check your email. We sent a login link to{" "}
+          <span className="font-medium text-stone-900">{email}</span>. Tap it
+          and you&apos;re in, on this device or any other.
         </p>
-        <label
-          htmlFor="code"
-          className="block text-sm font-medium text-stone-700"
-        >
-          Code
-        </label>
-        <input
-          id="code"
-          required
-          autoFocus
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          pattern="[0-9 ]*"
-          maxLength={12}
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          className={`${inputClass} text-center text-2xl font-semibold tracking-[0.3em]`}
-          placeholder="••••••"
-        />
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full rounded-xl bg-pink px-4 py-3 text-base font-semibold text-navy hover:bg-pink-strong disabled:opacity-60"
-        >
-          {busy ? "Checking…" : "Log in"}
-        </button>
-        {error && <p className="text-sm text-red-700">{error}</p>}
+        <p className="text-sm text-stone-500">
+          Can&apos;t see it? Check your junk folder, or wait a minute.
+        </p>
         <button
           type="button"
           onClick={() => {
             setStep("email");
-            setCode("");
             setError("");
           }}
           className="text-sm font-medium text-pink-ink"
         >
-          Use a different email or send a new code
+          Use a different email or send it again
         </button>
-      </form>
+      </div>
     );
   }
 

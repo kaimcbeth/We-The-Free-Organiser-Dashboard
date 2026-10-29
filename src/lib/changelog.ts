@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Logging in is now just a link: enter your email, tap the link in the email and you're in. It works on phones even when the email opens in a different browser. No more codes.",
+      },
+      {
+        level: "organiser",
         text: "A small version tag (Alpha 0.29 to start with) sits next to Movement Hub at the top, and on What's new with the build number. It goes up by itself as changes ship.",
       },
       {

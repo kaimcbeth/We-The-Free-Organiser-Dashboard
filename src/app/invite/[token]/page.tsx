@@ -91,7 +91,7 @@ export default async function InvitePage({
         ) : (
           <EmailCodeLogin
             next={`/invite/${token}`}
-            buttonLabel="Email me a code"
+            buttonLabel="Email me a login link"
           />
         )}
       </div>

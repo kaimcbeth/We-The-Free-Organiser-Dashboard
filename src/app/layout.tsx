@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { TestAccountBar } from "@/components/test-account-bar";
+import { AuthFromLink } from "@/components/auth-from-link";
 
 export const metadata: Metadata = {
   title: "Movement Hub",
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
+        <AuthFromLink />
         {children}
         <TestAccountBar />
       </body>
