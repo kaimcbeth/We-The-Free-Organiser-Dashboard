@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Carousel maker: drag photos in the new Order row to rearrange the slides (the arrows still work).",
+      },
+      {
+        level: "organiser",
         text: "Photo Hub: select photos and Attach to event… to move them onto an event listing. Photos on an event (uploaded there or moved) are tagged automatically: the event type from the listing, plus Community event or Outreach.",
       },
       {

@@ -246,6 +246,21 @@ export function CarouselMaker({
         })}
       </div>
 
+      {chosen.length > 1 && (
+        <OrderStrip
+          photos={chosen}
+          onMove={(from, to) => {
+            setMade(null);
+            setOrder((o) => {
+              const n = [...o];
+              const [x] = n.splice(from, 1);
+              n.splice(to, 0, x);
+              return n;
+            });
+          }}
+        />
+      )}
+
       {chosen.length > 0 && (
         <>
           <p className="mt-4 text-xs font-medium text-stone-500">
@@ -347,6 +362,82 @@ export function CarouselMaker({
         On your phone, Share opens Instagram or Facebook with every slide ready
         to post.
       </p>
+    </div>
+  );
+}
+
+// The chosen photos in slide order: drag one (mouse or finger) to a new spot.
+function OrderStrip({
+  photos,
+  onMove,
+}: {
+  photos: EventPhoto[];
+  onMove: (from: number, to: number) => void;
+}) {
+  const [from, setFrom] = useState<number | null>(null);
+  const [over, setOver] = useState<number | null>(null);
+
+  const indexAt = (x: number, y: number) => {
+    for (const el of document.elementsFromPoint(x, y)) {
+      const i = (el as HTMLElement).dataset?.slide;
+      if (i !== undefined) return Number(i);
+    }
+    return null;
+  };
+
+  return (
+    <div className="mt-3">
+      <p className="text-xs font-medium text-stone-500">
+        Order · drag to rearrange
+      </p>
+      <div className="mt-1.5 flex flex-wrap gap-1.5">
+        {photos.map((p, i) => (
+          <div
+            key={p.id}
+            data-slide={i}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+              setFrom(i);
+              setOver(i);
+            }}
+            onPointerMove={(e) => {
+              if (from === null) return;
+              const at = indexAt(e.clientX, e.clientY);
+              if (at !== null) setOver(at);
+            }}
+            onPointerUp={() => {
+              if (from !== null && over !== null && over !== from)
+                onMove(from, over);
+              setFrom(null);
+              setOver(null);
+            }}
+            onPointerCancel={() => {
+              setFrom(null);
+              setOver(null);
+            }}
+            style={{ touchAction: "none" }}
+            className={`relative h-14 w-14 cursor-grab select-none overflow-hidden rounded-lg ring-2 transition active:cursor-grabbing ${
+              from === i
+                ? "opacity-40 ring-pink"
+                : over === i && from !== null
+                  ? "scale-105 ring-navy"
+                  : "ring-transparent"
+            }`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
+            <img
+              src={p.url}
+              alt=""
+              draggable={false}
+              className="pointer-events-none h-full w-full object-cover"
+            />
+            <span className="pointer-events-none absolute left-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[10px] font-bold text-navy">
+              {i + 1}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
