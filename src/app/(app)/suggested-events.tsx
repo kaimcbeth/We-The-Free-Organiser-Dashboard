@@ -84,6 +84,8 @@ function SuggestionCard({ teamId, s }: { teamId: string; s: Suggestion }) {
   const router = useRouter();
   const [planning, setPlanning] = useState(!!s.planning);
   const [confirm, setConfirm] = useState(false);
+  const [later, setLater] = useState(false);
+  const [error, setError] = useState("");
   const [gone, setGone] = useState(false);
   const [, start] = useTransition();
   if (gone) return null;
@@ -99,6 +101,30 @@ function SuggestionCard({ teamId, s }: { teamId: string; s: Suggestion }) {
       router.refresh();
     });
   const shown = { ...s, planning, ...countsFor(s, planning) };
+  const laterOptions = [
+    { days: 1, label: "Tomorrow" },
+    { days: 7, label: "Next week" },
+    { days: 14, label: "In 2 weeks" },
+    { days: 28, label: "In 4 weeks" },
+  ].filter((o) => o.days < s.days);
+  const planLater = (days: number) => {
+    // 6am that day, the same time other actions show up.
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    d.setHours(6, 0, 0, 0);
+    setError("");
+    start(async () => {
+      const { data } = await createClient().rpc("plan_special_event_later", {
+        p_team_id: teamId,
+        p_event_id: s.id,
+        p_year: s.year,
+        p_show_from: d.toISOString(),
+      });
+      if (data !== "ok") return setError("Couldn't move that. Try again?");
+      setGone(true);
+      router.refresh();
+    });
+  };
 
   return (
     <div className="relative rounded-2xl border border-dashed border-stone-300 bg-white/50 p-4">
@@ -119,11 +145,38 @@ function SuggestionCard({ teamId, s }: { teamId: string; s: Suggestion }) {
         </span>
         {shortDate(s.date)} · {whenLabel(s.days)}
       </p>
-      <p className="mt-1.5 font-semibold text-navy/80">{s.name}</p>
+      <p className="mt-1.5 font-semibold text-navy/80">
+        {s.emoji && <span className="mr-1.5">{s.emoji}</span>}
+        {s.name}
+      </p>
       {s.blurb && <p className="mt-0.5 text-sm text-stone-500">{s.blurb}</p>}
       <p className="mt-2 text-xs text-stone-500">{onBoardLine(shown)}</p>
 
-      {confirm ? (
+      {later ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-stone-600">
+            Put &ldquo;Plan your {s.name}&rdquo; in Actions:
+          </span>
+          {laterOptions.map((o) => (
+            <button
+              key={o.days}
+              type="button"
+              onClick={() => planLater(o.days)}
+              className="rounded-lg px-2.5 py-1 font-medium text-navy ring-1 ring-black/10 hover:bg-stone-50"
+            >
+              {o.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setLater(false)}
+            className="rounded-lg px-2 py-1 text-stone-500 hover:bg-stone-100"
+          >
+            Cancel
+          </button>
+          {error && <p className="w-full text-red-700">{error}</p>}
+        </div>
+      ) : confirm ? (
         <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
           <span className="text-stone-600">Hide this until next year?</span>
           <button
@@ -183,6 +236,15 @@ function SuggestionCard({ teamId, s }: { teamId: string; s: Suggestion }) {
             >
               Plan it
             </a>
+          )}
+          {!planning && laterOptions.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setLater(true)}
+              className="text-sm text-stone-500 hover:text-navy hover:underline"
+            >
+              Plan later
+            </button>
           )}
           {s.link && (
             <a

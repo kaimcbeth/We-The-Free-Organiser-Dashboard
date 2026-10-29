@@ -26,7 +26,7 @@ export default async function SpecialEventsPage() {
     supabase
       .from("special_events")
       .select(
-        "id, name, blurb, link, month, day, next_date, lead_days, region_ids",
+        "id, name, emoji, blurb, link, month, day, next_date, lead_days, region_ids",
       )
       .order("month", { nullsFirst: false })
       .order("day")

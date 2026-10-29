@@ -42,7 +42,9 @@ export async function loadTaskSetup(
       )
       .is("archived_at", null)
       .eq("audience", "community")
-      .neq("schedule", "follow_up") // come from another action, not chosen
+      // Follow-ups come from another action, and special-event ones from
+      // "Plan later": neither is chosen here.
+      .not("schedule", "in", "(follow_up,special)")
       .or(`team_id.is.null,team_id.eq.${teamId}`)
       .order("sort_order"),
     supabase

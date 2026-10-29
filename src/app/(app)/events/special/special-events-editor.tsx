@@ -6,6 +6,17 @@ import { createClient } from "@/lib/supabase/client";
 import { Sheet } from "@/components/sheet";
 import { MONTHS, shortDate, type SpecialEvent } from "@/lib/special-events";
 
+const LEADS = [
+  { days: 14, label: "2 weeks" },
+  { days: 21, label: "3 weeks" },
+  { days: 28, label: "4 weeks" },
+  { days: 42, label: "6 weeks" },
+  { days: 61, label: "2 months" },
+  { days: 91, label: "3 months" },
+];
+const leadLabel = (days: number) =>
+  LEADS.find((l) => l.days === days)?.label ?? `${Math.round(days / 7)} weeks`;
+
 type Row = SpecialEvent & { on_date: string | null; on_board: string[] };
 type Region = { id: string; name: string };
 
@@ -46,14 +57,17 @@ export function SpecialEventsEditor({
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="font-semibold">{e.name}</p>
+              <p className="font-semibold">
+                {e.emoji && <span className="mr-1.5">{e.emoji}</span>}
+                {e.name}
+              </p>
               <p className="text-sm text-stone-500">
                 {e.month && e.day
                   ? `${e.day} ${MONTHS[e.month - 1]} every year`
                   : e.next_date
                     ? shortDate(e.next_date)
                     : "No date set"}{" "}
-                · suggested {Math.round(e.lead_days / 7)} weeks before ·{" "}
+                · suggested {leadLabel(e.lead_days)} before ·{" "}
                 {regionName(e.region_ids)}
               </p>
             </div>
@@ -124,13 +138,14 @@ function EditSheet({
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [name, setName] = useState(e?.name ?? "");
+  const [emoji, setEmoji] = useState(e?.emoji ?? "");
   const [blurb, setBlurb] = useState(e?.blurb ?? "");
   const [link, setLink] = useState(e?.link ?? "");
   const [yearly, setYearly] = useState(e ? !!e.month : true);
   const [month, setMonth] = useState(e?.month ?? 1);
   const [day, setDay] = useState(e?.day ?? 1);
   const [date, setDate] = useState(e?.next_date ?? "");
-  const [weeks, setWeeks] = useState(e ? Math.round(e.lead_days / 7) : 6);
+  const [lead, setLead] = useState(e?.lead_days ?? 61);
   const [where, setWhere] = useState<string[] | null>(
     isGod ? (e?.region_ids ?? null) : myRegion ? [myRegion] : null,
   );
@@ -143,12 +158,13 @@ function EditSheet({
       return setError("Pick at least one region, or Worldwide.");
     const row = {
       name: name.trim(),
+      emoji: emoji.trim() || null,
       blurb: blurb.trim() || null,
       link: link.trim() || null,
       month: yearly ? month : null,
       day: yearly ? day : null,
       next_date: yearly ? null : date,
-      lead_days: Math.min(180, Math.max(1, weeks * 7)),
+      lead_days: lead,
       region_ids: where,
     };
     start(async () => {
@@ -178,15 +194,27 @@ function EditSheet({
       onClose={onClose}
     >
       <div className="space-y-3">
-        <label className="block text-sm">
-          <span className="font-medium">Name</span>
-          <input
-            value={name}
-            onChange={(v) => setName(v.target.value)}
-            placeholder="Halloween Movie Challenge"
-            className={`mt-1 ${input}`}
-          />
-        </label>
+        <div className="flex gap-2">
+          <label className="block w-20 text-sm">
+            <span className="font-medium">Emoji</span>
+            <input
+              value={emoji}
+              onChange={(v) => setEmoji(v.target.value)}
+              placeholder="🎃"
+              maxLength={8}
+              className={`mt-1 ${input} text-center`}
+            />
+          </label>
+          <label className="block flex-1 text-sm">
+            <span className="font-medium">Name</span>
+            <input
+              value={name}
+              onChange={(v) => setName(v.target.value)}
+              placeholder="Halloween Movie Challenge"
+              className={`mt-1 ${input}`}
+            />
+          </label>
+        </div>
         <div className="text-sm">
           <span className="font-medium">Date</span>
           <div className="mt-1 flex gap-4">
@@ -238,17 +266,20 @@ function EditSheet({
         </div>
         <label className="block text-sm">
           <span className="font-medium">Suggest it</span>
-          <span className="mt-1 flex items-center gap-2">
-            <input
-              type="number"
-              min={1}
-              max={25}
-              value={weeks}
-              onChange={(v) => setWeeks(Number(v.target.value) || 1)}
-              className={`${input.replace("w-full", "")} w-20`}
-            />
-            weeks before
-          </span>
+          <select
+            value={lead}
+            onChange={(v) => setLead(Number(v.target.value))}
+            className={`mt-1 ${input}`}
+          >
+            {!LEADS.some((l) => l.days === lead) && (
+              <option value={lead}>{leadLabel(lead)} before</option>
+            )}
+            {LEADS.map((l) => (
+              <option key={l.days} value={l.days}>
+                {l.label} before
+              </option>
+            ))}
+          </select>
         </label>
         <label className="block text-sm">
           <span className="font-medium">Short blurb</span>

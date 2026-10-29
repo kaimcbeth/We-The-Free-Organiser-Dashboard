@@ -4,7 +4,7 @@ import {
   changelogFor,
   COMING_SOON,
   STAGE,
-  STAGE_TAG,
+  STAGE_TAG_LIGHT,
   VERSION,
   type ChangeLevel,
 } from "@/lib/changelog";
@@ -59,7 +59,7 @@ export default async function WhatsNewPage() {
           What&apos;s new
           <span className="flex items-center gap-1.5 text-sm font-medium text-stone-400">
             <span
-              className={`rounded px-1.5 text-xs font-semibold ${STAGE_TAG}`}
+              className={`rounded px-1.5 text-xs font-medium ${STAGE_TAG_LIGHT}`}
             >
               {STAGE} {VERSION}
             </span>

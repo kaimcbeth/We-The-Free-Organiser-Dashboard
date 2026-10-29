@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'Suggested events come up 2 months before now, and have Plan later: pick tomorrow, next week or a few weeks away, and "Plan your …" turns up in Actions that morning.',
+      },
+      {
+        level: "organiser",
         text: "Moving an action: two more choices, In 2 weeks and In a month.",
       },
       {
@@ -790,13 +794,20 @@ export const CHANGELOG: Release[] = [
 // in total. Still alpha (see the stage below); bump STAGE when that changes.
 export const STAGE = "Alpha";
 
-// Colour of the version tag: yellow while in alpha, blue once in beta.
+// Colour of the version tag, kept washed out: yellow while in alpha, blue
+// once in beta. STAGE_TAG sits on the navy header; STAGE_TAG_LIGHT on white.
 export const STAGE_TAG: string =
   STAGE === "Alpha"
-    ? "bg-yellow text-navy"
+    ? "bg-yellow/15 text-yellow/70"
     : STAGE === "Beta"
-      ? "bg-cyan text-navy"
+      ? "bg-cyan/15 text-cyan/70"
       : "bg-white/10 text-white/60";
+export const STAGE_TAG_LIGHT: string =
+  STAGE === "Alpha"
+    ? "bg-yellow/30 text-navy/60"
+    : STAGE === "Beta"
+      ? "bg-cyan/25 text-navy/60"
+      : "bg-stone-100 text-stone-500";
 export const VERSION = `0.${CHANGELOG.length}`;
 export const BUILD = CHANGELOG.reduce((n, r) => n + r.changes.length, 0);
 

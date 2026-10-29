@@ -30,7 +30,7 @@ export function AttendeeShell({
                   <EasterEggLogo className="block text-xs font-bold uppercase tracking-wider text-pink" />
                   <span
                     title={`${STAGE} ${VERSION}, build ${BUILD}`}
-                    className={`rounded px-1 text-[10px] font-semibold leading-4 ${STAGE_TAG}`}
+                    className={`rounded px-1 text-[10px] font-medium leading-4 ${STAGE_TAG}`}
                   >
                     {STAGE} {VERSION}
                   </span>

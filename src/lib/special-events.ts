@@ -8,6 +8,7 @@ export const NEW_EVENT_URL = "https://mystats.wtf/events/new";
 export type Suggestion = {
   id: string;
   name: string;
+  emoji: string | null;
   blurb: string | null;
   link: string | null;
   date: string; // yyyy-mm-dd
@@ -22,6 +23,7 @@ export type Suggestion = {
 export type SpecialEvent = {
   id: string;
   name: string;
+  emoji: string | null;
   blurb: string | null;
   link: string | null;
   month: number | null;
