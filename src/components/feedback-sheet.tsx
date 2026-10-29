@@ -208,6 +208,9 @@ function Responses({ list }: { list: FeedbackResponse[] }) {
               })}
               {r.rating ? ` · ${SCALE[r.rating - 1]}` : ""}
             </p>
+            {r.message && (
+              <p className="mt-1.5 whitespace-pre-line">{r.message}</p>
+            )}
             {r.going_well && (
               <p className="mt-1.5">
                 <span className="font-medium">Working well: </span>

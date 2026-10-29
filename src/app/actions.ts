@@ -1177,6 +1177,7 @@ export type FeedbackResponse = {
   rating: number | null;
   going_well: string | null;
   better: string | null;
+  message: string | null; // open feedback from a volunteer's own page
   name: string | null;
   created_at: string;
 };
@@ -1194,7 +1195,7 @@ export async function getFeedback(teamId: string): Promise<{
       .maybeSingle(),
     supabase
       .from("volunteer_feedback")
-      .select("id, rating, going_well, better, name, created_at")
+      .select("id, rating, going_well, better, message, name, created_at")
       .eq("team_id", teamId)
       .order("created_at", { ascending: false })
       .limit(200),

@@ -1,4 +1,5 @@
 import { OriginEditor } from "@/components/origin-editor";
+import { OpenFeedback } from "./open-feedback";
 import { cookies } from "next/headers";
 import { VIEW_AS_COOKIE } from "@/lib/organiser";
 import Link from "next/link";
@@ -419,6 +420,13 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
           Your details
         </h2>
         <ProfileForm me={me} />
+      </section>
+
+      <section id="feedback" className="mt-8 scroll-mt-4">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+          Feedback
+        </h2>
+        <OpenFeedback preview={previewingAttendee && !!organiser} />
       </section>
 
       <div className="mt-10 text-center">

@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Volunteers have a Feedback box on their own page: open feedback to their organisers, with their name or anonymously. It shows with the rest of your volunteer feedback.",
+      },
+      {
+        level: "organiser",
         text: "Fixed: members' own page (and the Outreach guide) couldn't find their profile since 23 October, so it asked them to set one up. Their page works again.",
       },
       {
