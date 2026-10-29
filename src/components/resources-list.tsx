@@ -26,7 +26,10 @@ export function ResourcesList({
       has(q, r.title, r.about, r.area, r.tip, s.title),
     ),
   })).filter((s) => s.items.length);
-  const soon = RESOURCES_COMING_SOON.filter((r) => has(q, r.title, r.about));
+  const core = path.startsWith("/attendance");
+  const soon = RESOURCES_COMING_SOON.filter(
+    (r) => !(core && r.organisersOnly) && has(q, r.title, r.about),
+  );
 
   return (
     <div>

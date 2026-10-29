@@ -36,7 +36,11 @@ export const RESOURCE_SECTIONS: { title: string; items: Resource[] }[] = [
 ];
 
 // Shown under "Coming soon" on the Resources page.
-export const RESOURCES_COMING_SOON: { title: string; about: string }[] = [
+export const RESOURCES_COMING_SOON: {
+  title: string;
+  about: string;
+  organisersOnly?: boolean; // not on the Core Team's Resources
+}[] = [
   {
     title: "Our theory of change",
     about: "How our outreach leads to change, and where each event fits in.",
@@ -54,9 +58,10 @@ export const RESOURCES_COMING_SOON: { title: string; about: string }[] = [
     about: "How we look after each other at events and online.",
   },
   {
-    title: "Incident report form",
+    title: "Group chat discussion prompts",
     about:
-      "For recording anything that goes wrong at an event, so it can be followed up.",
+      "Questions and conversation starters to keep your community chat lively between events.",
+    organisersOnly: true,
   },
   {
     title: "Fundraising guide",
