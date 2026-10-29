@@ -27,7 +27,8 @@ export async function savePhoto(id: string, c: PhotoChange) {
     .eq("id", id);
 }
 
-// One photo in a grid. Tap it for: tags, favourite, crop, download
+// One photo in a grid. The star in the corner favourites it; tap the photo
+// for tags, crop, download
 // (and remove, where that's allowed).
 export function PhotoTile({
   p,
@@ -104,11 +105,20 @@ export function PhotoTile({
           className="h-full w-full object-cover"
         />
       </button>
-      {p.favourite && (
-        <span className="absolute left-1.5 top-1.5 rounded-full bg-white/90 px-1.5 text-xs">
-          ⭐
-        </span>
-      )}
+      <button
+        type="button"
+        onClick={() => onChange({ favourite: !p.favourite })}
+        aria-pressed={p.favourite}
+        aria-label={p.favourite ? "Unstar" : "Favourite"}
+        title={p.favourite ? "Unstar" : "Favourite"}
+        className={`absolute left-1.5 top-1.5 rounded-full px-1.5 text-xs transition ${
+          p.favourite
+            ? "bg-white/90"
+            : "bg-white/30 opacity-50 grayscale hover:opacity-100 hover:grayscale-0"
+        }`}
+      >
+        ⭐
+      </button>
       {p.tags.length > 0 && (
         <span
           aria-label={`Tags: ${p.tags.join(", ")}`}
@@ -156,13 +166,6 @@ export function PhotoTile({
               );
             })}
           </div>
-          <button
-            type="button"
-            onClick={() => onChange({ favourite: !p.favourite })}
-            className={item}
-          >
-            {p.favourite ? "Unstar" : "Favourite"}
-          </button>
           <button
             type="button"
             onClick={() => {
@@ -242,6 +245,11 @@ export function PhotoTile({
 
 // "All / Outreach / Group photo / Volunteers" filter, with counts. Hidden
 // when no photo has a tag yet.
+// A photo filter: a tag, or just the favourites.
+export type PhotoFilter = PhotoTag | "favourite" | null;
+export const matchesFilter = (p: EventPhoto, f: PhotoFilter) =>
+  !f || (f === "favourite" ? p.favourite : p.tags.includes(f));
+
 export function TagFilter({
   photos,
   value,
@@ -249,15 +257,16 @@ export function TagFilter({
   small = false,
 }: {
   photos: EventPhoto[];
-  value: PhotoTag | null;
-  onChange: (t: PhotoTag | null) => void;
+  value: PhotoFilter;
+  onChange: (t: PhotoFilter) => void;
   small?: boolean;
 }) {
+  const favourites = photos.filter((p) => p.favourite).length;
   const counts = PHOTO_TAGS.map((t) => ({
     ...t,
     n: photos.filter((p) => p.tags.includes(t.id)).length,
   })).filter((t) => t.n > 0);
-  if (counts.length === 0) return null;
+  if (counts.length === 0 && favourites === 0) return null;
   const chip = (on: boolean) =>
     `rounded-full ${small ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm"} font-medium ring-1 ${on ? "bg-navy text-white ring-navy" : "bg-white text-stone-600 ring-stone-300"}`;
   return (
@@ -269,6 +278,15 @@ export function TagFilter({
       >
         All
       </button>
+      {favourites > 0 && (
+        <button
+          type="button"
+          onClick={() => onChange(value === "favourite" ? null : "favourite")}
+          className={chip(value === "favourite")}
+        >
+          ⭐ Favourites <span className="opacity-60">{favourites}</span>
+        </button>
+      )}
       {counts.map((t) => (
         <button
           key={t.id}

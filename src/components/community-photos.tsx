@@ -16,7 +16,9 @@ import {
   PhotoTile,
   savePhoto,
   TagFilter,
+  matchesFilter,
   type PhotoChange,
+  type PhotoFilter,
 } from "@/components/photo-tile";
 
 // Community photos: good photos that aren't from one event in the app (often
@@ -53,7 +55,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
   const [month, setMonth] = useState("");
   const [caption, setCaption] = useState("");
   const [tags, setTags] = useState<PhotoTag[]>([]);
-  const [filter, setFilter] = useState<PhotoTag | null>(null);
+  const [filter, setFilter] = useState<PhotoFilter>(null);
   const [sel, setSel] = useState<Set<string> | null>(null); // select mode
   const [trash, setTrash] = useState<EventPhoto[] | null>(null); // Removed, open
 
@@ -89,9 +91,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
 
   // Grouped by rough date, in the order they came back (newest first).
   const groups: { label: string; list: EventPhoto[] }[] = [];
-  for (const p of (photos ?? []).filter(
-    (x) => !filter || x.tags.includes(filter),
-  )) {
+  for (const p of (photos ?? []).filter((x) => matchesFilter(x, filter))) {
     const label = when(p);
     const g = groups.find((x) => x.label === label);
     if (g) g.list.push(p);
@@ -256,15 +256,13 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
           <div className="h-40" aria-hidden />
           <BulkBar
             photos={photos.filter((p) => sel.has(p.id))}
-            total={
-              photos.filter((x) => !filter || x.tags.includes(filter)).length
-            }
+            total={photos.filter((x) => matchesFilter(x, filter)).length}
             onApply={bulk}
             onSelectAll={() =>
               setSel(
                 new Set(
                   photos
-                    .filter((x) => !filter || x.tags.includes(filter))
+                    .filter((x) => matchesFilter(x, filter))
                     .map((p) => p.id),
                 ),
               )

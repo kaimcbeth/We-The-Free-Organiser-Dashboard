@@ -11,7 +11,11 @@ import {
   type EventPhoto,
   type PhotoTag,
 } from "@/lib/event-photos";
-import { TagFilter } from "@/components/photo-tile";
+import {
+  TagFilter,
+  matchesFilter,
+  type PhotoFilter,
+} from "@/components/photo-tile";
 
 // Event graphics, drawn in the browser on a canvas from the event's details
 // and the community's own photos, in We The Free colours, downloaded as PNG.
@@ -306,7 +310,7 @@ export function GraphicMaker({
   const [promoPhotos, setPromoPhotos] = useState<EventPhoto[]>([]);
   const [ownPhotos, setOwnPhotos] = useState<EventPhoto[]>([]);
   const [chosen, setChosen] = useState<string | null>(null); // photo id, "" = none
-  const [tag, setTag] = useState<PhotoTag | null>(null);
+  const [tag, setTag] = useState<PhotoFilter>(null);
   const [imgs, setImgs] = useState<HTMLImageElement[]>([]);
   const [logo, setLogo] = useState<HTMLImageElement | null>(null);
   const [reload, setReload] = useState(0); // bumped after an upload
@@ -337,7 +341,7 @@ export function GraphicMaker({
 
   // Which photos the current template uses.
   const all = template === "recap" ? ownPhotos : promoPhotos;
-  const pool = tag ? all.filter((p) => p.tags.includes(tag)) : all;
+  const pool = all.filter((p) => matchesFilter(p, tag));
   const pickId = chosen === null ? (pool[0]?.id ?? "") : chosen;
   const urls =
     template === "recap"
