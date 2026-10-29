@@ -1,7 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type PhotoTag =
-  "outreach" | "group" | "volunteers" | "watching" | "community" | "sign";
+  | "outreach"
+  | "group"
+  | "volunteers"
+  | "watching"
+  | "community"
+  | "sign"
+  | "training";
 // short: the tiny label on photo thumbnails.
 export const PHOTO_TAGS: { id: PhotoTag; label: string; short: string }[] = [
   { id: "outreach", label: "Outreach", short: "Outreach" },
@@ -10,6 +16,7 @@ export const PHOTO_TAGS: { id: PhotoTag; label: string; short: string }[] = [
   { id: "watching", label: "Watching", short: "Watching" },
   { id: "community", label: "Community event", short: "Community" },
   { id: "sign", label: "Holding sign", short: "Sign" },
+  { id: "training", label: "Training", short: "Training" },
 ];
 
 export type EventPhoto = {

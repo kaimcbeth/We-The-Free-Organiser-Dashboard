@@ -100,10 +100,7 @@ export function ResourcesList({
         </a>
       )}
       {sections.map((s) => (
-        <section key={s.title} className="mt-6">
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
-            {s.title}
-          </h2>
+        <section key={s.title} className="mt-3">
           <ul className="space-y-3">
             {s.items.map((r) => (
               <li key={r.file}>

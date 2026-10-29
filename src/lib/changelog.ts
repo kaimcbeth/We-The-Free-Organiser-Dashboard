@@ -79,7 +79,11 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Photos: hold Cmd (Mac) or Ctrl (Windows) and click to select several at once for bulk changes; double-click a photo to see it full screen; Make carousel from up to 20 selected photos; Removed photos (under Community photos) to restore anything removed. New tags: Community event and Holding sign, and each photo shows its tags small in the corner. Not for promo is gone (any photos marked that way are back to normal).",
+        text: "Photos: hold Cmd (Mac) or Ctrl (Windows) and click to select several at once for bulk changes; double-click a photo to see it full screen; tap the star in a photo's corner to favourite it, and filter by ⭐ Favourites; Make carousel from up to 20 selected photos; Removed photos (under Photo Hub) to restore anything removed. New tags: Community event, Holding sign and Training, and each photo shows its tags small in the corner. Not for promo is gone (any photos marked that way are back to normal).",
+      },
+      {
+        level: "organiser",
+        text: "Community photos in Resources & Training is now called Photo Hub.",
       },
       {
         level: "organiser",

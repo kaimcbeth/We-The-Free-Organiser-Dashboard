@@ -101,7 +101,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
   return (
     <section id="photos" className="mt-6">
       <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
-        Community photos
+        Photo Hub
       </h2>
       <div className="rounded-2xl bg-white p-3 ring-1 ring-black/5">
         <p className="text-sm text-stone-600">
