@@ -258,13 +258,22 @@ export function GearTracker({
                     {g.notes && ` · ${g.notes}`}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setMoving(g)}
-                  className="shrink-0 rounded-xl px-3 py-1.5 text-sm font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50"
-                >
-                  Location
-                </button>
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setEditing(g)}
+                    className="rounded-xl px-2.5 py-1.5 text-sm font-medium text-stone-500 hover:bg-stone-50 hover:text-navy"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMoving(g)}
+                    className="rounded-xl px-3 py-1.5 text-sm font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50"
+                  >
+                    Location
+                  </button>
+                </div>
               </li>
             );
           })}
