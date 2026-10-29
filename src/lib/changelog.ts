@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "New weekly action for Throwback Thursday: Throwback photo posted. Find a throwback shows Photo Hub photos from this month 1, 2, 5... years ago (like Facebook memories), with a download button and a couple of captions.",
+      },
+      {
+        level: "organiser",
         text: "What to get next (Funding page and the equipment guide): the gear your community doesn't have yet, base kit first, as the ✨ Best version, with Can get now or Enough in about N months from your banked funding (example numbers for now). Hand trolley, Video player box, Disinfectant spray and Spring clamps (for windy days) added to upgrades.",
       },
       {
