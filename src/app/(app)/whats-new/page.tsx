@@ -1,5 +1,12 @@
 import { requireOrganiser } from "@/lib/organiser";
-import { changelogFor, COMING_SOON, type ChangeLevel } from "@/lib/changelog";
+import {
+  BUILD,
+  changelogFor,
+  COMING_SOON,
+  STAGE,
+  VERSION,
+  type ChangeLevel,
+} from "@/lib/changelog";
 import { MarkSeen } from "./mark-seen";
 import { Suggest, type Suggestion } from "./suggest";
 
@@ -47,8 +54,11 @@ export default async function WhatsNewPage() {
     <div className="space-y-6">
       <MarkSeen />
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="flex items-baseline gap-2 text-2xl font-semibold tracking-tight">
           What&apos;s new
+          <span className="text-sm font-medium text-stone-400">
+            {STAGE} {VERSION} · build {BUILD}
+          </span>
         </h1>
         <p className="mt-1 text-sm text-stone-500">
           Recent changes to the Movement Hub

@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "A small version tag (Alpha 0.29 to start with) sits next to Movement Hub at the top, and on What's new with the build number. It goes up by itself as changes ship.",
+      },
+      {
+        level: "organiser",
         text: "Equipment guide: Viewing devices (laptops, with a purchasing guide), Table banner (DIY, or Best from your Regional Support Lead) and a Bell in Upgrades. Signs and A-frames have a purchasing guide (order vertical flute; cheaper past 4 signs). Budget and Best are now ticked separately in your inventory, with a dot on the ones you have.",
       },
       {
@@ -712,6 +716,13 @@ export const CHANGELOG: Release[] = [
     ],
   },
 ];
+
+// The version, worked out from this file so it moves on by itself: the minor
+// number is how many releases there have been, the build is how many changes
+// in total. Still alpha (see the stage below); bump STAGE when that changes.
+export const STAGE = "Alpha";
+export const VERSION = `0.${CHANGELOG.length}`;
+export const BUILD = CHANGELOG.reduce((n, r) => n + r.changes.length, 0);
 
 export const LATEST_CHANGE = CHANGELOG[0]
   ? `${CHANGELOG[0].date}-${CHANGELOG.length}`

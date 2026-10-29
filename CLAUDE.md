@@ -27,6 +27,7 @@ git push origin main
 - Visual check: temporary page under `src/app/checkin/zz-*`, `npx next dev -p 31xx`, Python Playwright with `executable_path="/opt/pw-browsers/chromium"`. Kill the server, delete the zz folder and `.next/dev` afterwards.
 - React 19 lint: no `Date.now()` in render (eslint-disable comment in server components), no setState in effects, no components defined inside components.
 - Add a line to `src/lib/changelog.ts` (What's new) for anything users will notice; `COMING_SOON` there for planned items.
+- The version tag (header, What's new) comes from the changelog: `0.<releases>`, build = total changes. Adding entries moves it on; change `STAGE` there when it leaves alpha.
 
 ## Kai's preferences
 
