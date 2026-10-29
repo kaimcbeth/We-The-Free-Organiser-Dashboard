@@ -263,7 +263,7 @@ export function GearTracker({
                   onClick={() => setMoving(g)}
                   className="shrink-0 rounded-xl px-3 py-1.5 text-sm font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50"
                 >
-                  Handed to…
+                  Location
                 </button>
               </li>
             );
@@ -319,7 +319,7 @@ function HandOver({
     .filter((p) => full(p).toLowerCase().includes(q.trim().toLowerCase()))
     .slice(0, 30);
   return (
-    <Sheet title={`Who has the ${item.name}?`} onClose={onClose}>
+    <Sheet title={`Where is the ${item.name}?`} onClose={onClose}>
       {(item.model || item.source || item.condition || item.notes) && (
         <div className="mb-3 space-y-0.5 text-sm text-stone-600">
           {item.model && <p>Model: {item.model}</p>}
