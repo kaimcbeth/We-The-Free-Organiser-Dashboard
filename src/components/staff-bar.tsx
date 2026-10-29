@@ -133,12 +133,20 @@ export function StaffBar({
           </label>
         )}
         {isGod && !viewingAs && (
-          <Link
-            href="/test-accounts"
-            className="ml-auto rounded-md px-1.5 py-0.5 font-medium opacity-75 hover:bg-white/10 hover:opacity-100"
-          >
-            Test account
-          </Link>
+          <span className="ml-auto flex gap-1">
+            <Link
+              href="/usage"
+              className="rounded-md px-1.5 py-0.5 font-medium opacity-75 hover:bg-white/10 hover:opacity-100"
+            >
+              Usage
+            </Link>
+            <Link
+              href="/test-accounts"
+              className="rounded-md px-1.5 py-0.5 font-medium opacity-75 hover:bg-white/10 hover:opacity-100"
+            >
+              Test account
+            </Link>
+          </span>
         )}
         {viewingAs && (
           <button

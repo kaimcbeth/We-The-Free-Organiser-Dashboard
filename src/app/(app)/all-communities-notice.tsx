@@ -11,6 +11,7 @@ const REGION_WIDE = [
   "/people",
   "/facebook-groups",
   "/test-accounts",
+  "/usage",
   "/events/",
 ];
 

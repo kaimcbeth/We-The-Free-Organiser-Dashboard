@@ -70,6 +70,10 @@ export const CHANGELOG: Release[] = [
     title: "Monthly recap carousel",
     changes: [
       {
+        level: "god",
+        text: "Usage page (God Mode, top bar): which parts of the app people open and how often, split by members, Core Team, organisers and RSLs. Counting starts today.",
+      },
+      {
         level: "organiser",
         text: "Members' page has a top bar like the organiser Hub: community name, version, the bell, and their name and photo (tap to jump to their details). The carousel maker shows one set of photos now: chosen first in order (drag to reorder, tap to take out), the rest faded below.",
       },

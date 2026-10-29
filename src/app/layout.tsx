@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { TestAccountBar } from "@/components/test-account-bar";
 import { AuthFromLink } from "@/components/auth-from-link";
+import { UsageTracker } from "@/components/usage-tracker";
 
 export const metadata: Metadata = {
   title: "Movement Hub",
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col font-sans">
         <AuthFromLink />
+        <UsageTracker />
         {children}
         <TestAccountBar />
       </body>
