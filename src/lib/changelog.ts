@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "📝 Incident report form added to Resources, for organisers and on members' Resources tab.",
+      },
+      {
+        level: "organiser",
         text: "Members get the same top bar as the Hub, with their own tabs: Events, Outreach (the guide), Photo Hub, New members (who they're supporting) and Resources (starting with legal). Sign out is at the bottom of their Events page.",
       },
       {

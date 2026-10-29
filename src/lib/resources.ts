@@ -4,7 +4,8 @@ export type Resource = {
   title: string;
   emoji?: string; // shown before the title
   about: string;
-  file: string; // under /resources
+  file: string; // under /resources, or a link
+  members?: string; // also on members' Resources tab, under this heading
   area?: string; // e.g. "NSW" when it only applies there
   tip?: string;
 };
@@ -20,6 +21,15 @@ export const RESOURCE_SECTIONS: { title: string; items: Resource[] }[] = [
         about:
           "For police who come by: explains the right to peaceful protest, the limits on move-on directions (LEPRA s 200) and the test for “offensive” conduct.",
         file: "/resources/notice-of-legal-protections-nsw.pdf",
+        members: "Legal",
+      },
+      {
+        title: "Incident report form",
+        emoji: "📝",
+        about:
+          "Something happened at an event (harassment, an injury, trouble with the public or police)? Report it here so it can be followed up.",
+        file: "https://docs.google.com/forms/d/e/1FAIpQLSeTH5tQQFNhgtFqllx_uMjCaO7JhGKwKjXQiiNvnF8RfXExQw/viewform",
+        members: "Incidents",
       },
     ],
   },
