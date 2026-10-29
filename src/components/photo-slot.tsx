@@ -13,7 +13,7 @@ export function PhotoSlot({
 }: {
   photo: string | null;
   alt: string;
-  href: string;
+  href?: string; // tapping the photo opens this (when they can't change it)
   onUpload?: (file: File) => Promise<boolean>;
 }) {
   const [busy, setBusy] = useState(false);
@@ -86,9 +86,18 @@ export function PhotoSlot({
   );
   if (!onUpload)
     return photo ? (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={box}>
-        {img}
-      </a>
+      href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={box}
+        >
+          {img}
+        </a>
+      ) : (
+        <span className={box}>{img}</span>
+      )
     ) : null;
   const menuItem =
     "block w-full rounded-lg px-3 py-1.5 text-left text-sm hover:bg-stone-100";

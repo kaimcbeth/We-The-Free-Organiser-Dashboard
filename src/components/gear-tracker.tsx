@@ -18,11 +18,15 @@ type Gear = {
   source: string | null;
   condition: Condition | null;
   photo_path: string | null;
+  quantity: number;
 };
 
 const COLS =
-  "id, name, notes, holder_person_id, holder_note, moved_at, model, source, condition, photo_path";
-type Details = Pick<Gear, "name" | "notes" | "model" | "source" | "condition">;
+  "id, name, notes, holder_person_id, holder_note, moved_at, model, source, condition, photo_path, quantity";
+type Details = Pick<
+  Gear,
+  "name" | "notes" | "model" | "source" | "condition" | "quantity"
+>;
 const isLink = (s: string) => /^https?:\/\//i.test(s.trim());
 type Person = { id: string; first_name: string; last_name: string | null };
 
@@ -212,6 +216,11 @@ export function GearTracker({
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-navy">
                     {g.name}
+                    {g.quantity > 1 && (
+                      <span className="ml-1 font-semibold text-pink-ink">
+                        ×{g.quantity}
+                      </span>
+                    )}
                     {g.model && (
                       <span className="font-normal text-stone-500">
                         {" "}
@@ -432,6 +441,7 @@ function GearForm({
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [model, setModel] = useState(initial?.model ?? "");
   const [source, setSource] = useState(initial?.source ?? "");
+  const [quantity, setQuantity] = useState(String(initial?.quantity ?? 1));
   const [condition, setCondition] = useState<Condition | "">(
     initial?.condition ?? "",
   );
@@ -453,6 +463,10 @@ function GearForm({
             model: model.trim() || null,
             source: source.trim() || null,
             condition: condition || null,
+            quantity: Math.min(
+              999,
+              Math.max(1, Math.round(Number(quantity) || 1)),
+            ),
           }),
         );
         setBusy(false);
@@ -471,7 +485,7 @@ function GearForm({
         placeholder="What is it? e.g. Laptop 1, TV screen, Gazebo"
         className={field}
       />
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-[1fr_1fr_4.5rem] gap-2">
         <input
           value={model}
           onChange={(e) => setModel(e.target.value)}
@@ -492,6 +506,17 @@ function GearForm({
             </option>
           ))}
         </select>
+        <input
+          type="number"
+          min={1}
+          max={999}
+          inputMode="numeric"
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+          aria-label="How many"
+          title="How many"
+          className={`${field} min-w-0 px-2`}
+        />
       </div>
       <input
         value={source}

@@ -77,15 +77,19 @@ export type EquipmentItem = {
   key: string; // stays the same, so gear added from the guide can find it
   name: string;
   about: string;
-  shop: string;
-  url: string;
+  shop?: string; // no shop or link: there's a purchasing guide instead
+  url?: string;
+  // Tips for buying it, shown in a pop-up (instead of a shop link).
+  guide?: { label: string; text: string }[];
   image?: string; // a default photo (under /equipment); uploads replace it
   // Different versions of the same thing (e.g. budget and best), shown with
   // a toggle. The first is shown to start with; url above matches it.
   options?: {
     label: string;
     about: string;
-    url: string;
+    url?: string; // where to buy it (if you can)
+    instructions?: string; // DIY: link to how-to ("" = coming soon)
+    contactLead?: string; // get it from your Regional Support Lead (pop-up text)
     image?: string; // a default photo for this option
     product?: string; // when the options are different products
     shop?: string; // when they're from a different shop
@@ -131,6 +135,16 @@ export const EQUIPMENT_GUIDE: {
           "Light, weatherproof signs inviting people to take the challenge.",
         shop: "Easy Signs",
         url: "https://www.easysigns.com.au/products/details/signflute-corrugated-plastic-signs",
+        guide: [
+          {
+            label: "When you order",
+            text: "Ask for vertical flute: write “vertical flute” in the notes section when you order the signs.",
+          },
+          {
+            label: "Order more than 4",
+            text: "Signs get significantly cheaper per sign once you order more than 4.",
+          },
+        ],
       },
       {
         key: "headphones",
@@ -146,6 +160,36 @@ export const EQUIPMENT_GUIDE: {
         shop: "AliExpress",
         url: "https://www.aliexpress.com/item/1005006364582345.html",
       },
+      {
+        key: "viewing_devices",
+        name: "Viewing devices",
+        about:
+          "What people watch the footage on. Usually laptops, typically two.",
+        guide: [
+          {
+            label: "Priority 1",
+            text: "Look on Facebook Marketplace. Also look in your area for refurbished options.",
+          },
+        ],
+      },
+      {
+        key: "table_banner",
+        name: "Table banner",
+        about: "Goes across the front of the table.",
+        options: [
+          {
+            label: "DIY",
+            about: "Make your own.",
+            instructions: "",
+          },
+          {
+            label: "Best",
+            about: "Good-quality banners, bought in bulk.",
+            contactLead:
+              "Ask your Regional Support Lead: they keep a bulk stock of good table banners from Alibaba. Wholesale orders like this are hard to place directly, so get one from them.",
+          },
+        ],
+      },
     ],
     upgrades: [
       {
@@ -154,6 +198,16 @@ export const EQUIPMENT_GUIDE: {
         about: "Stands on its own, so people can spot you from further away.",
         shop: "Easy Signs",
         url: "https://www.easysigns.com.au/products/details/signflute-insertable-a-frame-sandwich-board",
+        guide: [
+          {
+            label: "When you order",
+            text: "Ask for vertical flute: write “vertical flute” in the notes section when you order the signs.",
+          },
+          {
+            label: "Order more than 4",
+            text: "Signs get significantly cheaper per sign once you order more than 4.",
+          },
+        ],
         options: [
           {
             label: "Budget",
@@ -166,6 +220,14 @@ export const EQUIPMENT_GUIDE: {
             url: "https://www.easysigns.com.au/products/details/a-frame-with-full-colour-digital-print-lamination",
           },
         ],
+      },
+      {
+        key: "bell",
+        name: "Bell",
+        about:
+          "For people to ring when they finish the video. Great for busy and chaotic outreach events.",
+        shop: "AliExpress",
+        url: "https://www.aliexpress.com/item/1005003770913674.html",
       },
     ],
   },

@@ -71,7 +71,11 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "Equipment: once an item is ticked In community inventory, pick its condition (Good, Fair or Needs replacing) right there. Gear uses the same three conditions now (New became Good, Worn became Fair, Needs repair and Broken became Needs replacing).",
+        text: "Equipment guide: Viewing devices (laptops, with a purchasing guide), Table banner (DIY, or Best from your Regional Support Lead) and a Bell in Upgrades. Signs and A-frames have a purchasing guide (order vertical flute; cheaper past 4 signs). Budget and Best are now ticked separately in your inventory, with a dot on the ones you have.",
+      },
+      {
+        level: "organiser",
+        text: "Equipment: once an item is ticked In community inventory, pick its condition (Good, Fair or Needs replacing) and how many you have, right there. Quantity shows in Your gear too (×4). Gear uses the same three conditions now (New became Good, Worn became Fair, Needs repair and Broken became Needs replacing).",
       },
       {
         level: "organiser",

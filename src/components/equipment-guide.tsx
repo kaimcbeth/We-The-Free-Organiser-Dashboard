@@ -12,6 +12,7 @@ import {
 } from "@/lib/resources";
 import { shrink } from "@/components/photo-uploader";
 import { PhotoSlot } from "@/components/photo-slot";
+import { Sheet } from "@/components/sheet";
 
 // Equipment: the recommended kit (base kit, then upgrades) with where to buy
 // it, which of it the community already has, and the community's gear list
@@ -53,7 +54,7 @@ export function Equipment({
   const hidden = !!teamId && stored;
   const [version, setVersion] = useState(0);
   // Guide items the community has, with the condition of (the first of) it.
-  const [have, setHave] = useState<Map<string, Condition | null>>(new Map());
+  const [have, setHave] = useState<Map<string, Owned>>(new Map());
   const bump = () => setVersion((v) => v + 1);
   const [photos, setPhotos] = useState<Record<string, string>>({});
 
@@ -104,16 +105,19 @@ export function Equipment({
     let live = true;
     createClient()
       .from("gear_items")
-      .select("guide_key, condition")
+      .select("guide_key, condition, quantity")
       .eq("team_id", teamId)
       .not("guide_key", "is", null)
       .order("created_at")
       .then(({ data }) => {
         if (!live) return;
-        const m = new Map<string, Condition | null>();
+        const m = new Map<string, Owned>();
         for (const r of data ?? [])
           if (!m.has(r.guide_key as string))
-            m.set(r.guide_key as string, r.condition as Condition | null);
+            m.set(r.guide_key as string, {
+              condition: r.condition as Condition | null,
+              quantity: (r.quantity as number) ?? 1,
+            });
         setHave(m);
       });
     return () => {
@@ -121,49 +125,63 @@ export function Equipment({
     };
   }, [teamId, version]);
 
-  async function add(
-    item: EquipmentItem,
-    opt: NonNullable<EquipmentItem["options"]>[number] | undefined,
-  ) {
+  async function add(item: EquipmentItem, opt: Option | undefined) {
     if (!teamId) return;
-    setHave((h) => new Map(h).set(item.key, null));
+    const key = invKey(item, opt);
+    setHave((h) => new Map(h).set(key, { condition: null, quantity: 1 }));
     await createClient()
       .from("gear_items")
       .insert({
         team_id: teamId,
-        name: item.name,
-        model: opt?.product ?? opt?.label ?? null,
-        source: opt?.url ?? item.url,
-        guide_key: item.key,
+        name: opt ? `${item.name} (${opt.label})` : item.name,
+        model: opt?.product ?? null,
+        source: opt?.url ?? item.url ?? null,
+        guide_key: key,
       });
     bump();
   }
 
-  async function setCondition(item: EquipmentItem, c: Condition | null) {
+  async function setOwned(
+    item: EquipmentItem,
+    opt: Option | undefined,
+    change: Partial<Owned>,
+  ) {
     if (!teamId) return;
-    setHave((h) => new Map(h).set(item.key, c));
+    const key = invKey(item, opt);
+    setHave((h) => {
+      const now = h.get(key) ?? { condition: null, quantity: 1 };
+      return new Map(h).set(key, { ...now, ...change });
+    });
     await createClient()
       .from("gear_items")
-      .update({ condition: c })
+      .update(change)
       .eq("team_id", teamId)
-      .eq("guide_key", item.key);
+      .eq("guide_key", key);
     bump();
   }
 
-  async function removeFromInventory(item: EquipmentItem) {
+  async function removeFromInventory(
+    item: EquipmentItem,
+    opt: Option | undefined,
+  ) {
     if (!teamId) return;
+    const key = invKey(item, opt);
     setHave((h) => {
       const n = new Map(h);
-      n.delete(item.key);
+      n.delete(key);
       return n;
     });
     await createClient()
       .from("gear_items")
       .delete()
       .eq("team_id", teamId)
-      .eq("guide_key", item.key);
+      .eq("guide_key", key);
     bump();
   }
+
+  // An item counts as had if any version of it is in the inventory.
+  const hasAny = (i: EquipmentItem) =>
+    i.options ? i.options.some((o) => have.has(invKey(i, o))) : have.has(i.key);
 
   return (
     <div className="space-y-6">
@@ -189,7 +207,7 @@ export function Equipment({
                 </span>
                 {teamId && (
                   <span className="ml-auto text-sm text-stone-500">
-                    You have {g.items.filter((i) => have.has(i.key)).length} of{" "}
+                    You have {g.items.filter((i) => hasAny(i)).length} of{" "}
                     {g.items.length}
                   </span>
                 )}
@@ -199,13 +217,14 @@ export function Equipment({
                   <EquipmentRow
                     key={i.key}
                     item={i}
-                    has={have.has(i.key)}
-                    condition={have.get(i.key) ?? null}
-                    onCondition={teamId ? (c) => setCondition(i, c) : undefined}
+                    inventory={have}
+                    onOwned={
+                      teamId ? (opt, c) => setOwned(i, opt, c) : undefined
+                    }
                     onHave={
                       teamId
                         ? (opt, on) =>
-                            on ? add(i, opt) : removeFromInventory(i)
+                            on ? add(i, opt) : removeFromInventory(i, opt)
                         : undefined
                     }
                     photos={photos}
@@ -225,15 +244,14 @@ export function Equipment({
                     <EquipmentRow
                       key={i.key}
                       item={i}
-                      has={have.has(i.key)}
-                      condition={have.get(i.key) ?? null}
-                      onCondition={
-                        teamId ? (c) => setCondition(i, c) : undefined
+                      inventory={have}
+                      onOwned={
+                        teamId ? (opt, c) => setOwned(i, opt, c) : undefined
                       }
                       onHave={
                         teamId
                           ? (opt, on) =>
-                              on ? add(i, opt) : removeFromInventory(i)
+                              on ? add(i, opt) : removeFromInventory(i, opt)
                           : undefined
                       }
                       photos={photos}
@@ -253,6 +271,12 @@ export function Equipment({
 }
 
 type Option = NonNullable<EquipmentItem["options"]>[number];
+type Owned = { condition: Condition | null; quantity: number };
+
+// Which inventory entry: the item, or one version of it (Budget and Best are
+// tracked separately), e.g. "a_frame:budget".
+const invKey = (item: EquipmentItem, opt?: Option) =>
+  item.options && opt ? photoKey(item.key, opt) : item.key;
 
 // Shown on the Budget / Best toggle (Kai asked for these, despite the usual
 // no-emoji-on-buttons rule).
@@ -263,25 +287,27 @@ const OPTION_EMOJI: Record<string, string> = { Budget: "✅", Best: "✨" };
 // the community's gear (the option showing is the one recorded).
 function EquipmentRow({
   item,
-  has,
+  inventory,
   onHave,
-  condition,
-  onCondition,
+  onOwned,
   photos,
   onUpload,
 }: {
   item: EquipmentItem;
-  has: boolean;
-  condition: Condition | null;
-  onCondition?: (c: Condition | null) => void;
+  inventory: Map<string, Owned>; // what the community has, by inventory key
+  onOwned?: (opt: Option | undefined, change: Partial<Owned>) => void;
   onHave?: (opt: Option | undefined, on: boolean) => void;
   photos: Record<string, string>; // uploaded, by photo key
   onUpload?: (key: string, file: File) => Promise<boolean>; // staff only
 }) {
   const [pick, setPick] = useState(0);
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
   const opt = item.options?.[pick];
   const url = opt?.url ?? item.url;
   const key = photoKey(item.key, opt);
+  const owned = inventory.get(invKey(item, opt)) ?? null;
+  const has = !!owned;
   const photo = photos[key] ?? opt?.image ?? item.image ?? null;
   return (
     <li className="flex gap-3 py-2.5">
@@ -295,25 +321,60 @@ function EquipmentRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
           <span>
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block font-medium text-navy hover:underline"
-            >
-              {item.name}
-            </a>
+            {url ? (
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block font-medium text-navy hover:underline"
+              >
+                {item.name}
+              </a>
+            ) : (
+              <span className="block font-medium text-navy">{item.name}</span>
+            )}
             <span className="block text-sm text-stone-600">{item.about}</span>
           </span>
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="shrink-0 pt-0.5 text-xs text-stone-500 hover:text-stone-800"
-          >
-            {opt?.shop ?? item.shop} ↗
-          </a>
+          <span className="flex shrink-0 flex-col items-end gap-1">
+            {url && (
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pt-0.5 text-xs text-stone-500 hover:text-stone-800"
+              >
+                {opt?.shop ?? item.shop} ↗
+              </a>
+            )}
+            {item.guide && (
+              <button
+                type="button"
+                onClick={() => setGuideOpen(true)}
+                className="rounded-lg px-2 py-0.5 text-xs font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50"
+              >
+                Purchasing guide
+              </button>
+            )}
+          </span>
         </div>
+        {guideOpen && item.guide && (
+          <Sheet
+            title={`Buying ${item.name.toLowerCase()}`}
+            onClose={() => setGuideOpen(false)}
+          >
+            <ul className="space-y-3">
+              {item.guide.map((g) => (
+                <li
+                  key={g.label}
+                  className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
+                >
+                  <p className="font-semibold text-navy">{g.label}</p>
+                  <p className="mt-1 text-stone-700">{g.text}</p>
+                </li>
+              ))}
+            </ul>
+          </Sheet>
+        )}
         {item.options && (
           <div className="mt-2">
             <div
@@ -336,6 +397,12 @@ function EquipmentRow({
                     </span>
                   )}
                   {o.label}
+                  {inventory.has(invKey(item, o)) && (
+                    <span
+                      aria-label="in inventory"
+                      className={`ml-1 inline-block h-1.5 w-1.5 rounded-full align-middle ${pick === n ? "bg-pink" : "bg-navy"}`}
+                    />
+                  )}
                 </button>
               ))}
             </div>
@@ -354,6 +421,38 @@ function EquipmentRow({
                 {opt.about}
               </p>
             )}
+            {opt?.instructions !== undefined &&
+              (opt.instructions ? (
+                <a
+                  href={opt.instructions}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 inline-block text-sm font-medium text-pink-ink hover:underline"
+                >
+                  Instructions ↗
+                </a>
+              ) : (
+                <p className="mt-1 text-sm text-stone-400">
+                  Instructions coming soon.
+                </p>
+              ))}
+            {opt?.contactLead && (
+              <button
+                type="button"
+                onClick={() => setContactOpen(true)}
+                className="mt-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50"
+              >
+                Contact your Regional Support Lead
+              </button>
+            )}
+            {contactOpen && opt?.contactLead && (
+              <Sheet
+                title={`${item.name} (${opt.label})`}
+                onClose={() => setContactOpen(false)}
+              >
+                <p className="text-stone-700">{opt.contactLead}</p>
+              </Sheet>
+            )}
           </div>
         )}
         {onHave && (
@@ -367,28 +466,56 @@ function EquipmentRow({
               />
               In community inventory
             </label>
-            {has && onCondition && (
-              <select
-                value={condition ?? ""}
-                onChange={(e) =>
-                  onCondition((e.target.value || null) as Condition | null)
-                }
-                aria-label={`${item.name} condition`}
-                className={`rounded-lg bg-white px-2 py-0.5 text-sm ring-1 ring-black/10 ${
-                  condition === "needs_replacing"
-                    ? "text-red-700"
-                    : condition
-                      ? "text-stone-700"
-                      : "text-stone-400"
-                }`}
-              >
-                <option value="">Condition</option>
-                {CONDITIONS.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
+            {has && onOwned && owned && (
+              <>
+                <select
+                  value={owned.condition ?? ""}
+                  onChange={(e) =>
+                    onOwned(opt, {
+                      condition: (e.target.value || null) as Condition | null,
+                    })
+                  }
+                  aria-label={`${item.name} condition`}
+                  className={`rounded-lg bg-white px-2 py-0.5 text-sm ring-1 ring-black/10 ${
+                    owned.condition === "needs_replacing"
+                      ? "text-red-700"
+                      : owned.condition
+                        ? "text-stone-700"
+                        : "text-stone-400"
+                  }`}
+                >
+                  <option value="">Condition</option>
+                  {CONDITIONS.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+                <label className="flex items-center gap-1 text-sm text-stone-500">
+                  Qty
+                  <input
+                    type="number"
+                    min={1}
+                    max={999}
+                    inputMode="numeric"
+                    defaultValue={owned.quantity}
+                    key={owned.quantity}
+                    onBlur={(e) => {
+                      const n = Math.min(
+                        999,
+                        Math.max(1, Math.round(Number(e.target.value) || 1)),
+                      );
+                      if (n !== owned.quantity) onOwned(opt, { quantity: n });
+                      else e.target.value = String(n);
+                    }}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && (e.target as HTMLInputElement).blur()
+                    }
+                    aria-label={`How many ${item.name.toLowerCase()}`}
+                    className="w-12 rounded-lg bg-white px-1.5 py-0.5 text-sm text-stone-700 ring-1 ring-black/10"
+                  />
+                </label>
+              </>
             )}
           </div>
         )}
