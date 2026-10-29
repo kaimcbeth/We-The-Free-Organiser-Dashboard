@@ -242,6 +242,32 @@ export const EQUIPMENT_GUIDE: {
         url: "https://www.aliexpress.com/item/1005003770913674.html",
       },
       {
+        key: "standup_banner",
+        name: "Stand-up banner",
+        about:
+          "A tall printed banner that stands on its own, so people can see who you are from down the street.",
+        shop: "Officeworks",
+        url: "https://www.officeworks.com.au/print-copy/p/pull-up-banners-pcbspbcp",
+        options: [
+          {
+            label: "Budget",
+            about:
+              "Pull-up banner that rolls into its base. 610 × 1500 mm or 841 × 2000 mm.",
+            url: "https://www.officeworks.com.au/print-copy/p/pull-up-banners-pcbspbcp",
+            price: "From $85",
+          },
+          {
+            label: "Best",
+            about:
+              "Stretch fabric banner on a curved frame. Printed in Sydney in 24 hours; single or double sided.",
+            url: "https://www.easysigns.com.au/products/details/stretch-fabric-display-stand",
+            price: "From $140.26 ($197.67 for 850 × 2000 mm single sided)",
+            shop: "Easy Signs",
+            product: "Stretch fabric display stand",
+          },
+        ],
+      },
+      {
         key: "video_station_covers",
         name: "Video station covers",
         about: "More details coming soon.",
