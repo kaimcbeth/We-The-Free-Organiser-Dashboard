@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LivePlayers } from "@/components/live-players";
 import { requireCore } from "@/lib/organiser";
 import { LoadError } from "@/components/load-error";
 import {
@@ -45,6 +46,7 @@ export default async function AttendanceHome() {
 
   return (
     <div className="space-y-8">
+      <LivePlayers />
       {needsSetup && (
         <Link
           href="/attendance/tasks"

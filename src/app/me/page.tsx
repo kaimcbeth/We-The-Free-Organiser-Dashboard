@@ -1,4 +1,5 @@
 import { OriginEditor } from "@/components/origin-editor";
+import { LivePlayers } from "@/components/live-players";
 import { cookies } from "next/headers";
 import { VIEW_AS_COOKIE } from "@/lib/organiser";
 import Link from "next/link";
@@ -164,6 +165,9 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
   return (
     <>
       <PreviewBanner />
+      <div className="mb-6 empty:hidden">
+        <LivePlayers />
+      </div>
       {welcome && (
         <Link
           href="/me/welcome"

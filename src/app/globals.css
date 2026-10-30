@@ -68,3 +68,12 @@ body {
     box-shadow: 0 0 0 10px rgb(255 71 185 / 0);
   }
 }
+@keyframes stopring {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(220 38 38 / 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgb(220 38 38 / 0);
+  }
+}

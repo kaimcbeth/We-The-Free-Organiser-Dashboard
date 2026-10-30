@@ -6,12 +6,13 @@ import { createClient } from "@/lib/supabase/client";
 type Player = {
   device: string;
   laptop: string;
-  state: "idle" | "playing" | "paused" | "survey";
+  state: "idle" | "playing" | "paused" | "survey" | "stopped";
   film: string | null;
   language: string | null;
   seconds_left: number | null;
   duration: number | null;
   viewers: number | null;
+  stopped_at: number | null; // seconds in, when someone pressed Stop
   ends_at: string | null;
   updated_at: string;
 };
@@ -39,9 +40,29 @@ function beep(ctx: AudioContext) {
   });
 }
 
+// Someone pressed Stop: three lower, longer tones (different from the 10 s one).
+function urgent(ctx: AudioContext) {
+  [0, 0.35, 0.7].forEach((at) => {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "square";
+    o.frequency.value = 440;
+    g.gain.setValueAtTime(0.0001, ctx.currentTime + at);
+    g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + at + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + at + 0.3);
+    o.connect(g).connect(ctx.destination);
+    o.start(ctx.currentTime + at);
+    o.stop(ctx.currentTime + at + 0.32);
+  });
+}
+
 // Live screen for the event: each laptop's film and countdown, with an alert
-// just before a film ends so a volunteer can be there for the chat.
-export function LivePlayers({ teamId }: { teamId: string }) {
+// just before a film ends so a volunteer can be there for the chat, and when
+// someone presses Stop. Organisers pass their community (Movie player page);
+// members and Core Team see their own community's laptops, only while they're
+// running (on their Events / attendance pages).
+export function LivePlayers({ teamId }: { teamId?: string }) {
+  const everyone = !teamId;
   const [players, setPlayers] = useState<Player[] | null>(null);
   const [skew, setSkew] = useState(0); // server clock minus this phone's clock
   const [now, setNow] = useState(0);
@@ -50,28 +71,37 @@ export function LivePlayers({ teamId }: { teamId: string }) {
   const lock = useRef<WakeLockSentinel | null>(null);
   const alerted = useRef<Set<string>>(new Set());
 
+  const count = useRef(0);
   const load = useCallback(async () => {
-    const { data } = await createClient().rpc("live_players", {
-      p_team_id: teamId,
-    });
+    const supabase = createClient();
+    const { data } = teamId
+      ? await supabase.rpc("live_players", { p_team_id: teamId })
+      : await supabase.rpc("my_live_players");
     const d = data as { now: string; players: Player[] } | null;
     if (!d) return;
     setSkew(new Date(d.now).getTime() - Date.now());
+    count.current = d.players.length;
     setPlayers(d.players);
   }, [teamId]);
 
   useEffect(() => {
-    const first = setTimeout(load, 0);
-    const poll = setInterval(() => {
-      if (document.visibilityState === "visible") load();
-    }, 3000);
+    // Every 3 s while laptops are running; members' pages check every 20 s
+    // otherwise, so the card appears when an event starts.
+    let timer: ReturnType<typeof setTimeout>;
+    let stop = false;
+    const loop = async () => {
+      if (document.visibilityState === "visible") await load();
+      if (!stop)
+        timer = setTimeout(loop, everyone && !count.current ? 20000 : 3000);
+    };
+    timer = setTimeout(loop, 0);
     const tick = setInterval(() => setNow(Date.now()), 250);
     return () => {
-      clearTimeout(first);
-      clearInterval(poll);
+      stop = true;
+      clearTimeout(timer);
       clearInterval(tick);
     };
-  }, [load]);
+  }, [load, everyone]);
 
   const serverNow = now + skew;
   const left = (p: Player) =>
@@ -83,6 +113,29 @@ export function LivePlayers({ teamId }: { teamId: string }) {
   useEffect(() => {
     if (!players || !now) return;
     for (const p of players) {
+      if (p.state === "stopped" && !offline(p)) {
+        const key = `${p.device}|stop|${p.stopped_at}|${p.film}`;
+        if (!alerted.current.has(key)) {
+          alerted.current.add(key);
+          if (!alertsOn) continue;
+          if (audio.current) urgent(audio.current);
+          navigator.vibrate?.([500, 150, 500, 150, 500]);
+          if (
+            "Notification" in window &&
+            Notification.permission === "granted"
+          ) {
+            navigator.serviceWorker?.ready
+              .then((r) =>
+                r.showNotification(`${p.laptop}: someone pressed Stop`, {
+                  body: `${p.film ?? "Film"}, at ${mmss(p.stopped_at ?? 0)}. Someone may need support.`,
+                  tag: `player-${p.device}`,
+                }),
+              )
+              .catch(() => {});
+          }
+        }
+        continue;
+      }
       const s = left(p);
       if (p.state !== "playing" || s === null || offline(p)) continue;
       const key = `${p.device}|${p.ends_at?.slice(0, 19)}`;
@@ -137,9 +190,10 @@ export function LivePlayers({ teamId }: { teamId: string }) {
   }, [alertsOn]);
 
   if (!players) return null;
+  if (everyone && players.length === 0) return null;
 
   return (
-    <section className="mt-6">
+    <section className={everyone ? "" : "mt-6"}>
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="text-lg font-semibold tracking-tight">
           Live at the event
@@ -159,6 +213,13 @@ export function LivePlayers({ teamId }: { teamId: string }) {
             </button>
           ))}
       </div>
+      {everyone && (
+        <p className="mt-1 text-sm text-stone-600">
+          The Movie Challenge laptops right now. Pink: a film ends in 10
+          seconds, so someone can be there to chat. Red: someone pressed Stop
+          and may need support.
+        </p>
+      )}
       {players.length === 0 ? (
         <p className="mt-1 text-sm text-stone-600">
           Laptops show here while the player is open and online (a phone hotspot
@@ -173,28 +234,33 @@ export function LivePlayers({ teamId }: { teamId: string }) {
             const off = offline(p);
             const ending =
               !off && p.state === "playing" && s !== null && s <= WARN;
+            const stopped = !off && p.state === "stopped";
             const tone = off
               ? "bg-stone-100 text-stone-500 ring-stone-200"
-              : ending
-                ? "bg-pink text-navy ring-4 ring-pink/40 motion-safe:animate-[ring_1s_ease-in-out_infinite]"
-                : p.state === "playing" || p.state === "paused"
-                  ? "bg-navy text-white ring-navy"
-                  : p.state === "survey"
-                    ? "bg-cyan/25 text-navy ring-cyan"
-                    : "bg-white text-navy ring-black/5";
+              : stopped
+                ? "bg-red-600 text-white ring-4 ring-red-600/40 motion-safe:animate-[stopring_1s_ease-in-out_infinite]"
+                : ending
+                  ? "bg-pink text-navy ring-4 ring-pink/40 motion-safe:animate-[ring_1s_ease-in-out_infinite]"
+                  : p.state === "playing" || p.state === "paused"
+                    ? "bg-navy text-white ring-navy"
+                    : p.state === "survey"
+                      ? "bg-cyan/25 text-navy ring-cyan"
+                      : "bg-white text-navy ring-black/5";
             const what = off
               ? "Offline"
-              : p.state === "playing"
-                ? ending
-                  ? s! > 0
-                    ? `Finishing in ${Math.ceil(s!)}s`
-                    : "Finishing now"
-                  : `${mmss(s ?? 0)} left`
-                : p.state === "paused"
-                  ? `Paused · ${mmss(p.seconds_left ?? 0)} left`
-                  : p.state === "survey"
-                    ? "Answering the question"
-                    : "Free";
+              : stopped
+                ? `Stopped at ${mmss(p.stopped_at ?? 0)}`
+                : p.state === "playing"
+                  ? ending
+                    ? s! > 0
+                      ? `Finishing in ${Math.ceil(s!)}s`
+                      : "Finishing now"
+                    : `${mmss(s ?? 0)} left`
+                  : p.state === "paused"
+                    ? `Paused · ${mmss(p.seconds_left ?? 0)} left`
+                    : p.state === "survey"
+                      ? "Answering the question"
+                      : "Free";
             return (
               <li
                 key={p.device}
@@ -209,17 +275,19 @@ export function LivePlayers({ teamId }: { teamId: string }) {
                 <p className="mt-1 text-sm opacity-80">
                   {off
                     ? "Not heard from it for a while (hotspot or player closed?)."
-                    : p.film && p.state !== "idle"
-                      ? [
-                          p.film,
-                          p.language && p.language !== "English"
-                            ? p.language
-                            : null,
-                          p.viewers ? `${p.viewers} watching` : null,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")
-                      : "On the menu"}
+                    : stopped
+                      ? `Someone pressed Stop: they may need support. ${p.film ?? ""}`.trim()
+                      : p.film && p.state !== "idle"
+                        ? [
+                            p.film,
+                            p.language && p.language !== "English"
+                              ? p.language
+                              : null,
+                            p.viewers ? `${p.viewers} watching` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")
+                        : "On the menu"}
                 </p>
                 {!off &&
                   (p.state === "playing" || p.state === "paused") &&

@@ -197,7 +197,38 @@
     display: none; flex-direction: column; align-items: center; justify-content: center;
     padding: clamp(20px, 4vw, 56px); text-align: center;
   }
-  #survey.on, #count.on, #name-screen.on { display: flex; }
+  #survey.on, #count.on, #name-screen.on, #intro.on { display: flex; }
+  #intro {
+    position: fixed; inset: 0; z-index: 16; background: var(--navy);
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    padding: clamp(20px, 4vw, 56px); text-align: center;
+  }
+  #intro h2 { margin: 0; font-size: clamp(28px, 3.8vw, 48px); font-weight: 800; }
+  .intro-text { max-width: 760px; margin: 18px auto 28px; font-size: clamp(19px, 2.2vw, 28px); line-height: 1.45; color: #d7dbea; }
+  .btn.big { margin-top: 34px; font-size: 22px; padding: 18px 40px; }
+  #intro-back { margin-top: 22px; }
+  /* Stop button: always visible while a film plays, quiet until needed */
+  .stop-btn {
+    position: absolute; right: clamp(14px, 2vw, 26px); bottom: clamp(70px, 10vh, 96px); z-index: 3;
+    display: inline-flex; align-items: center; gap: 10px;
+    border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 10px 16px;
+    background: rgba(0,0,0,.45); color: rgba(255,255,255,.85); font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: background .15s ease, color .15s ease;
+  }
+  .stop-btn:hover, .stop-btn:focus-visible { background: rgba(0,0,0,.75); color: #fff; outline: none; border-color: #ff5a5a; }
+  .stop-btn.sample { position: static; cursor: default; font-size: 17px; padding: 12px 20px; }
+  #player.idle .stop-btn { cursor: pointer; }
+  .stopped {
+    position: absolute; inset: 0; z-index: 4; display: none; place-items: center; padding: 30px;
+    background: var(--navy); text-align: center;
+  }
+  .stopped.on { display: grid; }
+  .stopped h2 { margin: 0; font-size: clamp(30px, 4vw, 52px); font-weight: 800; }
+  .stopped p { margin: 14px 0 0; font-size: clamp(19px, 2.2vw, 28px); color: #d7dbea; }
+  .stopped-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 36px; }
+  .ghost-btn { background: transparent; color: var(--text); box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); }
+  .ghost-btn:hover { background: rgba(255,255,255,.08); }
+  #player.stopped-on .bar, #player.stopped-on #big-pause, #player.stopped-on .stop-btn { display: none; }
   #name-screen {
     position: fixed; inset: 0; z-index: 25; background: var(--navy);
     display: none; flex-direction: column; align-items: center; justify-content: center;
@@ -335,6 +366,17 @@
     <div id="seek" aria-label="Seek"><div id="fill"></div></div>
     <span id="time"></span>
   </div>
+  <button id="stop" class="stop-btn"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="1" y="1" width="12" height="12" rx="2.5" fill="#ff5a5a"/></svg><span class="stop-label">I'm not comfortable watching this anymore</span></button>
+  <div id="stopped" class="stopped">
+    <div>
+      <h2 id="stopped-title">That's completely okay.</h2>
+      <p id="stopped-text">A volunteer will be with you in a moment.</p>
+      <div class="stopped-actions">
+        <button class="btn ghost-btn" id="keep-watching">Keep watching for the others</button>
+        <button class="btn" id="stopped-finish">Finish</button>
+      </div>
+    </div>
+  </div>
   <div id="err"><div><p id="err-text"></p><button class="btn" id="err-back">Back to menu</button></div></div>
 </div>
 
@@ -347,6 +389,16 @@
       <input id="name-input" class="field" maxlength="40" placeholder="Or type a name" aria-label="Laptop name">
       <button class="btn" id="name-save">Done</button>
     </div>
+  </div>
+</div>
+
+<div id="intro" role="dialog" aria-label="Before you start">
+  <div class="ask">
+    <h2 id="intro-title">Before you start</h2>
+    <p id="intro-text" class="intro-text">We really encourage you to try to see it through. But if it's ever too much, you can stop at any time with this button:</p>
+    <div class="stop-btn sample" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="1" y="1" width="12" height="12" rx="2.5" fill="#ff5a5a"/></svg><span class="stop-label">I'm not comfortable watching this anymore</span></div>
+    <button class="btn big" id="intro-start">Start the film</button>
+    <button class="link" id="intro-back">Back</button>
   </div>
 </div>
 
@@ -426,7 +478,15 @@
         start: "开始",
         back: "返回",
         person: "第 {n} 位（共 {t} 位）",
-        next: "下面请第 {n} 位。"
+        next: "下面请第 {n} 位。",
+        stopBtn: "我不想再看下去了",
+        introTitle: "开始之前",
+        introText: "我们真诚地鼓励您尽量看完。但如果任何时候您觉得难以承受，都可以按下这个按钮停止观看：",
+        startFilm: "开始播放",
+        stoppedTitle: "完全没关系。",
+        stoppedText: "志愿者马上就会过来。",
+        keepWatching: "其他人继续观看",
+        finish: "结束"
       },
       films: { standard: "标准版", children: "儿童版", vegetarian: "素食者版", halal: "清真版" }
     },
@@ -461,7 +521,15 @@
     end0: "0: Not at all", end10: "10: Extremely impactful",
     skip: "Skip", thanks: "Thank you!", chat: "Have a chat with one of our volunteers.",
     howMany: "How many people are watching?", more: "More", start: "Start", back: "Back",
-    person: "Person {n} of {t}", next: "Now Person {n}."
+    person: "Person {n} of {t}", next: "Now Person {n}.",
+    stopBtn: "I'm not comfortable watching this anymore",
+    introTitle: "Before you start",
+    introText: "We really encourage you to try to see it through. But if it's ever too much, you can stop at any time with this button:",
+    startFilm: "Start the film",
+    stoppedTitle: "That's completely okay.",
+    stoppedText: "A volunteer will be with you in a moment.",
+    keepWatching: "Keep watching for the others",
+    finish: "Finish"
   };
   function fill(text, n, t) { return text.replace("{n}", n).replace("{t}", t); }
   function canonLang(word) {
@@ -626,8 +694,19 @@
     $("count-back").textContent = t.back;
     var mb = document.querySelector(".counts .more");
     if (mb) mb.textContent = t.more;
+    Array.prototype.forEach.call(document.querySelectorAll(".stop-label"), function (el) { el.textContent = t.stopBtn; });
+    $("intro-title").textContent = t.introTitle;
+    $("intro-text").textContent = t.introText;
+    $("intro-start").textContent = t.startFilm;
+    $("intro-back").textContent = t.back;
+    $("stopped-title").textContent = t.stoppedTitle;
+    $("stopped-text").textContent = t.stoppedText;
+    $("keep-watching").textContent = t.keepWatching;
+    $("stopped-finish").textContent = t.finish;
     $("survey").dir = dir;
     $("count").dir = dir;
+    $("intro").dir = dir;
+    $("stopped").dir = dir;
   }
 
   function editTile(el, tile, i) {
@@ -844,8 +923,19 @@
     if (countFor < 0) return;
     var i = countFor;
     closeCount();
-    play(i, n);
+    introFor = { i: i, n: n };
+    applyUI();
+    $("intro").classList.add("on");
   }
+  // "Before you start": encourage seeing it through, and show the Stop button.
+  var introFor = null;
+  $("intro-start").onclick = function () {
+    var f = introFor;
+    introFor = null;
+    $("intro").classList.remove("on");
+    if (f) play(f.i, f.n);
+  };
+  $("intro-back").onclick = function () { introFor = null; $("intro").classList.remove("on"); };
 
   function play(i, viewers) {
     var tile = state.tiles[i];
@@ -866,6 +956,9 @@
     poke();
   }
   function stopVideo() {
+    stoppedNow = false;
+    $("stopped").classList.remove("on");
+    player.classList.remove("stopped-on");
     video.pause();
     video.removeAttribute("src");
     video.load();
@@ -940,6 +1033,12 @@
     if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "SELECT")) return;
     if ($("results").classList.contains("on")) { if (e.key === "Escape") $("results").classList.remove("on"); return; }
     if ($("survey").classList.contains("on") || $("name-screen").classList.contains("on")) return;
+    if ($("intro").classList.contains("on")) {
+      if (e.key === "Enter") $("intro-start").click();
+      else if (e.key === "Escape" || e.key === "Backspace") $("intro-back").click();
+      return;
+    }
+    if ($("stopped").classList.contains("on")) return;
     if ($("count").classList.contains("on")) {
       if (/^[1-9]$/.test(e.key)) chooseCount(+e.key);
       else if (e.key === "Escape" || e.key === "Backspace") closeCount();
@@ -1044,7 +1143,7 @@
     if (!CONFIG) return;
     var c = current || (surveyFilm ? { tile: surveyFilm, version: surveyVersion, viewers: surveyTotal } : null);
     var left = null, d = null;
-    if (liveState === "playing" || liveState === "paused") {
+    if (liveState === "playing" || liveState === "paused" || liveState === "stopped") {
       d = isFinite(video.duration) && video.duration ? video.duration : (c && c.version.secs) || null;
       left = d ? Math.max(0, d - video.currentTime) / (video.playbackRate || 1) : null;
     }
@@ -1057,18 +1156,61 @@
         p_language: c && liveState !== "idle" ? c.version.lang || "English" : null,
         p_seconds_left: left,
         p_duration: d,
-        p_viewers: c && liveState !== "idle" ? c.viewers || 1 : null
+        p_viewers: c && liveState !== "idle" ? c.viewers || 1 : null,
+        p_stopped_at: liveState === "stopped" ? stoppedAt : null
       })
     }).catch(function () {});
   }
   video.addEventListener("playing", function () { status("playing"); });
   video.addEventListener("durationchange", function () { if (current && !video.paused) status("playing"); });
-  video.addEventListener("pause", function () { if (current && !video.ended) status("paused"); });
+  video.addEventListener("pause", function () { if (current && !video.ended && !stoppedNow) status("paused"); });
   video.addEventListener("seeked", function () { if (current && !video.paused) status("playing"); });
   video.addEventListener("ratechange", function () { if (current && !video.paused) status("playing"); });
   // Heartbeat: keeps the phone's countdown honest and shows the laptop is online.
   setInterval(function () { status(); }, 15000);
   setTimeout(function () { status(); }, 800);
+
+  // ---------- Stop button ----------
+  // A viewer can stop at any time. The film pauses, the Hub's live screen
+  // alerts the organiser, and the press is recorded (how far in).
+  var stoppedNow = false, stoppedAt = null;
+  $("stop").addEventListener("click", function (e) {
+    e.stopPropagation();
+    if (!current || stoppedNow) return;
+    stoppedNow = true;
+    stoppedAt = Math.round(video.currentTime * 10) / 10;
+    video.pause();
+    var d = isFinite(video.duration) && video.duration ? video.duration : current.version.secs || null;
+    answers.push({ id: uid(), stop: true, film: current.tile.title, version: current.version.name,
+      language: current.version.lang || "English", stopped_at: stoppedAt, duration: d,
+      at: new Date().toISOString(), laptop: laptop, sent: false });
+    saveAnswers();
+    clearTimeout(idleTimer);
+    player.classList.remove("idle", "paused");
+    player.classList.add("stopped-on");
+    $("keep-watching").hidden = (current.viewers || 1) < 2;
+    $("stopped").classList.add("on");
+    status("stopped");
+    sync(true);
+  });
+  $("keep-watching").onclick = function () {
+    if (!current) return;
+    // The person who stopped still counts as a viewer (no score from them).
+    answers.push({ id: uid(), film: current.tile.title, version: current.version.name,
+      language: current.version.lang || "English", impact: null,
+      at: new Date().toISOString(), laptop: laptop, sent: false });
+    saveAnswers();
+    current.viewers = Math.max(1, (current.viewers || 1) - 1);
+    stoppedNow = false;
+    $("stopped").classList.remove("on");
+    player.classList.remove("stopped-on");
+    video.play();
+  };
+  $("stopped-finish").onclick = function () {
+    var c = current;
+    stopVideo();
+    if (c) askSurvey(c.tile, c.version, c.viewers); else toMenu();
+  };
 
   var surveyFilm = null, surveyVersion = null, surveyTimer = 0, surveyPerson = 1, surveyTotal = 1;
   for (var n = 0; n <= 10; n++) (function (score) {
@@ -1152,14 +1294,17 @@
   // ---------- Results ----------
   function unsent() { return answers.filter(function (a) { return !a.sent; }); }
   function showResults() {
-    var scored = answers.filter(function (a) { return a.impact !== null; });
+    var stops = answers.filter(function (a) { return a.stop; });
+    var views = answers.filter(function (a) { return !a.stop; });
+    var scored = views.filter(function (a) { return a.impact !== null; });
     var avg = scored.length ? scored.reduce(function (t, a) { return t + a.impact; }, 0) / scored.length : 0;
-    $("res-sum").textContent = answers.length
-      ? answers.length + (answers.length === 1 ? " viewer" : " viewers") + " on this laptop, " + scored.length + " answered" +
-        (scored.length ? " (average " + avg.toFixed(1) + " out of 10)." : ".")
+    $("res-sum").textContent = views.length
+      ? views.length + (views.length === 1 ? " viewer" : " viewers") + " on this laptop, " + scored.length + " answered" +
+        (scored.length ? " (average " + avg.toFixed(1) + " out of 10)" : "") +
+        (stops.length ? ". Stop pressed " + stops.length + (stops.length === 1 ? " time." : " times.") : ".")
       : "No answers on this laptop yet. Viewers are asked after each film.";
     var by = {};
-    answers.forEach(function (a) {
+    views.forEach(function (a) {
       var multi = state.tiles.some(function (t) { return t.title === a.film && t.versions.length > 1; });
       var k = a.film + (multi && a.version ? " (" + a.version + ")" : "");
       var r = by[k] || (by[k] = { views: 0, n: 0, sum: 0 });
@@ -1200,10 +1345,12 @@
   };
   $("export").onclick = function () {
     var q = function (v) { v = v === null || v === undefined ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-    var lines = ["Film,Version,Language,Score (0-10),Date,Time,Laptop"];
+    var lines = ["Film,Version,Language,Score (0-10),Stopped at,Date,Time,Laptop"];
     answers.forEach(function (a) {
       var d = new Date(a.at);
-      lines.push([a.film, a.version || "", a.language || "English", a.impact === null ? "skipped" : a.impact,
+      lines.push([a.film, a.version || "", a.language || "English",
+        a.stop ? "pressed Stop" : a.impact === null ? "skipped" : a.impact,
+        a.stop && a.stopped_at !== null ? fmt(a.stopped_at) : "",
         d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"),
         String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"), a.laptop || ""].map(q).join(","));
     });
@@ -1230,7 +1377,9 @@
       headers: { "Content-Type": "application/json", apikey: CONFIG.key },
       body: JSON.stringify({
         p_token: CONFIG.token,
-        p_rows: batch.map(function (a) { return { id: a.id, film: a.film, version: a.version, language: a.language || "English", impact: a.impact, at: a.at, laptop: a.laptop }; })
+        p_rows: batch.map(function (a) { return a.stop
+          ? { id: a.id, stop: true, film: a.film, version: a.version, language: a.language || "English", stopped_at: a.stopped_at, duration: a.duration, at: a.at, laptop: a.laptop }
+          : { id: a.id, film: a.film, version: a.version, language: a.language || "English", impact: a.impact, at: a.at, laptop: a.laptop }; })
       })
     }).then(function (r) {
       if (!r.ok) throw new Error("HTTP " + r.status);

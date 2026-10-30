@@ -13,7 +13,50 @@ type Answer = {
   laptop: string | null;
 };
 
-type Stat = { views: number; n: number; sum: number };
+// A press of the Stop button during a film.
+type Stop = {
+  id: string;
+  film: string;
+  version: string | null;
+  language: string | null;
+  stopped_at: number | null; // seconds in
+  duration: number | null;
+  stopped_on: string;
+  laptop: string | null;
+};
+
+type Stat = {
+  views: number;
+  n: number;
+  sum: number;
+  stops: number; // Stop presses
+  secs: number; // sum of seconds in, for the average
+  frac: number; // sum of how far through (0-1)
+  fracN: number;
+};
+const blank = (): Stat => ({
+  views: 0,
+  n: 0,
+  sum: 0,
+  stops: 0,
+  secs: 0,
+  frac: 0,
+  fracN: 0,
+});
+const addStop = (m: Map<string, Stat>, k: string, x: Stop) => {
+  const s = m.get(k) ?? blank();
+  s.stops++;
+  s.secs += x.stopped_at ?? 0;
+  if (x.stopped_at !== null && x.duration) {
+    s.frac += Math.min(1, x.stopped_at / x.duration);
+    s.fracN++;
+  }
+  m.set(k, s);
+};
+const mmss = (sec: number) => {
+  const t = Math.max(0, Math.round(sec));
+  return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
+};
 const tally = (s: Stat, a: Answer) => {
   s.views++;
   if (a.impact !== null) {
@@ -22,7 +65,7 @@ const tally = (s: Stat, a: Answer) => {
   }
 };
 const add = (m: Map<string, Stat>, k: string, a: Answer) => {
-  const s = m.get(k) ?? { views: 0, n: 0, sum: 0 };
+  const s = m.get(k) ?? blank();
   tally(s, a);
   m.set(k, s);
 };
@@ -44,16 +87,29 @@ function ago(iso: string, now: number) {
 // Live count for the day, and which film (and A/B version) has the most impact.
 export function MovieResults({ teamId, tz }: { teamId: string; tz: string }) {
   const [rows, setRows] = useState<Answer[] | null>(null);
+  const [stops, setStops] = useState<Stop[]>([]);
   const [now, setNow] = useState(0);
 
   const load = useCallback(async () => {
-    const { data } = await createClient()
-      .from("film_survey_responses")
-      .select("id, film, version, language, impact, answered_at, laptop")
-      .eq("team_id", teamId)
-      .order("answered_at", { ascending: false })
-      .limit(20000);
+    const supabase = createClient();
+    const [{ data }, { data: st }] = await Promise.all([
+      supabase
+        .from("film_survey_responses")
+        .select("id, film, version, language, impact, answered_at, laptop")
+        .eq("team_id", teamId)
+        .order("answered_at", { ascending: false })
+        .limit(20000),
+      supabase
+        .from("film_stops")
+        .select(
+          "id, film, version, language, stopped_at, duration, stopped_on, laptop",
+        )
+        .eq("team_id", teamId)
+        .order("stopped_on", { ascending: false })
+        .limit(20000),
+    ]);
     setRows((data ?? []) as Answer[]);
+    setStops((st ?? []) as Stop[]);
     setNow(Date.now());
   }, [teamId]);
 
@@ -79,8 +135,9 @@ export function MovieResults({ teamId, tz }: { teamId: string; tz: string }) {
 
   const today = dayOf(new Date(now).toISOString(), tz);
   const todays = rows.filter((a) => dayOf(a.answered_at, tz) === today);
-  const all: Stat = { views: 0, n: 0, sum: 0 };
-  const todayStat: Stat = { views: 0, n: 0, sum: 0 };
+  const all: Stat = blank();
+  const todayStat: Stat = blank();
+  const todaysStops = stops.filter((x) => dayOf(x.stopped_on, tz) === today);
   const todayFilms = new Map<string, Stat>();
   const todayLaptops = new Map<string, Stat>();
   for (const a of todays) {
@@ -105,6 +162,21 @@ export function MovieResults({ teamId, tz }: { teamId: string; tz: string }) {
       add(vm, a.version, a);
       fv.set(lang, vm);
       versions.set(a.film, fv);
+    }
+  }
+  for (const x of stops) {
+    all.stops++;
+    addStop(films, x.film, x);
+    const lang = x.language ?? "English";
+    const lm = langs.get(x.film) ?? new Map<string, Stat>();
+    addStop(lm, lang, x);
+    langs.set(x.film, lm);
+    if (x.version) {
+      const fv = versions.get(x.film) ?? new Map<string, Map<string, Stat>>();
+      const vm = fv.get(lang) ?? new Map<string, Stat>();
+      addStop(vm, x.version, x);
+      fv.set(lang, vm);
+      versions.set(x.film, fv);
     }
   }
   const byLang = (m: Map<string, unknown>) =>
@@ -134,6 +206,10 @@ export function MovieResults({ teamId, tz }: { teamId: string; tz: string }) {
             ? `${todayStat.n} answered${
                 todayStat.n
                   ? ` · average impact ${avg(todayStat)!.toFixed(1)} / 10`
+                  : ""
+              }${
+                todaysStops.length
+                  ? ` · Stop pressed ${todaysStops.length} ${todaysStops.length === 1 ? "time" : "times"}`
                   : ""
               }${todays[0] ? ` · last one ${ago(todays[0].answered_at, now)}` : ""}`
             : "Nobody yet today. Counts come in as each film ends on a laptop that's online."}
@@ -245,21 +321,53 @@ export function MovieResults({ teamId, tz }: { teamId: string; tz: string }) {
         )}
       </section>
 
-      {rows.length > 0 && <AllAnswers rows={rows} tz={tz} onChange={load} />}
+      {rows.length + stops.length > 0 && (
+        <AllAnswers rows={rows} stops={stops} tz={tz} onChange={load} />
+      )}
     </>
   );
 }
 
 // Every answer, newest first, with checkboxes to delete test ones.
+type Item = {
+  id: string;
+  kind: "answer" | "stop";
+  film: string;
+  version: string | null;
+  language: string | null;
+  at: string;
+  laptop: string | null;
+  impact: number | null;
+  stopped_at: number | null;
+  duration: number | null;
+};
+
 function AllAnswers({
   rows,
+  stops,
   tz,
   onChange,
 }: {
   rows: Answer[];
+  stops: Stop[];
   tz: string;
   onChange: () => Promise<void>;
 }) {
+  const items: Item[] = [
+    ...rows.map((a) => ({
+      ...a,
+      kind: "answer" as const,
+      at: a.answered_at,
+      stopped_at: null,
+      duration: null,
+    })),
+    ...stops.map((x) => ({
+      ...x,
+      kind: "stop" as const,
+      at: x.stopped_on,
+      impact: null,
+    })),
+  ].sort((x, y) => y.at.localeCompare(x.at));
   const [open, setOpen] = useState(false);
   const [shown, setShown] = useState(50);
   const [picked, setPicked] = useState<Set<string>>(new Set());
@@ -267,7 +375,7 @@ function AllAnswers({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  const chosen = rows.filter((a) => picked.has(a.id)).map((a) => a.id);
+  const chosen = items.filter((a) => picked.has(a.id));
   const toggle = (id: string) =>
     setPicked((p) => {
       const n = new Set(p);
@@ -288,11 +396,21 @@ function AllAnswers({
   async function remove() {
     setBusy(true);
     setError("");
-    const { error } = await createClient()
-      .from("film_survey_responses")
-      .delete()
-      .in("id", chosen);
-    if (error) setError("Couldn't delete them. Try again.");
+    const supabase = createClient();
+    const answerIds = chosen
+      .filter((a) => a.kind === "answer")
+      .map((a) => a.id);
+    const stopIds = chosen.filter((a) => a.kind === "stop").map((a) => a.id);
+    const results = await Promise.all([
+      answerIds.length
+        ? supabase.from("film_survey_responses").delete().in("id", answerIds)
+        : { error: null },
+      stopIds.length
+        ? supabase.from("film_stops").delete().in("id", stopIds)
+        : { error: null },
+    ]);
+    if (results.some((r) => r.error))
+      setError("Couldn't delete them. Try again.");
     else {
       setPicked(new Set());
       setConfirming(false);
@@ -309,6 +427,8 @@ function AllAnswers({
         className="text-sm font-medium text-stone-500 hover:text-stone-800 hover:underline"
       >
         {open ? "Hide" : "See"} all {rows.length} answers
+        {stops.length > 0 &&
+          ` and ${stops.length} Stop ${stops.length === 1 ? "press" : "presses"}`}
       </button>
       {open && (
         <div className="mt-3 rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
@@ -361,7 +481,7 @@ function AllAnswers({
             {error && <span className="text-xs text-red-600">{error}</span>}
           </div>
           <ul className="divide-y divide-stone-100">
-            {rows.slice(0, shown).map((a) => (
+            {items.slice(0, shown).map((a) => (
               <li key={a.id}>
                 <label className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm hover:bg-stone-50">
                   <input
@@ -383,12 +503,19 @@ function AllAnswers({
                       </span>
                     )}
                     <span className="block text-xs text-stone-500">
-                      {when(a.answered_at)}
+                      {when(a.at)}
                       {a.laptop ? ` · ${a.laptop}` : ""}
                     </span>
                   </span>
-                  <span className="w-16 text-right tabular-nums font-semibold text-navy">
-                    {a.impact === null ? (
+                  <span className="w-28 text-right tabular-nums font-semibold text-navy">
+                    {a.kind === "stop" ? (
+                      <span className="text-xs font-semibold text-red-700">
+                        Stopped at {mmss(a.stopped_at ?? 0)}
+                        {a.duration && a.stopped_at !== null
+                          ? ` (${Math.round(Math.min(1, a.stopped_at / a.duration) * 100)}%)`
+                          : ""}
+                      </span>
+                    ) : a.impact === null ? (
                       <span className="text-xs font-normal text-stone-400">
                         skipped
                       </span>
@@ -400,7 +527,7 @@ function AllAnswers({
               </li>
             ))}
           </ul>
-          {rows.length > shown && (
+          {items.length > shown && (
             <button
               type="button"
               onClick={() => setShown((n) => n + 100)}
@@ -453,6 +580,17 @@ function Row({
       </div>
       <p className="mt-1 text-xs text-stone-500">
         {s.views} {s.views === 1 ? "viewer" : "viewers"}, {s.n} answered
+        {s.stops > 0 && (
+          <span className="text-red-700">
+            {" "}
+            · Stop pressed {s.stops}
+            {s.stops === 1 ? " time" : " times"}, on average at{" "}
+            {mmss(s.secs / s.stops)}
+            {s.fracN
+              ? ` (${Math.round((s.frac / s.fracN) * 100)}% through)`
+              : ""}
+          </span>
+        )}
       </p>
     </div>
   );

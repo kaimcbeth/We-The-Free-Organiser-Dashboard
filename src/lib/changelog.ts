@@ -87,6 +87,14 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: 'A Stop button on the player ("I\'m not comfortable watching this anymore"): the film pauses, the live screen turns red with an alert so someone can go over, and each press is recorded with how far in. Before each film, viewers are encouraged to see it through and shown the button.',
+      },
+      {
+        level: "organiser",
+        text: "Everyone in your community (Core Team and members too) sees the live laptops on their Events page while the player is running at an event.",
+      },
+      {
+        level: "organiser",
         text: "The player asks which laptop it is (A, B, C…) when you open it at each event, so you know which one to walk to. Change it any time from the corner of the menu.",
       },
       {
