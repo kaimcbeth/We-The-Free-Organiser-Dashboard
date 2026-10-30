@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/actions";
 import { DEFAULT_TZ, formatEventDate, setRequestTz } from "@/lib/time";
 import { ProfileForm } from "../profile-form";
+import { ReminderSetting } from "../buddy-section";
 import { PhotoPicker } from "@/components/photo-picker";
 import { OriginEditor } from "@/components/origin-editor";
 import { signPhotos } from "@/lib/photos";
@@ -22,6 +23,7 @@ type Me = {
   found_via_person_id: string | null;
   found_via_note: string | null;
   photo_updated_at: string | null;
+  notify_channel: "none" | "email" | "push";
   team: { name: string; timezone: string } | null;
 };
 
@@ -45,7 +47,7 @@ export default async function ProfilePage() {
   const { data: me } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, started_on, found_via, found_via_person_id, found_via_note, photo_updated_at, team:teams!people_team_id_fkey(name, timezone)",
+      "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, started_on, found_via, found_via_person_id, found_via_note, photo_updated_at, notify_channel, team:teams!people_team_id_fkey(name, timezone)",
     )
     .eq("user_id", user.id)
     .maybeSingle<Me>();
@@ -140,6 +142,11 @@ export default async function ProfilePage() {
           Your details
         </h2>
         <ProfileForm me={me} />
+        <ReminderSetting
+          initial={me.notify_channel ?? "none"}
+          hasEmail={!!me.email}
+          intro="If you're going to an event, we'll remind you the day before. You'll always see it in the app (the bell). Also send it by:"
+        />
       </section>
 
       <form action={signOut} className="mt-10 text-center">

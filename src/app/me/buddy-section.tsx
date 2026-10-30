@@ -287,10 +287,14 @@ export function ReminderSetting({
   initial,
   hasEmail,
   intro = "You always get them in the app (the bell). Also send them by:",
+  bare = false,
+  dryRun = false,
 }: {
   initial: BuddyDashboard["notify_channel"];
   hasEmail: boolean;
   intro?: string;
+  bare?: boolean; // no card or heading (inside the welcome tour)
+  dryRun?: boolean; // God Mode preview: don't save anything
 }) {
   const [channel, setChannel] = useState(initial);
   const [msg, setMsg] = useState("");
@@ -298,9 +302,13 @@ export function ReminderSetting({
 
   function choose(next: BuddyDashboard["notify_channel"]) {
     if (next === channel) return;
+    if (dryRun) {
+      setChannel(next);
+      return;
+    }
     start(async () => {
       if (next === "email" && !hasEmail) {
-        setMsg("Add your email under “Your details” first.");
+        setMsg("Add your email in your profile (your photo, top right) first.");
         return;
       }
       if (next === "push") {
@@ -324,8 +332,14 @@ export function ReminderSetting({
   }
 
   return (
-    <div className="mt-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-      <h3 className="font-semibold">Reminders</h3>
+    <div
+      className={
+        bare
+          ? "mt-4 text-left"
+          : "mt-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
+      }
+    >
+      {!bare && <h3 className="font-semibold">Reminders</h3>}
       <p className="text-sm text-stone-500">{intro}</p>
       <div
         className="mt-3 grid grid-cols-3 gap-2"

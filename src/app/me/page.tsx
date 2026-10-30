@@ -10,7 +10,6 @@ import { WhatsAppJoin } from "@/components/whatsapp";
 import { TaskCard } from "@/components/task-card";
 import { loadMyTasks } from "@/lib/tasks";
 import { MemberTutorial, ReplayTour } from "./member-tutorial";
-import { ReminderSetting, type BuddyDashboard } from "./buddy-section";
 import { MyEvents, type MyEvent } from "./my-events";
 
 type Me = {
@@ -39,8 +38,7 @@ type Me = {
   } | null;
 };
 
-export default async function MePage({ searchParams }: PageProps<"/me">) {
-  const { welcome } = await searchParams;
+export default async function MePage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -118,16 +116,9 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     );
   }
 
-  const [
-    { data: buddy },
-    myTasks,
-    { data: upcoming },
-    { data: outreachToday },
-  ] = await Promise.all([
-    supabase.rpc("my_buddy_dashboard"),
+  const [myTasks, { data: upcoming }] = await Promise.all([
     loadMyTasks(supabase, me.id),
     supabase.rpc("my_upcoming_events"),
-    supabase.rpc("my_outreach_today"),
   ]);
   // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
   const now = Date.now();
@@ -137,64 +128,20 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
       <div className="mb-6 empty:hidden">
         <LivePlayers />
       </div>
-      {welcome && !me.welcome_done_at && (
-        <Link
-          href="/me/welcome"
-          className="mb-6 block rounded-2xl bg-pink p-4 text-navy shadow-sm hover:bg-pink-strong"
-        >
-          <span className="block text-lg font-semibold">
-            You&apos;re connected. Welcome to We The Free!
-          </span>
-          <span className="text-sm">
-            Start here: who we are, what we stand for and your first event (2
-            minutes) →
-          </span>
-        </Link>
-      )}
+
       {me.team?.whatsapp_url && !me.whatsapp_joined_at && (
         <div className="mb-6">
           <WhatsAppJoin url={me.team.whatsapp_url} hideOnceJoined />
         </div>
       )}
 
-      {outreachToday ? (
-        <Link
-          href="/me/guide"
-          className="mt-6 block rounded-2xl bg-pink p-4 text-navy shadow-sm hover:bg-pink-strong"
-        >
-          <span className="block text-lg font-semibold">
-            Out on outreach today? Outreach guide →
-          </span>
-          <span className="text-sm">
-            Ten seconds between conversations: how it went, a quick refresher,
-            and one thing to focus on next.
-          </span>
-        </Link>
-      ) : null}
-
-      {!me.welcome_done_at && (
-        <div className="mt-6">
-          <Link
-            href="/me/welcome"
-            className="inline-block text-sm font-medium text-pink-ink hover:underline"
-          >
-            Welcome to We The Free →
-          </Link>
-        </div>
-      )}
-
-      <section id="coming-up" className="mt-8 scroll-mt-4">
+      <section id="coming-up" className="scroll-mt-4">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
           Coming up
         </h2>
         <MyEvents
           events={(upcoming as MyEvent[] | null) ?? []}
           tz={me.team?.timezone ?? DEFAULT_TZ}
-        />
-        <ReminderSetting
-          initial={me.notify_channel ?? "none"}
-          hasEmail={!!me.email}
-          intro="If you're going, we'll remind you the day before. You'll always see it in the app (the bell). Also send it by:"
         />
       </section>
 
@@ -217,20 +164,6 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
         </section>
       )}
 
-      {buddy?.status === "ok" && (
-        <Link
-          href="/me/support"
-          className="mt-8 block rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 hover:ring-pink"
-        >
-          <span className="block font-semibold">
-            You&apos;re supporting a new member
-          </span>
-          <span className="text-sm text-stone-600">
-            See who and how to help in How you can help →
-          </span>
-        </Link>
-      )}
-
       <div className="mt-10 flex items-center justify-center gap-4">
         <ReplayTour />
       </div>
@@ -241,6 +174,8 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
           "",
         )}
         whatsappUrl={me.team?.whatsapp_url ?? null}
+        notifyChannel={me.notify_channel ?? "none"}
+        hasEmail={!!me.email}
         autoOpen={previewNewMember || !me.tutorial_done_at}
         preview={previewNewMember}
       />

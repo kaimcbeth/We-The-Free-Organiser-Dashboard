@@ -62,6 +62,20 @@ export const COMING_SOON: { title: string; text: string }[] = [
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-10-31",
+    title: "A simpler Events page for members",
+    changes: [
+      {
+        level: "organiser",
+        text: "Members' Events page is now just the essentials: live laptops (at Movie Challenges), the WhatsApp invite, what's coming up and their actions. The outreach card, welcome links, reminders and \"You're supporting a new member\" card are gone from it (the Outreach guide, Welcome and How you can help are still in their own tabs and Resources).",
+      },
+      {
+        level: "organiser",
+        text: "Members now choose how they get event reminders during their welcome tour, and can change it later in their profile.",
+      },
+    ],
+  },
+  {
     date: "2026-10-30",
     title: "Movie player",
     changes: [

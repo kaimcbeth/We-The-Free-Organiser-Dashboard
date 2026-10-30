@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { ReminderSetting, type BuddyDashboard } from "./buddy-section";
 
 type Step = {
   icon: string;
@@ -17,12 +18,16 @@ export function MemberTutorial({
   firstName,
   teamName,
   whatsappUrl,
+  notifyChannel,
+  hasEmail,
   autoOpen,
   preview,
 }: {
   firstName: string;
   teamName: string;
   whatsappUrl: string | null;
+  notifyChannel: BuddyDashboard["notify_channel"];
+  hasEmail: boolean;
   autoOpen: boolean;
   preview: boolean; // God Mode preview: don't save anything
 }) {
@@ -88,7 +93,16 @@ export function MemberTutorial({
       icon: "🔔",
       tone: "bg-cyan",
       title: "Stay in the loop",
-      body: "The bell at the top shows your notifications. Add this page to your home screen to open it like an app (on iPhone: Share → Add to Home Screen).",
+      body: "If you're going to an event, we'll remind you the day before. The bell at the top shows your notifications. Add this page to your home screen to open it like an app (on iPhone: Share → Add to Home Screen).",
+      extra: (
+        <ReminderSetting
+          initial={notifyChannel}
+          hasEmail={hasEmail}
+          intro="Also send reminders by (you can change this in your profile):"
+          bare
+          dryRun={preview}
+        />
+      ),
     },
     {
       icon: "🎉",
