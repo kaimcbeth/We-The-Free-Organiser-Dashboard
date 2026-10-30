@@ -269,14 +269,6 @@ export const EQUIPMENT_GUIDE: {
         ],
       },
       {
-        key: "bell",
-        name: "Bell",
-        about:
-          "For people to ring when they finish the video. Great for busy and chaotic outreach events.",
-        shop: "AliExpress",
-        url: "https://www.aliexpress.com/item/1005003770913674.html",
-      },
-      {
         key: "standup_banner",
         name: "Stand-up banner",
         about:

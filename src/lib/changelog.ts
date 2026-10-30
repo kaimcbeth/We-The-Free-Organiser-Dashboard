@@ -91,6 +91,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "The bell is gone from the Equipment guide: the movie player's live screen tells you when someone's finishing.",
+      },
+      {
+        level: "organiser",
         text: "Movie Challenge event pages show the live laptops too, from an hour before the event until an hour after.",
       },
       {
