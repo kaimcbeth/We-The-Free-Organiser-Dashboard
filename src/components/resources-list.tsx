@@ -184,6 +184,36 @@ export function ResourcesList({
           </span>
         </a>
       )}
+      {has(
+        q,
+        "recommended prizes treats movie challenge biscuits cookies oreo biscoff lollies chips vegan reimbursement",
+      ) && (
+        <a
+          href={`${path.replace(/\/$/, "")}/prizes`}
+          className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+        >
+          <span>
+            <span className="flex flex-wrap items-center gap-2">
+              <span className="font-semibold">
+                <span aria-hidden className="mr-1.5">
+                  🍪
+                </span>
+                Recommended prizes
+              </span>
+              <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
+                Australia
+              </span>
+            </span>
+            <span className="block text-sm text-stone-600">
+              Vegan treats for the Movie Challenge: cost per prize against the
+              reimbursement, where to buy, and how many packs to get.
+            </span>
+          </span>
+          <span aria-hidden className="text-xl">
+            →
+          </span>
+        </a>
+      )}
       {!core &&
         has(
           q,

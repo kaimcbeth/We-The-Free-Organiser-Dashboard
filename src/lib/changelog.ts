@@ -43,10 +43,6 @@ export const COMING_SOON: { title: string; text: string }[] = [
     text: "How to set up the Movie Challenge gear and pack it away (what to buy is in the Equipment guide now).",
   },
   {
-    title: "Recommended Movie Challenge prizes",
-    text: "A list of prizes that work well for the Movie Challenge, with rough costs and where to get them.",
-  },
-  {
     title: "Planning guides for community events",
     text: "Step-by-step guides for running socials, dinners, co-working and other community events.",
   },
@@ -88,6 +84,10 @@ export const CHANGELOG: Release[] = [
       {
         level: "organiser",
         text: 'A Stop button on the player ("I\'m not comfortable watching this anymore"): the film pauses, the live screen turns red with an alert so someone can go over, and each tapout is recorded with how far in. Before each film, viewers are encouraged to see it through and shown the button.',
+      },
+      {
+        level: "organiser",
+        text: "🍪 Recommended prizes in Resources: vegan Movie Challenge treats with the cost per prize against the US$0.50 reimbursement, where to buy, allergens, and how many packs for the crowd you expect. Premium prizes over the reimbursement are recommended when your community has funding banked.",
       },
       {
         level: "organiser",
