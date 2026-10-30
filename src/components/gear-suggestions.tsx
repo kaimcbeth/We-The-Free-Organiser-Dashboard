@@ -34,7 +34,8 @@ export function GearSuggestions({
         )}
       </div>
       <p className="mt-0.5 text-xs text-stone-500">
-        With ${banked} banked and about ${saving} saved each month. Things you
+        With <b className="text-navy">${banked}</b> banked and about{" "}
+        <b className="text-navy">${saving}</b> saved each month. Things you
         haven&apos;t got yet, base kit first.
       </p>
       {shown.length === 0 ? (
@@ -62,10 +63,11 @@ export function GearSuggestions({
                     s.option &&
                       `${s.option === "Best" ? "✨ " : ""}${s.option}`,
                     s.product,
-                    s.priceText ?? "Price to come",
                   ]
                     .filter(Boolean)
                     .join(" · ")}
+                  {(s.option || s.product) && " · "}
+                  <BoldDollars text={s.priceText ?? "Price to come"} />
                 </span>
                 {s.url ? (
                   <a
@@ -104,5 +106,22 @@ export function GearSuggestions({
         </p>
       )}
     </section>
+  );
+}
+
+// "$137.50 for 4" with the dollar amounts in bold.
+function BoldDollars({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/(\$[\d,]+(?:\.\d+)?)/).map((t, i) =>
+        i % 2 ? (
+          <b key={i} className="font-semibold text-navy">
+            {t}
+          </b>
+        ) : (
+          t
+        ),
+      )}
+    </>
   );
 }

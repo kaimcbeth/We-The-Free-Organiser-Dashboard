@@ -63,6 +63,16 @@ export function PhotoTile({
   const box = useRef<HTMLLIElement>(null);
   const [cropping, setCropping] = useState(false);
   const [big, setBig] = useState(false); // double-click: full screen
+  // Long press (phones): select this photo, like Ctrl/Cmd-click on a computer.
+  const press = useRef<{
+    timer: number;
+    x: number;
+    y: number;
+    fired: boolean;
+  } | null>(null);
+  const cancelPress = () => {
+    if (press.current) window.clearTimeout(press.current.timer);
+  };
 
   useEffect(() => {
     if (!big) return;
@@ -92,7 +102,38 @@ export function PhotoTile({
     <li ref={box} className="relative">
       <button
         type="button"
+        onPointerDown={(e) => {
+          if (e.pointerType === "mouse" || !onModSelect) return;
+          const x = e.clientX;
+          const y = e.clientY;
+          press.current = {
+            x,
+            y,
+            fired: false,
+            timer: window.setTimeout(() => {
+              if (!press.current) return;
+              press.current.fired = true;
+              navigator.vibrate?.(30);
+              onModSelect();
+            }, 450),
+          };
+        }}
+        onPointerMove={(e) => {
+          const p0 = press.current;
+          if (p0 && Math.hypot(e.clientX - p0.x, e.clientY - p0.y) > 10)
+            cancelPress();
+        }}
+        onPointerUp={cancelPress}
+        onPointerCancel={cancelPress}
+        onContextMenu={(e) => {
+          // No "save image" menu when long-pressing to select.
+          if (onModSelect) e.preventDefault();
+        }}
         onClick={(e) => {
+          if (press.current?.fired) {
+            press.current = null;
+            return; // the long press already selected it
+          }
           if ((e.metaKey || e.ctrlKey) && onModSelect) return onModSelect();
           (onSelect ?? onToggle)();
         }}
@@ -101,14 +142,15 @@ export function PhotoTile({
           setBig(true);
         }}
         aria-pressed={onSelect ? !!selected : undefined}
-        className={`block aspect-square w-full overflow-hidden rounded-xl bg-stone-200 ${open || selected ? "ring-2 ring-pink ring-offset-2" : ""}`}
+        className={`block aspect-square w-full select-none overflow-hidden rounded-xl bg-stone-200 [-webkit-touch-callout:none] ${open || selected ? "ring-2 ring-pink ring-offset-2" : ""}`}
         title={p.caption ?? undefined}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
         <img
           src={p.url}
           alt={p.caption ?? ""}
-          className="h-full w-full object-cover"
+          draggable={false}
+          className="pointer-events-none h-full w-full object-cover"
         />
       </button>
       <button

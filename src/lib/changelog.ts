@@ -87,6 +87,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Photo Hub on phones: long-press a photo to start selecting, then tap more to add them. What to get next shows the dollar amounts in bold.",
+      },
+      {
+        level: "organiser",
         text: "People on phones: names get their own line, with tags underneath. Set roles from each person's page.",
       },
       {

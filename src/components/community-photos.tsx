@@ -251,6 +251,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                     setOpen(null);
                     setSel(new Set());
                   }}
+                  title="Or long-press a photo (Ctrl/Cmd-click on a computer)"
                   className="ml-auto shrink-0 text-sm font-medium text-stone-500 hover:text-stone-800 hover:underline"
                 >
                   Select
