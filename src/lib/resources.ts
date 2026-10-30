@@ -337,6 +337,13 @@ export const EQUIPMENT_GUIDE: {
         price: "$8.48 each (Trojan 100mm)",
       },
       {
+        key: "sign_clamps",
+        name: "Sign clamps",
+        about: "Good for attaching smaller signs to your tables.",
+        shop: "Amazon",
+        url: "https://www.amazon.com.au/dp/B0G4S4VHX6",
+      },
+      {
         key: "lanyards",
         name: "Lanyards",
         about:
