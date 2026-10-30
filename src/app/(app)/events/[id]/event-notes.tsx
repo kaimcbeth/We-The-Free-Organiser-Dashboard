@@ -46,7 +46,7 @@ export function EventNotes({
       <textarea
         id="event-notes"
         value={text}
-        rows={text ? Math.min(10, text.split("\n").length + 1) : 2}
+        rows={text ? Math.min(4, text.split("\n").length + 1) : 2}
         maxLength={5000}
         placeholder="Anything to remember: who's bringing what, the venue contact, how it went…"
         onChange={(e) => {

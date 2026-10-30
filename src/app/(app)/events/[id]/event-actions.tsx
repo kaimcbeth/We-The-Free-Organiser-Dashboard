@@ -65,69 +65,89 @@ export async function EventActions({
     return t < now ? "overdue" : `due ${formatEventDate(iso)}`;
   };
 
+  const overdue = open.filter((r) => Date.parse(r.due_at) < now).length;
+
+  // Folded to one line so check-in stays near the top; tap to see them all.
   return (
-    <section className="mt-5">
-      <div className="mb-2 flex items-baseline justify-between gap-3">
-        <h2 className="text-sm font-semibold text-navy">
-          Actions{" "}
-          <span className="font-normal text-stone-400">
+    <details className="group mt-5 rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm [&::-webkit-details-marker]:hidden">
+        <span>
+          <span className="font-semibold text-navy">Actions</span>{" "}
+          <span className="text-stone-500">
             {done.length} of {open.length + done.length + upcoming.length} done
+            {open.length > 0 && ` · ${open.length} to do`}
           </span>
-        </h2>
+          {overdue > 0 && (
+            <span className="font-semibold text-red-700">
+              {" "}
+              · {overdue} overdue
+            </span>
+          )}
+        </span>
+        <span
+          aria-hidden
+          className="text-stone-400 transition-transform group-open:rotate-90"
+        >
+          ›
+        </span>
+      </summary>
+      <div className="border-t border-black/5 p-3">
         {open.length > 0 && (
-          <Link
-            href={`/tasks?event=${eventId}`}
-            className="text-xs font-semibold text-pink-ink hover:underline"
-          >
-            Open in Actions
-          </Link>
+          <div className="mb-2 flex justify-end">
+            <Link
+              href={`/tasks?event=${eventId}`}
+              className="text-xs font-semibold text-pink-ink hover:underline"
+            >
+              Open in Actions
+            </Link>
+          </div>
+        )}
+        {(open.length > 0 || done.length > 0) && (
+          <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white text-sm shadow-sm ring-1 ring-black/5">
+            {open.map((r) => (
+              <li
+                key={r.id}
+                className="flex items-center justify-between gap-3 px-4 py-2.5"
+              >
+                <span className="min-w-0 truncate font-medium">
+                  {r.kind?.title ?? "Action"}
+                </span>
+                <span
+                  className={`shrink-0 text-xs ${Date.parse(r.due_at) < now ? "font-semibold text-red-700" : "text-stone-500"}`}
+                >
+                  {r.assignee ? `${r.assignee.first_name} · ` : ""}
+                  {due(r.due_at)}
+                </span>
+              </li>
+            ))}
+            {done.map((r) => (
+              <li
+                key={r.id}
+                className="flex items-center justify-between gap-3 px-4 py-2.5 text-stone-400"
+              >
+                <span className="min-w-0 truncate line-through">
+                  {r.kind?.title ?? "Action"}
+                </span>
+                <span className="shrink-0 text-xs">✓ done</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {upcoming.length > 0 && (
+          <>
+            <p className="mt-3 px-1 text-xs font-medium uppercase tracking-wide text-stone-400">
+              Still to come
+            </p>
+            <ComingUp
+              items={upcoming}
+              whenLabel={Object.fromEntries(
+                upcoming.map((u) => [u.appearsAt, when(u.appearsAt)]),
+              )}
+              alwaysOpen
+            />
+          </>
         )}
       </div>
-      {(open.length > 0 || done.length > 0) && (
-        <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white text-sm shadow-sm ring-1 ring-black/5">
-          {open.map((r) => (
-            <li
-              key={r.id}
-              className="flex items-center justify-between gap-3 px-4 py-2.5"
-            >
-              <span className="min-w-0 truncate font-medium">
-                {r.kind?.title ?? "Action"}
-              </span>
-              <span
-                className={`shrink-0 text-xs ${Date.parse(r.due_at) < now ? "font-semibold text-red-700" : "text-stone-500"}`}
-              >
-                {r.assignee ? `${r.assignee.first_name} · ` : ""}
-                {due(r.due_at)}
-              </span>
-            </li>
-          ))}
-          {done.map((r) => (
-            <li
-              key={r.id}
-              className="flex items-center justify-between gap-3 px-4 py-2.5 text-stone-400"
-            >
-              <span className="min-w-0 truncate line-through">
-                {r.kind?.title ?? "Action"}
-              </span>
-              <span className="shrink-0 text-xs">✓ done</span>
-            </li>
-          ))}
-        </ul>
-      )}
-      {upcoming.length > 0 && (
-        <>
-          <p className="mt-3 px-1 text-xs font-medium uppercase tracking-wide text-stone-400">
-            Still to come
-          </p>
-          <ComingUp
-            items={upcoming}
-            whenLabel={Object.fromEntries(
-              upcoming.map((u) => [u.appearsAt, when(u.appearsAt)]),
-            )}
-            alwaysOpen
-          />
-        </>
-      )}
-    </section>
+    </details>
   );
 }

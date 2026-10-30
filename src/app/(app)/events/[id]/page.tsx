@@ -293,13 +293,6 @@ export default async function EventCheckInPage({
         now={Date.now()}
       />
 
-      <EventPhotos
-        key={eventPhotos.map((p) => p.id).join()}
-        teamId={event.team_id}
-        eventId={event.id}
-        photos={eventPhotos}
-      />
-
       <CheckIn
         eventId={event.id}
         teamId={event.team_id}
@@ -322,6 +315,13 @@ export default async function EventCheckInPage({
         isOutreach={isOutreach}
         outreachBefore={outreachBefore}
         likely={(likely.data as Record<string, number> | null) ?? {}}
+      />
+
+      <EventPhotos
+        key={eventPhotos.map((p) => p.id).join()}
+        teamId={event.team_id}
+        eventId={event.id}
+        photos={eventPhotos}
       />
     </div>
   );

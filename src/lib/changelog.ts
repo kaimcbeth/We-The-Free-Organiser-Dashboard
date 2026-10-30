@@ -87,6 +87,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Event pages get you to check-in faster: actions fold into one line (tap to open), notes stay short, and event photos sit below the check-in list.",
+      },
+      {
+        level: "organiser",
         text: "🍪 Recommended prizes in Resources: vegan Movie Challenge treats with the cost per prize against the US$0.50 reimbursement, where to buy, allergens, and how many packs for the crowd you expect. Premium prizes over the reimbursement are recommended when your community has funding banked.",
       },
       {
