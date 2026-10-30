@@ -41,8 +41,17 @@ export default async function MoviePlayerPage() {
         )}
         <ol className="mt-4 list-decimal space-y-1.5 pl-5 text-sm text-stone-700">
           <li>
-            Put the player and the videos in the same folder on each laptop (or
-            a USB stick). MP4 videos play on Windows and Mac.
+            Download the Movie Challenge videos from the{" "}
+            <a
+              href="https://drive.google.com/drive/folders/1gzYY00Al3T6AOfjW2D5owmyibkqX-3LZ?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-pink-ink underline"
+            >
+              videos folder on Google Drive
+            </a>
+            . Put them and the player in the same folder on each laptop (or a
+            USB stick). MP4 videos play on Windows and Mac.
           </li>
           <li>
             Open the player (double-click it), click <b>Choose films</b> and
