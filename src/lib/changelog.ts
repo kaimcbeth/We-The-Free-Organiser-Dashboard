@@ -79,7 +79,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Equipment guide: prices added for the table banner (DIY ~$25, Best $50), viewing devices (<$150 each), headphones ($8.19) and headphone splitters (~$4 each). Signs now have a 🛠️ DIY option (8 portrait A3 sheets on thick cardboard, ~$5 each, printed with the sign splitter) next to ✨ Best (Easy Signs corrugated plastic).",
+        text: "Equipment guide: prices added for the table banner (DIY ~$25, Best $50), viewing devices (<$150 each), headphones ($8.19), headphone splitters (~$4 each) and the hand trolley ($79). Signs now have a 🛠️ DIY option (8 portrait A3 sheets on thick cardboard, ~$5 each, printed with the sign splitter) next to ✨ Best (Easy Signs corrugated plastic).",
       },
       {
         level: "regional_lead",

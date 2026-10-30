@@ -304,7 +304,7 @@ export const EQUIPMENT_GUIDE: {
         about:
           "Folding trolley for carrying the gear. More details coming soon.",
         shop: "Bunnings",
-        price: "$85",
+        price: "$79",
       },
       {
         key: "video_player_box",
