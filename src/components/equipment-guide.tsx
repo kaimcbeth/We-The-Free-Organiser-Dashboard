@@ -326,7 +326,13 @@ function EquipmentRow({
   photos: Record<string, string>; // uploaded, by photo key
   onUpload?: (key: string, file: File) => Promise<boolean>; // staff only
 }) {
-  const [pick, setPick] = useState(0);
+  // Open on the version the community has (its pink dot), else the first.
+  const [pick, setPick] = useState(() =>
+    Math.max(
+      0,
+      (item.options ?? []).findIndex((o) => inventory.has(invKey(item, o))),
+    ),
+  );
   const [guideOpen, setGuideOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const opt = item.options?.[pick];
@@ -401,7 +407,7 @@ function EquipmentRow({
                 {opt?.shop ?? item.shop} ↗
               </a>
             )}
-            {item.guide && (
+            {item.guide && opt?.instructions === undefined && (
               <button
                 type="button"
                 onClick={() => setGuideOpen(true)}
@@ -480,11 +486,14 @@ function EquipmentRow({
               (opt.instructions ? (
                 <a
                   href={opt.instructions}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  {...(opt.instructions.startsWith("/")
+                    ? {}
+                    : { target: "_blank", rel: "noopener noreferrer" })}
                   className="mt-1 inline-block text-sm font-medium text-pink-ink hover:underline"
                 >
-                  Instructions ↗
+                  {opt.instructions.startsWith("/")
+                    ? "Print it with the sign splitter →"
+                    : "Instructions ↗"}
                 </a>
               ) : (
                 <p className="mt-1 text-sm text-stone-400">

@@ -152,12 +152,25 @@ export const EQUIPMENT_GUIDE: {
       },
       {
         key: "signs",
-        name: "Corrugated plastic signs",
-        about:
-          "Light, weatherproof signs inviting people to take the challenge.",
-        shop: "Easy Signs",
-        url: "https://www.easysigns.com.au/products/details/signflute-corrugated-plastic-signs",
-        price: "$137.50 for 4 (600 × 900mm)",
+        name: "Signs",
+        about: "Signs inviting people to take the challenge.",
+        options: [
+          {
+            label: "DIY",
+            about:
+              "Print the sign on 8 portrait A3 sheets and stick them onto thick cardboard backing.",
+            price: "About $5 each",
+            instructions: "/resources/signs",
+          },
+          {
+            label: "Best",
+            product: "Corrugated plastic signs",
+            about: "Light and weatherproof.",
+            shop: "Easy Signs",
+            url: "https://www.easysigns.com.au/products/details/signflute-corrugated-plastic-signs",
+            price: "$137.50 for 4 (600 × 900mm)",
+          },
+        ],
         guide: [
           {
             label: "When you order",
