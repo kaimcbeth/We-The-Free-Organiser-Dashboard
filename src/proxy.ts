@@ -13,6 +13,7 @@ const PUBLIC_PATHS = [
   "/tell", // members' open feedback for their organisers (same secret link)
   "/calendar", // calendar feeds (secret link per community; apps can't log in)
   "/guide", // Outreach guide questions (newcomers scan a QR code for it)
+  "/resources/movie-player.html", // blank offline player; the Hub's download adds the community link
 ];
 
 export async function proxy(request: NextRequest) {
