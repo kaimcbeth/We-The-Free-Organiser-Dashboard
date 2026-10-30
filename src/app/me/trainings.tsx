@@ -57,10 +57,7 @@ export function TrainingSection({
   const { set, pending, msg } = useSetTraining(preview);
   const next = recommendedTraining(data);
   const done = data.trainings.filter((t) => t.done_at);
-  const later = data.trainings.find(
-    (t) => !t.done_at && t.min_events > data.events,
-  );
-  if (!next && done.length === 0 && !later) return null;
+  if (!next && done.length === 0) return null;
 
   return (
     <section id="training" className="mt-10 scroll-mt-4">
@@ -94,12 +91,6 @@ export function TrainingSection({
           </div>
           {msg && <p className="mt-2 text-sm text-stone-600">{msg}</p>}
         </div>
-      ) : later ? (
-        <p className="rounded-2xl border border-dashed border-stone-300 px-4 py-3 text-sm text-stone-500">
-          <span className="font-medium text-stone-700">Coming up next:</span>{" "}
-          {later.title}. Opens after {later.min_events - data.events} more{" "}
-          {later.min_events - data.events === 1 ? "event" : "events"}.
-        </p>
       ) : (
         <p className="text-sm text-stone-500">
           You&apos;re all caught up. New trainings will show here.

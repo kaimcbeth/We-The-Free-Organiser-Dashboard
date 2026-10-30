@@ -14,8 +14,8 @@ export type MicroRole = {
 };
 export type MyMicroRoles = { events: number; roles: MicroRole[] };
 
-// Small roles that unlock as you come to more events. You see the ones you've
-// unlocked (or already do) plus a peek at the next one, never the whole list.
+// Small roles that unlock as you come to more events. You only see the ones
+// you've unlocked (or already do), never the whole list.
 export function MicroRoles({
   data,
   preview,
@@ -31,7 +31,6 @@ export function MicroRoles({
   const open = data.roles.filter(
     (r) => r.status || r.min_events <= data.events,
   );
-  const next = data.roles.find((r) => !r.status && r.min_events > data.events);
 
   function act(r: MicroRole, stop: boolean) {
     if (preview) {
@@ -128,15 +127,6 @@ export function MicroRoles({
           </li>
         ))}
       </ul>
-
-      {next && (
-        <div className="mt-3 rounded-2xl border border-dashed border-stone-300 px-4 py-3 text-sm text-stone-500">
-          <span className="font-medium text-stone-700">Coming up next:</span>{" "}
-          {next.title.toLowerCase()}. Opens after{" "}
-          {next.min_events - data.events} more{" "}
-          {next.min_events - data.events === 1 ? "event" : "events"}.
-        </div>
-      )}
     </section>
   );
 }
