@@ -128,7 +128,7 @@ export default async function MePage() {
   return (
     <>
       <div className="mb-6 empty:hidden">
-        <LivePlayers noIntro />
+        <LivePlayers noIntro withToday />
       </div>
 
       {me.team?.whatsapp_url && !me.whatsapp_joined_at && (

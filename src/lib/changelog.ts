@@ -107,6 +107,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Members now see today's Movie Challenge numbers under the live laptops on their Events page while laptops are running: how many have watched, the average impact, tapouts, and each film (and laptop) when there's more than one.",
+      },
+      {
+        level: "organiser",
         text: 'The Outreach guide\'s "Create your account" prompt now says what newcomers get: events and reminders, the Photo Hub, their impact, and a way to send feedback and ideas.',
       },
     ],
