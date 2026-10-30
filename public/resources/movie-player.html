@@ -1291,7 +1291,7 @@
     $("res-sum").textContent = views.length
       ? views.length + (views.length === 1 ? " viewer" : " viewers") + " on this laptop, " + scored.length + " answered" +
         (scored.length ? " (average " + avg.toFixed(1) + " out of 10)" : "") +
-        (stops.length ? ". Stop pressed " + stops.length + (stops.length === 1 ? " time." : " times.") : ".")
+        (stops.length ? ". " + stops.length + (stops.length === 1 ? " tapout." : " tapouts.") : ".")
       : "No answers on this laptop yet. Viewers are asked after each film.";
     var by = {};
     views.forEach(function (a) {
@@ -1335,11 +1335,11 @@
   };
   $("export").onclick = function () {
     var q = function (v) { v = v === null || v === undefined ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-    var lines = ["Film,Version,Language,Score (0-10),Stopped at,Date,Time,Laptop"];
+    var lines = ["Film,Version,Language,Score (0-10),Tapout at,Date,Time,Laptop"];
     answers.forEach(function (a) {
       var d = new Date(a.at);
       lines.push([a.film, a.version || "", a.language || "English",
-        a.stop ? "pressed Stop" : a.impact === null ? "skipped" : a.impact,
+        a.stop ? "tapout" : a.impact === null ? "skipped" : a.impact,
         a.stop && a.stopped_at !== null ? fmt(a.stopped_at) : "",
         d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"),
         String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"), a.laptop || ""].map(q).join(","));

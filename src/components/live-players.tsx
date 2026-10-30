@@ -126,7 +126,7 @@ export function LivePlayers({ teamId }: { teamId?: string }) {
           ) {
             navigator.serviceWorker?.ready
               .then((r) =>
-                r.showNotification(`${p.laptop}: someone pressed Stop`, {
+                r.showNotification(`${p.laptop}: tapout`, {
                   body: `${p.film ?? "Film"}, at ${mmss(p.stopped_at ?? 0)}. Someone may need support.`,
                   tag: `player-${p.device}`,
                 }),
@@ -216,8 +216,8 @@ export function LivePlayers({ teamId }: { teamId?: string }) {
       {everyone && (
         <p className="mt-1 text-sm text-stone-600">
           The Movie Challenge laptops right now. Pink: a film ends in 10
-          seconds, so someone can be there to chat. Red: someone pressed Stop
-          and may need support.
+          seconds, so someone can be there to chat. Red: someone tapped out and
+          may need support.
         </p>
       )}
       {players.length === 0 ? (
@@ -249,7 +249,7 @@ export function LivePlayers({ teamId }: { teamId?: string }) {
             const what = off
               ? "Offline"
               : stopped
-                ? `Stopped at ${mmss(p.stopped_at ?? 0)}`
+                ? `Tapout at ${mmss(p.stopped_at ?? 0)}`
                 : p.state === "playing"
                   ? ending
                     ? s! > 0
@@ -276,7 +276,7 @@ export function LivePlayers({ teamId }: { teamId?: string }) {
                   {off
                     ? "Not heard from it for a while (hotspot or player closed?)."
                     : stopped
-                      ? `Someone pressed Stop: they may need support. ${p.film ?? ""}`.trim()
+                      ? `Someone tapped out and may need support. ${p.film ?? ""}`.trim()
                       : p.film && p.state !== "idle"
                         ? [
                             p.film,

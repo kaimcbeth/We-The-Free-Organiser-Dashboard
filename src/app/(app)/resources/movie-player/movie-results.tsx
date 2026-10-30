@@ -209,7 +209,7 @@ export function MovieResults({ teamId, tz }: { teamId: string; tz: string }) {
                   : ""
               }${
                 todaysStops.length
-                  ? ` · Stop pressed ${todaysStops.length} ${todaysStops.length === 1 ? "time" : "times"}`
+                  ? ` · ${todaysStops.length} ${todaysStops.length === 1 ? "tapout" : "tapouts"}`
                   : ""
               }${todays[0] ? ` · last one ${ago(todays[0].answered_at, now)}` : ""}`
             : "Nobody yet today. Counts come in as each film ends on a laptop that's online."}
@@ -428,7 +428,7 @@ function AllAnswers({
       >
         {open ? "Hide" : "See"} all {rows.length} answers
         {stops.length > 0 &&
-          ` and ${stops.length} Stop ${stops.length === 1 ? "press" : "presses"}`}
+          ` and ${stops.length} ${stops.length === 1 ? "tapout" : "tapouts"}`}
       </button>
       {open && (
         <div className="mt-3 rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
@@ -510,7 +510,7 @@ function AllAnswers({
                   <span className="w-28 text-right tabular-nums font-semibold text-navy">
                     {a.kind === "stop" ? (
                       <span className="text-xs font-semibold text-red-700">
-                        Stopped at {mmss(a.stopped_at ?? 0)}
+                        Tapout at {mmss(a.stopped_at ?? 0)}
                         {a.duration && a.stopped_at !== null
                           ? ` (${Math.round(Math.min(1, a.stopped_at / a.duration) * 100)}%)`
                           : ""}
@@ -583,8 +583,8 @@ function Row({
         {s.stops > 0 && (
           <span className="text-red-700">
             {" "}
-            · Stop pressed {s.stops}
-            {s.stops === 1 ? " time" : " times"}, on average at{" "}
+            · {s.stops}
+            {s.stops === 1 ? " tapout" : " tapouts"}, on average at{" "}
             {mmss(s.secs / s.stops)}
             {s.fracN
               ? ` (${Math.round((s.frac / s.fracN) * 100)}% through)`

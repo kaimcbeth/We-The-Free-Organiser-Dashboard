@@ -87,7 +87,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: 'A Stop button on the player ("I\'m not comfortable watching this anymore"): the film pauses, the live screen turns red with an alert so someone can go over, and each press is recorded with how far in. Before each film, viewers are encouraged to see it through and shown the button.',
+        text: 'A Stop button on the player ("I\'m not comfortable watching this anymore"): the film pauses, the live screen turns red with an alert so someone can go over, and each tapout is recorded with how far in. Before each film, viewers are encouraged to see it through and shown the button.',
       },
       {
         level: "organiser",
