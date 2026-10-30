@@ -6,6 +6,7 @@ import {
   MOCK_BANKED,
   MOCK_SAVING,
   gearSuggestions,
+  loadEquipmentPhotos,
   loadOwnedGear,
 } from "@/lib/funding";
 
@@ -20,6 +21,7 @@ export default async function EquipmentPage() {
         await loadOwnedGear(supabase, teamId),
         MOCK_BANKED,
         MOCK_SAVING,
+        await loadEquipmentPhotos(supabase),
       )
     : null;
   return (

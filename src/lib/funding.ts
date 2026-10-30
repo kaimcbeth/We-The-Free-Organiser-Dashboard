@@ -16,6 +16,10 @@ export type GearSuggestion = {
   product: string | null;
   price: number | null;
   priceText: string | null;
+  url: string | null; // where to buy it
+  shop: string | null;
+  contactLead: boolean; // got from the Regional Support Lead, not a shop
+  photo: string | null; // uploaded photo, or the guide's built-in one
   // "now": the banked money covers it (counting the ones above it);
   // a number: months of saving until it does; null: no price yet.
   when: "now" | number | null;
@@ -48,6 +52,7 @@ export function gearSuggestions(
   owned: Set<string>,
   banked: number,
   saving: number,
+  photos: Record<string, string> = {}, // uploaded equipment photos, by photo key
 ): GearSuggestion[] {
   const has = (item: EquipmentItem) =>
     owned.has(item.key) ||
@@ -60,7 +65,7 @@ export function gearSuggestions(
       [area.upgrades, true],
     ] as const)
       for (const item of list) {
-        if (has(item)) continue;
+        if (has(item) || item.noSuggest) continue;
         const { opt, price, text } = bestOf(item);
         let when: GearSuggestion["when"] = null;
         if (price !== null) {
@@ -80,6 +85,14 @@ export function gearSuggestions(
           product: opt?.product ?? null,
           price,
           priceText: text,
+          url: opt?.url ?? item.url ?? null,
+          shop: opt?.shop ?? item.shop ?? null,
+          contactLead: !!opt?.contactLead,
+          photo:
+            photos[photoKey(item.key, opt ?? undefined)] ??
+            opt?.image ??
+            item.image ??
+            null,
           when,
         });
       }
@@ -93,4 +106,18 @@ export async function loadOwnedGear(supabase: SupabaseClient, teamId: string) {
     .eq("team_id", teamId)
     .not("guide_key", "is", null);
   return new Set((data ?? []).map((r) => r.guide_key as string));
+}
+
+// Uploaded equipment guide photos (shared by every community), as public links.
+export async function loadEquipmentPhotos(supabase: SupabaseClient) {
+  const { data } = await supabase
+    .from("equipment_photos")
+    .select("photo_key, path");
+  return Object.fromEntries(
+    (data ?? []).map((r) => [
+      r.photo_key as string,
+      supabase.storage.from("equipment").getPublicUrl(r.path as string).data
+        .publicUrl,
+    ]),
+  ) as Record<string, string>;
 }

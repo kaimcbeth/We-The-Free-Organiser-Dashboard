@@ -102,6 +102,8 @@ export type EquipmentItem = {
   // Tips for buying it, shown in a pop-up (instead of a shop link).
   guide?: { label: string; text: string }[];
   image?: string; // a default photo (under /equipment); uploads replace it
+  // Left out of "What to get next" (consumables, or not every team needs it).
+  noSuggest?: boolean;
   // Different versions of the same thing (e.g. budget and best), shown with
   // a toggle. The first is shown to start with; url above matches it.
   options?: {
@@ -300,6 +302,7 @@ export const EQUIPMENT_GUIDE: {
       },
       {
         key: "hand_trolley",
+        noSuggest: true,
         name: "Hand trolley",
         about:
           "Folding trolley for carrying the gear. More details coming soon.",
@@ -316,6 +319,7 @@ export const EQUIPMENT_GUIDE: {
       },
       {
         key: "disinfectant_spray",
+        noSuggest: true,
         name: "Disinfectant spray",
         about:
           "For wiping down the headphones between people. More details coming soon.",

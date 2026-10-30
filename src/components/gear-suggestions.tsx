@@ -1,8 +1,11 @@
 import Link from "next/link";
 import type { GearSuggestion } from "@/lib/funding";
+import { PhotoSlot } from "@/components/photo-slot";
 
 // "What to get next": the community's gear gaps (base kit first, then
-// upgrades, Best versions) against its banked funding.
+// upgrades, Best versions) against its banked funding, with a picture and
+// where to buy each. Only things there isn't enough money for yet are
+// labelled (with roughly when there will be).
 export function GearSuggestions({
   list,
   banked,
@@ -41,11 +44,13 @@ export function GearSuggestions({
       ) : (
         <ul className="mt-2 divide-y divide-black/5">
           {shown.map((s) => (
-            <li
-              key={s.key}
-              className="flex items-center justify-between gap-3 py-2 text-sm"
-            >
-              <span className="min-w-0">
+            <li key={s.key} className="flex items-center gap-3 py-2.5 text-sm">
+              {s.photo ? (
+                <PhotoSlot photo={s.photo} alt={s.name} />
+              ) : (
+                <span className="h-16 w-16 shrink-0 rounded-xl bg-stone-50 ring-1 ring-black/5" />
+              )}
+              <span className="min-w-0 flex-1">
                 <span className="font-medium">{s.name}</span>
                 {s.upgrade && (
                   <span className="ml-1.5 rounded-full bg-stone-100 px-1.5 py-0.5 text-[10px] text-stone-500">
@@ -62,16 +67,33 @@ export function GearSuggestions({
                     .filter(Boolean)
                     .join(" · ")}
                 </span>
+                {s.url ? (
+                  <a
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-0.5 inline-block text-xs font-semibold text-pink-ink hover:underline"
+                  >
+                    Buy{s.shop ? ` at ${s.shop}` : ""} ↗
+                  </a>
+                ) : (
+                  <Link
+                    href="/resources/equipment"
+                    className="mt-0.5 inline-block text-xs font-semibold text-pink-ink hover:underline"
+                  >
+                    {s.contactLead
+                      ? "Get it from your Regional Support Lead"
+                      : s.shop
+                        ? `From ${s.shop}: see the guide`
+                        : "See the guide"}
+                  </Link>
+                )}
               </span>
-              {s.when === "now" ? (
-                <span className="shrink-0 rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
-                  Can get now
-                </span>
-              ) : typeof s.when === "number" ? (
-                <span className="shrink-0 text-xs text-stone-500">
+              {typeof s.when === "number" && (
+                <span className="shrink-0 text-right text-xs text-stone-500">
                   Enough in about {s.when} {s.when === 1 ? "month" : "months"}
                 </span>
-              ) : null}
+              )}
             </li>
           ))}
         </ul>

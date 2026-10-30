@@ -4,6 +4,7 @@ import {
   MOCK_FUNDING,
   MOCK_SAVING,
   gearSuggestions,
+  loadEquipmentPhotos,
   loadOwnedGear,
 } from "@/lib/funding";
 import { GearSuggestions } from "@/components/gear-suggestions";
@@ -39,7 +40,12 @@ export default async function FundingPage() {
     organiser.allCommunities || organiser.exampleMode
       ? new Set<string>()
       : await loadOwnedGear(supabase, organiser.team_id);
-  const gear = gearSuggestions(owned, MOCK_BANKED, MOCK_SAVING);
+  const gear = gearSuggestions(
+    owned,
+    MOCK_BANKED,
+    MOCK_SAVING,
+    await loadEquipmentPhotos(supabase),
+  );
 
   return (
     <div className="space-y-6">

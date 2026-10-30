@@ -75,6 +75,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "What to get next shows each item's picture and a link to buy it. Things you can already afford aren't labelled; the rest say roughly when you'll have enough. Disinfectant spray and the hand trolley are left out (not every team needs them).",
+      },
+      {
+        level: "organiser",
         text: "Equipment: double-click (or double-tap) a picture to see it large. Items ticked In community inventory now show who has them, with a Location button to change it, so the separate Your gear list is gone.",
       },
       {
