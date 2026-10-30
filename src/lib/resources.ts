@@ -188,6 +188,7 @@ export const EQUIPMENT_GUIDE: {
         about: "So people watching can hear the footage properly.",
         shop: "AliExpress",
         url: "https://www.aliexpress.com/item/1005007618332688.html",
+        price: "$8.19",
       },
       {
         key: "headphone_splitters",
