@@ -260,7 +260,8 @@ export const EQUIPMENT_GUIDE: {
           },
           {
             label: "Best",
-            about: "Full-colour digital print with lamination.",
+            about:
+              "Full-colour digital print with lamination, and a handle for easy carrying.",
             url: "https://www.easysigns.com.au/products/details/a-frame-with-full-colour-digital-print-lamination",
             price: "$192.50",
           },
