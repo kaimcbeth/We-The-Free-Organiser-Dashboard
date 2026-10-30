@@ -324,7 +324,7 @@ export const EQUIPMENT_GUIDE: {
         about:
           "For wiping down the headphones between people. More details coming soon.",
         shop: "Woolworths",
-        price: "$9.50",
+        price: "~$4",
       },
       {
         key: "spring_clamps",
