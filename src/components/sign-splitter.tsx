@@ -26,7 +26,23 @@ const BUILT_IN = [
       "/resources/signs/3mmc-landscape-2.png",
     ],
   },
-];
+  {
+    // Kai's Canva design for the front of a 6ft table (1830 × 750 mm).
+    id: "table-banner",
+    label: "Table banner",
+    file: "/resources/signs/table-banner.pdf",
+    designs: ["Table banner"],
+    previews: ["/resources/signs/table-banner.png"],
+    fixedSize: true, // printed as designed (fits the table)
+  },
+] as {
+  id: string;
+  label: string;
+  file: string;
+  designs: string[];
+  previews: string[];
+  fixedSize?: boolean;
+}[];
 
 type Source = {
   doc: PDFDocument;
@@ -34,6 +50,7 @@ type Source = {
   designs: string[];
   previews: (string | null)[];
   sizes: { w: number; h: number }[]; // mm
+  fixedSize?: boolean; // only "As designed" (e.g. the table banner)
 };
 
 const MM = 25.4 / 72;
@@ -74,12 +91,19 @@ export function SignSplitter() {
     const { PDFDocument } = await import("pdf-lib");
     const bytes = await (await fetch(b.file)).arrayBuffer();
     await load(await PDFDocument.load(bytes), b.label, b.designs, b.previews);
+    if (b.fixedSize) {
+      setSource((s) => s && { ...s, fixedSize: true });
+      setSize("design");
+    }
   }
 
   useEffect(() => {
-    // Start with the built-in sign ready to go.
+    // Start with a built-in sign ready to go: ?sign=table-banner picks that
+    // one (from the equipment guide), otherwise the first.
     void (async () => {
-      const b = BUILT_IN[0];
+      const wanted = new URLSearchParams(window.location.search).get("sign");
+      const b = BUILT_IN.find((x) => x.id === wanted) ?? BUILT_IN[0];
+      if (b.fixedSize) setSize("design");
       const { PDFDocument } = await import("pdf-lib");
       const bytes = await (await fetch(b.file)).arrayBuffer();
       const doc = await PDFDocument.load(bytes);
@@ -89,6 +113,7 @@ export function SignSplitter() {
         name: b.label,
         designs: b.designs,
         previews: b.previews,
+        fixedSize: b.fixedSize,
         sizes: pages.map((p) => ({
           w: p.getWidth() * MM,
           h: p.getHeight() * MM,
@@ -185,7 +210,7 @@ export function SignSplitter() {
                   <img
                     src={source.previews[i]!}
                     alt=""
-                    className="aspect-[1.414] w-full object-cover"
+                    className="aspect-[1.414] w-full bg-stone-100 object-contain"
                   />
                 ) : (
                   <span className="flex aspect-[1.414] items-center justify-center bg-stone-100 text-stone-400">
@@ -214,21 +239,23 @@ export function SignSplitter() {
         )}
       </section>
 
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold">Printed size</h2>
-        <div className="flex flex-wrap gap-1.5">
-          {(["design", "A0", "A1", "A2"] as SignSize[]).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setSize(s)}
-              className={chip(size === s)}
-            >
-              {s === "design" ? "As designed" : s}
-            </button>
-          ))}
-        </div>
-      </section>
+      {!source?.fixedSize && (
+        <section className="space-y-2">
+          <h2 className="text-sm font-semibold">Printed size</h2>
+          <div className="flex flex-wrap gap-1.5">
+            {(["design", "A0", "A1", "A2"] as SignSize[]).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setSize(s)}
+                className={chip(size === s)}
+              >
+                {s === "design" ? "As designed" : s}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="space-y-2">
         <h2 className="text-sm font-semibold">Print on</h2>

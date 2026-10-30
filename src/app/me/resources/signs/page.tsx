@@ -14,7 +14,8 @@ export default function MemberSignsPage() {
         Sign splitter
       </h1>
       <p className="mt-1 text-stone-600">
-        Print a big sign on A4 or A3 sheets at home, then tape them together.
+        Print a big sign or the table banner on A4 or A3 sheets at home, then
+        tape them together.
       </p>
       <div className="mt-5">
         <SignSplitter />

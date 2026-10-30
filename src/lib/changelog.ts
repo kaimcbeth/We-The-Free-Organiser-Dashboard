@@ -75,6 +75,14 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Table banner in the sign splitter: print the 1830 × 750 mm banner design on 14 A3 sheets (or A4). The table banner's DIY option links straight to it.",
+      },
+      {
+        level: "organiser",
+        text: "Equipment Location: places you've typed before (like a storage unit) come up for every item, so you can pick them again.",
+      },
+      {
+        level: "organiser",
         text: "New upgrade in the equipment guide: Sign clamps (Amazon, ~$15), good for attaching smaller signs to your tables.",
       },
       {

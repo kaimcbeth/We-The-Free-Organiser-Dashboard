@@ -207,6 +207,15 @@ export function Equipment({
     bump();
   }
 
+  // Places typed for any kit (e.g. "Storage unit"), offered for the rest.
+  const places = [
+    ...new Set(
+      [...have.values()]
+        .map((o) => o.holder_note?.trim())
+        .filter((x): x is string => !!x),
+    ),
+  ].sort((a, b) => a.localeCompare(b));
+
   // An item counts as had if any version of it is in the inventory.
   const hasAny = (i: EquipmentItem) =>
     i.options ? i.options.some((o) => have.has(invKey(i, o))) : have.has(i.key);
@@ -258,6 +267,7 @@ export function Equipment({
                     photos={photos}
                     onUpload={canEditPhotos ? upload : undefined}
                     people={people}
+                    places={places}
                   />
                 ))}
               </ul>
@@ -286,6 +296,7 @@ export function Equipment({
                       photos={photos}
                       onUpload={canEditPhotos ? upload : undefined}
                       people={people}
+                      places={places}
                     />
                   ))}
                 </ul>
@@ -343,8 +354,10 @@ function EquipmentRow({
   photos,
   onUpload,
   people = [],
+  places = [],
 }: {
   people?: Person[]; // the community's people (for where it is)
+  places?: string[]; // places typed before for any kit
   item: EquipmentItem;
   inventory: Map<string, Owned>; // what the community has, by inventory key
   onOwned?: (opt: Option | undefined, change: Partial<Owned>) => void;
@@ -633,7 +646,9 @@ function EquipmentRow({
           <LocationSheet
             name={item.name}
             people={people}
+            places={places}
             personId={owned?.holder_person_id ?? null}
+            note={owned?.holder_note ?? null}
             onPick={(personId, note) => {
               setLocating(false);
               onOwned(opt, {

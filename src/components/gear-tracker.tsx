@@ -578,13 +578,17 @@ function GearForm({
 export function LocationSheet({
   name,
   people,
+  places = [],
   personId,
+  note,
   onPick,
   onClose,
 }: {
   name: string;
   people: Person[];
+  places?: string[]; // places typed before for other kit (e.g. storage unit)
   personId: string | null; // who has it now
+  note?: string | null; // ...or where it is now
   onPick: (personId: string | null, note: string | null) => void;
   onClose: () => void;
 }) {
@@ -593,15 +597,34 @@ export function LocationSheet({
   const shown = people
     .filter((p) => full(p).toLowerCase().includes(q.trim().toLowerCase()))
     .slice(0, 30);
+  const shownPlaces = places.filter((p) =>
+    p.toLowerCase().includes(q.trim().toLowerCase()),
+  );
   return (
     <Sheet title={`Who has the ${name.toLowerCase()}?`} onClose={onClose}>
       <input
         autoFocus
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="Search people"
+        placeholder="Search people or places"
         className="w-full rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
       />
+      {shownPlaces.length > 0 && (
+        <ul className="mt-2 space-y-1">
+          {shownPlaces.map((p) => (
+            <li key={p}>
+              <button
+                type="button"
+                onClick={() => onPick(null, p)}
+                className={`w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-white ${!personId && p === note ? "bg-white font-semibold" : ""}`}
+              >
+                {p}
+                <span className="ml-2 text-xs text-stone-400">Place</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       <ul className="mt-2 max-h-72 space-y-1 overflow-y-auto">
         {shown.map((p) => (
           <li key={p.id}>

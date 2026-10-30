@@ -64,7 +64,7 @@ git push origin main
 - No real RSL accounts yet; leaked-password protection needs Supabase Pro (org is on Free).
 - Supabase approval prompts often time out in this chat; if so, send Kai the migration file to run in the SQL Editor.
 - Funding is a mock until it's integrated from the main WTF website.
-- Equipment (data in `src/lib/resources.ts`, prices checked 29 Oct 2026): details still to come for Video station covers (possibly the same as Video player box: ask Kai), Lanyards, VR headset, Lav mic, Hand trolley, Video player box and Disinfectant spray. Also the large Kings table price, the table banner DIY instructions link and sign-pole assembly steps.
+- Equipment (data in `src/lib/resources.ts`, prices checked 29 Oct 2026): details still to come for Video station covers (possibly the same as Video player box: ask Kai), Lanyards, VR headset, Lav mic, Hand trolley, Video player box and Disinfectant spray. Also the large Kings table price, sign-pole assembly steps.
 - Throwback suggestions need photos with a month and year set (none of Sydney's 48 photos has one yet).
 - Not yet tested live: write-copy "Write new options" for prompt/incident, Find a throwback, Plan later, and a real print of the sign splitter output.
 - Never answered by Kai: tutorial steps for the new features; whether sharing the buddy's phone number is OK; the A-frame notes.

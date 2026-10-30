@@ -220,9 +220,10 @@ export const EQUIPMENT_GUIDE: {
         options: [
           {
             label: "DIY",
-            about: "Make your own.",
+            about:
+              "Make your own: print the banner design on A3 sheets and tape them together.",
             price: "~$25",
-            instructions: "",
+            instructions: "/resources/signs?sign=table-banner",
           },
           {
             label: "Best",

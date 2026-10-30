@@ -1,7 +1,17 @@
 // Sign splitter: print a big sign (e.g. A1) on A4 or A3 sheets at home.
 // Each sheet keeps a small margin (most printers can't print to the edge)
 // and overlaps its neighbours, with tick marks to line them up.
-import { PDFDocument, StandardFonts, rgb, type PDFPage } from "pdf-lib";
+import {
+  PDFDocument,
+  StandardFonts,
+  clip,
+  endPath,
+  popGraphicsState,
+  pushGraphicsState,
+  rectangle,
+  rgb,
+  type PDFPage,
+} from "pdf-lib";
 
 export const PAPERS = {
   A4: [210, 297],
@@ -220,18 +230,24 @@ export async function splitSign(
       for (let c = 0; c < l.cols; c++) {
         const t = tileRect(l, r, c);
         const page = out.addPage([l.paperW * PT, l.paperH * PT]);
-        // The part of the design this sheet shows (design points, PDF y-up).
+        // The part of the design this sheet shows (design points, PDF y-up):
+        // the whole design (embedded once, so big designs don't make huge
+        // PDFs), shifted and clipped to the sheet's printable area.
         const left = (t.x / k) * PT;
-        const right = ((t.x + t.iw) / k) * PT;
-        const top = sh - (t.y / k) * PT;
         const bottom = sh - ((t.y + t.ih) / k) * PT;
-        const piece = await out.embedPage(sp, { left, right, top, bottom });
-        page.drawPage(piece, {
-          x: MARGIN * PT,
-          y: MARGIN * PT,
+        page.pushOperators(
+          pushGraphicsState(),
+          rectangle(MARGIN * PT, MARGIN * PT, t.iw * PT, t.ih * PT),
+          clip(),
+          endPath(),
+        );
+        page.drawPage(whole, {
+          x: MARGIN * PT - left * k,
+          y: MARGIN * PT - bottom * k,
           xScale: k,
           yScale: k,
         });
+        page.pushOperators(popGraphicsState());
         // Tick marks in the margins where the neighbouring sheets overlap.
         const pw = l.paperW;
         const ph = l.paperH;
