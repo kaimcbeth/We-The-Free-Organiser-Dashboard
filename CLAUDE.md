@@ -46,32 +46,34 @@ git push origin main
 
 ## Recent features (29 Oct 2026)
 
-- Members: own top bar + tabs (Events, Outreach, Photo Hub, New members, Resources). No Favourites filter in their Photo Hub. Sign out at the bottom of /me.
-- Special events: God sets them anywhere, RSLs have full control in their region. A faded "Suggested" card on Events about 2 months before (lead time is set per event) shows teams on board in the region and worldwide, with "Plan it" (opens mystats.wtf/events/new), "Plan later" (adds a "Plan your …" action, schedule `special`) or × (hidden until next year). Teams switch suggestions on/off on Events and in Get ready. Seeded: 🎃 Halloween Movie Challenge (31 Oct), 🎄 Christmas social (13 Dec).
-- Funding → gear: "What to get next" on Funding and the equipment page. Gaps first (base kit, then upgrades), always the ✨ Best version, labelled "Can get now" or "Enough in about N months" from banked funds and monthly saving. No nudges.
-- New actions: Incident report form shared (quarterly, Write message via write-copy `incident`), Debrief video posted (after outreach), Throwback photo posted (weekly on Thursday; `throwback_photos` RPC finds photos from this month in past years).
-- Resources: 📝 incident report form (also on members' tab), 🗨️ discussion prompts (72 questions, Copy / Write post via write-copy `prompt`, posted is tracked per community), 🖨️ sign splitter (organisers, Core and members), Outreach guide card with the QR link inside it, 👥 FB groups (God-only card, no longer a tab).
-- God `/usage` page. Version tag is washed-out yellow in alpha and turns blue in beta (`STAGE_TAG`). PDFs skip the login check (proxy matcher).
+- Members: own top bar + tabs. Special events (God anywhere, RSLs in their region): faded "Suggested" card on Events ~2 months before with Plan it / Plan later / ×; seeded 🎃 Halloween Movie Challenge (31 Oct), 🎄 Christmas social (13 Dec). Funding → gear "What to get next". Actions: Incident report form shared, Debrief video posted, Throwback photo posted. Resources: incident form, discussion prompts, sign splitter, Outreach guide card, FB groups (God-only). God `/usage`.
 
 ## Recent features (30 Oct 2026)
 
-- Organiser hangouts: import-hangouts Edge Function (cron :37), listed for the communities they're for. RSLs of those regions (and God with `lead_region_id`) get "Organiser hangout promoted" weekly from 3 weeks before (`private.create_hangout_tasks`, cron :42); a new week's replaces last week's if not done; weeks already past when first imported are skipped. Japan teams are in Asia, so Asia's RSL also gets the Oceania + Japan one.
+- Organiser hangouts: import-hangouts Edge Function (cron :37) reads the activism.wtf sitemap; listed (not in `events`) for the communities they're for. RSLs of those regions (and God with `lead_region_id`) get "Organiser hangout promoted" weekly from 3 weeks before (`private.create_hangout_tasks`, cron :42). Japan teams are in Asia, so Asia's RSL also gets the Oceania + Japan one.
+- Kai's account: God + Sydney organiser + Oceania RSL (`organiser_team_id` / `lead_region_id`).
+- Special events as a category: `events.special_event_id` (picker on the event page; trigger tags new events whose title has the special event's word within 21 days). `promote_special` weekly from 8 weeks before (`private.create_special_promo_tasks`, cron :47; schedule `special`, so not in Choose actions; has Write post + Get graphic).
+- Monthly actions on the nth weekday: `task_kinds.schedule_week` (5 = last) + `schedule_weekday`, per-community override in `team_task_kinds` (`set_task_schedule`, `ScheduleChanger` on the card). Feedback Fridays = `com_feedback` (now monthly, on by default, 3rd Friday; first 20 Nov). Made on the day (skipped if over a week past), due 2 days later.
+- Meet the Members: `meet_members_ask` (monthly, 1st Monday, changeable; first 2 Nov) → ticking it off makes `meet_members_post` (trigger, due a week later). Questions: `teams.meet_members_questions` (null = `MEET_MEMBERS_DEFAULT` in `src/lib/meet-members.ts`), copied/edited from the action.
+- Feedback: members' Feedback tab (`/me/feedback`, up to 20k chars, anonymous option) and a no-login member link `/tell/<feedback_token>` (Resources card 📣 Member feedback form: Copy link / Share / What they've said). Each notifies the organisers; `/feedback-inbox` lists it. Organisers → RSL: Resources card 📢 Feedback for your Regional Support Lead (`organiser_feedback`; God gets it when the region has no RSL), read at `/feedback-inbox?from=organisers`. Member tab "New members" renamed "How you can help" (more micro roles to come).
+- Equipment: prices (table banner DIY ~$25 / Best $50, viewing devices <$150 each, headphones $8.19, splitters ~$4 each, hand trolley $79, disinfectant ~$4, stand-up banner Best $197.67, sign clamps ~$15 new upgrade from Amazon). Signs have DIY (8 A3 sheets on cardboard, ~$5 each) / Best. A-frame Best has a carry handle. Location (who/where) on inventory rows with earlier places offered; Your gear removed. Double-click photos to enlarge. Each item opens on the version the community has (no dot). What to get next: photos + buy links, only "Enough in about N months" labels, `noSuggest` (hand trolley, disinfectant).
+- Sign splitter: table banner built in (1830 × 750 mm, 14 A3 sheets; `?sign=table-banner`, linked from the banner's DIY option); tiles embed the design once (small PDFs).
+- Graphic maker: Copy image (clipboard). Photo Hub: Reaction tag.
 - Fixed: two helpers' search_path (security advisor).
-- Special events as a category: `events.special_event_id` (picker on the event page; trigger tags new events whose title has the special event's word, e.g. Christmas, within 21 days). `promote_special` weekly from 8 weeks before (`private.create_special_promo_tasks`, cron :47; schedule `special`, so not in Choose actions).
-- Monthly actions can be on the nth weekday: `task_kinds.schedule_week` (5 = last) + `schedule_weekday`, overridable per community in `team_task_kinds` (`set_task_schedule`, `ScheduleChanger` on the card). Feedback Fridays = `com_feedback`, 3rd Friday, made on the day (skipped if more than a week past), due 2 days later.
-- Meet the Members: `meet_members_ask` (monthly, 1st Monday, changeable) → ticking it off makes `meet_members_post` (trigger `private.meet_members_follow_up`, due a week later). Questions: `teams.meet_members_questions` (null = `MEET_MEMBERS_DEFAULT` in `src/lib/meet-members.ts`), edited from the action.
-- Graphic maker: Copy image (clipboard). Table banner built into the sign splitter (`?sign=table-banner`); tiles embed the design once (PDFs stay small). Equipment: Location on inventory rows (Your gear removed), earlier places offered; double-click photos to enlarge; What to get next has photos + buy links (`noSuggest` items left out).
 
 ## Open threads
 
 - Townsville's activism.wtf calendar returns 404 every hour (team moved or closed?): ask Kai.
 - No real RSL accounts yet; leaked-password protection needs Supabase Pro (org is on Free).
-- Supabase approval prompts often time out in this chat; if so, send Kai the migration file to run in the SQL Editor.
+- Supabase approval prompts often time out here; `execute_sql` usually goes through without one (avoid `drop trigger`, use `create or replace trigger`). Otherwise send Kai the migration file for the SQL Editor.
+- Local dev server can't reach Supabase server-side (pages that load data on the server 404 locally); check those on the live site (fetch via `net.http_get` from SQL).
+- Not yet tried on a real device: Copy image in the graphic maker, Share on the member feedback link, double-tap photos on phones, Location picker; Write new options for prompt/incident, Find a throwback, Plan later; a real print of the sign splitter/table banner.
+- Ask Kai: should Asia's RSL get the Oceania + Japan hangout action; Core Team's "Print it with the sign splitter" links go to the organiser page (redirects them); tutorial steps for today's features (hangouts, special-event promotion, Feedback Fridays, Meet the Members, feedback forms); an "Add something else" for gear not in the kit.
 - Funding is a mock until it's integrated from the main WTF website.
-- Equipment (data in `src/lib/resources.ts`, prices checked 29 Oct 2026): details still to come for Video station covers (possibly the same as Video player box: ask Kai), Lanyards, VR headset, Lav mic, Hand trolley, Video player box and Disinfectant spray. Also the large Kings table price, sign-pole assembly steps.
+- Equipment (`src/lib/resources.ts`): details still to come for Video station covers, Lanyards (no photo/price, shows in What to get next), VR headset, Lav mic, Video player box, Disinfectant spray; the large Kings table price; sign-pole assembly steps.
 - Throwback suggestions need photos with a month and year set (none of Sydney's 48 photos has one yet).
-- Not yet tested live: write-copy "Write new options" for prompt/incident, Find a throwback, Plan later, and a real print of the sign splitter output.
-- Never answered by Kai: tutorial steps for the new features; whether sharing the buddy's phone number is OK; the A-frame notes.
-- Leftover empty table `conversation_logs` (from an abandoned version) can be dropped; Supabase asks Kai to approve.
+- Never answered by Kai: whether sharing the buddy's phone number is OK; the A-frame notes.
+- Leftover empty table `conversation_logs` (plus its log_conversation/undo_conversation functions) can be dropped; needs Kai's approval.
+- `GearTracker` in `gear-tracker.tsx` is no longer shown (only `LocationSheet` is used); can be deleted.
 - Welcome cards use activism.wtf photos; Kai may send Sydney photos to swap in (`src/lib/welcome.ts`).
-- Ideas not built: duplicate warning at check-in, weather heads-up, cancel event, upcoming milestones, away mode, on-the-day screen, roster, "N going" on the Events list, Japanese translation (start with volunteer screens), nearby communities sharing volunteers.
+- Ideas not built: duplicate warning at check-in, weather heads-up, cancel event, upcoming milestones, away mode, on-the-day screen, roster, "N going" on the Events list, Japanese translation (start with volunteer screens), nearby communities sharing volunteers, more micro roles in How you can help.
