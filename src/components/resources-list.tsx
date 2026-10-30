@@ -223,7 +223,7 @@ export function ResourcesList({
             <span>
               <span className="block font-semibold">
                 <span aria-hidden className="mr-1.5">
-                  🗨️
+                  💬
                 </span>
                 Group chat discussion prompts
               </span>

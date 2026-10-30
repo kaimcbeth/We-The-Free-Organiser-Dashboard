@@ -179,7 +179,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "🗨️ Group chat discussion prompts in Resources: 72 questions for your community chat. Pick one for me, Copy or Write post (ready-made or written in your community's voice), and tick Posted so you don't repeat them. The QR code for newcomers now sits inside the Outreach guide card.",
+        text: "💬 Group chat discussion prompts in Resources: 72 questions for your community chat. Pick one for me, Copy or Write post (ready-made or written in your community's voice), and tick Posted so you don't repeat them. The QR code for newcomers now sits inside the Outreach guide card.",
       },
       {
         level: "organiser",
