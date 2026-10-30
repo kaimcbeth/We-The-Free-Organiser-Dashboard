@@ -24,6 +24,21 @@ export default function MemberResourcesPage() {
         </p>
       </a>
       <a
+        href="https://activism.wtf/ibc/masterclass"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-3 block rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 hover:ring-pink"
+      >
+        <p className="font-semibold">
+          <span className="mr-1.5">🎓</span>IBC Masterclass ↗
+        </p>
+        <p className="mt-1 text-sm text-stone-600">
+          The full Inspiring Behaviour Change handout: how to stop debating and
+          start coaching, the 15 questions, handling objections, role plays and
+          an AI practice tool.
+        </p>
+      </a>
+      <a
         href="/me/resources/signs"
         className="mt-3 block rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 hover:ring-pink"
       >

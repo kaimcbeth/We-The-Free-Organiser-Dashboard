@@ -87,6 +87,34 @@ export function ResourcesList({
           )}
         </div>
       )}
+      {has(
+        q,
+        "ibc masterclass inspiring behaviour change training coaching outreach objections role play practice",
+      ) && (
+        <a
+          href="https://activism.wtf/ibc/masterclass"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+        >
+          <span>
+            <span className="block font-semibold">
+              <span aria-hidden className="mr-1.5">
+                🎓
+              </span>
+              IBC Masterclass
+            </span>
+            <span className="block text-sm text-stone-600">
+              The full Inspiring Behaviour Change handout: how to stop debating
+              and start coaching, the 15 questions, handling objections, role
+              plays and an AI practice tool.
+            </span>
+          </span>
+          <span aria-hidden className="text-xl">
+            ↗
+          </span>
+        </a>
+      )}
       {has(q, "welcome mission values onboarding new members first event") && (
         <a
           href="/me/welcome"

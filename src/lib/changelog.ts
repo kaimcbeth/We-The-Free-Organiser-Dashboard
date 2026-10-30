@@ -81,6 +81,14 @@ export const CHANGELOG: Release[] = [
         level: "organiser",
         text: "Attendance, posting photos and Facebook events need your OK (they need access set up). Say Yes or Not right now at the top of People, where everyone helping out is also listed.",
       },
+      {
+        level: "organiser",
+        text: "New in Resources for everyone (organisers, Core Team and members): the IBC Masterclass, the full Inspiring Behaviour Change training handout.",
+      },
+      {
+        level: "organiser",
+        text: 'The Outreach guide\'s "Create your account" prompt now says what newcomers get: events and reminders, the Photo Hub, their impact, and a way to send feedback and ideas.',
+      },
     ],
   },
   {
