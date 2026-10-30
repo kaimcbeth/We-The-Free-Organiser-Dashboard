@@ -50,6 +50,7 @@ const GRAPHIC_SIZE: Record<string, GraphicSize | undefined> = {
   facebook_event: "cover",
   promote_facebook_groups: "post",
   promote_whatsapp: "story",
+  promote_special: "post",
   post_photos: "story",
   post_photos_facebook: "post",
   post_photos_instagram: "post",

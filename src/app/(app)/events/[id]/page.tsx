@@ -17,6 +17,7 @@ import { AddToCalendar } from "@/components/add-to-calendar";
 import { EventPhotos } from "@/components/event-photos";
 import { loadEventPhotos } from "@/lib/event-photos";
 import { TypePicker } from "./type-picker";
+import { SpecialPicker } from "./special-picker";
 import { signPhotos } from "@/lib/photos";
 import { LoadError } from "@/components/load-error";
 import { loadInsightData } from "@/lib/insights-data";
@@ -35,6 +36,7 @@ type EventDetail = {
   facebook_url: string | null;
   description: string | null;
   event_type_id: string | null;
+  special_event_id: string | null;
   notes: string | null;
 };
 
@@ -47,7 +49,7 @@ export default async function EventCheckInPage({
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, team_id, title, starts_at, ends_at, venue, address, source_url, facebook_url, description, event_type_id, notes",
+      "id, team_id, title, starts_at, ends_at, venue, address, source_url, facebook_url, description, event_type_id, notes, special_event_id",
     )
     .eq("id", id)
     .maybeSingle<EventDetail>();
@@ -65,6 +67,20 @@ export default async function EventCheckInPage({
   const team =
     organiser.teams.find((t) => t.id === event.team_id) ?? organiser.team;
   setRequestTz(team.timezone);
+
+  // Special events this community can mark it as (worldwide, or its region).
+  const { data: specialRows } = await supabase
+    .from("special_events")
+    .select("id, name, emoji, region_ids")
+    .order("name");
+  const specials = (
+    (specialRows ?? []) as {
+      id: string;
+      name: string;
+      emoji: string | null;
+      region_ids: string[] | null;
+    }[]
+  ).filter((s) => !s.region_ids || s.region_ids.includes(team.region_id ?? ""));
 
   const [people, attendance, earlier, types, helper, likely] =
     await Promise.all([
@@ -139,6 +155,11 @@ export default async function EventCheckInPage({
             eventId={event.id}
             value={event.event_type_id}
             types={types.data ?? []}
+          />
+          <SpecialPicker
+            eventId={event.id}
+            value={event.special_event_id}
+            specials={specials}
           />
           {event.source_url && (
             <a

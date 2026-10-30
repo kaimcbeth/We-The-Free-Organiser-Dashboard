@@ -75,6 +75,14 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Special events are now an event category: on an event's page, mark it as (say) 🎄 Christmas social. Events with Christmas, Halloween etc. in the title are marked automatically. Special events get a Special event promoted action every week from 8 weeks before, on top of the usual promote actions.",
+      },
+      {
+        level: "organiser",
+        text: "Graphic maker: Copy image, to paste straight into WhatsApp, Instagram or Facebook (as well as Download PNG).",
+      },
+      {
+        level: "organiser",
         text: "Table banner in the sign splitter: print the 1830 × 750 mm banner design on 14 A3 sheets (or A4). The table banner's DIY option links straight to it.",
       },
       {

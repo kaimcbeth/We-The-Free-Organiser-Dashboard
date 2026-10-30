@@ -386,6 +386,29 @@ export function GraphicMaker({
       draw(canvas.current, event, size, tz, template, imgs, logo);
   }, [open, size, event, tz, template, imgs, logo]);
 
+  const [copied, setCopied] = useState<"" | "done" | "failed">("");
+  // Copy the picture, to paste straight into WhatsApp, Instagram or Facebook.
+  async function copy() {
+    const c = canvas.current;
+    if (!c) return;
+    try {
+      // Safari wants the ClipboardItem made straight away, with a promise.
+      const png = new Promise<Blob>((resolve, reject) =>
+        c.toBlob(
+          (b) => (b ? resolve(b) : reject(new Error("no image"))),
+          "image/png",
+        ),
+      );
+      await navigator.clipboard.write([
+        new ClipboardItem({ "image/png": png }),
+      ]);
+      setCopied("done");
+    } catch {
+      setCopied("failed");
+    }
+    setTimeout(() => setCopied(""), 2500);
+  }
+
   function download() {
     if (!canvas.current) return;
     const a = document.createElement("a");
@@ -493,13 +516,26 @@ export function GraphicMaker({
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={download}
-                className="mt-3 w-full rounded-xl bg-pink px-4 py-2.5 font-semibold text-navy hover:bg-pink-strong"
-              >
-                Download PNG
-              </button>
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={download}
+                  className="flex-1 rounded-xl bg-pink px-4 py-2.5 font-semibold text-navy hover:bg-pink-strong"
+                >
+                  Download PNG
+                </button>
+                <button
+                  type="button"
+                  onClick={copy}
+                  className="flex-1 rounded-xl bg-white px-4 py-2.5 font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50"
+                >
+                  {copied === "done"
+                    ? "Copied"
+                    : copied === "failed"
+                      ? "Couldn't copy: use Download"
+                      : "Copy image"}
+                </button>
+              </div>
             </>
           )}
           {event.teamId && event.eventId && (

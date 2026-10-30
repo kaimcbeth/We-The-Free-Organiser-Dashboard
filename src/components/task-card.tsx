@@ -40,6 +40,7 @@ const COPY_FOR: Record<string, [CopyPlatform, boolean]> = {
   promote_facebook_groups: ["facebook", false],
   promote_fb_groups_weekly: ["facebook", false],
   promote_whatsapp: ["whatsapp", false],
+  promote_special: ["whatsapp", false],
   facebook_event: ["facebook", false],
   instagram_stories: ["story", true],
   post_photos: ["whatsapp", true],

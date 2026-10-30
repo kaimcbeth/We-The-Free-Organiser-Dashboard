@@ -200,6 +200,40 @@ export async function setEventType(
   return {};
 }
 
+// Mark an event as a special event (or not). Its weekly promote actions
+// start within the hour (up to 8 weeks before).
+export async function setEventSpecial(
+  eventId: string,
+  specialEventId: string | null,
+): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  const { error } = await supabase
+    .from("events")
+    .update({
+      special_event_id: specialEventId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", eventId)
+    .in(
+      "team_id",
+      organiser.teams.map((t) => t.id),
+    );
+  if (error) return { error: "Couldn't change that." };
+  // Not special any more: its open promote actions go.
+  if (!specialEventId)
+    await supabase
+      .from("tasks")
+      .update({ dismissed_at: new Date().toISOString() })
+      .eq("event_id", eventId)
+      .eq("kind", "promote_special")
+      .is("done_at", null)
+      .is("dismissed_at", null);
+  revalidatePath(`/events/${eventId}`);
+  revalidatePath("/");
+  revalidatePath("/tasks");
+  return {};
+}
+
 export type HelperLink = { token: string; expires_at: string };
 
 // Make (or reuse) a no-login check-in link for one event, for a helper at the door.
