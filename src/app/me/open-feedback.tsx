@@ -58,8 +58,8 @@ export function OpenFeedback({ preview = false }: { preview?: boolean }) {
       </p>
       <textarea
         value={text}
-        onChange={(e) => setText(e.target.value.slice(0, 2000))}
-        rows={4}
+        onChange={(e) => setText(e.target.value.slice(0, 20000))}
+        rows={6}
         placeholder="Your feedback…"
         aria-label="Your feedback"
         className="w-full rounded-xl bg-white p-3 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"

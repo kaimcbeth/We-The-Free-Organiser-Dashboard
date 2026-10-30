@@ -75,6 +75,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Members: the New members tab is now How you can help (more small roles to come), and there's a new Feedback tab: one box, any length, with your name or anonymously. It goes straight to the community's organisers (a notification, and a Feedback page with everything volunteers have sent).",
+      },
+      {
+        level: "organiser",
         text: "Feedback Fridays: Volunteer feedback collected is now Feedback Friday: form shared, on by default on the 3rd Friday of each month (it was every 3 months). Change the week and day on the action itself.",
       },
       {

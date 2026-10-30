@@ -22,13 +22,18 @@ const LINKS = [
   },
   {
     href: "/me/support",
-    label: "New members",
+    label: "How you can help",
     match: (p: string) => p.startsWith("/me/support"),
   },
   {
     href: "/me/resources",
     label: "Resources",
     match: (p: string) => p.startsWith("/me/resources"),
+  },
+  {
+    href: "/me/feedback",
+    label: "Feedback",
+    match: (p: string) => p.startsWith("/me/feedback"),
   },
 ];
 

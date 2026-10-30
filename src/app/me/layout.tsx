@@ -10,7 +10,7 @@ import { STAGE, STAGE_TAG, VERSION, BUILD } from "@/lib/changelog";
 import { MemberNav } from "./member-nav";
 
 // The member side of the Hub: the same top bar as the organiser Hub, with
-// member tabs (Events, Outreach, Photo Hub, New members, Resources).
+// member tabs (Events, Outreach, Photo Hub, How you can help, Resources, Feedback).
 export default async function MemberLayout({
   children,
 }: {

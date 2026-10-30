@@ -1,5 +1,4 @@
 import { OriginEditor } from "@/components/origin-editor";
-import { OpenFeedback } from "./open-feedback";
 import { cookies } from "next/headers";
 import { VIEW_AS_COOKIE } from "@/lib/organiser";
 import Link from "next/link";
@@ -77,9 +76,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
   ]);
   setRequestTz(me?.team?.timezone);
 
-  // Hidden while God Mode is previewing as an attendee.
   const viewAs = (await cookies()).get(VIEW_AS_COOKIE)?.value ?? "";
-  const previewingAttendee = ["member", "new_member"].includes(viewAs);
   // God Mode "View as New member" runs the tour every time (and saves nothing).
   const previewNewMember = viewAs === "new_member" && !!organiser;
 
@@ -279,7 +276,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
             You&apos;re supporting a new member
           </span>
           <span className="text-sm text-stone-600">
-            See who and how to help in New members →
+            See who and how to help in How you can help →
           </span>
         </Link>
       )}
@@ -321,13 +318,6 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
           Your details
         </h2>
         <ProfileForm me={me} />
-      </section>
-
-      <section id="feedback" className="mt-8 scroll-mt-4">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
-          Feedback
-        </h2>
-        <OpenFeedback preview={previewingAttendee && !!organiser} />
       </section>
 
       <div className="mt-10 flex items-center justify-center gap-4">
