@@ -32,6 +32,17 @@ type EventRow = {
   attendance: { count: number }[];
 };
 
+// An Organiser Hangout (activism.wtf/hangouts): listed so organisers know
+// it's on, but no attendance or actions.
+type HangoutRow = {
+  id: string;
+  title: string;
+  starts_at: string;
+  ends_at: string | null;
+  audience: string | null;
+  url: string;
+};
+
 // Quick link to an event's open actions.
 function ActionsLink({
   eventId,
@@ -177,14 +188,31 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
     ? { data: null }
     : await supabase.rpc("team_setup_status", { p_team_id: organiser.team_id });
   const setup = setupData as SetupStatus | null;
-  const [{ data: suggestData }, { data: suggestOn }] = await Promise.all([
-    supabase.rpc("suggested_events", { p_team_id: organiser.team_id }),
-    supabase
-      .from("teams")
-      .select("suggest_events")
-      .eq("id", organiser.team_id)
-      .maybeSingle(),
-  ]);
+  const [{ data: suggestData }, { data: suggestOn }, { data: hangoutData }] =
+    await Promise.all([
+      supabase.rpc("suggested_events", { p_team_id: organiser.team_id }),
+      supabase
+        .from("teams")
+        .select("suggest_events")
+        .eq("id", organiser.team_id)
+        .maybeSingle(),
+      organiser.exampleMode
+        ? Promise.resolve({ data: [] })
+        : supabase.rpc("team_hangouts", {
+            p_team_id: organiser.team_id,
+            p_from: todayStart,
+            p_to: new Date(Date.parse(todayStart) + 183 * 864e5).toISOString(),
+          }),
+    ]);
+  // Hangouts within the stretch the Upcoming list covers (it shows 10 events).
+  const shownUpcoming = upcoming.data ?? [];
+  const lastShown =
+    shownUpcoming.length >= 10
+      ? shownUpcoming[shownUpcoming.length - 1].starts_at
+      : null;
+  const hangouts = ((hangoutData ?? []) as HangoutRow[]).filter(
+    (h) => !lastShown || h.starts_at <= lastShown,
+  );
   const suggestions = (suggestData ?? []) as Suggestion[];
   const canManageSpecial =
     organiser.role === "god" || organiser.role === "regional_lead";
@@ -297,6 +325,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
       <EventList
         title="Upcoming"
         events={upcoming.data ?? []}
+        hangouts={hangouts}
         empty="Nothing scheduled yet."
         nextId={next?.id}
         actions={actionsFor}
@@ -366,67 +395,103 @@ function EventList({
   empty,
   nextId,
   actions,
+  hangouts = [],
 }: {
   actions?: Map<string, number>;
   title: string;
   events: EventRow[];
+  hangouts?: HangoutRow[];
   empty: string;
   nextId?: string;
 }) {
+  // Events and hangouts together, in date order.
+  const rows = [
+    ...events.map((e) => ({ at: e.starts_at, event: e, hangout: null })),
+    ...hangouts.map((h) => ({ at: h.starts_at, event: null, hangout: h })),
+  ].sort((a, b) => a.at.localeCompare(b.at));
   return (
     <section>
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
         {title}
       </h2>
-      {events.length === 0 ? (
+      {rows.length === 0 ? (
         <p className="text-sm text-stone-500">{empty}</p>
       ) : (
         <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-          {events.map((e) => (
-            <li
-              key={e.id}
-              className={`flex items-center hover:bg-stone-50 ${e.id === nextId ? "bg-pink/5" : ""}`}
-            >
-              <Link
-                href={`/events/${e.id}`}
-                className="flex min-w-0 flex-1 items-center gap-4 py-3.5 pl-4 pr-2"
+          {rows.map(({ event: e, hangout: h }) =>
+            h ? (
+              <li
+                key={`h-${h.id}`}
+                className="flex items-center hover:bg-stone-50"
               >
-                <div className="w-16 shrink-0 text-sm font-medium text-stone-500">
-                  {formatEventDate(e.starts_at)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2 font-medium">
-                    <span className="truncate">{e.title}</span>
-                    {e.id === nextId && (
-                      <span className="shrink-0 rounded-full bg-pink px-2 py-0.5 text-xs font-semibold text-navy">
-                        Next
-                      </span>
-                    )}
-                  </p>
-                  <p className="truncate text-sm text-stone-500">
-                    {e.event_type?.name ?? "No type"}
-                    {e.venue || e.address ? ` · ${e.venue ?? e.address}` : ""}
-                  </p>
-                </div>
-                <div className="shrink-0 text-sm tabular-nums text-stone-500">
-                  {e.attendance[0]?.count ?? 0}
-                </div>
-              </Link>
-              <ActionsLink
-                eventId={e.id}
-                count={actions?.get(e.id) ?? 0}
-                className="shrink-0 text-pink-ink/70 hover:text-pink-ink"
-              />
-              {e.source_url ? (
-                <WebsiteLink
-                  url={e.source_url}
-                  className="mr-2 shrink-0 text-stone-300 hover:text-navy"
+                <a
+                  href={h.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex min-w-0 flex-1 items-center gap-4 py-3.5 pl-4 pr-4"
+                >
+                  <div className="w-16 shrink-0 text-sm font-medium text-stone-500">
+                    {formatEventDate(h.starts_at)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{h.title}</p>
+                    <p className="truncate text-sm text-stone-500">
+                      Organiser hangout ·{" "}
+                      {formatTimeRange(h.starts_at, h.ends_at)}
+                      {h.audience ? ` · For ${h.audience}` : ""}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-stone-300" aria-hidden>
+                    ↗
+                  </span>
+                </a>
+              </li>
+            ) : (
+              <li
+                key={e.id}
+                className={`flex items-center hover:bg-stone-50 ${e.id === nextId ? "bg-pink/5" : ""}`}
+              >
+                <Link
+                  href={`/events/${e.id}`}
+                  className="flex min-w-0 flex-1 items-center gap-4 py-3.5 pl-4 pr-2"
+                >
+                  <div className="w-16 shrink-0 text-sm font-medium text-stone-500">
+                    {formatEventDate(e.starts_at)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-center gap-2 font-medium">
+                      <span className="truncate">{e.title}</span>
+                      {e.id === nextId && (
+                        <span className="shrink-0 rounded-full bg-pink px-2 py-0.5 text-xs font-semibold text-navy">
+                          Next
+                        </span>
+                      )}
+                    </p>
+                    <p className="truncate text-sm text-stone-500">
+                      {e.event_type?.name ?? "No type"}
+                      {e.venue || e.address ? ` · ${e.venue ?? e.address}` : ""}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-sm tabular-nums text-stone-500">
+                    {e.attendance[0]?.count ?? 0}
+                  </div>
+                </Link>
+                <ActionsLink
+                  eventId={e.id}
+                  count={actions?.get(e.id) ?? 0}
+                  className="shrink-0 text-pink-ink/70 hover:text-pink-ink"
                 />
-              ) : (
-                <span className="w-2" />
-              )}
-            </li>
-          ))}
+                {e.source_url ? (
+                  <WebsiteLink
+                    url={e.source_url}
+                    className="mr-2 shrink-0 text-stone-300 hover:text-navy"
+                  />
+                ) : (
+                  <span className="w-2" />
+                )}
+              </li>
+            ),
+          )}
         </ul>
       )}
     </section>

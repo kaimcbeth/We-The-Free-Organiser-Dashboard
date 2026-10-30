@@ -2,7 +2,8 @@ import Link from "next/link";
 import { requireOrganiser } from "@/lib/organiser";
 import { LoadError } from "@/components/load-error";
 import { TaskCard } from "@/components/task-card";
-import { loadTeamTasks } from "@/lib/tasks";
+import { loadRegionTasks, loadTeamTasks } from "@/lib/tasks";
+import { RegionActions } from "./region-actions";
 import { loadTaskSetup } from "@/lib/task-setup";
 import { loadUpcomingActions } from "@/lib/upcoming-actions";
 import { ComingUp } from "./coming-up";
@@ -38,14 +39,27 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
   // Regional Support Leads only get their own tasks (the communities' tasks
   // are for the communities). God Mode sees both.
   // God Mode with "All communities": a light overview by region.
+  // Region-wide actions (e.g. promoting an Organiser Hangout) for the
+  // regions they lead: not while "viewing as" someone else.
+  const regionTasks = await loadRegionTasks(
+    supabase,
+    organiser.viewingAs ? [] : organiser.leadRegionIds,
+  );
   if (organiser.role === "god" && organiser.allCommunities)
-    return <GodOverview supabase={supabase} teams={organiser.teams} />;
+    return (
+      <GodOverview
+        supabase={supabase}
+        teams={organiser.teams}
+        regionTasks={regionTasks.open}
+      />
+    );
   if (organiser.role === "regional_lead" || organiser.allCommunities)
     return (
       <RegionTasks
         supabase={supabase}
         teams={organiser.allCommunities ? organiser.teams : [organiser.team]}
         showCommunities={organiser.role === "god"}
+        regionTasks={regionTasks.open}
       />
     );
   const [tasks, { data: people }, setup, connect, { data: leadRows }] =
@@ -370,10 +384,19 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         </div>
       </div>
 
+      <RegionActions
+        tasks={regionTasks.open}
+        tz={common.tz}
+        now={now}
+        title="For you as Regional Support Lead"
+      />
+
       {checkIns.length > 0 && (
         <section>
           <h2 className="mb-3 font-semibold">
-            For you as Regional Support Lead
+            {regionTasks.open.length
+              ? "Check-ins"
+              : "For you as Regional Support Lead"}
           </h2>
           <ul className="space-y-3">
             {checkIns.map((t) => (

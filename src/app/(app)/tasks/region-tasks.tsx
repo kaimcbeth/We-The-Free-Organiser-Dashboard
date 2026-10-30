@@ -8,6 +8,8 @@ import { loadConnectContext } from "@/lib/connect";
 import { ConnectIdeas } from "@/components/connect-ideas";
 import { WaitingList } from "./waiting-list";
 import { formatEventDate } from "@/lib/time";
+import type { TaskRow } from "@/components/task-card";
+import { RegionActions } from "./region-actions";
 
 const short = (name: string) =>
   name.replace(/, (Australia|New Zealand|Canada)$/, "");
@@ -19,10 +21,12 @@ export async function RegionTasks({
   supabase,
   teams,
   showCommunities,
+  regionTasks = [],
 }: {
   supabase: SupabaseClient;
   teams: Team[];
   showCommunities: boolean; // God Mode: also how each community's own tasks are going
+  regionTasks?: TaskRow[]; // region-wide actions (e.g. promoting a hangout)
 }) {
   const ids = teams.map((t) => t.id);
   const [tasks, connect, { data: waitRows }] = await Promise.all([
@@ -68,11 +72,23 @@ export async function RegionTasks({
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Actions</h1>
         <p className="mt-1 text-sm text-stone-500">
-          {checkIns.length === 0
+          {checkIns.length + regionTasks.length === 0
             ? "All your Regional Support Lead actions are done."
-            : `${checkIns.length} check-in${checkIns.length === 1 ? "" : "s"} to do this month`}
+            : [
+                regionTasks.length && `${regionTasks.length} for your region`,
+                checkIns.length &&
+                  `${checkIns.length} check-in${checkIns.length === 1 ? "" : "s"} to do this month`,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
         </p>
       </div>
+
+      <RegionActions
+        tasks={regionTasks}
+        tz={teams[0]?.timezone ?? "Australia/Sydney"}
+        now={now}
+      />
 
       {checkIns.length > 0 && (
         <section>

@@ -6,7 +6,9 @@ import type { GraphicSize } from "@/components/graphic-maker";
 
 type Raw = {
   id: string;
-  team_id: string;
+  team_id: string | null; // null: a region-wide action (region_id)
+  region_id?: string | null;
+  hangout?: { title: string; starts_at: string; source_url: string } | null;
   due_at: string;
   show_from: string | null;
   done_at: string | null;
@@ -56,8 +58,10 @@ const GRAPHIC_SIZE: Record<string, GraphicSize | undefined> = {
 function toRow(t: Raw): TaskRow {
   return {
     id: t.id,
-    teamId: t.team_id,
+    teamId: t.team_id ?? "",
     regional: t.kind?.audience === "regional",
+    regionId: t.region_id ?? null,
+    hangoutUrl: t.hangout?.source_url ?? null,
     kind: t.kind?.kind ?? "",
     sortOrder: t.kind?.sort_order ?? 0,
     eventId: t.event?.id ?? null,
@@ -77,7 +81,7 @@ function toRow(t: Raw): TaskRow {
     dueAt: t.due_at,
     showFrom: t.show_from,
     doneAt: t.done_at,
-    eventTitle: t.event?.title ?? null,
+    eventTitle: t.event?.title ?? t.hangout?.title ?? null,
     repeats:
       (
         {
@@ -93,7 +97,7 @@ function toRow(t: Raw): TaskRow {
     personName: t.person
       ? [t.person.first_name, t.person.last_name].filter(Boolean).join(" ")
       : null,
-    eventAt: t.event?.starts_at ?? null,
+    eventAt: t.event?.starts_at ?? t.hangout?.starts_at ?? null,
     fbEvent:
       t.kind?.kind === "facebook_event" && t.event
         ? {
@@ -120,7 +124,7 @@ function toRow(t: Raw): TaskRow {
               community:
                 t.event.team?.name.replace(/, (Australia|New Zealand)$/, "") ??
                 null,
-              teamId: t.team_id,
+              teamId: t.team_id ?? undefined,
               eventId: t.event.id,
             },
           }
@@ -275,4 +279,40 @@ export async function loadMyTasks(supabase: SupabaseClient, personId: string) {
     }
   }
   return rows;
+}
+
+// Region-wide Regional Support Lead actions (e.g. promoting an Organiser
+// Hangout), for the regions they lead. Open ones, plus the last fortnight's done.
+export async function loadRegionTasks(
+  supabase: SupabaseClient,
+  regionIds: string[],
+) {
+  if (!regionIds.length) return { open: [], later: [], done: [] };
+  const since = new Date(Date.now() - 14 * 864e5).toISOString();
+  const select = `${SELECT}, region_id, hangout:hangouts(title, starts_at, source_url)`;
+  const [open, done] = await Promise.all([
+    supabase
+      .from("tasks")
+      .select(select)
+      .in("region_id", regionIds)
+      .is("done_at", null)
+      .is("dismissed_at", null)
+      .order("due_at")
+      .returns<Raw[]>(),
+    supabase
+      .from("tasks")
+      .select(select)
+      .in("region_id", regionIds)
+      .is("dismissed_at", null)
+      .gte("done_at", since)
+      .order("done_at", { ascending: false })
+      .returns<Raw[]>(),
+  ]);
+  const nowIso = new Date().toISOString();
+  const all = (open.data ?? []).map(toRow);
+  return {
+    open: all.filter((t) => !t.showFrom || t.showFrom <= nowIso),
+    later: all.filter((t) => t.showFrom && t.showFrom > nowIso),
+    done: (done.data ?? []).map(toRow),
+  };
 }

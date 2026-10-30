@@ -157,6 +157,8 @@ export default async function PeoplePage({
             role: Access;
             team: string | null;
             region: string | null;
+            also_team: string | null; // God who's also an organiser here
+            also_region: string | null; // ...and a Regional Support Lead there
           }[]
         | null) ?? []
     ).filter(
@@ -175,7 +177,13 @@ export default async function PeoplePage({
         role: r.role,
         where:
           r.role === "god"
-            ? "All regions"
+            ? [
+                "All regions",
+                r.also_region && `${r.also_region} RSL`,
+                r.also_team && `${short(r.also_team)} organiser`,
+              ]
+                .filter(Boolean)
+                .join(" · ")
             : r.role === "regional_lead"
               ? (r.region ?? "")
               : short(r.team ?? ""),

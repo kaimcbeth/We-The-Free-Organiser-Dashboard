@@ -30,6 +30,7 @@ export type Organiser = {
   coreSetupPreview: boolean; // God Mode "View as New Core Team member": setup, nothing saved
   showCoreTour: boolean; // run the Core Team welcome tour
   region_id: string | null;
+  leadRegionIds: string[]; // regions they get Regional Support Lead actions for (RSL, or God who's also one)
   team_id: string; // the team being looked at (with "All communities", a stand-in)
   homeTeamId: string; // their real community (differs only during the tour)
   exampleMode: boolean; // tour running: pages show the Example Community
@@ -59,7 +60,7 @@ export async function getStaff() {
   const { data: row } = await supabase
     .from("organisers")
     .select(
-      "id, team_id, region_id, name, email, access, tutorial_done_at, core_tutorial_done_at",
+      "id, team_id, region_id, name, email, access, tutorial_done_at, core_tutorial_done_at, organiser_team_id, lead_region_id",
     )
     .eq("id", user.id)
     .maybeSingle<{
@@ -71,6 +72,8 @@ export async function getStaff() {
       access: Access;
       tutorial_done_at: string | null;
       core_tutorial_done_at: string | null;
+      organiser_team_id: string | null; // God who's also a community's organiser
+      lead_region_id: string | null; // God who's also a Regional Support Lead
     }>();
   if (!row) return { supabase, user, organiser: null };
 
@@ -124,7 +127,7 @@ export async function getStaff() {
 
   let team =
     teams.find((t) => t.id === wanted) ??
-    teams.find((t) => t.id === row.team_id) ??
+    teams.find((t) => t.id === (row.organiser_team_id ?? row.team_id)) ??
     teams[0];
   // Previewing as a Regional Support Lead: just that region's communities.
   if (viewingAs === "regional_lead")
@@ -182,6 +185,12 @@ export async function getStaff() {
       (row.access === "core_team" && !row.core_tutorial_done_at),
     showTour,
     region_id: row.region_id,
+    leadRegionIds:
+      row.access === "regional_lead" && row.region_id
+        ? [row.region_id]
+        : row.access === "god" && row.lead_region_id
+          ? [row.lead_region_id]
+          : [],
     team_id: team.id,
     homeTeamId,
     exampleMode,

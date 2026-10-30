@@ -2,6 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Team } from "@/lib/organiser";
 import { LoadError } from "@/components/load-error";
 import { formatEventDate } from "@/lib/time";
+import type { TaskRow } from "@/components/task-card";
+import { RegionActions } from "./region-actions";
 
 type CheckIn = {
   team_id: string;
@@ -23,9 +25,11 @@ const short = (name: string) =>
 export async function GodOverview({
   supabase,
   teams,
+  regionTasks = [],
 }: {
   supabase: SupabaseClient;
   teams: Team[];
+  regionTasks?: TaskRow[]; // their own region-wide actions (God who's also an RSL)
 }) {
   // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
   const now = Date.now();
@@ -43,6 +47,7 @@ export async function GodOverview({
         "team_id, period, due_at, done_at, outcome, show_from, dismissed_at, created_at, kind:task_kinds!inner(audience)",
       )
       .eq("kind.audience", "regional")
+      .not("team_id", "is", null) // (region-wide actions aren't check-ins)
       .gte("created_at", since)
       .order("created_at", { ascending: false }),
     supabase
@@ -143,9 +148,16 @@ export async function GodOverview({
         <h1 className="text-2xl font-semibold tracking-tight">Actions</h1>
         <p className="mt-1 text-sm text-stone-500">
           How each region&apos;s Regional Support Lead is going with their
-          monthly check-ins. Just an overview: nothing to do here.
+          monthly check-ins.
         </p>
       </div>
+
+      <RegionActions
+        tasks={regionTasks}
+        tz="Australia/Sydney"
+        now={now}
+        title="For you as Regional Support Lead"
+      />
 
       {sections.map((r) => {
         const pct = r.list.length ? (r.doneThisMonth / r.list.length) * 100 : 0;

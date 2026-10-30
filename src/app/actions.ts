@@ -607,10 +607,10 @@ export async function dismissTask(taskId: string): Promise<{ error?: string }> {
     .from("tasks")
     .update({ dismissed_at: new Date().toISOString() })
     .eq("id", taskId)
-    // Any of their communities (Regional Support Leads work across several).
-    .in(
-      "team_id",
-      organiser.teams.map((t) => t.id),
+    // Any of their communities (Regional Support Leads work across several),
+    // or a region-wide action (the database checks it's their region).
+    .or(
+      `team_id.in.(${organiser.teams.map((t) => t.id).join(",")}),region_id.not.is.null`,
     );
   if (error) return { error: "Couldn't remove that action. Please try again." };
   revalidatePath("/tasks", "layout");

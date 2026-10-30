@@ -66,6 +66,24 @@ export const COMING_SOON: { title: string; text: string }[] = [
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-10-30",
+    title: "Organiser hangouts",
+    changes: [
+      {
+        level: "organiser",
+        text: "Organiser hangouts from activism.wtf now show in your Upcoming events and on the calendar when they're for your community. They're just listed so you know they're on: tap one to RSVP on activism.wtf.",
+      },
+      {
+        level: "regional_lead",
+        text: "New action when an organiser hangout is coming up in your region: Organiser hangout promoted, each week from 3 weeks before, with a link to the hangout page.",
+      },
+      {
+        level: "god",
+        text: "Hangouts import hourly from the activism.wtf sitemap (import-hangouts Edge Function); \"For organizers in Oceania + Japan\" matches region names and countries. Actions can now belong to a region rather than a community (tasks.region_id). A God account can also be a community's organiser and a region's RSL (organiser_team_id / lead_region_id).",
+      },
+    ],
+  },
+  {
     date: "2026-10-29",
     title: "Monthly recap carousel",
     changes: [

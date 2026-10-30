@@ -199,6 +199,60 @@ export default async function CalendarPage({
     }
   }
 
+  // Organiser Hangouts for the communities in view: listed only (they open
+  // on activism.wtf), under their own colour.
+  const hangoutRows = (
+    isOrganiser
+      ? (
+          await supabase.rpc("team_hangouts", {
+            p_team_id: organiser.team_id,
+            p_from: startPad,
+            p_to: endPad,
+          })
+        ).data
+      : (
+          await supabase
+            .from("hangouts")
+            .select("id, title, starts_at, ends_at, audience, url:source_url")
+            .is("removed_at", null)
+            .overlaps(
+              "team_ids",
+              teamsInView.map((t) => t.id),
+            )
+            .gte("starts_at", startPad)
+            .lt("starts_at", endPad)
+        ).data
+  ) as
+    | {
+        id: string;
+        title: string;
+        starts_at: string;
+        ends_at: string | null;
+        audience: string | null;
+        url: string;
+      }[]
+    | null;
+  if (hangoutRows?.length) {
+    teams.push({
+      id: "hangouts",
+      name: "Organiser hangouts",
+      colour: "#334155",
+      tz: organiser.team.timezone,
+    });
+    for (const h of hangoutRows)
+      events.push({
+        id: `hangout-${h.id}`,
+        teamId: "hangouts",
+        title: h.title,
+        startsAt: h.starts_at,
+        endsAt: h.ends_at,
+        venue: h.audience ? `For ${h.audience}` : null,
+        type: "Organiser hangout",
+        here: 0,
+        externalUrl: h.url,
+      });
+  }
+
   const regionName =
     regions?.find((r) => r.id === regionId)?.name ?? "All regions";
 

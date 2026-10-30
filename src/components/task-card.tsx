@@ -60,6 +60,8 @@ export type TaskRow = {
   id: string;
   teamId: string;
   regional: boolean; // a Regional Support Lead task
+  regionId?: string | null; // region-wide (not one community's) action
+  hangoutUrl?: string | null; // promoting an Organiser Hangout: its activism.wtf page
 
   kind: string;
   sortOrder: number;
@@ -233,7 +235,9 @@ export function TaskCard({
           disabled={pending}
           onClick={() => {
             // Check-ins: ticking means they replied (the usual case).
-            if (task.regional && !done) {
+            // (Region-wide actions like promoting a hangout just tick off.)
+            const checkIn = task.regional && !task.regionId;
+            if (checkIn && !done) {
               start(async () => {
                 setDone(true);
                 const r = await completeCheckIn(task.id, "replied");
@@ -333,6 +337,16 @@ export function TaskCard({
           )}
           {task.description && !done && (
             <p className="mt-1 text-sm text-stone-600">{task.description}</p>
+          )}
+          {task.hangoutUrl && !done && (
+            <a
+              href={task.hangoutUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 inline-block text-sm font-medium text-pink-ink hover:underline"
+            >
+              Hangout page and RSVPs ↗
+            </a>
           )}
           {extra && !done && <div className="mt-3">{extra}</div>}
 
@@ -562,7 +576,7 @@ export function TaskCard({
                 events={moveEvents}
                 onMoved={() => setRemoved(true)}
               />
-              {task.regional && (
+              {task.regional && !task.regionId && (
                 <button
                   disabled={pending}
                   onClick={() =>
