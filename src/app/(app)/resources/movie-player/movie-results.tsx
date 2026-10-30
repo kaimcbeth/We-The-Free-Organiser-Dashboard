@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type Answer = {
+  id: string;
   film: string;
   version: string | null;
   impact: number | null; // 0-10, null = skipped
@@ -47,7 +48,7 @@ export function MovieResults({ teamId, tz }: { teamId: string; tz: string }) {
   const load = useCallback(async () => {
     const { data } = await createClient()
       .from("film_survey_responses")
-      .select("film, version, impact, answered_at, laptop")
+      .select("id, film, version, impact, answered_at, laptop")
       .eq("team_id", teamId)
       .order("answered_at", { ascending: false })
       .limit(20000);
@@ -211,7 +212,169 @@ export function MovieResults({ teamId, tz }: { teamId: string; tz: string }) {
           </ul>
         )}
       </section>
+
+      {rows.length > 0 && <AllAnswers rows={rows} tz={tz} onChange={load} />}
     </>
+  );
+}
+
+// Every answer, newest first, with checkboxes to delete test ones.
+function AllAnswers({
+  rows,
+  tz,
+  onChange,
+}: {
+  rows: Answer[];
+  tz: string;
+  onChange: () => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [shown, setShown] = useState(50);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const chosen = rows.filter((a) => picked.has(a.id)).map((a) => a.id);
+  const toggle = (id: string) =>
+    setPicked((p) => {
+      const n = new Set(p);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  const when = (iso: string) =>
+    new Intl.DateTimeFormat("en-AU", {
+      timeZone: tz,
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(new Date(iso));
+
+  async function remove() {
+    setBusy(true);
+    setError("");
+    const { error } = await createClient()
+      .from("film_survey_responses")
+      .delete()
+      .in("id", chosen);
+    if (error) setError("Couldn't delete them. Try again.");
+    else {
+      setPicked(new Set());
+      setConfirming(false);
+      await onChange();
+    }
+    setBusy(false);
+  }
+
+  return (
+    <section className="mt-8">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="text-sm font-medium text-stone-500 hover:text-stone-800 hover:underline"
+      >
+        {open ? "Hide" : "See"} all {rows.length} answers
+      </button>
+      {open && (
+        <div className="mt-3 rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+          <div className="flex flex-wrap items-center gap-3 border-b border-stone-100 px-4 py-3 text-sm">
+            <span className="text-stone-600">
+              {chosen.length
+                ? `${chosen.length} selected`
+                : "Tick answers made while testing to delete them."}
+            </span>
+            {chosen.length > 0 && !confirming && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setConfirming(true)}
+                  className="rounded-full bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700"
+                >
+                  Delete {chosen.length}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPicked(new Set())}
+                  className="text-xs text-stone-500 hover:underline"
+                >
+                  Clear
+                </button>
+              </>
+            )}
+            {confirming && (
+              <span className="flex items-center gap-2">
+                <span className="font-medium text-stone-800">
+                  Delete {chosen.length} for good?
+                </span>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={remove}
+                  className="rounded-full bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                >
+                  {busy ? "Deleting…" : "Yes, delete"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirming(false)}
+                  className="text-xs text-stone-500 hover:underline"
+                >
+                  Cancel
+                </button>
+              </span>
+            )}
+            {error && <span className="text-xs text-red-600">{error}</span>}
+          </div>
+          <ul className="divide-y divide-stone-100">
+            {rows.slice(0, shown).map((a) => (
+              <li key={a.id}>
+                <label className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm hover:bg-stone-50">
+                  <input
+                    type="checkbox"
+                    checked={picked.has(a.id)}
+                    onChange={() => toggle(a.id)}
+                    className="h-4 w-4 accent-pink"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="font-medium text-stone-800">{a.film}</span>
+                    {a.version && (
+                      <span className="ml-1.5 text-xs text-stone-400">
+                        {versionName(a.version)}
+                      </span>
+                    )}
+                    <span className="block text-xs text-stone-500">
+                      {when(a.answered_at)}
+                      {a.laptop ? ` · ${a.laptop}` : ""}
+                    </span>
+                  </span>
+                  <span className="w-16 text-right tabular-nums font-semibold text-navy">
+                    {a.impact === null ? (
+                      <span className="text-xs font-normal text-stone-400">
+                        skipped
+                      </span>
+                    ) : (
+                      `${a.impact}/10`
+                    )}
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+          {rows.length > shown && (
+            <button
+              type="button"
+              onClick={() => setShown((n) => n + 100)}
+              className="w-full border-t border-stone-100 px-4 py-2.5 text-sm font-medium text-stone-500 hover:text-stone-800"
+            >
+              Show more
+            </button>
+          )}
+        </div>
+      )}
+    </section>
   );
 }
 

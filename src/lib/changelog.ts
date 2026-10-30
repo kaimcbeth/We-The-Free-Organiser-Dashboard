@@ -78,6 +78,10 @@ export const CHANGELOG: Release[] = [
         text: "With the laptops online (a phone hotspot is fine), watch a live count of who's watched today. See which film has the most impact, and A/B test two versions of a film.",
       },
       {
+        level: "organiser",
+        text: "See every answer on the Movie player page, and delete any you made while testing.",
+      },
+      {
         level: "god",
         text: "Offline HTML player in public/resources/movie-player.html; /resources/movie-player/download injects the team's player_token. Answers go to film_survey_responses via submit_film_surveys (anon, token; client_id dedupes). Migration 0144.",
       },
