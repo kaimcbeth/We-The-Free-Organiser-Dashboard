@@ -27,10 +27,16 @@ const SET_UP: Record<string, string> = {
 
 // People: members who've put their hand up for a micro role (How you can
 // help). Asks that need an OK come first; everyone helping is folded below.
-export function HelpingOut({ rows }: { rows: HelperRow[] }) {
+export function HelpingOut({
+  rows,
+  trained,
+}: {
+  rows: HelperRow[];
+  trained: { title: string; people: { id: string; name: string }[] }[];
+}) {
   const router = useRouter();
   const [pending, start] = useTransition();
-  if (rows.length === 0) return null;
+  if (rows.length === 0 && trained.length === 0) return null;
   const asks = rows.filter((r) => r.status === "pending");
   const active = rows.filter((r) => r.status === "active");
   const byRole = new Map<string, HelperRow[]>();
@@ -87,6 +93,36 @@ export function HelpingOut({ rows }: { rows: HelperRow[] }) {
             </li>
           ))}
         </ul>
+      )}
+
+      {trained.length > 0 && (
+        <details className="mt-3 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-black/5">
+          <summary className="cursor-pointer text-sm font-semibold">
+            Training done
+          </summary>
+          <ul className="mt-3 space-y-3 text-sm">
+            {trained.map((t) => (
+              <li key={t.title}>
+                <p className="font-medium text-stone-700">
+                  {t.title} ({t.people.length})
+                </p>
+                <p className="mt-1 text-stone-600">
+                  {t.people.map((p, i) => (
+                    <span key={p.id}>
+                      {i > 0 && ", "}
+                      <Link
+                        href={`/people/${p.id}`}
+                        className="hover:underline"
+                      >
+                        {p.name}
+                      </Link>
+                    </span>
+                  ))}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
 
       {active.length > 0 && (

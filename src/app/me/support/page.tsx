@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { VIEW_AS_COOKIE } from "@/lib/organiser";
 import { BuddySection, type BuddyDashboard } from "../buddy-section";
 import { MicroRoles, type MyMicroRoles } from "./micro-roles";
+import { TrainingSection, type MyTrainings } from "../trainings";
 
 // How you can help tab: small roles that unlock as you come to more events,
 // and the newcomers an organiser has asked you to support.
@@ -22,12 +23,17 @@ export default async function SupportPage() {
   if (!me) redirect("/me");
   const tz = me.team?.timezone ?? DEFAULT_TZ;
   setRequestTz(tz);
-  const [{ data: buddy }, { data: roles }, { data: organiser }] =
-    await Promise.all([
-      supabase.rpc("my_buddy_dashboard"),
-      supabase.rpc("my_micro_roles"),
-      supabase.from("organisers").select("id").eq("id", user.id).maybeSingle(),
-    ]);
+  const [
+    { data: buddy },
+    { data: roles },
+    { data: trainings },
+    { data: organiser },
+  ] = await Promise.all([
+    supabase.rpc("my_buddy_dashboard"),
+    supabase.rpc("my_micro_roles"),
+    supabase.rpc("my_trainings"),
+    supabase.from("organisers").select("id").eq("id", user.id).maybeSingle(),
+  ]);
   const viewAs = (await cookies()).get(VIEW_AS_COOKIE)?.value ?? "";
   const preview = viewAs === "new_member" && !!organiser;
 
@@ -41,6 +47,9 @@ export default async function SupportPage() {
         events. Pick whatever suits you; there&apos;s no pressure.
       </p>
       {roles && <MicroRoles data={roles as MyMicroRoles} preview={preview} />}
+      {trainings && (
+        <TrainingSection data={trainings as MyTrainings} preview={preview} />
+      )}
       {buddy?.status === "ok" && (
         <BuddySection data={buddy as BuddyDashboard} tz={tz} />
       )}

@@ -11,6 +11,7 @@ import { TaskCard } from "@/components/task-card";
 import { loadMyTasks } from "@/lib/tasks";
 import { MemberTutorial, ReplayTour } from "./member-tutorial";
 import { MyEvents, type MyEvent } from "./my-events";
+import { TrainingNudge, type MyTrainings } from "./trainings";
 
 type Me = {
   id: string;
@@ -116,9 +117,10 @@ export default async function MePage() {
     );
   }
 
-  const [myTasks, { data: upcoming }] = await Promise.all([
+  const [myTasks, { data: upcoming }, { data: trainings }] = await Promise.all([
     loadMyTasks(supabase, me.id),
     supabase.rpc("my_upcoming_events"),
+    supabase.rpc("my_trainings"),
   ]);
   // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
   const now = Date.now();
@@ -163,6 +165,11 @@ export default async function MePage() {
           </ul>
         </section>
       )}
+
+      <TrainingNudge
+        data={trainings as MyTrainings | null}
+        preview={previewNewMember}
+      />
 
       <div className="mt-10 flex items-center justify-center gap-4">
         <ReplayTour />

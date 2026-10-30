@@ -74,14 +74,16 @@ export default async function PeoplePage({
       loadTracking(supabase, organiser.team_id, now),
     ]);
   const communityDates = tracking.tracked;
-  const helpers =
-    organiser.allCommunities || organiser.exampleMode
-      ? []
-      : (((
-          await supabase.rpc("team_micro_roles", {
-            p_team_id: organiser.team_id,
-          })
-        ).data as HelperRow[] | null) ?? []);
+  const ownTeam = !organiser.allCommunities && !organiser.exampleMode;
+  const [{ data: helperRows }, { data: trainedRows }, { data: trainingList }] =
+    ownTeam
+      ? await Promise.all([
+          supabase.rpc("team_micro_roles", { p_team_id: organiser.team_id }),
+          supabase.rpc("team_trainings", { p_team_id: organiser.team_id }),
+          supabase.from("trainings").select("key, title").order("sort_order"),
+        ])
+      : [{ data: null }, { data: null }, { data: null }];
+  const helpers = (helperRows as HelperRow[] | null) ?? [];
   const leads = new Map<string, CoreRole[]>();
   for (const r of (leadRows ?? []) as {
     person_id: string;
@@ -232,7 +234,32 @@ export default async function PeoplePage({
           Person deleted.
         </p>
       )}
-      <HelpingOut rows={helpers} />
+      <HelpingOut
+        rows={helpers}
+        trained={(trainingList ?? [])
+          .map((t: { key: string; title: string }) => ({
+            title: t.title,
+            people: (
+              (trainedRows as
+                { person_id: string; training_key: string }[] | null) ?? []
+            )
+              .filter((r) => r.training_key === t.key)
+              .flatMap((r) => {
+                const p = people.find((x) => x.id === r.person_id);
+                return p
+                  ? [
+                      {
+                        id: p.id,
+                        name: [p.first_name, p.last_name]
+                          .filter(Boolean)
+                          .join(" "),
+                      },
+                    ]
+                  : [];
+              }),
+          }))
+          .filter((t) => t.people.length > 0)}
+      />
       <PeopleList
         initialFilter={
           show === "roles" ||

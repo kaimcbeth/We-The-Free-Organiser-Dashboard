@@ -87,6 +87,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: 'Training for members: How you can help now suggests one training at a time (starting with the IBC Masterclass after 3 events). Members tap "I\'ve done this" to move on, and their Events page shows a one-line nudge that "Not now" hides for a month. See who\'s done what under Training done at the top of People.',
+      },
+      {
+        level: "organiser",
         text: 'The Outreach guide\'s "Create your account" prompt now says what newcomers get: events and reminders, the Photo Hub, their impact, and a way to send feedback and ideas.',
       },
     ],
