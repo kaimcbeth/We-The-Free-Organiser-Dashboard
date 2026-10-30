@@ -26,6 +26,32 @@ const mmss = (s: number) => {
 };
 
 // A short two-tone beep (needs a tap on "Turn on alerts" first).
+// Finished answering: a quick rising chime.
+function chime(ctx: AudioContext) {
+  [660, 880, 1320].forEach((f, i) => {
+    const at = i * 0.12;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, ctx.currentTime + at);
+    g.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + at + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + at + 0.25);
+    o.connect(g).connect(ctx.destination);
+    o.start(ctx.currentTime + at);
+    o.stop(ctx.currentTime + at + 0.27);
+  });
+}
+
+function notify(title: string, body: string, tag: string) {
+  if ("Notification" in window && Notification.permission === "granted") {
+    navigator.serviceWorker?.ready
+      .then((r) => r.showNotification(title, { body, tag }))
+      .catch(() => {});
+  }
+}
+
+type Done = { at: number; film: string | null; viewers: number | null };
+
 function beep(ctx: AudioContext) {
   [0, 0.22].forEach((at, i) => {
     const o = ctx.createOscillator();
@@ -70,6 +96,10 @@ export function LivePlayers({ teamId }: { teamId?: string }) {
   const audio = useRef<AudioContext | null>(null);
   const lock = useRef<WakeLockSentinel | null>(null);
   const alerted = useRef<Set<string>>(new Set());
+  // Laptops that just finished the question (shown for a minute, with a chime).
+  const [done, setDone] = useState<Record<string, Done>>({});
+  const prev = useRef<Record<string, Player>>({});
+  const alertsRef = useRef(false);
 
   const count = useRef(0);
   const load = useCallback(async () => {
@@ -81,6 +111,28 @@ export function LivePlayers({ teamId }: { teamId?: string }) {
     if (!d) return;
     setSkew(new Date(d.now).getTime() - Date.now());
     count.current = d.players.length;
+    const finished: Record<string, Done> = {};
+    for (const p of d.players) {
+      const was = prev.current[p.device];
+      if (was?.state === "survey" && p.state !== "survey") {
+        finished[p.device] = {
+          at: Date.now(),
+          film: was.film,
+          viewers: was.viewers,
+        };
+        if (alertsRef.current) {
+          if (audio.current) chime(audio.current);
+          navigator.vibrate?.([120, 80, 120]);
+          notify(
+            `${p.laptop}: finished`,
+            "They've answered the question. Ready for a chat.",
+            `player-${p.device}`,
+          );
+        }
+      }
+    }
+    prev.current = Object.fromEntries(d.players.map((p) => [p.device, p]));
+    if (Object.keys(finished).length) setDone((x) => ({ ...x, ...finished }));
     setPlayers(d.players);
   }, [teamId]);
 
@@ -173,6 +225,7 @@ export function LivePlayers({ teamId }: { teamId?: string }) {
     try {
       lock.current = await navigator.wakeLock.request("screen");
     } catch {}
+    alertsRef.current = true;
     setAlertsOn(true);
   }
 
@@ -216,8 +269,8 @@ export function LivePlayers({ teamId }: { teamId?: string }) {
       {everyone && (
         <p className="mt-1 text-sm text-stone-600">
           The Movie Challenge laptops right now. Pink: a film ends in 10
-          seconds, so someone can be there to chat. Red: someone tapped out and
-          may need support.
+          seconds. Light blue: they&apos;ve answered the question and are ready
+          to chat. Red: someone tapped out and may need support.
         </p>
       )}
       {players.length === 0 ? (
@@ -235,32 +288,39 @@ export function LivePlayers({ teamId }: { teamId?: string }) {
             const ending =
               !off && p.state === "playing" && s !== null && s <= WARN;
             const stopped = !off && p.state === "stopped";
+            const fin = done[p.device];
+            const finished =
+              !off && p.state === "idle" && !!fin && now - fin.at < 60000;
             const tone = off
               ? "bg-stone-100 text-stone-500 ring-stone-200"
               : stopped
                 ? "bg-red-600 text-white ring-4 ring-red-600/40 motion-safe:animate-[stopring_1s_ease-in-out_infinite]"
                 : ending
                   ? "bg-pink text-navy ring-4 ring-pink/40 motion-safe:animate-[ring_1s_ease-in-out_infinite]"
-                  : p.state === "playing" || p.state === "paused"
-                    ? "bg-navy text-white ring-navy"
-                    : p.state === "survey"
-                      ? "bg-cyan/25 text-navy ring-cyan"
-                      : "bg-white text-navy ring-black/5";
+                  : finished
+                    ? "bg-cyan text-navy ring-cyan"
+                    : p.state === "playing" || p.state === "paused"
+                      ? "bg-navy text-white ring-navy"
+                      : p.state === "survey"
+                        ? "bg-cyan/25 text-navy ring-cyan"
+                        : "bg-white text-navy ring-black/5";
             const what = off
               ? "Offline"
               : stopped
                 ? `Tapout at ${mmss(p.stopped_at ?? 0)}`
-                : p.state === "playing"
-                  ? ending
-                    ? s! > 0
-                      ? `Finishing in ${Math.ceil(s!)}s`
-                      : "Finishing now"
-                    : `${mmss(s ?? 0)} left`
-                  : p.state === "paused"
-                    ? `Paused · ${mmss(p.seconds_left ?? 0)} left`
-                    : p.state === "survey"
-                      ? "Answering the question"
-                      : "Free";
+                : finished
+                  ? "Finished · ready to chat"
+                  : p.state === "playing"
+                    ? ending
+                      ? s! > 0
+                        ? `Finishing in ${Math.ceil(s!)}s`
+                        : "Finishing now"
+                      : `${mmss(s ?? 0)} left`
+                    : p.state === "paused"
+                      ? `Paused · ${mmss(p.seconds_left ?? 0)} left`
+                      : p.state === "survey"
+                        ? "Answering the question"
+                        : "Free";
             return (
               <li
                 key={p.device}
@@ -276,18 +336,28 @@ export function LivePlayers({ teamId }: { teamId?: string }) {
                   {off
                     ? "Not heard from it for a while (hotspot or player closed?)."
                     : stopped
-                      ? `Someone tapped out and may need support. ${p.film ?? ""}`.trim()
-                      : p.film && p.state !== "idle"
+                      ? [p.film, "someone tapped out and may need support"]
+                          .filter(Boolean)
+                          .join(" · ")
+                      : finished
                         ? [
-                            p.film,
-                            p.language && p.language !== "English"
-                              ? p.language
-                              : null,
-                            p.viewers ? `${p.viewers} watching` : null,
+                            fin!.film,
+                            fin!.viewers ? `${fin!.viewers} watched` : null,
+                            "they've answered the question",
                           ]
                             .filter(Boolean)
                             .join(" · ")
-                        : "On the menu"}
+                        : p.film && p.state !== "idle"
+                          ? [
+                              p.film,
+                              p.language && p.language !== "English"
+                                ? p.language
+                                : null,
+                              p.viewers ? `${p.viewers} watching` : null,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")
+                          : "On the menu"}
                 </p>
                 {!off &&
                   (p.state === "playing" || p.state === "paused") &&

@@ -91,7 +91,15 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Media wall added to the upgrades in the Equipment guide (details coming soon).",
+      },
+      {
+        level: "organiser",
         text: "The bell is gone from the Equipment guide: the movie player's live screen tells you when someone's finishing.",
+      },
+      {
+        level: "organiser",
+        text: "The live screen also lets you know when a laptop's viewers have finished the question, with a chime and a light-blue card: ready for a chat.",
       },
       {
         level: "organiser",

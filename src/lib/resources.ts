@@ -360,6 +360,11 @@ export const EQUIPMENT_GUIDE: {
         about: "More details coming soon.",
       },
       {
+        key: "media_wall",
+        name: "Media wall",
+        about: "More details coming soon.",
+      },
+      {
         key: "sign_poles",
         name: "Sign poles",
         about: "Hold signs up high. Made from a few parts:",
