@@ -95,6 +95,14 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Movie player: if a video file stalls or pauses by itself in its last 10 seconds (some files claim to be a little longer than they are), the player now treats it as finished and goes to the question. Download the player again to get this.",
+      },
+      {
+        level: "organiser",
+        text: 'Live at the event: "Finished · ready to chat" is now pink too, so a laptop stays pink from the 10-second warning until someone goes over.',
+      },
+      {
+        level: "organiser",
         text: 'The Outreach guide\'s "Create your account" prompt now says what newcomers get: events and reminders, the Photo Hub, their impact, and a way to send feedback and ideas.',
       },
     ],
