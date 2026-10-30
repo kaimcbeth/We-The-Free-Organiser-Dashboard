@@ -67,6 +67,24 @@ export const COMING_SOON: { title: string; text: string }[] = [
 export const CHANGELOG: Release[] = [
   {
     date: "2026-10-30",
+    title: "Movie player",
+    changes: [
+      {
+        level: "organiser",
+        text: "New in Resources: a movie player for Movie Challenge laptops. It works with no internet, shows a clean menu of your films, and asks viewers after each one how much it impacted them (0 to 10).",
+      },
+      {
+        level: "organiser",
+        text: "With the laptops online (a phone hotspot is fine), watch a live count of who's watched today. See which film has the most impact, and A/B test two versions of a film.",
+      },
+      {
+        level: "god",
+        text: "Offline HTML player in public/resources/movie-player.html; /resources/movie-player/download injects the team's player_token. Answers go to film_survey_responses via submit_film_surveys (anon, token; client_id dedupes). Migration 0144.",
+      },
+    ],
+  },
+  {
+    date: "2026-10-30",
     title: "Organiser hangouts",
     changes: [
       {

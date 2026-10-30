@@ -184,6 +184,33 @@ export function ResourcesList({
           </span>
         </a>
       )}
+      {!core &&
+        has(
+          q,
+          "movie player challenge video film laptop offline survey impact a/b test live count",
+        ) && (
+          <a
+            href="/resources/movie-player"
+            className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+          >
+            <span>
+              <span className="block font-semibold">
+                <span aria-hidden className="mr-1.5">
+                  🎬
+                </span>
+                Movie player
+              </span>
+              <span className="block text-sm text-stone-600">
+                Play the Movie Challenge films on laptops with no internet, with
+                a quick impact question after each. See the live count and which
+                film has the most impact.
+              </span>
+            </span>
+            <span aria-hidden className="text-xl">
+              →
+            </span>
+          </a>
+        )}
       {!path.startsWith("/attendance") &&
         has(
           q,
