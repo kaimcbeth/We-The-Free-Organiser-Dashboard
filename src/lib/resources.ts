@@ -342,6 +342,7 @@ export const EQUIPMENT_GUIDE: {
         about: "Good for attaching smaller signs to your tables.",
         shop: "Amazon",
         url: "https://www.amazon.com.au/dp/B0G4S4VHX6",
+        price: "~$15",
       },
       {
         key: "lanyards",

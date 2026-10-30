@@ -75,7 +75,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "New upgrade in the equipment guide: Sign clamps (Amazon), good for attaching smaller signs to your tables.",
+        text: "New upgrade in the equipment guide: Sign clamps (Amazon, ~$15), good for attaching smaller signs to your tables.",
       },
       {
         level: "organiser",
