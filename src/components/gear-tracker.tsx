@@ -29,11 +29,15 @@ type Details = Pick<
   "name" | "notes" | "model" | "source" | "condition" | "quantity"
 >;
 const isLink = (s: string) => /^https?:\/\//i.test(s.trim());
-type Person = { id: string; first_name: string; last_name: string | null };
+export type Person = {
+  id: string;
+  first_name: string;
+  last_name: string | null;
+};
 
-const full = (p: Person) =>
+export const full = (p: Person) =>
   [p.first_name, p.last_name].filter(Boolean).join(" ");
-const since = (iso: string) =>
+export const since = (iso: string) =>
   new Date(iso).toLocaleDateString("en-AU", { day: "numeric", month: "short" });
 
 // Your community's kit and who has it right now.
@@ -566,5 +570,72 @@ function GearForm({
         </button>
       </div>
     </form>
+  );
+}
+
+// Where a piece of kit is: one of the community's people, or somewhere else
+// (e.g. a storage unit). Used on the equipment list's inventory items.
+export function LocationSheet({
+  name,
+  people,
+  personId,
+  onPick,
+  onClose,
+}: {
+  name: string;
+  people: Person[];
+  personId: string | null; // who has it now
+  onPick: (personId: string | null, note: string | null) => void;
+  onClose: () => void;
+}) {
+  const [q, setQ] = useState("");
+  const [place, setPlace] = useState("");
+  const shown = people
+    .filter((p) => full(p).toLowerCase().includes(q.trim().toLowerCase()))
+    .slice(0, 30);
+  return (
+    <Sheet title={`Who has the ${name.toLowerCase()}?`} onClose={onClose}>
+      <input
+        autoFocus
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="Search people"
+        className="w-full rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
+      />
+      <ul className="mt-2 max-h-72 space-y-1 overflow-y-auto">
+        {shown.map((p) => (
+          <li key={p.id}>
+            <button
+              type="button"
+              onClick={() => onPick(p.id, null)}
+              className={`w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-white ${p.id === personId ? "bg-white font-semibold" : ""}`}
+            >
+              {full(p)}
+            </button>
+          </li>
+        ))}
+      </ul>
+      <form
+        className="mt-3 flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (place.trim()) onPick(null, place.trim());
+        }}
+      >
+        <input
+          value={place}
+          onChange={(e) => setPlace(e.target.value)}
+          maxLength={100}
+          placeholder="Or somewhere else, e.g. storage unit"
+          className="min-w-0 flex-1 rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
+        />
+        <button
+          type="submit"
+          className="rounded-xl bg-navy px-3 py-2 text-sm font-semibold text-white"
+        >
+          Save
+        </button>
+      </form>
+    </Sheet>
   );
 }

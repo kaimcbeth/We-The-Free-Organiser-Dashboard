@@ -75,6 +75,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Equipment: double-click (or double-tap) a picture to see it large. Items ticked In community inventory now show who has them, with a Location button to change it, so the separate Your gear list is gone.",
+      },
+      {
+        level: "organiser",
         text: "Equipment guide: prices added for the table banner (DIY ~$25, Best $50), viewing devices (<$150 each), headphones ($8.19) and headphone splitters (~$4 each). Signs now have a 🛠️ DIY option (8 portrait A3 sheets on thick cardboard, ~$5 each, printed with the sign splitter) next to ✨ Best (Easy Signs corrugated plastic).",
       },
       {

@@ -2,7 +2,12 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { GearTracker } from "@/components/gear-tracker";
+import {
+  LocationSheet,
+  full,
+  since,
+  type Person,
+} from "@/components/gear-tracker";
 import {
   CONDITIONS,
   EQUIPMENT_GUIDE,
@@ -106,7 +111,9 @@ export function Equipment({
     let live = true;
     createClient()
       .from("gear_items")
-      .select("guide_key, condition, quantity")
+      .select(
+        "guide_key, condition, quantity, holder_person_id, holder_note, moved_at",
+      )
       .eq("team_id", teamId)
       .not("guide_key", "is", null)
       .order("created_at")
@@ -118,6 +125,9 @@ export function Equipment({
             m.set(r.guide_key as string, {
               condition: r.condition as Condition | null,
               quantity: (r.quantity as number) ?? 1,
+              holder_person_id: r.holder_person_id as string | null,
+              holder_note: r.holder_note as string | null,
+              moved_at: r.moved_at as string | null,
             });
         setHave(m);
       });
@@ -126,10 +136,27 @@ export function Equipment({
     };
   }, [teamId, version]);
 
+  // The community's people, for where each piece of kit is.
+  const [people, setPeople] = useState<Person[]>([]);
+  useEffect(() => {
+    if (!teamId) return;
+    let live = true;
+    createClient()
+      .from("people")
+      .select("id, first_name, last_name")
+      .eq("team_id", teamId)
+      .eq("is_test", false)
+      .order("first_name")
+      .then(({ data }) => live && setPeople((data as Person[]) ?? []));
+    return () => {
+      live = false;
+    };
+  }, [teamId]);
+
   async function add(item: EquipmentItem, opt: Option | undefined) {
     if (!teamId) return;
     const key = invKey(item, opt);
-    setHave((h) => new Map(h).set(key, { condition: null, quantity: 1 }));
+    setHave((h) => new Map(h).set(key, { ...EMPTY }));
     await createClient()
       .from("gear_items")
       .insert({
@@ -150,7 +177,7 @@ export function Equipment({
     if (!teamId) return;
     const key = invKey(item, opt);
     setHave((h) => {
-      const now = h.get(key) ?? { condition: null, quantity: 1 };
+      const now = h.get(key) ?? { ...EMPTY };
       return new Map(h).set(key, { ...now, ...change });
     });
     await createClient()
@@ -179,16 +206,6 @@ export function Equipment({
       .eq("guide_key", key);
     bump();
   }
-
-  // The recommended list's photo for each inventory entry (uploaded, or the
-  // built-in one), so gear added from the list shows the same picture.
-  const guidePhotos: Record<string, string> = {};
-  for (const g of EQUIPMENT_GUIDE)
-    for (const i of [...g.items, ...g.upgrades])
-      for (const o of i.options ?? [undefined]) {
-        const pic = photos[photoKey(i.key, o)] ?? o?.image ?? i.image;
-        if (pic) guidePhotos[invKey(i, o)] = pic;
-      }
 
   // An item counts as had if any version of it is in the inventory.
   const hasAny = (i: EquipmentItem) =>
@@ -240,6 +257,7 @@ export function Equipment({
                     }
                     photos={photos}
                     onUpload={canEditPhotos ? upload : undefined}
+                    people={people}
                   />
                 ))}
               </ul>
@@ -267,6 +285,7 @@ export function Equipment({
                       }
                       photos={photos}
                       onUpload={canEditPhotos ? upload : undefined}
+                      people={people}
                     />
                   ))}
                 </ul>
@@ -280,20 +299,25 @@ export function Equipment({
           including GST but not shipping. They change, so check before you buy.
         </p>
       )}
-      {teamId && (
-        <GearTracker
-          teamId={teamId}
-          version={version}
-          onChanged={bump}
-          guidePhotos={guidePhotos}
-        />
-      )}
     </div>
   );
 }
 
 type Option = NonNullable<EquipmentItem["options"]>[number];
-type Owned = { condition: Condition | null; quantity: number };
+type Owned = {
+  condition: Condition | null;
+  quantity: number;
+  holder_person_id: string | null; // who has it
+  holder_note: string | null; // ...or where it is (e.g. storage unit)
+  moved_at: string | null;
+};
+const EMPTY: Owned = {
+  condition: null,
+  quantity: 1,
+  holder_person_id: null,
+  holder_note: null,
+  moved_at: null,
+};
 
 // Which inventory entry: the item, or one version of it (Budget and Best are
 // tracked separately), e.g. "a_frame:budget".
@@ -318,7 +342,9 @@ function EquipmentRow({
   onOwned,
   photos,
   onUpload,
+  people = [],
 }: {
+  people?: Person[]; // the community's people (for where it is)
   item: EquipmentItem;
   inventory: Map<string, Owned>; // what the community has, by inventory key
   onOwned?: (opt: Option | undefined, change: Partial<Owned>) => void;
@@ -335,6 +361,7 @@ function EquipmentRow({
   );
   const [guideOpen, setGuideOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+  const [locating, setLocating] = useState(false);
   const opt = item.options?.[pick];
   const url = opt?.url ?? item.url;
   const key = photoKey(item.key, opt);
@@ -576,6 +603,47 @@ function EquipmentRow({
               </>
             )}
           </div>
+        )}
+        {onHave && has && onOwned && owned && (
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-stone-500">
+            {(() => {
+              const holder = owned.holder_person_id
+                ? people.find((p) => p.id === owned.holder_person_id)
+                : null;
+              const where = holder ? full(holder) : owned.holder_note;
+              return where ? (
+                <span>
+                  With <span className="text-stone-700">{where}</span>
+                  {owned.moved_at && ` since ${since(owned.moved_at)}`}
+                </span>
+              ) : (
+                <span>Nobody&apos;s marked as having it</span>
+              );
+            })()}
+            <button
+              type="button"
+              onClick={() => setLocating(true)}
+              className="rounded-lg px-2 py-0.5 text-xs font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50"
+            >
+              Location
+            </button>
+          </p>
+        )}
+        {locating && onOwned && (
+          <LocationSheet
+            name={item.name}
+            people={people}
+            personId={owned?.holder_person_id ?? null}
+            onPick={(personId, note) => {
+              setLocating(false);
+              onOwned(opt, {
+                holder_person_id: personId,
+                holder_note: personId ? null : note,
+                moved_at: new Date().toISOString(),
+              });
+            }}
+            onClose={() => setLocating(false)}
+          />
         )}
       </div>
     </li>
