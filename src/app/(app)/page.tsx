@@ -74,7 +74,8 @@ function ActionsLink({
           strokeLinejoin="round"
         />
       </svg>
-      {count} action{count === 1 ? "" : "s"}
+      {count}
+      <span className="hidden sm:inline"> action{count === 1 ? "" : "s"}</span>
     </Link>
   );
 }
@@ -91,7 +92,7 @@ function WebsiteLink({ url, className }: { url: string; className: string }) {
       data-tour="website-link"
       className={`rounded-md px-1.5 py-0.5 text-xs hover:underline ${className}`}
     >
-      activism.wtf ↗
+      <span className="hidden sm:inline">activism.wtf </span>↗
     </a>
   );
 }
@@ -428,14 +429,16 @@ function EventList({
                   href={h.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex min-w-0 flex-1 items-center gap-4 py-3.5 pl-4 pr-4"
+                  className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-3 pr-3 sm:gap-4 sm:py-3.5 sm:pl-4 sm:pr-4"
                 >
-                  <div className="w-16 shrink-0 text-sm font-medium text-stone-500">
+                  <div className="w-11 shrink-0 text-xs font-medium leading-tight text-stone-500 sm:w-16 sm:text-sm">
                     {formatEventDate(h.starts_at)}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{h.title}</p>
-                    <p className="truncate text-sm text-stone-500">
+                    <p className="line-clamp-2 font-medium leading-snug sm:truncate">
+                      {h.title}
+                    </p>
+                    <p className="truncate text-xs text-stone-500 sm:text-sm">
                       Organiser hangout ·{" "}
                       {formatTimeRange(h.starts_at, h.ends_at)}
                       {h.audience ? ` · For ${h.audience}` : ""}
@@ -453,28 +456,35 @@ function EventList({
               >
                 <Link
                   href={`/events/${e.id}`}
-                  className="flex min-w-0 flex-1 items-center gap-4 py-3.5 pl-4 pr-2"
+                  className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-3 pr-1 sm:gap-4 sm:py-3.5 sm:pl-4 sm:pr-2"
                 >
-                  <div className="w-16 shrink-0 text-sm font-medium text-stone-500">
+                  <div className="w-11 shrink-0 text-xs font-medium leading-tight text-stone-500 sm:w-16 sm:text-sm">
                     {formatEventDate(e.starts_at)}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-2 font-medium">
-                      <span className="truncate">{e.title}</span>
+                    <p className="flex items-start gap-2 font-medium leading-snug">
+                      <span className="line-clamp-2 sm:truncate">
+                        {e.title}
+                      </span>
                       {e.id === nextId && (
-                        <span className="shrink-0 rounded-full bg-pink px-2 py-0.5 text-xs font-semibold text-navy">
+                        <span className="mt-0.5 shrink-0 rounded-full bg-pink px-1.5 py-px text-[10px] font-semibold text-navy sm:px-2 sm:py-0.5 sm:text-xs">
                           Next
                         </span>
                       )}
                     </p>
-                    <p className="truncate text-sm text-stone-500">
+                    <p className="truncate text-xs text-stone-500 sm:text-sm">
                       {e.event_type?.name ?? "No type"}
                       {e.venue || e.address ? ` · ${e.venue ?? e.address}` : ""}
                     </p>
                   </div>
-                  <div className="shrink-0 text-sm tabular-nums text-stone-500">
-                    {e.attendance[0]?.count ?? 0}
-                  </div>
+                  {(e.attendance[0]?.count ?? 0) > 0 && (
+                    <div
+                      className="shrink-0 text-xs tabular-nums text-stone-500 sm:text-sm"
+                      title="Checked in"
+                    >
+                      {e.attendance[0]?.count}
+                    </div>
+                  )}
                 </Link>
                 <ActionsLink
                   eventId={e.id}
@@ -484,7 +494,7 @@ function EventList({
                 {e.source_url ? (
                   <WebsiteLink
                     url={e.source_url}
-                    className="mr-2 shrink-0 text-stone-300 hover:text-navy"
+                    className="mr-1 shrink-0 text-stone-300 hover:text-navy sm:mr-2"
                   />
                 ) : (
                   <span className="w-2" />

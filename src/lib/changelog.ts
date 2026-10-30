@@ -87,6 +87,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Tidier on phones: event names get most of the row (two lines if needed), with a smaller date, just the number of actions, and a small ↗ for activism.wtf. The header keeps Movement Hub on one line with a smaller Alpha tag, and shows just your photo.",
+      },
+      {
+        level: "organiser",
         text: "Event pages get you to check-in faster: actions fold into one line (tap to open), notes stay short, and event photos sit below the check-in list.",
       },
       {

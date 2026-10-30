@@ -26,13 +26,14 @@ export function AttendeeShell({
                 className="h-9 w-auto shrink-0"
               />
               <span className="min-w-0">
-                <span className="flex items-center gap-1.5">
-                  <EasterEggLogo className="block text-xs font-bold uppercase tracking-wider text-pink" />
+                <span className="flex items-center gap-1.5 whitespace-nowrap">
+                  <EasterEggLogo className="block whitespace-nowrap text-xs font-bold uppercase tracking-wider text-pink" />
                   <span
                     title={`${STAGE} ${VERSION}, build ${BUILD}`}
-                    className={`rounded px-1 text-[10px] font-medium leading-4 ${STAGE_TAG}`}
+                    className={`shrink-0 rounded px-1 text-[9px] font-semibold uppercase leading-[14px] tracking-wide ${STAGE_TAG}`}
                   >
-                    {STAGE} {VERSION}
+                    {STAGE}
+                    <span className="hidden sm:inline"> {VERSION}</span>
                   </span>
                 </span>
                 <span className="block truncate text-sm font-medium text-white">
