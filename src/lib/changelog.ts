@@ -74,6 +74,10 @@ export const CHANGELOG: Release[] = [
         text: "Organiser hangouts from activism.wtf now show in your Upcoming events and on the calendar when they're for your community. They're just listed so you know they're on: tap one to RSVP on activism.wtf.",
       },
       {
+        level: "organiser",
+        text: "Equipment guide: prices added for the table banner (DIY about $25, Best $50) and viewing devices (under $150 each).",
+      },
+      {
         level: "regional_lead",
         text: "New action when an organiser hangout is coming up in your region: Organiser hangout promoted, each week from 3 weeks before, with a link to the hangout page.",
       },

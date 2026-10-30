@@ -188,6 +188,7 @@ export const EQUIPMENT_GUIDE: {
         name: "Viewing devices",
         about:
           "What people watch the footage on. Usually laptops, typically two.",
+        price: "Under $150 each",
         guide: [
           {
             label: "Priority 1",
@@ -203,11 +204,13 @@ export const EQUIPMENT_GUIDE: {
           {
             label: "DIY",
             about: "Make your own.",
+            price: "About $25",
             instructions: "",
           },
           {
             label: "Best",
             about: "Good-quality banners, bought in bulk.",
+            price: "$50",
             contactLead:
               "Ask your Regional Support Lead: they keep a bulk stock of good table banners from Alibaba. Wholesale orders like this are hard to place directly, so get one from them.",
           },
