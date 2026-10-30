@@ -92,7 +92,7 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
         <span>
           <span className="block font-semibold">
             <span aria-hidden className="mr-1.5">
-              💌
+              📢
             </span>
             Feedback for your Regional Support Lead
           </span>

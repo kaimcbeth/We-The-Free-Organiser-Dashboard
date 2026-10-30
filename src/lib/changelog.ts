@@ -79,7 +79,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Two feedback forms in Resources: 💌 Feedback for your Regional Support Lead (with your name or anonymously), and 📣 Member feedback form, a link to copy or share with members so they can give you feedback any time (one box, name optional). You get a notification for each one, and What they've said opens the Feedback page.",
+        text: "Two feedback forms in Resources: 📢 Feedback for your Regional Support Lead (with your name or anonymously), and 📣 Member feedback form, a link to copy or share with members so they can give you feedback any time (one box, name optional). You get a notification for each one, and What they've said opens the Feedback page.",
       },
       {
         level: "regional_lead",
