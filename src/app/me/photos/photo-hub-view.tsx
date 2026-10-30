@@ -35,6 +35,33 @@ export function PhotoHubView({ teamId }: { teamId: string }) {
   const [photos, setPhotos] = useState<EventPhoto[] | null>(null);
   const [filter, setFilter] = useState<PhotoFilter>(null);
   const [big, setBig] = useState<EventPhoto | null>(null);
+  const [sharing, setSharing] = useState(false);
+
+  // Share the photo itself (the link only works for an hour), through the
+  // phone's share sheet. Where that isn't available, download it instead.
+  async function share(p: EventPhoto) {
+    setSharing(true);
+    try {
+      const blob = await (await fetch(p.url)).blob();
+      const type = blob.type || "image/jpeg";
+      const ext = type.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
+      const file = new File([blob], `we-the-free-${p.id.slice(0, 8)}.${ext}`, {
+        type,
+      });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file] });
+      } else {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(file);
+        a.download = file.name;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+    } catch {
+      // Closing the share sheet counts as an error; nothing to do.
+    }
+    setSharing(false);
+  }
 
   useEffect(() => {
     let live = true;
@@ -120,16 +147,36 @@ export function PhotoHubView({ teamId }: { teamId: string }) {
           {big.caption && (
             <p className="text-center text-sm text-white/80">{big.caption}</p>
           )}
-          <a
-            href={big.url}
-            download
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-navy"
-          >
-            Download
-          </a>
+          <div className="flex gap-2">
+            {!big.noPromo && (
+              <button
+                type="button"
+                disabled={sharing}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  share(big);
+                }}
+                className="rounded-xl bg-pink px-4 py-2 text-sm font-semibold text-navy hover:bg-pink-strong disabled:opacity-60"
+              >
+                {sharing ? "Getting it ready…" : "Share"}
+              </button>
+            )}
+            <a
+              href={big.url}
+              download
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-navy"
+            >
+              Download
+            </a>
+          </div>
+          {big.noPromo && (
+            <p className="text-center text-xs text-white/60">
+              This one isn&apos;t for sharing on social media.
+            </p>
+          )}
         </div>
       )}
     </div>

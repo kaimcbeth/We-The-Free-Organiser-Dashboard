@@ -23,6 +23,20 @@ export default async function MemberGuidePage() {
       <div className="mt-5">
         <QuestionSheet />
       </div>
+      <a
+        href="https://activism.wtf/ibc/masterclass"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 block rounded-2xl bg-white p-4 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+      >
+        <span className="block font-semibold">
+          Go deeper: the IBC Masterclass ↗
+        </span>
+        <span className="block text-sm text-stone-600">
+          The full training: why these questions work, handling objections, role
+          plays and an AI practice tool.
+        </span>
+      </a>
       {me.team?.slug && (
         <div className="mt-6 text-center">
           <GuideShare slug={me.team.slug} />

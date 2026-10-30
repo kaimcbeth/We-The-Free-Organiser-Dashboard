@@ -111,6 +111,14 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Members' Photo Hub: a Share button on the big view of a photo, which sends the photo itself through the phone's share sheet (or downloads it on a computer). Photos marked not for promo can't be shared, only downloaded.",
+      },
+      {
+        level: "organiser",
+        text: "Members' Outreach tab: a link to the IBC Masterclass at the bottom of the questions.",
+      },
+      {
+        level: "organiser",
         text: 'The Outreach guide\'s "Create your account" prompt now says what newcomers get: events and reminders, the Photo Hub, their impact, and a way to send feedback and ideas.',
       },
     ],
