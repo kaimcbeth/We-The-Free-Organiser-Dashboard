@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { MEET_MEMBERS_DEFAULT } from "@/lib/meet-members";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
@@ -1376,5 +1377,35 @@ export async function setTaskSchedule(
   });
   if (error || data !== "ok") return { error: "Couldn't save that." };
   revalidatePath("/tasks");
+  return {};
+}
+
+// Meet the Members questions for this community (its own, or the default).
+export async function getMeetMembersQuestions(): Promise<{
+  questions: string;
+  custom: boolean;
+}> {
+  const { supabase, organiser } = await requireOrganiser();
+  const { data } = await supabase
+    .from("teams")
+    .select("meet_members_questions")
+    .eq("id", organiser.team_id)
+    .maybeSingle();
+  const own = (data?.meet_members_questions as string | null) ?? null;
+  return { questions: own ?? MEET_MEMBERS_DEFAULT, custom: !!own };
+}
+
+// Save this community's questions (blank, or the default, goes back to the default).
+export async function saveMeetMembersQuestions(
+  questions: string,
+): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  if (organiser.tourPreview) return {};
+  const q = questions.trim();
+  const { data, error } = await supabase.rpc("set_meet_members_questions", {
+    p_team_id: organiser.team_id,
+    p_questions: q === MEET_MEMBERS_DEFAULT.trim() ? "" : q,
+  });
+  if (error || data !== "ok") return { error: "Couldn't save the questions." };
   return {};
 }

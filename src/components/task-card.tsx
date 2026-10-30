@@ -27,6 +27,7 @@ import { ScriptButton } from "@/components/script-button";
 import { CopyMaker, type CopyPlatform } from "@/components/copy-maker";
 import { MonthCarousel } from "@/components/month-carousel";
 import { ScheduleChanger } from "@/components/schedule-changer";
+import { MeetMembersQuestions } from "@/components/meet-members-questions";
 import { FbGroupsButton } from "@/components/fb-groups-button";
 import { inputClass } from "@/components/form";
 import {
@@ -340,11 +341,12 @@ export function TaskCard({
           {task.description && !done && (
             <p className="mt-1 text-sm text-stone-600">{task.description}</p>
           )}
-          {task.kind === "com_feedback" && !done && (
-            <p className="mt-1">
-              <ScheduleChanger kind={task.kind} />
-            </p>
-          )}
+          {(task.kind === "com_feedback" || task.kind === "meet_members_ask") &&
+            !done && (
+              <p className="mt-1">
+                <ScheduleChanger kind={task.kind} />
+              </p>
+            )}
           {task.hangoutUrl && !done && (
             <a
               href={task.hangoutUrl}
@@ -441,6 +443,7 @@ export function TaskCard({
                   className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
                 />
               )}
+              {task.kind === "meet_members_ask" && <MeetMembersQuestions />}
               {task.kind === "promo_throwback" && (
                 <ThrowbackSheet
                   teamId={task.teamId}

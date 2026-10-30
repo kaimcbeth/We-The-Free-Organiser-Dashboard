@@ -75,6 +75,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Meet the Members: once a month (1st Monday, change the day on the action), Meet the Members: volunteer asked comes up with the questions to copy and send. Ticking it off brings up Meet the Members posted, due a week later. Change the questions for future months from the same place.",
+      },
+      {
+        level: "organiser",
         text: "Members: the New members tab is now How you can help (more small roles to come), and there's a new Feedback tab: one box, any length, with your name or anonymously. It goes straight to the community's organisers (a notification, and a Feedback page with everything volunteers have sent).",
       },
       {
