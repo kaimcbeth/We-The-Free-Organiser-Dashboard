@@ -295,7 +295,7 @@ export const EQUIPMENT_GUIDE: {
             about:
               "Stretch fabric banner on a curved frame. Printed in Sydney in 24 hours; single or double sided.",
             url: "https://www.easysigns.com.au/products/details/stretch-fabric-display-stand",
-            price: "From $140.26 ($197.67 for 850 × 2000 mm single sided)",
+            price: "$197.67 (850 × 2000 mm, single sided)",
             shop: "Easy Signs",
             product: "Stretch fabric display stand",
           },
