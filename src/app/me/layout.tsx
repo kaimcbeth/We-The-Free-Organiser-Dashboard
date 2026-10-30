@@ -67,13 +67,14 @@ export default async function MemberLayout({
               className="h-9 w-auto shrink-0"
             />
             <span className="min-w-0">
-              <span className="flex items-center gap-1.5">
-                <EasterEggLogo className="block text-xs font-bold uppercase tracking-wider text-pink" />
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
+                <EasterEggLogo className="block whitespace-nowrap text-xs font-bold uppercase tracking-wider text-pink" />
                 <span
                   title={`${STAGE} ${VERSION}, build ${BUILD}`}
-                  className={`rounded px-1 text-[10px] font-medium leading-4 ${STAGE_TAG}`}
+                  className={`shrink-0 rounded px-1 text-[9px] font-semibold uppercase leading-[14px] tracking-wide ${STAGE_TAG}`}
                 >
-                  {STAGE} {VERSION}
+                  {STAGE}
+                  <span className="hidden sm:inline"> {VERSION}</span>
                 </span>
               </span>
               <span className="block truncate text-sm font-medium text-white">
@@ -95,11 +96,11 @@ export default async function MemberLayout({
             <NotificationBell supabase={supabase} userId={user.id} />
             {name && (
               <Link
-                href="/me#details"
-                className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pl-3 pr-1 hover:bg-white/10"
-                aria-label="Your details"
+                href="/me/profile"
+                className="flex min-w-0 items-center gap-2.5 rounded-full p-1 hover:bg-white/10 sm:pl-3"
+                aria-label="Your profile"
               >
-                <span className="min-w-0 text-right leading-tight">
+                <span className="hidden min-w-0 text-right leading-tight sm:block">
                   <span className="block truncate text-sm font-medium text-white">
                     {name}
                   </span>

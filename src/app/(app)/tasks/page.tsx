@@ -374,13 +374,6 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
               "",
             )}
           />
-          <Link
-            href="/facebook-groups"
-            data-tour="fb-groups-link"
-            className="rounded-xl px-3 py-2 text-sm font-medium text-stone-500 hover:bg-stone-100 hover:text-navy"
-          >
-            Facebook groups
-          </Link>
         </div>
       </div>
 

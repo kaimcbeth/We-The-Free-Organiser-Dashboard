@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { setTeamWhatsapp } from "@/app/actions";
 import { ShareLink } from "@/components/share-link";
 import { inputClass } from "@/components/form";
+import { createClient } from "@/lib/supabase/client";
 
 function WhatsAppIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
@@ -18,13 +19,33 @@ function WhatsAppIcon({ className = "h-5 w-5" }: { className?: string }) {
   );
 }
 
-// Big green "Join our WhatsApp community" button for members.
-export function WhatsAppJoin({ url }: { url: string }) {
-  return (
+// Big green "Join our WhatsApp community" button for members. With `hideOnceJoined`
+// it goes away once they've tapped it (or say they've already joined): we
+// can't see who's in the group, so tapping the link counts as joining.
+export function WhatsAppJoin({
+  url,
+  hideOnceJoined = false,
+}: {
+  url: string;
+  hideOnceJoined?: boolean;
+}) {
+  const [hidden, setHidden] = useState(false);
+  const joined = () => {
+    if (!hideOnceJoined) return;
+    createClient()
+      .rpc("mark_whatsapp_joined")
+      .then(() => {});
+  };
+  if (hidden) return null;
+  const card = (
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={() => {
+        joined();
+        // Leave it on screen while they're off in WhatsApp; gone next visit.
+      }}
       className="flex items-center gap-3 rounded-2xl bg-[#25D366] px-4 py-3.5 font-semibold text-navy shadow-sm hover:brightness-95"
     >
       <WhatsAppIcon className="h-6 w-6 shrink-0" />
@@ -36,6 +57,22 @@ export function WhatsAppJoin({ url }: { url: string }) {
       </span>
       <span aria-hidden>↗</span>
     </a>
+  );
+  if (!hideOnceJoined) return card;
+  return (
+    <div>
+      {card}
+      <button
+        type="button"
+        onClick={() => {
+          joined();
+          setHidden(true);
+        }}
+        className="mt-1.5 text-xs text-stone-400 hover:text-navy hover:underline"
+      >
+        Already joined? Hide this
+      </button>
+    </div>
   );
 }
 

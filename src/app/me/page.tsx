@@ -1,16 +1,11 @@
-import { OriginEditor } from "@/components/origin-editor";
 import { LivePlayers } from "@/components/live-players";
 import { cookies } from "next/headers";
 import { VIEW_AS_COOKIE } from "@/lib/organiser";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { signOut } from "@/app/actions";
 import { DEFAULT_TEAM_SLUG } from "@/lib/teams";
-import { DEFAULT_TZ, formatEventDate, setRequestTz } from "@/lib/time";
-import { ProfileForm } from "./profile-form";
-import { PhotoPicker } from "@/components/photo-picker";
-import { signPhotos } from "@/lib/photos";
+import { DEFAULT_TZ, setRequestTz } from "@/lib/time";
 import { WhatsAppJoin } from "@/components/whatsapp";
 import { PreviewBanner } from "@/components/preview-banner";
 import { TaskCard } from "@/components/task-card";
@@ -35,21 +30,12 @@ type Me = {
   photo_updated_at: string | null;
   tutorial_done_at: string | null;
   notify_channel: "none" | "email" | "push";
+  whatsapp_joined_at: string | null;
   team: {
     name: string;
     whatsapp_url: string | null;
     timezone: string;
     activism_team_url: string | null;
-  } | null;
-};
-
-type Attended = {
-  event: {
-    id: string;
-    title: string;
-    starts_at: string;
-    ends_at: string | null;
-    event_type: { name: string; counts_as_outreach: boolean } | null;
   } | null;
 };
 
@@ -65,7 +51,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     supabase
       .from("people")
       .select(
-        "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, started_on, found_via, found_via_person_id, found_via_note, photo_updated_at, tutorial_done_at, notify_channel, team:teams!people_team_id_fkey(name, whatsapp_url, timezone, activism_team_url)",
+        "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, started_on, found_via, found_via_person_id, found_via_note, photo_updated_at, tutorial_done_at, notify_channel, whatsapp_joined_at, team:teams!people_team_id_fkey(name, whatsapp_url, timezone, activism_team_url)",
       )
       .eq("user_id", user.id)
       .maybeSingle<Me>(),
@@ -133,29 +119,14 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     );
   }
 
-  const { data: rows } = await supabase
-    .from("attendance")
-    .select(
-      "event:events(id, title, starts_at, ends_at, event_type:event_types(name, counts_as_outreach))",
-    )
-    .eq("person_id", me.id)
-    .returns<Attended[]>();
-
-  const events = (rows ?? [])
-    .map((r) => r.event)
-    .filter((e): e is NonNullable<Attended["event"]> => !!e)
-    .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
-  const photos = await signPhotos(supabase, [me]);
   const [
     { data: buddy },
     myTasks,
-    { data: crew },
     { data: upcoming },
     { data: outreachToday },
   ] = await Promise.all([
     supabase.rpc("my_buddy_dashboard"),
     loadMyTasks(supabase, me.id),
-    supabase.rpc("my_team_crew"),
     supabase.rpc("my_upcoming_events"),
     supabase.rpc("my_outreach_today"),
   ]);
@@ -182,34 +153,9 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
           </span>
         </Link>
       )}
-      <PhotoPicker
-        personId={me.id}
-        name={[me.first_name, me.last_name].filter(Boolean).join(" ")}
-        url={photos[me.id] ?? null}
-        size={80}
-      />
-      <p className="mt-4 text-sm text-stone-500">{me.team?.name}</p>
-      <h1 className="text-3xl font-semibold tracking-tight">
-        {[me.first_name, me.last_name].filter(Boolean).join(" ")}
-      </h1>
-
-      <div className="mt-3">
-        <OriginEditor
-          self
-          personId={me.id}
-          initial={{
-            started_on: me.started_on,
-            found_via: me.found_via,
-            found_via_person_id: me.found_via_person_id,
-            found_via_note: me.found_via_note,
-          }}
-          people={(crew as { id: string; name: string }[] | null) ?? []}
-        />
-      </div>
-
-      {me.team?.whatsapp_url && (
-        <div className="mt-6">
-          <WhatsAppJoin url={me.team.whatsapp_url} />
+      {me.team?.whatsapp_url && !me.whatsapp_joined_at && (
+        <div className="mb-6">
+          <WhatsAppJoin url={me.team.whatsapp_url} hideOnceJoined />
         </div>
       )}
 
@@ -285,52 +231,8 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
         </Link>
       )}
 
-      <section className="mt-8">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
-          Your events
-        </h2>
-        {events.length === 0 ? (
-          <p className="text-sm text-stone-500">
-            Your events will show here once an organiser checks you in.
-          </p>
-        ) : (
-          <ul className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-            {events.map((e) => (
-              <li
-                key={e.id}
-                className="flex items-center gap-4 border-b border-black/5 px-4 py-3 last:border-0"
-              >
-                <div className="w-16 shrink-0 text-sm font-medium text-stone-500">
-                  {formatEventDate(e.starts_at)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{e.title}</p>
-                  {e.event_type && (
-                    <p className="truncate text-sm text-stone-500">
-                      {e.event_type.name}
-                    </p>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section id="details" className="mt-8 scroll-mt-4">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
-          Your details
-        </h2>
-        <ProfileForm me={me} />
-      </section>
-
       <div className="mt-10 flex items-center justify-center gap-4">
         <ReplayTour />
-        <form action={signOut}>
-          <button className="text-sm text-stone-400 hover:text-navy hover:underline">
-            Sign out
-          </button>
-        </form>
       </div>
       <MemberTutorial
         firstName={me.first_name}

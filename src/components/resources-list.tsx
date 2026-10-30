@@ -15,11 +15,10 @@ const has = (q: string, ...text: (string | undefined)[]) =>
 export function ResourcesList({
   teamId,
   teamSlug,
-  isGod = false,
 }: {
   teamId: string | null;
   teamSlug: string | null;
-  isGod?: boolean; // God Mode also sees FB groups
+  isGod?: boolean; // (unused now: Facebook groups is for all organisers)
 }) {
   const path = usePathname();
   const [query, setQuery] = useState("");
@@ -267,7 +266,7 @@ export function ResourcesList({
             </span>
           </a>
         )}
-      {isGod && has(q, "facebook fb groups promote local vegan community") && (
+      {!core && has(q, "facebook fb groups promote local vegan community") && (
         <a
           href="/facebook-groups"
           className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
@@ -278,14 +277,12 @@ export function ResourcesList({
                 <span aria-hidden className="mr-1.5">
                   👥
                 </span>
-                FB groups
-              </span>
-              <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-500">
-                God Mode
+                Facebook groups
               </span>
             </span>
             <span className="block text-sm text-stone-600">
-              Local Facebook groups to share events in.
+              Local vegan Facebook groups to share your events in, with Open all
+              to post in every group near you.
             </span>
           </span>
           <span aria-hidden className="text-xl">

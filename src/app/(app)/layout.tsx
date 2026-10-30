@@ -132,7 +132,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
               examples={organiser.exampleMode}
             />
             <Link
-              href="/me"
+              href="/me/profile"
               className="flex min-w-0 items-center gap-2.5 rounded-full p-1 hover:bg-white/10 sm:pl-3"
               aria-label="Your profile"
             >

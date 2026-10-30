@@ -87,6 +87,18 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "People on phones: names get their own line, with tags underneath. Set roles from each person's page.",
+      },
+      {
+        level: "organiser",
+        text: "Facebook groups moved from Actions to its own card in Resources, for all organisers.",
+      },
+      {
+        level: "organiser",
+        text: "Members' Events page is about events now: their photo, details and event history are on their profile (tap your photo in the top corner). The WhatsApp community card disappears once they've tapped it to join, or tapped \"Already joined? Hide this\".",
+      },
+      {
+        level: "organiser",
         text: "Tidier on phones: event names get most of the row (two lines if needed), with a smaller date, just the number of actions, and a small ↗ for activism.wtf. The header keeps Movement Hub on one line with a smaller Alpha tag, and shows just your photo.",
       },
       {

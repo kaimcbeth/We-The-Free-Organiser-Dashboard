@@ -42,7 +42,7 @@ export default async function AttendanceLayout({
               className="h-9 w-auto shrink-0"
             />
             <span className="min-w-0">
-              <EasterEggLogo className="block text-xs font-bold uppercase tracking-wider text-pink" />
+              <EasterEggLogo className="block whitespace-nowrap text-xs font-bold uppercase tracking-wider text-pink" />
               <span className="block truncate text-sm font-medium text-white">
                 {organiser.team.name}
               </span>
@@ -51,7 +51,7 @@ export default async function AttendanceLayout({
           <div className="flex items-center gap-1">
             <NotificationBell supabase={supabase} userId={user.id} />
             <Link
-              href="/me"
+              href="/me/profile"
               className="rounded-full px-3 py-1.5 text-right leading-tight hover:bg-white/10"
             >
               <span className="block text-sm font-medium">My profile</span>

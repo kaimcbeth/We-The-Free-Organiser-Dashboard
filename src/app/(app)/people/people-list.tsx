@@ -205,7 +205,7 @@ export function PeopleList({
                   <Link
                     href={`/people/${p.id}`}
                     data-tour={`person-${p.first_name.toLowerCase()}`}
-                    className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 pr-2"
+                    className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-3 pr-1 sm:pl-4 sm:pr-2"
                   >
                     <Avatar
                       name={[p.first_name, p.last_name]
@@ -215,6 +215,8 @@ export function PeopleList({
                       size={40}
                     />
                     <div className="min-w-0 flex-1">
+                      {/* Name on its own line; tags wrap underneath, so
+                          names stay readable on phones. */}
                       <p className="flex items-center gap-2 font-medium">
                         <span className="truncate">
                           {[p.first_name, p.last_name]
@@ -230,6 +232,8 @@ export function PeopleList({
                             p.connected ? "Account connected" : "No account yet"
                           }
                         />
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5 empty:hidden">
                         {canMove && homeTeamId && communities.length > 1 && (
                           <MoveChip
                             personId={p.id}
@@ -272,8 +276,8 @@ export function PeopleList({
                               New to activism
                             </span>
                           )}
-                      </p>
-                      <p className="truncate text-sm text-stone-500">
+                      </div>
+                      <p className="mt-0.5 truncate text-xs text-stone-500 sm:text-sm">
                         {[p.suburb, p.email, p.phone]
                           .filter(Boolean)
                           .join(" · ") ||
@@ -282,30 +286,32 @@ export function PeopleList({
                     </div>
                   </Link>
                   {(p.facebook_url || p.phone) && (
-                    <span className="mr-2 flex shrink-0 gap-1">
+                    <span className="mr-1 flex shrink-0 gap-1 sm:mr-2">
                       <WhatsAppButton phone={p.phone} tz={tz} small />
                       <MessengerButton facebookUrl={p.facebook_url} small />
                     </span>
                   )}
-                  <RolePicker
-                    personId={p.id}
-                    firstName={p.first_name}
-                    connected={p.connected}
-                    current={p.role}
-                    pending={p.rolePending}
-                    leads={p.leads}
-                    communities={communities}
-                    homeTeamId={homeTeamId}
-                    roleTeamId={p.roleTeamId}
-                    phone={p.phone ?? ""}
-                    email={p.email ?? ""}
-                    gives={gives}
-                    regions={regions}
-                    compact
-                  />
+                  <span className="hidden sm:contents">
+                    <RolePicker
+                      personId={p.id}
+                      firstName={p.first_name}
+                      connected={p.connected}
+                      current={p.role}
+                      pending={p.rolePending}
+                      leads={p.leads}
+                      communities={communities}
+                      homeTeamId={homeTeamId}
+                      roleTeamId={p.roleTeamId}
+                      phone={p.phone ?? ""}
+                      email={p.email ?? ""}
+                      gives={gives}
+                      regions={regions}
+                      compact
+                    />
+                  </span>
                   <Link
                     href={`/people/${p.id}`}
-                    className="w-20 shrink-0 py-3 pr-4 text-right"
+                    className="w-14 shrink-0 py-3 pr-3 text-right sm:w-20 sm:pr-4"
                   >
                     <div>
                       <p className="text-sm font-semibold tabular-nums">

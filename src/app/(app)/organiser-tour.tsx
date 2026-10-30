@@ -201,7 +201,7 @@ export function OrganiserTour({
       tone: "bg-pink",
       title: "Share in local Facebook groups",
       href: "/tasks",
-      target: "task-promote_facebook_groups,fb-groups-link",
+      target: "task-promote_facebook_groups",
       body: "We keep a database of over 600 local vegan Facebook groups. A week before each event, tap “Open all” and every group near you opens in its own tab, ready to post. One click, every group.",
     },
     {
