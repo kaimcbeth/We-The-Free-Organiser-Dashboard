@@ -229,6 +229,16 @@
   .ghost-btn { background: transparent; color: var(--text); box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); }
   .ghost-btn:hover { background: rgba(255,255,255,.08); }
   #player.stopped-on .bar, #player.stopped-on #big-pause, #player.stopped-on .stop-btn { display: none; }
+  /* "Video not working?": smaller and quieter than the stop button */
+  .help-btn {
+    position: absolute; left: clamp(14px, 2vw, 26px); bottom: clamp(70px, 10vh, 96px); z-index: 3;
+    border: 0; background: transparent; padding: 8px 10px; border-radius: 8px;
+    color: rgba(255,255,255,.42); font-size: 13px; font-weight: 500; cursor: pointer;
+  }
+  .help-btn:hover, .help-btn:focus-visible { color: #fff; background: rgba(0,0,0,.5); outline: none; }
+  .help-btn.sample { position: static; display: inline-block; cursor: default; color: rgba(255,255,255,.6); text-decoration: underline; padding: 0; }
+  .intro-help { max-width: 680px; margin: 26px auto 0; font-size: clamp(15px, 1.6vw, 19px); line-height: 1.45; color: #aab0c4; }
+  #player.stopped-on .help-btn { display: none; }
   #name-screen {
     position: fixed; inset: 0; z-index: 25; background: var(--navy);
     display: none; flex-direction: column; align-items: center; justify-content: center;
@@ -368,6 +378,17 @@
     <span id="time"></span>
   </div>
   <button id="stop" class="stop-btn"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="1" y="1" width="12" height="12" rx="2.5" fill="#ff5a5a"/></svg><span class="stop-label">I'm not comfortable watching this anymore</span></button>
+  <button id="help" class="help-btn">Video not working?</button>
+  <div id="problem" class="stopped">
+    <div>
+      <h2 id="problem-title">Thanks for letting us know.</h2>
+      <p id="problem-text">Someone will be with you in a few seconds.</p>
+      <div class="stopped-actions">
+        <button class="btn ghost-btn" id="problem-restart">Start again</button>
+        <button class="btn" id="problem-resume">Keep watching</button>
+      </div>
+    </div>
+  </div>
   <div id="stopped" class="stopped">
     <div>
       <h2 id="stopped-title">That's completely okay.</h2>
@@ -394,6 +415,7 @@
     <h2 id="intro-title">Before you start</h2>
     <p id="intro-text" class="intro-text">We really encourage you to try to see it through. But if it's ever too much, you can stop at any time with this button:</p>
     <div class="stop-btn sample" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="1" y="1" width="12" height="12" rx="2.5" fill="#ff5a5a"/></svg><span class="stop-label">I'm not comfortable watching this anymore</span></div>
+    <p class="intro-help"><span id="intro-help">If the video isn't playing properly (no sound, or it freezes), tap this in the bottom-left corner:</span> <span class="help-btn sample help-label">Video not working?</span></p>
     <button class="btn big" id="intro-start">Start the film</button>
     <button class="link" id="intro-back">Back</button>
   </div>
@@ -483,7 +505,12 @@
         stoppedTitle: "完全没关系。",
         stoppedText: "马上就会有人过来。",
         keepWatching: "其他人继续观看",
-        finish: "结束"
+        finish: "结束",
+        helpBtn: "视频无法正常播放？",
+        introHelp: "如果视频无法正常播放（没有声音或画面卡住），请点击左下角的：",
+        problemTitle: "谢谢您告诉我们。",
+        resume: "继续观看",
+        restart: "从头开始"
       },
       films: { standard: "标准版", children: "儿童版", vegetarian: "素食者版", halal: "清真版" }
     },
@@ -526,7 +553,12 @@
     stoppedTitle: "That's completely okay.",
     stoppedText: "Someone will be with you in a few seconds.",
     keepWatching: "Keep watching for the others",
-    finish: "Finish"
+    finish: "Finish",
+    helpBtn: "Video not working?",
+    introHelp: "If the video isn't playing properly (no sound, or it freezes), tap this in the bottom-left corner:",
+    problemTitle: "Thanks for letting us know.",
+    resume: "Keep watching",
+    restart: "Start again"
   };
   function fill(text, n, t) { return text.replace("{n}", n).replace("{t}", t); }
   function canonLang(word) {
@@ -700,6 +732,13 @@
     $("stopped-text").textContent = t.stoppedText;
     $("keep-watching").textContent = t.keepWatching;
     $("stopped-finish").textContent = t.finish;
+    Array.prototype.forEach.call(document.querySelectorAll(".help-label, #help"), function (el) { el.textContent = t.helpBtn || EN_UI.helpBtn; });
+    $("intro-help").textContent = t.introHelp || EN_UI.introHelp;
+    $("problem-title").textContent = t.problemTitle || EN_UI.problemTitle;
+    $("problem-text").textContent = t.stoppedText;
+    $("problem-resume").textContent = t.resume || EN_UI.resume;
+    $("problem-restart").textContent = t.restart || EN_UI.restart;
+    $("problem").dir = dir;
     $("survey").dir = dir;
     $("count").dir = dir;
     $("intro").dir = dir;
@@ -954,6 +993,8 @@
   }
   function stopVideo() {
     stoppedNow = false;
+    problemNow = false;
+    $("problem").classList.remove("on");
     $("stopped").classList.remove("on");
     player.classList.remove("stopped-on");
     video.pause();
@@ -997,7 +1038,7 @@
   video.addEventListener("play", function () { userPaused = false; });
   video.addEventListener("playing", function () { stuckSince = 0; nudged = false; });
   setInterval(function () {
-    if (!current || stoppedNow || userPaused || !video.getAttribute("src") || $("err").classList.contains("on")) {
+    if (!current || stoppedNow || problemNow || userPaused || !video.getAttribute("src") || $("err").classList.contains("on")) {
       stuckSince = 0; lastT = -1; return;
     }
     var t = video.currentTime;
@@ -1062,7 +1103,7 @@
       else if (e.key === "Escape" || e.key === "Backspace") $("intro-back").click();
       return;
     }
-    if ($("stopped").classList.contains("on")) return;
+    if ($("stopped").classList.contains("on") || $("problem").classList.contains("on")) return;
     if ($("count").classList.contains("on")) {
       if (/^[1-9]$/.test(e.key)) chooseCount(+e.key);
       else if (e.key === "Escape" || e.key === "Backspace") closeCount();
@@ -1184,7 +1225,7 @@
     } else claim(true);
     var c = current || (surveyFilm ? { tile: surveyFilm, version: surveyVersion, viewers: surveyTotal } : null);
     var left = null, d = null;
-    if (liveState === "playing" || liveState === "paused" || liveState === "stopped") {
+    if (liveState === "playing" || liveState === "paused" || liveState === "stopped" || liveState === "problem") {
       d = isFinite(video.duration) && video.duration ? video.duration : (c && c.version.secs) || null;
       left = d ? Math.max(0, d - video.currentTime) / (video.playbackRate || 1) : null;
     }
@@ -1204,7 +1245,7 @@
   }
   video.addEventListener("playing", function () { status("playing"); });
   video.addEventListener("durationchange", function () { if (current && !video.paused) status("playing"); });
-  video.addEventListener("pause", function () { if (current && !video.ended && !stoppedNow) status("paused"); });
+  video.addEventListener("pause", function () { if (current && !video.ended && !stoppedNow && !problemNow) status("paused"); });
   video.addEventListener("seeked", function () { if (current && !video.paused) status("playing"); });
   video.addEventListener("ratechange", function () { if (current && !video.paused) status("playing"); });
   // Heartbeat: keeps the phone's countdown honest and shows the laptop is online.
@@ -1246,6 +1287,40 @@
     $("stopped").classList.remove("on");
     player.classList.remove("stopped-on");
     video.play();
+  };
+  // ---------- "Video not working?" ----------
+  // Pauses the film and alerts the live screen straight away (no tapout).
+  var problemNow = false;
+  $("help").addEventListener("click", function (e) {
+    e.stopPropagation();
+    if (!current || stoppedNow || problemNow) return;
+    problemNow = true;
+    video.pause();
+    clearTimeout(idleTimer);
+    player.classList.remove("idle", "paused");
+    player.classList.add("stopped-on");
+    $("problem").classList.add("on");
+    status("problem");
+  });
+  function endProblem() {
+    problemNow = false;
+    $("problem").classList.remove("on");
+    player.classList.remove("stopped-on");
+  }
+  $("problem-resume").onclick = function () {
+    endProblem();
+    userPaused = false;
+    var p = video.play();
+    if (p && p.catch) p.catch(function () { setPaused(); });
+    status("playing");
+  };
+  $("problem-restart").onclick = function () {
+    endProblem();
+    userPaused = false;
+    try { video.currentTime = 0; } catch (e) {}
+    var p = video.play();
+    if (p && p.catch) p.catch(function () { setPaused(); });
+    status("playing");
   };
   $("stopped-finish").onclick = function () {
     var c = current;

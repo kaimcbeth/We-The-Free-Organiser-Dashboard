@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 type Player = {
   device: string;
   laptop: string;
-  state: "idle" | "playing" | "paused" | "survey" | "stopped";
+  state: "idle" | "playing" | "paused" | "survey" | "stopped" | "problem";
   film: string | null;
   language: string | null;
   seconds_left: number | null;
@@ -171,6 +171,27 @@ export function LivePlayers({
   useEffect(() => {
     if (!players || !now) return;
     for (const p of players) {
+      if (p.state === "problem" && !offline(p)) {
+        const key = `${p.device}|problem|${p.updated_at.slice(0, 16)}|${p.film}`;
+        const any = [...alerted.current].some((k) =>
+          k.startsWith(`${p.device}|problem|`),
+        );
+        if (!any) {
+          alerted.current.add(key);
+          if (!alertsOn) continue;
+          if (audio.current) urgent(audio.current);
+          navigator.vibrate?.([500, 150, 500, 150, 500]);
+          notify(
+            `${p.laptop}: video not working`,
+            `${p.film ?? "Film"}: they've paused it and need a hand.`,
+            `player-${p.device}`,
+          );
+        }
+        continue;
+      }
+      // Ready to alert again next time the button is pressed.
+      for (const k of [...alerted.current])
+        if (k.startsWith(`${p.device}|problem|`)) alerted.current.delete(k);
       if (p.state === "stopped" && !offline(p)) {
         const key = `${p.device}|stop|${p.stopped_at}|${p.film}`;
         if (!alerted.current.has(key)) {
@@ -276,7 +297,8 @@ export function LivePlayers({
         <p className="mt-1 text-sm text-stone-600">
           The Movie Challenge laptops right now. Pink: a film ends in 10
           seconds, then stays pink once they&apos;ve answered and are ready to
-          chat. Red: someone tapped out and may need support.
+          chat. Red: someone tapped out and may need support. Yellow: the video
+          isn&apos;t playing properly.
         </p>
       )}
       {players.length === 0 ? (
@@ -294,39 +316,44 @@ export function LivePlayers({
             const ending =
               !off && p.state === "playing" && s !== null && s <= WARN;
             const stopped = !off && p.state === "stopped";
+            const problem = !off && p.state === "problem";
             const fin = done[p.device];
             const finished =
               !off && p.state === "idle" && !!fin && now - fin.at < 60000;
             const tone = off
               ? "bg-stone-100 text-stone-500 ring-stone-200"
-              : stopped
-                ? "bg-red-600 text-white ring-4 ring-red-600/40 motion-safe:animate-[stopring_1s_ease-in-out_infinite]"
-                : ending
-                  ? "bg-pink text-navy ring-4 ring-pink/40 motion-safe:animate-[ring_1s_ease-in-out_infinite]"
-                  : finished
-                    ? "bg-pink text-navy ring-4 ring-pink/40"
-                    : p.state === "playing" || p.state === "paused"
-                      ? "bg-navy text-white ring-navy"
-                      : p.state === "survey"
-                        ? "bg-cyan/25 text-navy ring-cyan"
-                        : "bg-white text-navy ring-black/5";
+              : problem
+                ? "bg-amber-400 text-navy ring-4 ring-amber-400/50 motion-safe:animate-[ring_1s_ease-in-out_infinite]"
+                : stopped
+                  ? "bg-red-600 text-white ring-4 ring-red-600/40 motion-safe:animate-[stopring_1s_ease-in-out_infinite]"
+                  : ending
+                    ? "bg-pink text-navy ring-4 ring-pink/40 motion-safe:animate-[ring_1s_ease-in-out_infinite]"
+                    : finished
+                      ? "bg-pink text-navy ring-4 ring-pink/40"
+                      : p.state === "playing" || p.state === "paused"
+                        ? "bg-navy text-white ring-navy"
+                        : p.state === "survey"
+                          ? "bg-cyan/25 text-navy ring-cyan"
+                          : "bg-white text-navy ring-black/5";
             const what = off
               ? "Offline"
-              : stopped
-                ? `Tapout at ${mmss(p.stopped_at ?? 0)}`
-                : finished
-                  ? "Finished · ready to chat"
-                  : p.state === "playing"
-                    ? ending
-                      ? s! > 0
-                        ? `Finishing in ${Math.ceil(s!)}s`
-                        : "Finishing now"
-                      : `${mmss(s ?? 0)} left`
-                    : p.state === "paused"
-                      ? `Paused · ${mmss(p.seconds_left ?? 0)} left`
-                      : p.state === "survey"
-                        ? "Answering the question"
-                        : "Free";
+              : problem
+                ? "Video not working · needs a hand"
+                : stopped
+                  ? `Tapout at ${mmss(p.stopped_at ?? 0)}`
+                  : finished
+                    ? "Finished · ready to chat"
+                    : p.state === "playing"
+                      ? ending
+                        ? s! > 0
+                          ? `Finishing in ${Math.ceil(s!)}s`
+                          : "Finishing now"
+                        : `${mmss(s ?? 0)} left`
+                      : p.state === "paused"
+                        ? `Paused · ${mmss(p.seconds_left ?? 0)} left`
+                        : p.state === "survey"
+                          ? "Answering the question"
+                          : "Free";
             return (
               <li
                 key={p.device}

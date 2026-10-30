@@ -103,6 +103,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: 'Movie player: a small "Video not working?" link in the bottom-left corner (quieter than the tapout button), mentioned on the Before you start screen. Tapping it pauses the film, tells them someone\'s coming, and alerts your phone straight away (yellow card on the live screen). They can keep watching or start again. Download the player again to get it.',
+      },
+      {
+        level: "organiser",
         text: 'The Outreach guide\'s "Create your account" prompt now says what newcomers get: events and reminders, the Photo Hub, their impact, and a way to send feedback and ideas.',
       },
     ],
