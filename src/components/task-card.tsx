@@ -26,6 +26,7 @@ import { FbEventLink } from "@/components/fb-event-link";
 import { ScriptButton } from "@/components/script-button";
 import { CopyMaker, type CopyPlatform } from "@/components/copy-maker";
 import { MonthCarousel } from "@/components/month-carousel";
+import { ScheduleChanger } from "@/components/schedule-changer";
 import { FbGroupsButton } from "@/components/fb-groups-button";
 import { inputClass } from "@/components/form";
 import {
@@ -338,6 +339,11 @@ export function TaskCard({
           )}
           {task.description && !done && (
             <p className="mt-1 text-sm text-stone-600">{task.description}</p>
+          )}
+          {task.kind === "com_feedback" && !done && (
+            <p className="mt-1">
+              <ScheduleChanger kind={task.kind} />
+            </p>
           )}
           {task.hangoutUrl && !done && (
             <a

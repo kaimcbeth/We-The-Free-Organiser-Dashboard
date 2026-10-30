@@ -75,6 +75,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Feedback Fridays: Volunteer feedback collected is now Feedback Friday: form shared, on by default on the 3rd Friday of each month (it was every 3 months). Change the week and day on the action itself.",
+      },
+      {
+        level: "organiser",
         text: "Special events are now an event category: on an event's page, mark it as (say) 🎄 Christmas social. Events with Christmas, Halloween etc. in the title are marked automatically. Special events get a Special event promoted action every week from 8 weeks before, on top of the usual promote actions.",
       },
       {

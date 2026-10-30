@@ -1333,3 +1333,48 @@ export async function getAttendeesList(eventId: string) {
   );
   return { invites, eventTitle: "" };
 }
+
+// Which week and day of the month an action comes up on (e.g. Feedback
+// Fridays: 3rd Friday), for this community.
+export async function getTaskSchedule(
+  kind: string,
+): Promise<{ week: number; weekday: number } | null> {
+  const { supabase, organiser } = await requireOrganiser();
+  const [{ data: k }, { data: mine }] = await Promise.all([
+    supabase
+      .from("task_kinds")
+      .select("schedule_week, schedule_weekday")
+      .eq("kind", kind)
+      .maybeSingle(),
+    supabase
+      .from("team_task_kinds")
+      .select("schedule_week, schedule_weekday")
+      .eq("team_id", organiser.team_id)
+      .eq("kind", kind)
+      .maybeSingle(),
+  ]);
+  const week = mine?.schedule_week ?? k?.schedule_week;
+  if (!week) return null;
+  return {
+    week,
+    weekday: mine?.schedule_weekday ?? k?.schedule_weekday ?? 5,
+  };
+}
+
+export async function setTaskSchedule(
+  kind: string,
+  week: number,
+  weekday: number,
+): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  if (organiser.tourPreview) return {};
+  const { data, error } = await supabase.rpc("set_task_schedule", {
+    p_team_id: organiser.team_id,
+    p_kind: kind,
+    p_week: week,
+    p_weekday: weekday,
+  });
+  if (error || data !== "ok") return { error: "Couldn't save that." };
+  revalidatePath("/tasks");
+  return {};
+}
