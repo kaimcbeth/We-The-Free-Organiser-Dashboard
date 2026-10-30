@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { LivePlayers } from "@/components/live-players";
+import { showLivePlayers } from "@/lib/live-window";
 import { requireCore } from "@/lib/organiser";
 import { formatEventDate, formatTimeRange } from "@/lib/time";
 import type { HelperState } from "@/app/checkin/[token]/helper-check-in";
@@ -58,6 +60,11 @@ export default async function CoreAttendancePage({
         eventId={id}
         photos={photos}
       />
+      {showLivePlayers(e.title, e.starts_at, e.ends_at) && (
+        <div className="mt-6">
+          <LivePlayers />
+        </div>
+      )}
       <CoreCheckIn eventId={id} state={state} />
     </div>
   );

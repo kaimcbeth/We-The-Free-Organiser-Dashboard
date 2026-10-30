@@ -224,7 +224,7 @@ export function LivePlayers({ teamId }: { teamId?: string }) {
         <p className="mt-1 text-sm text-stone-600">
           Laptops show here while the player is open and online (a phone hotspot
           is fine), with a countdown for each film and an alert {WARN} seconds
-          before it ends. Each laptop asks for its name (A, B, C…) when the
+          before it ends. Each laptop asks for its name (A, B, C or D) when the
           player opens at an event.
         </p>
       ) : (

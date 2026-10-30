@@ -91,11 +91,15 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Movie Challenge event pages show the live laptops too, from an hour before the event until an hour after.",
+      },
+      {
+        level: "organiser",
         text: "Everyone in your community (Core Team and members too) sees the live laptops on their Events page while the player is running at an event.",
       },
       {
         level: "organiser",
-        text: "The player asks which laptop it is (A, B, C…) when you open it at each event, so you know which one to walk to. Change it any time from the corner of the menu.",
+        text: "The player asks which laptop it is (A, B, C or D) when you open it at each event, so you know which one to walk to. Change it any time from the corner of the menu.",
       },
       {
         level: "organiser",

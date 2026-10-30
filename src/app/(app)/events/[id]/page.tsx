@@ -1,4 +1,6 @@
 import { WhosComing } from "./whos-coming";
+import { LivePlayers } from "@/components/live-players";
+import { showLivePlayers } from "@/lib/live-window";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
@@ -266,6 +268,18 @@ export default async function EventCheckInPage({
           )}
         </div>
       </div>
+
+      {showLivePlayers(event.title, event.starts_at, event.ends_at) && (
+        <div className="mt-6">
+          <LivePlayers teamId={event.team_id} />
+          <Link
+            href="/resources/movie-player"
+            className="mt-2 inline-block text-xs font-medium text-stone-500 hover:text-stone-800 hover:underline"
+          >
+            Movie player: set-up and results →
+          </Link>
+        </div>
+      )}
 
       <WhosComing supabase={supabase} eventId={event.id} />
 
