@@ -11,7 +11,7 @@ export default async function WelcomePage() {
   if (!user) redirect("/login");
   return (
     <>
-      <WelcomeFlow doneHref="/me#coming-up" />
+      <WelcomeFlow doneHref="/me#coming-up" track />
     </>
   );
 }

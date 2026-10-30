@@ -30,6 +30,7 @@ type Me = {
   tutorial_done_at: string | null;
   notify_channel: "none" | "email" | "push";
   whatsapp_joined_at: string | null;
+  welcome_done_at: string | null;
   team: {
     name: string;
     whatsapp_url: string | null;
@@ -50,7 +51,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
     supabase
       .from("people")
       .select(
-        "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, started_on, found_via, found_via_person_id, found_via_note, photo_updated_at, tutorial_done_at, notify_channel, whatsapp_joined_at, team:teams!people_team_id_fkey(name, whatsapp_url, timezone, activism_team_url)",
+        "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, started_on, found_via, found_via_person_id, found_via_note, photo_updated_at, tutorial_done_at, notify_channel, whatsapp_joined_at, welcome_done_at, team:teams!people_team_id_fkey(name, whatsapp_url, timezone, activism_team_url)",
       )
       .eq("user_id", user.id)
       .maybeSingle<Me>(),
@@ -136,7 +137,7 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
       <div className="mb-6 empty:hidden">
         <LivePlayers />
       </div>
-      {welcome && (
+      {welcome && !me.welcome_done_at && (
         <Link
           href="/me/welcome"
           className="mb-6 block rounded-2xl bg-pink p-4 text-navy shadow-sm hover:bg-pink-strong"
@@ -171,14 +172,16 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
         </Link>
       ) : null}
 
-      <div className="mt-6">
-        <Link
-          href="/me/welcome"
-          className="inline-block text-sm font-medium text-pink-ink hover:underline"
-        >
-          Welcome to We The Free →
-        </Link>
-      </div>
+      {!me.welcome_done_at && (
+        <div className="mt-6">
+          <Link
+            href="/me/welcome"
+            className="inline-block text-sm font-medium text-pink-ink hover:underline"
+          >
+            Welcome to We The Free →
+          </Link>
+        </div>
+      )}
 
       <section id="coming-up" className="mt-8 scroll-mt-4">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">

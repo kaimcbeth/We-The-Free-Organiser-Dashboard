@@ -13,8 +13,19 @@ export default function MemberResourcesPage() {
         Handy to have on your phone at events.
       </p>
       <a
-        href="/me/resources/signs"
+        href="/me/welcome"
         className="mt-6 block rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 hover:ring-pink"
+      >
+        <p className="font-semibold">
+          <span className="mr-1.5">👋</span>Welcome to We The Free
+        </p>
+        <p className="mt-1 text-sm text-stone-600">
+          Who we are, what we stand for and what to expect at an event.
+        </p>
+      </a>
+      <a
+        href="/me/resources/signs"
+        className="mt-3 block rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 hover:ring-pink"
       >
         <p className="font-semibold">
           <span className="mr-1.5">🖨️</span>Sign splitter

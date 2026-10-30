@@ -87,6 +87,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Members' Events page stops showing \"Welcome to We The Free\" once they've been through it (it's in their Resources to read again).",
+      },
+      {
+        level: "organiser",
         text: "Photo Hub on phones: long-press a photo to start selecting, then tap more to add them. What to get next shows the dollar amounts in bold.",
       },
       {

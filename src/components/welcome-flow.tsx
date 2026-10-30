@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import {
   MENTAL_HEALTH_URL,
   THEORY_OF_CHANGE_URL,
@@ -9,7 +10,14 @@ import {
 } from "@/lib/welcome";
 
 // "Welcome to We The Free": a few cards on mission and values for new members.
-export function WelcomeFlow({ doneHref = "/me" }: { doneHref?: string }) {
+// With `track`, reaching the last card marks it done for this member.
+export function WelcomeFlow({
+  doneHref = "/me",
+  track = false,
+}: {
+  doneHref?: string;
+  track?: boolean;
+}) {
   const [i, setI] = useState(0);
   const card = WELCOME_CARDS[i];
   const last = i === WELCOME_CARDS.length - 1;
@@ -96,7 +104,13 @@ export function WelcomeFlow({ doneHref = "/me" }: { doneHref?: string }) {
           ) : (
             <button
               type="button"
-              onClick={() => setI(i + 1)}
+              onClick={() => {
+                if (track && i + 1 === WELCOME_CARDS.length - 1)
+                  createClient()
+                    .rpc("mark_welcome_done")
+                    .then(() => {});
+                setI(i + 1);
+              }}
               className="flex-1 rounded-2xl bg-pink px-4 py-3 font-semibold text-navy hover:bg-pink-strong"
             >
               Next
