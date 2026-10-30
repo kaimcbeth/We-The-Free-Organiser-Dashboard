@@ -57,3 +57,14 @@ body {
     opacity: 0.8;
   }
 }
+
+/* Movie player live screen: a film about to end */
+@keyframes ring {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(255 71 185 / 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgb(255 71 185 / 0);
+  }
+}

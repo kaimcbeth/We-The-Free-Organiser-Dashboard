@@ -89,6 +89,16 @@
   .tile .title { font-size: clamp(20px, 2.2vw, 30px); font-weight: 700; line-height: 1.15; }
   .tile .len { margin-top: 6px; color: var(--muted); font-size: 15px; min-height: 1.2em; }
 
+  /* Language buttons */
+  .langs { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 0 auto clamp(18px, 3vh, 32px); }
+  .langs button {
+    border: 0; border-radius: 999px; padding: 10px 20px; font-size: 17px; font-weight: 600;
+    background: var(--navy-2); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+  }
+  .langs button:hover { box-shadow: inset 0 0 0 2px var(--pink); }
+  .langs button[aria-pressed="true"] { background: var(--pink); color: var(--navy); box-shadow: none; }
+  .lang-select { background: var(--navy); border-radius: 8px; padding: 3px 6px; font-size: 12px; flex: none; }
+
   /* Edit mode */
   .tile.editing { cursor: default; transform: none; justify-content: flex-start; padding-top: 80px; }
   .tile.editing .play { display: none; }
@@ -109,6 +119,8 @@
   .version { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; font-size: 13px; color: #c9cee0; word-break: break-all; border-top: 1px solid rgba(255,255,255,.08); }
   .join { margin-top: 10px; background: var(--navy); padding: 8px 12px; border-radius: 10px; width: 100%; }
   .file-name { margin-top: 8px; font-size: 12px; color: var(--muted); word-break: break-all; }
+  .laptop-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 12px; color: var(--muted); font-size: 15px; }
+  .laptop-row .field { width: 160px; font-size: 16px; padding: 6px 10px; }
   #title-field { max-width: 720px; margin: 10px auto 0; text-align: center; font-size: 22px; }
 
   footer {
@@ -185,7 +197,34 @@
     display: none; flex-direction: column; align-items: center; justify-content: center;
     padding: clamp(20px, 4vw, 56px); text-align: center;
   }
-  #survey.on { display: flex; }
+  #survey.on, #count.on { display: flex; }
+  #count {
+    position: fixed; inset: 0; z-index: 15; background: var(--navy);
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    padding: clamp(20px, 4vw, 56px); text-align: center;
+  }
+  #count h2 { margin: 0; font-size: clamp(26px, 3.6vw, 46px); font-weight: 800; line-height: 1.15; }
+  .ask { width: 100%; max-width: 1100px; display: flex; flex-direction: column; align-items: center; }
+  .counts { display: grid; grid-template-columns: repeat(6, 1fr); gap: clamp(8px, 1.4vw, 18px); width: 100%; max-width: 900px; margin-top: clamp(28px, 6vh, 56px); }
+  .counts button, .step {
+    border: 0; border-radius: 18px; background: var(--navy-2);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
+    font-size: clamp(26px, 3.4vw, 48px); font-weight: 800; padding: clamp(18px, 3vh, 34px) 0;
+    transition: transform .12s ease, background .12s ease;
+  }
+  .counts button.more { font-size: clamp(16px, 1.8vw, 24px); }
+  .counts button:hover, .counts button:focus-visible, .step:hover { outline: none; background: var(--pink); color: var(--navy); transform: translateY(-3px); }
+  .more-row { display: flex; align-items: center; gap: 18px; margin-top: 28px; }
+  .more-row .step { width: 84px; padding: 14px 0; }
+  #more-n { font-size: clamp(36px, 4vw, 56px); font-weight: 800; min-width: 80px; font-variant-numeric: tabular-nums; }
+  #count-back { margin-top: clamp(28px, 6vh, 56px); }
+  @media (max-width: 700px) { .counts { grid-template-columns: repeat(3, 1fr); } }
+  .person {
+    display: inline-block; margin-bottom: 18px; padding: 8px 18px; border-radius: 999px;
+    background: var(--cyan); color: var(--navy); font-weight: 800; font-size: clamp(16px, 1.8vw, 22px);
+  }
+  .thanks-next { display: block; margin-top: 14px; font-size: clamp(20px, 2.2vw, 30px); color: var(--cyan); }
+  #ask { width: 100%; max-width: 1100px; display: flex; flex-direction: column; align-items: center; }
   #survey h2 { margin: 0; font-size: clamp(26px, 3.6vw, 46px); font-weight: 800; line-height: 1.15; max-width: 960px; letter-spacing: -.01em; }
   .scale { display: grid; grid-template-columns: repeat(11, 1fr); gap: clamp(6px, 1vw, 14px); width: 100%; max-width: 1100px; margin-top: clamp(28px, 6vh, 56px); }
   .scale button {
@@ -194,6 +233,7 @@
     font-size: clamp(20px, 2.6vw, 36px); font-weight: 800;
     transition: transform .12s ease, background .12s ease;
   }
+  #survey.fresh .scale button:hover { background: var(--navy-2); color: inherit; transform: none; }
   .scale button:hover, .scale button:focus-visible { outline: none; background: var(--pink); color: var(--navy); transform: translateY(-3px); }
   .ends { display: flex; justify-content: space-between; width: 100%; max-width: 1100px; margin-top: 14px; color: var(--muted); font-size: clamp(14px, 1.5vw, 19px); }
   #skip { margin-top: clamp(28px, 6vh, 56px); }
@@ -233,8 +273,13 @@
     <div class="brand">We The Free</div>
     <h1 id="heading">3-Minute Movie Challenge</h1>
     <input id="title-field" class="field" hidden aria-label="Menu title">
+    <label id="laptop-row" class="laptop-row" hidden>This laptop's name
+      <input id="laptop-field" class="field" maxlength="40" placeholder="e.g. A">
+    </label>
     <p class="sub" id="subline">Choose a film to watch</p>
   </header>
+
+  <nav id="langs" class="langs" hidden aria-label="Language"></nav>
 
   <div id="notice" class="notice" hidden></div>
 
@@ -263,7 +308,7 @@
   <video id="video" playsinline preload="auto"></video>
   <div id="big-pause"><svg width="44" height="44" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div>
   <div class="bar top">
-    <button class="ghost" id="back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Menu</button>
+    <button class="ghost" id="back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span id="back-label">Menu</span></button>
     <span id="now"></span>
   </div>
   <div class="bar bottom">
@@ -274,14 +319,29 @@
   <div id="err"><div><p id="err-text"></p><button class="btn" id="err-back">Back to menu</button></div></div>
 </div>
 
+<div id="count" class="overlay" role="dialog" aria-label="How many are watching">
+  <div class="ask">
+    <h2 id="count-q">How many people are watching?</h2>
+    <div class="counts" id="counts"></div>
+    <div id="more-row" class="more-row" hidden>
+      <button class="step" id="minus" aria-label="One fewer">−</button>
+      <span id="more-n">6</span>
+      <button class="step" id="plus" aria-label="One more">+</button>
+      <button class="btn" id="start-more">Start</button>
+    </div>
+    <button class="link" id="count-back">Back</button>
+  </div>
+</div>
+
 <div id="survey" role="dialog" aria-label="Quick question">
   <div id="ask">
-    <h2>How much did viewing this video impact you?</h2>
+    <div id="person" class="person" hidden></div>
+    <h2 id="q">How much did viewing this video impact you?</h2>
     <div class="scale" id="scale"></div>
-    <div class="ends"><span>0: Not at all</span><span>10: Extremely impactful</span></div>
+    <div class="ends"><span id="end0">0: Not at all</span><span id="end10">10: Extremely impactful</span></div>
     <button class="link" id="skip">Skip</button>
   </div>
-  <div id="thanks" hidden>Thank you!<small>Have a chat with one of our volunteers.</small></div>
+  <div id="thanks" hidden><span id="thanks-main">Thank you!</span><span id="thanks-next" class="thanks-next" hidden></span><small id="thanks-sub">Have a chat with one of our volunteers.</small></div>
 </div>
 
 <div id="results" role="dialog" aria-label="Survey results">
@@ -310,6 +370,103 @@
   // send the survey answers, and which community they're for.
   var CONFIG = /*WTF_CONFIG*/null;
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
+
+  // Languages. A video is in a language when its file name ends with
+  // " - <language>", e.g. "Standard - Mandarin.mp4" or "Standard A - Mandarin.mp4".
+  // No ending = English. "ui" translates the viewer's screens (the survey
+  // question too); "films" translates common tile names. Languages without
+  // "ui" still work, with the screens in English.
+  var LANGS = {
+    English: { native: "English" },
+    Mandarin: {
+      native: "中文",
+      aliases: ["chinese", "mandarin chinese", "putonghua", "中文", "普通话", "简体中文"],
+      ui: {
+        choose: "请选择要观看的影片",
+        menu: "菜单",
+        q: "观看这段视频对您的触动有多大？",
+        end0: "0：完全没有",
+        end10: "10：触动极大",
+        skip: "跳过",
+        thanks: "谢谢！",
+        chat: "欢迎和我们的志愿者聊一聊。",
+        howMany: "请问有几位一起观看？",
+        more: "更多",
+        start: "开始",
+        back: "返回",
+        person: "第 {n} 位（共 {t} 位）",
+        next: "下面请第 {n} 位。"
+      },
+      films: { standard: "标准版", children: "儿童版", vegetarian: "素食者版", halal: "清真版" }
+    },
+    Cantonese: { native: "廣東話", aliases: ["粤语", "廣東話"] },
+    Arabic: { native: "العربية", dir: "rtl" },
+    Hindi: { native: "हिन्दी" },
+    Japanese: { native: "日本語" },
+    Korean: { native: "한국어" },
+    Vietnamese: { native: "Tiếng Việt" },
+    Indonesian: { native: "Bahasa Indonesia" },
+    Malay: { native: "Bahasa Melayu" },
+    Thai: { native: "ไทย" },
+    Tagalog: { native: "Tagalog", aliases: ["filipino"] },
+    Spanish: { native: "Español" },
+    Portuguese: { native: "Português" },
+    French: { native: "Français" },
+    German: { native: "Deutsch" },
+    Italian: { native: "Italiano" },
+    Greek: { native: "Ελληνικά" },
+    Russian: { native: "Русский" },
+    Turkish: { native: "Türkçe" },
+    Persian: { native: "فارسی", dir: "rtl", aliases: ["farsi"] },
+    Urdu: { native: "اردو", dir: "rtl" },
+    Punjabi: { native: "ਪੰਜਾਬੀ" },
+    Bengali: { native: "বাংলা" },
+    Tamil: { native: "தமிழ்" },
+    Nepali: { native: "नेपाली" }
+  };
+  var EN_UI = {
+    choose: "Choose a film to watch", menu: "Menu",
+    q: "How much did viewing this video impact you?",
+    end0: "0: Not at all", end10: "10: Extremely impactful",
+    skip: "Skip", thanks: "Thank you!", chat: "Have a chat with one of our volunteers.",
+    howMany: "How many people are watching?", more: "More", start: "Start", back: "Back",
+    person: "Person {n} of {t}", next: "Now Person {n}."
+  };
+  function fill(text, n, t) { return text.replace("{n}", n).replace("{t}", t); }
+  function canonLang(word) {
+    var w = String(word || "").trim().toLowerCase();
+    if (!w) return null;
+    for (var k in LANGS) {
+      if (k.toLowerCase() === w) return k;
+      if ((LANGS[k].aliases || []).indexOf(w) >= 0) return k;
+    }
+    return null;
+  }
+  // "Standard A - Mandarin.mp4" -> { base: "Standard A", lang: "Mandarin" }
+  function splitName(name) {
+    var stem = name.replace(/\.[^.]+$/, "");
+    var m = stem.match(/^(.*?)\s*[-–_(]\s*([^-–_()]+?)\)?\s*$/);
+    var lang = m && m[1] ? canonLang(m[2]) : null;
+    return lang ? { base: m[1], lang: lang } : { base: stem, lang: "English" };
+  }
+  function ui(lang) {
+    var t = (LANGS[lang] && LANGS[lang].ui) || {};
+    var out = {};
+    for (var k in EN_UI) out[k] = t[k] || EN_UI[k];
+    return out;
+  }
+  function filmKey(title) {
+    var t = title.toLowerCase().replace(/[’'`]/g, "");
+    if (/^standard/.test(t)) return "standard";
+    if (/^(childrens?|kids)/.test(t)) return "children";
+    if (/^vegetarian/.test(t)) return "vegetarian";
+    if (/^halal/.test(t)) return "halal";
+    return null;
+  }
+  function tileTitle(tile, lang) {
+    var f = LANGS[lang] && LANGS[lang].films, k = filmKey(tile.title);
+    return f && k && f[k] ? f[k] : tile.title;
+  }
   var $ = function (id) { return document.getElementById(id); };
   var ICON_PLAY = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
   var ICON_PAUSE = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
@@ -329,6 +486,10 @@
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { memoryOnly = true; }
   }
+  state.tiles.forEach(function (t) {
+    t.versions.forEach(function (v) { if (!v.lang) v.lang = splitName(v.name).lang; });
+  });
+  if (!state.lang) state.lang = "English";
 
   // Videos picked in this session play straight from the chosen file. On later
   // visits they play from the same folder as this player, by file name.
@@ -336,7 +497,7 @@
   var editing = false;
 
   function niceTitle(name) {
-    var t = name.replace(/\.[^.]+$/, "").replace(/[_\-.]+/g, " ").replace(/\s+/g, " ").trim();
+    var t = splitName(name).base.replace(/[_\-.]+/g, " ").replace(/\s+/g, " ").trim();
     return t ? t.charAt(0).toUpperCase() + t.slice(1) : name;
   }
   function fmt(s) {
@@ -354,30 +515,82 @@
     $("heading").textContent = state.title;
     $("heading").hidden = editing;
     $("title-field").hidden = !editing;
+    $("laptop-row").hidden = !editing;
     $("subline").hidden = editing || !state.tiles.length;
     $("empty").hidden = state.tiles.length > 0;
     $("footer").hidden = state.tiles.length === 0;
     $("edit").textContent = editing ? "Done" : "Edit menu";
     ["add", "full", "res-open"].forEach(function (id) { $(id).hidden = editing; });
+    var langs = languages();
+    if (langs.indexOf(state.lang) < 0) state.lang = langs[0] || "English";
+    renderLangs(langs);
+    applyUI();
+    var visible = editing ? state.tiles : shown();
     var tiles = $("tiles");
-    tiles.className = state.tiles.length === 4 || state.tiles.length === 2 ? "two" : "";
+    tiles.className = visible.length === 4 || visible.length === 2 ? "two" : "";
     tiles.innerHTML = "";
-    state.tiles.forEach(function (tile, i) {
+    visible.forEach(function (tile, n) {
+      var i = state.tiles.indexOf(tile);
       var el = document.createElement(editing ? "div" : "button");
       el.className = "tile" + (editing ? " editing" : "");
-      el.innerHTML = '<span class="num">' + (i + 1) + '</span><span class="play">' + ICON_PLAY + '</span>';
+      el.innerHTML = '<span class="num">' + (n + 1) + '</span><span class="play">' + ICON_PLAY + '</span>';
       if (editing) editTile(el, tile, i);
       else {
-        var t = document.createElement("span"); t.className = "title"; t.textContent = tile.title;
+        var t = document.createElement("span"); t.className = "title"; t.textContent = tileTitle(tile, state.lang);
         var l = document.createElement("span"); l.className = "len";
-        var v0 = tile.versions[0];
+        var v0 = inLang(tile, state.lang)[0];
         l.textContent = v0 && v0.secs ? fmt(v0.secs) : "";
         el.appendChild(t); el.appendChild(l);
-        el.addEventListener("click", function () { play(i); });
-        tile.versions.forEach(function (v, j) { if (!v.secs) measure(v, j === 0 ? l : null); });
+        el.addEventListener("click", function () { askCount(i); });
+        tile.versions.forEach(function (v) { if (!v.secs) measure(v, v === v0 ? l : null); });
       }
       tiles.appendChild(el);
     });
+  }
+
+  function inLang(tile, lang) {
+    return tile.versions.filter(function (v) { return v.lang === lang; });
+  }
+  // The languages there are videos in, English first.
+  function languages() {
+    var seen = [];
+    state.tiles.forEach(function (t) { t.versions.forEach(function (v) { if (seen.indexOf(v.lang) < 0) seen.push(v.lang); }); });
+    return seen.sort(function (a, b) { return a === "English" ? -1 : b === "English" ? 1 : a.localeCompare(b); });
+  }
+  // The tiles with a video in the chosen language.
+  function shown() {
+    return state.tiles.filter(function (t) { return inLang(t, state.lang).length; });
+  }
+  function renderLangs(langs) {
+    var nav = $("langs");
+    nav.hidden = editing || langs.length < 2;
+    nav.innerHTML = "";
+    langs.forEach(function (lang) {
+      var b = document.createElement("button");
+      b.textContent = (LANGS[lang] && LANGS[lang].native) || lang;
+      b.lang = lang;
+      b.setAttribute("aria-pressed", String(lang === state.lang));
+      b.addEventListener("click", function () { state.lang = lang; save(); render(); });
+      nav.appendChild(b);
+    });
+  }
+  function applyUI() {
+    var t = ui(state.lang), dir = (LANGS[state.lang] && LANGS[state.lang].ui && LANGS[state.lang].dir) || "ltr";
+    $("subline").textContent = t.choose;
+    $("back-label").textContent = t.menu;
+    $("q").textContent = t.q;
+    $("end0").textContent = t.end0;
+    $("end10").textContent = t.end10;
+    $("skip").textContent = t.skip;
+    $("thanks-main").textContent = t.thanks;
+    $("thanks-sub").textContent = t.chat;
+    $("count-q").textContent = t.howMany;
+    $("start-more").textContent = t.start;
+    $("count-back").textContent = t.back;
+    var mb = document.querySelector(".counts .more");
+    if (mb) mb.textContent = t.more;
+    $("survey").dir = dir;
+    $("count").dir = dir;
   }
 
   function editTile(el, tile, i) {
@@ -397,7 +610,7 @@
     if (tile.versions.length > 1) {
       var note = document.createElement("div");
       note.className = "file-name";
-      note.textContent = "A/B test: plays one of these at random, kept even.";
+      note.textContent = "Several videos: plays the viewer's language, and picks at random between versions in the same language (A/B test), kept even.";
       list.appendChild(note);
     }
     tile.versions.forEach(function (v, j) {
@@ -406,6 +619,15 @@
       var name = document.createElement("span");
       name.textContent = (tile.versions.length > 1 ? letter(j) + ": " : "") + v.name;
       row.appendChild(name);
+      var ls = document.createElement("select");
+      ls.className = "small lang-select";
+      ls.setAttribute("aria-label", "Language of " + v.name);
+      Object.keys(LANGS).forEach(function (k) {
+        var o = document.createElement("option"); o.value = k; o.textContent = k; o.selected = k === v.lang;
+        ls.appendChild(o);
+      });
+      ls.addEventListener("change", function () { v.lang = ls.value; save(); });
+      row.appendChild(ls);
       if (tile.versions.length > 1) {
         row.appendChild(smallBtn("Own tile", false, function () {
           tile.versions.splice(j, 1);
@@ -488,13 +710,19 @@
       if (picked[file.name]) URL.revokeObjectURL(picked[file.name]);
       picked[file.name] = URL.createObjectURL(file);
       if (hasVideo(file.name)) return;
-      var v = { name: file.name, secs: 0, plays: 0 };
-      // "Standard A.mp4" and "Standard B.mp4" become two versions of "Standard".
+      var v = { name: file.name, lang: splitName(file.name).lang, secs: 0, plays: 0 };
+      // "Standard A.mp4", "Standard B.mp4" and "Standard - Mandarin.mp4" all go
+      // in the "Standard" tile.
       var m = niceTitle(file.name).match(/^(.+?)\s+\(?([A-Ea-e])\)?$/);
       var base = m ? m[1] : null;
       var same = base && state.tiles.filter(function (t) { return t.title.toLowerCase() === base.toLowerCase(); })[0];
       if (same) same.versions.push(v);
-      else state.tiles.push({ title: base || niceTitle(file.name), versions: [v] });
+      else {
+        var title = base || niceTitle(file.name);
+        var sameTitle = state.tiles.filter(function (t) { return t.title.toLowerCase() === title.toLowerCase(); })[0];
+        if (sameTitle) sameTitle.versions.push(v);
+        else state.tiles.push({ title: title, versions: [v] });
+      }
     });
     save();
     notice(memoryOnly
@@ -541,20 +769,55 @@
 
   // A/B: the version played least on this laptop, picking at random between ties.
   function pickVersion(tile) {
-    var least = Math.min.apply(null, tile.versions.map(function (v) { return v.plays || 0; }));
-    var options = tile.versions.filter(function (v) { return (v.plays || 0) === least; });
+    var pool = inLang(tile, state.lang);
+    if (!pool.length) pool = tile.versions;
+    var least = Math.min.apply(null, pool.map(function (v) { return v.plays || 0; }));
+    var options = pool.filter(function (v) { return (v.plays || 0) === least; });
     return options[Math.floor(Math.random() * options.length)];
   }
 
-  function play(i) {
+  // ---------- How many are watching (headphone splitters) ----------
+  var countFor = -1, moreN = 6;
+  for (var c = 1; c <= 5; c++) (function (k) {
+    var b = document.createElement("button");
+    b.textContent = k;
+    b.addEventListener("click", function () { chooseCount(k); });
+    $("counts").appendChild(b);
+  })(c);
+  (function () {
+    var b = document.createElement("button");
+    b.className = "more"; b.textContent = "More";
+    b.addEventListener("click", function () { $("more-row").hidden = false; $("more-n").textContent = moreN; });
+    $("counts").appendChild(b);
+  })();
+  $("minus").onclick = function () { moreN = Math.max(1, moreN - 1); $("more-n").textContent = moreN; };
+  $("plus").onclick = function () { moreN = moreN + 1; $("more-n").textContent = moreN; };
+  $("start-more").onclick = function () { chooseCount(moreN); };
+  $("count-back").onclick = closeCount;
+  function askCount(i) {
+    countFor = i;
+    if (!isFull()) goFull();
+    $("more-row").hidden = true;
+    applyUI();
+    $("count").classList.add("on");
+  }
+  function closeCount() { $("count").classList.remove("on"); countFor = -1; }
+  function chooseCount(n) {
+    if (countFor < 0) return;
+    var i = countFor;
+    closeCount();
+    play(i, n);
+  }
+
+  function play(i, viewers) {
     var tile = state.tiles[i];
     var v = pickVersion(tile);
     v.plays = (v.plays || 0) + 1; save();
-    current = { tile: tile, version: v };
+    current = { tile: tile, version: v, viewers: viewers || 1 };
     if (!isFull()) goFull();
     wake();
     $("err").classList.remove("on");
-    $("now").textContent = tile.title;
+    $("now").textContent = tileTitle(tile, state.lang);
     $("fill").style.width = "0";
     $("time").textContent = v.secs ? "-" + fmt(v.secs) : "";
     player.classList.add("on");
@@ -573,6 +836,7 @@
   }
   function toMenu() {
     stopVideo();
+    if (liveState !== "idle" && !surveyFilm) status("idle");
     render();
     var first = document.querySelector(".tile");
     if (first && first.focus) first.focus({ preventScroll: true });
@@ -592,7 +856,7 @@
   video.addEventListener("ended", function () {
     var c = current;
     stopVideo();
-    if (c) askSurvey(c.tile, c.version); else toMenu();
+    if (c) askSurvey(c.tile, c.version, c.viewers); else toMenu();
   });
   video.addEventListener("timeupdate", function () {
     var d = video.duration;
@@ -638,13 +902,18 @@
     if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "SELECT")) return;
     if ($("results").classList.contains("on")) { if (e.key === "Escape") $("results").classList.remove("on"); return; }
     if ($("survey").classList.contains("on")) return;
+    if ($("count").classList.contains("on")) {
+      if (/^[1-9]$/.test(e.key)) chooseCount(+e.key);
+      else if (e.key === "Escape" || e.key === "Backspace") closeCount();
+      return;
+    }
     if (player.classList.contains("on")) {
       if (e.key === " " || e.key === "k") { e.preventDefault(); toggle(); poke(); }
       else if (e.key === "Backspace" || e.key === "m") { e.preventDefault(); toMenu(); }
       else if (e.key === "ArrowRight") { video.currentTime += 10; poke(); }
       else if (e.key === "ArrowLeft") { video.currentTime -= 10; poke(); }
-    } else if (/^[1-9]$/.test(e.key) && state.tiles[+e.key - 1] && !editing) {
-      play(+e.key - 1);
+    } else if (/^[1-9]$/.test(e.key) && shown()[+e.key - 1] && !editing) {
+      askCount(state.tiles.indexOf(shown()[+e.key - 1]));
     }
   });
   // ---------- Survey ----------
@@ -668,7 +937,55 @@
       : Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
   }
 
-  var surveyFilm = null, surveyVersion = null, surveyTimer = 0;
+  // ---------- Live status ----------
+  // When online, tell the Hub what this laptop is doing, so the organiser's
+  // phone can count down each film and alert just before it ends.
+  var device = "";
+  try {
+    device = localStorage.getItem("wtf-movie-player-device") || "";
+    if (!device) { device = uid(); localStorage.setItem("wtf-movie-player-device", device); }
+  } catch (e) { device = uid(); }
+  $("laptop-field").value = laptop;
+  $("laptop-field").addEventListener("change", function () {
+    var v = this.value.trim().slice(0, 40);
+    if (!v) { this.value = laptop; return; }
+    laptop = v;
+    try { localStorage.setItem("wtf-movie-player-laptop", laptop); } catch (e) {}
+    status();
+  });
+  var liveState = "idle";
+  function status(state) {
+    if (state) liveState = state;
+    if (!CONFIG) return;
+    var c = current || (surveyFilm ? { tile: surveyFilm, version: surveyVersion, viewers: surveyTotal } : null);
+    var left = null, d = null;
+    if (liveState === "playing" || liveState === "paused") {
+      d = isFinite(video.duration) && video.duration ? video.duration : (c && c.version.secs) || null;
+      left = d ? Math.max(0, d - video.currentTime) / (video.playbackRate || 1) : null;
+    }
+    fetch(CONFIG.url + "/rest/v1/rpc/set_player_status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: CONFIG.key },
+      body: JSON.stringify({
+        p_token: CONFIG.token, p_device: device, p_laptop: laptop, p_state: liveState,
+        p_film: c && liveState !== "idle" ? c.tile.title : null,
+        p_language: c && liveState !== "idle" ? c.version.lang || "English" : null,
+        p_seconds_left: left,
+        p_duration: d,
+        p_viewers: c && liveState !== "idle" ? c.viewers || 1 : null
+      })
+    }).catch(function () {});
+  }
+  video.addEventListener("playing", function () { status("playing"); });
+  video.addEventListener("durationchange", function () { if (current && !video.paused) status("playing"); });
+  video.addEventListener("pause", function () { if (current && !video.ended) status("paused"); });
+  video.addEventListener("seeked", function () { if (current && !video.paused) status("playing"); });
+  video.addEventListener("ratechange", function () { if (current && !video.paused) status("playing"); });
+  // Heartbeat: keeps the phone's countdown honest and shows the laptop is online.
+  setInterval(function () { status(); }, 15000);
+  setTimeout(function () { status(); }, 800);
+
+  var surveyFilm = null, surveyVersion = null, surveyTimer = 0, surveyPerson = 1, surveyTotal = 1;
   for (var n = 0; n <= 10; n++) (function (score) {
     var b = document.createElement("button");
     b.textContent = score;
@@ -678,28 +995,72 @@
   })(n);
   $("skip").onclick = function () { answer(null); };
 
-  function askSurvey(tile, version) {
+  // One question per person watching ("Person 1 of 3", then Person 2...).
+  function askSurvey(tile, version, viewers) {
     surveyFilm = tile;
     surveyVersion = version;
+    surveyTotal = Math.max(1, viewers || 1);
+    surveyPerson = 1;
+    status("survey");
+    $("survey").classList.add("on");
+    showQuestion();
+  }
+  function showQuestion() {
+    var t = ui(state.lang);
+    $("person").hidden = surveyTotal < 2;
+    $("person").textContent = fill(t.person, surveyPerson, surveyTotal);
     $("ask").hidden = false;
     $("thanks").hidden = true;
-    $("survey").classList.add("on");
-    // Nobody answering (they've walked off to chat): back to the menu after 2 minutes.
+    // Don't show the last person's button as picked until the mouse moves.
+    $("survey").classList.add("fresh");
+    var focused = document.activeElement;
+    if (focused && focused.blur) focused.blur();
+    // Nobody answering (they've walked off to chat): skip the rest after 2 minutes.
     clearTimeout(surveyTimer);
-    surveyTimer = setTimeout(function () { answer(null); }, 120000);
+    surveyTimer = setTimeout(function () {
+      while (surveyFilm && surveyPerson <= surveyTotal) { record(null); surveyPerson++; }
+      finish(0);
+    }, 120000);
   }
-  function answer(score) {
-    if (!surveyFilm) return;
-    clearTimeout(surveyTimer);
-    answers.push({ id: uid(), film: surveyFilm.title, version: surveyVersion.name, impact: score, at: new Date().toISOString(), laptop: laptop, sent: false });
+  $("survey").addEventListener("mousemove", function () { this.classList.remove("fresh"); });
+  function record(score) {
+    answers.push({ id: uid(), film: surveyFilm.title, version: surveyVersion.name, language: surveyVersion.lang || "English", impact: score, at: new Date().toISOString(), laptop: laptop, sent: false });
     saveAnswers();
-    surveyFilm = null;
+  }
+  var answering = false;
+  function answer(score) {
+    if (!surveyFilm || answering) return;
+    clearTimeout(surveyTimer);
+    record(score);
+    var t = ui(state.lang);
     $("ask").hidden = true;
     $("thanks").hidden = false;
+    if (surveyPerson < surveyTotal) {
+      // Next person: a short thank-you, then the question again.
+      surveyPerson++;
+      $("thanks-next").hidden = false;
+      $("thanks-next").textContent = fill(t.next, surveyPerson, surveyTotal);
+      $("thanks-sub").hidden = true;
+      answering = true;
+      setTimeout(function () { answering = false; showQuestion(); }, 1300);
+      sync(true);
+      return;
+    }
+    $("thanks-next").hidden = true;
+    $("thanks-sub").hidden = false;
+    finish(score === null ? 0 : 2200);
+  }
+  function finish(wait) {
+    surveyFilm = null;
+    status("idle");
+    answering = true;
     setTimeout(function () {
+      answering = false;
       $("survey").classList.remove("on");
+      $("thanks-next").hidden = true;
+      $("thanks-sub").hidden = false;
       toMenu();
-    }, score === null ? 0 : 2200);
+    }, wait);
     sync(true);
   }
 
@@ -754,10 +1115,10 @@
   };
   $("export").onclick = function () {
     var q = function (v) { v = v === null || v === undefined ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-    var lines = ["Film,Version,Score (0-10),Date,Time,Laptop"];
+    var lines = ["Film,Version,Language,Score (0-10),Date,Time,Laptop"];
     answers.forEach(function (a) {
       var d = new Date(a.at);
-      lines.push([a.film, a.version || "", a.impact === null ? "skipped" : a.impact,
+      lines.push([a.film, a.version || "", a.language || "English", a.impact === null ? "skipped" : a.impact,
         d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"),
         String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"), a.laptop || ""].map(q).join(","));
     });
@@ -784,7 +1145,7 @@
       headers: { "Content-Type": "application/json", apikey: CONFIG.key },
       body: JSON.stringify({
         p_token: CONFIG.token,
-        p_rows: batch.map(function (a) { return { id: a.id, film: a.film, version: a.version, impact: a.impact, at: a.at, laptop: a.laptop }; })
+        p_rows: batch.map(function (a) { return { id: a.id, film: a.film, version: a.version, language: a.language || "English", impact: a.impact, at: a.at, laptop: a.laptop }; })
       })
     }).then(function (r) {
       if (!r.ok) throw new Error("HTTP " + r.status);

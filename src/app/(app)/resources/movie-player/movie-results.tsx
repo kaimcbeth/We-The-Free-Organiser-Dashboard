@@ -7,6 +7,7 @@ type Answer = {
   id: string;
   film: string;
   version: string | null;
+  language: string | null; // null = English
   impact: number | null; // 0-10, null = skipped
   answered_at: string;
   laptop: string | null;
@@ -48,7 +49,7 @@ export function MovieResults({ teamId, tz }: { teamId: string; tz: string }) {
   const load = useCallback(async () => {
     const { data } = await createClient()
       .from("film_survey_responses")
-      .select("id, film, version, impact, answered_at, laptop")
+      .select("id, film, version, language, impact, answered_at, laptop")
       .eq("team_id", teamId)
       .order("answered_at", { ascending: false })
       .limit(20000);
@@ -88,16 +89,28 @@ export function MovieResults({ teamId, tz }: { teamId: string; tz: string }) {
     add(todayLaptops, a.laptop ?? "Laptop", a);
   }
   const films = new Map<string, Stat>();
-  const versions = new Map<string, Map<string, Stat>>();
+  // film -> language -> stat, and film -> language -> version -> stat
+  const langs = new Map<string, Map<string, Stat>>();
+  const versions = new Map<string, Map<string, Map<string, Stat>>>();
   for (const a of rows) {
     tally(all, a);
     add(films, a.film, a);
+    const lang = a.language ?? "English";
+    const lm = langs.get(a.film) ?? new Map<string, Stat>();
+    add(lm, lang, a);
+    langs.set(a.film, lm);
     if (a.version) {
-      const vm = versions.get(a.film) ?? new Map<string, Stat>();
+      const fv = versions.get(a.film) ?? new Map<string, Map<string, Stat>>();
+      const vm = fv.get(lang) ?? new Map<string, Stat>();
       add(vm, a.version, a);
-      versions.set(a.film, vm);
+      fv.set(lang, vm);
+      versions.set(a.film, fv);
     }
   }
+  const byLang = (m: Map<string, unknown>) =>
+    [...m.keys()].sort((x, y) =>
+      x === "English" ? -1 : y === "English" ? 1 : x.localeCompare(y),
+    );
   const ranked = [...films.entries()].sort(
     (x, y) => (avg(y[1]) ?? -1) - (avg(x[1]) ?? -1),
   );
@@ -175,10 +188,16 @@ export function MovieResults({ teamId, tz }: { teamId: string; tz: string }) {
         ) : (
           <ul className="mt-3 space-y-3">
             {ranked.map(([film, s], i) => {
-              const vs = [...(versions.get(film)?.entries() ?? [])].sort(
-                (x, y) =>
-                  x[0].localeCompare(y[0], undefined, { numeric: true }),
-              );
+              const lm = langs.get(film) ?? new Map<string, Stat>();
+              const fv = versions.get(film);
+              const tests = byLang(fv ?? new Map())
+                .map((lang) => ({
+                  lang,
+                  vs: [...(fv?.get(lang)?.entries() ?? [])].sort((x, y) =>
+                    x[0].localeCompare(y[0], undefined, { numeric: true }),
+                  ),
+                }))
+                .filter((t) => t.vs.length > 1);
               return (
                 <li
                   key={film}
@@ -190,22 +209,35 @@ export function MovieResults({ teamId, tz }: { teamId: string; tz: string }) {
                     best={i === 0 && ranked.length > 1 && s.n >= ENOUGH}
                     bold
                   />
-                  {vs.length > 1 && (
+                  {lm.size > 1 && (
                     <div className="mt-3 space-y-2 border-t border-stone-100 pt-3">
                       <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-                        A/B test
+                        By language
                       </p>
-                      {vs.map(([v, vs2]) => (
+                      {byLang(lm).map((lang) => (
+                        <Row key={lang} label={lang} s={lm.get(lang)!} />
+                      ))}
+                    </div>
+                  )}
+                  {tests.map((t) => (
+                    <div
+                      key={t.lang}
+                      className="mt-3 space-y-2 border-t border-stone-100 pt-3"
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+                        A/B test{lm.size > 1 ? ` · ${t.lang}` : ""}
+                      </p>
+                      {t.vs.map(([v, vs2]) => (
                         <Row key={v} label={versionName(v)} s={vs2} />
                       ))}
-                      {vs.some(([, x]) => x.n < ENOUGH) && (
+                      {t.vs.some(([, x]) => x.n < ENOUGH) && (
                         <p className="text-xs text-stone-500">
                           Too early to call: aim for about {ENOUGH} answers for
                           each version before comparing.
                         </p>
                       )}
                     </div>
-                  )}
+                  ))}
                 </li>
               );
             })}
@@ -343,6 +375,11 @@ function AllAnswers({
                     {a.version && (
                       <span className="ml-1.5 text-xs text-stone-400">
                         {versionName(a.version)}
+                      </span>
+                    )}
+                    {a.language && a.language !== "English" && (
+                      <span className="ml-1.5 rounded-full bg-cyan/20 px-1.5 py-0.5 text-[11px] font-medium text-navy">
+                        {a.language}
                       </span>
                     )}
                     <span className="block text-xs text-stone-500">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireOrganiser } from "@/lib/organiser";
 import { MovieResults } from "./movie-results";
+import { LivePlayers } from "./live-players";
 
 export default async function MoviePlayerPage() {
   const { organiser } = await requireOrganiser();
@@ -21,9 +22,10 @@ export default async function MoviePlayerPage() {
       </h1>
       <p className="mt-1 text-stone-600">
         A full-screen player for Movie Challenge laptops that works with no
-        internet. After each film, viewers rate how much it impacted them (0 to
-        10). With the laptops online (a phone hotspot is fine), you can watch
-        the count here live.
+        internet. Viewers say how many are watching (headphone splitters), and
+        after the film each person rates how much it impacted them (0 to 10).
+        With the laptops online (a phone hotspot is fine), you can follow every
+        laptop here live.
       </p>
 
       <section className="mt-5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
@@ -64,6 +66,18 @@ export default async function MoviePlayerPage() {
             <b>Edit menu</b>.
           </li>
           <li>
+            Under <b>Edit menu</b>, give each laptop a short name (A, B, C…).
+            With the laptops online (your phone hotspot is fine),{" "}
+            <b>Live at the event</b> below shows how far along each film is, and
+            alerts you 10 seconds before one ends so a volunteer can be there.
+            Tap <b>Turn on alerts</b> and keep this page open.
+          </li>
+          <li>
+            Language versions: name them like <i>Standard - Mandarin.mp4</i>.
+            Viewers pick their language on the menu, and the question after the
+            film is asked in that language too.
+          </li>
+          <li>
             Answers are saved on the laptop and sent here whenever it&apos;s
             online with the player open. Offline all day? Open the player at
             home on wifi and they&apos;ll come through. <b>Results</b> on the
@@ -76,6 +90,7 @@ export default async function MoviePlayerPage() {
         </p>
       </section>
 
+      {teamId && <LivePlayers teamId={teamId} />}
       {teamId && <MovieResults teamId={teamId} tz={organiser.team.timezone} />}
     </>
   );

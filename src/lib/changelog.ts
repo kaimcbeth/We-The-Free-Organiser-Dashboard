@@ -82,6 +82,14 @@ export const CHANGELOG: Release[] = [
         text: "See every answer on the Movie player page, and delete any you made while testing.",
       },
       {
+        level: "organiser",
+        text: "Live at the event: see how far along each laptop's film is on your phone, with an alert 10 seconds before it ends so a volunteer can be there.",
+      },
+      {
+        level: "organiser",
+        text: "The player asks how many people are watching, then asks each person the impact question. Language versions (like Mandarin) can be chosen on the menu, with the question in that language too.",
+      },
+      {
         level: "god",
         text: "Offline HTML player in public/resources/movie-player.html; /resources/movie-player/download injects the team's player_token. Answers go to film_survey_responses via submit_film_surveys (anon, token; client_id dedupes). Migration 0144.",
       },
