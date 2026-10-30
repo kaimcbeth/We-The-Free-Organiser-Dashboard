@@ -195,6 +195,7 @@ export const EQUIPMENT_GUIDE: {
         about: "Plug more than one pair of headphones into the same screen.",
         shop: "AliExpress",
         url: "https://www.aliexpress.com/item/1005006364582345.html",
+        price: "~$4 each",
       },
       {
         key: "viewing_devices",
