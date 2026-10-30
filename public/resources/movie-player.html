@@ -218,6 +218,9 @@
   .stop-btn:hover, .stop-btn:focus-visible { background: rgba(0,0,0,.75); color: #fff; outline: none; border-color: #ff5a5a; }
   .stop-btn.sample { position: static; cursor: default; font-size: 17px; padding: 12px 20px; }
   #player.idle .stop-btn { cursor: pointer; }
+  /* Once the controls hide, both buttons drop to the very bottom, clear of subtitles */
+  .stop-btn, .help-btn { transition: bottom .25s ease, background .15s ease, color .15s ease; }
+  #player.idle .stop-btn, #player.idle .help-btn { bottom: clamp(8px, 1.5vh, 16px); }
   .stopped {
     position: absolute; inset: 0; z-index: 4; display: none; place-items: center; padding: 30px;
     background: var(--navy); text-align: center;
