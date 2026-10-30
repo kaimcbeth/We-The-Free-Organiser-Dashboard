@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PreviewBanner } from "@/components/preview-banner";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { VIEW_AS_COOKIE } from "@/lib/organiser";
@@ -86,11 +87,19 @@ export default async function MemberLayout({
             {staffLink && (
               <Link
                 href="/"
-                className="hidden rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10 sm:inline-block"
+                className="shrink-0 rounded-lg px-2 py-1.5 text-xs font-medium text-white/85 ring-1 ring-white/25 hover:bg-white/10 sm:px-3 sm:py-2 sm:text-sm sm:ring-0"
               >
-                {organiser!.access === "core_team"
-                  ? "Take attendance"
-                  : "Organiser view"}
+                {organiser!.access === "core_team" ? (
+                  <>
+                    <span className="sm:hidden">Attendance</span>
+                    <span className="hidden sm:inline">Take attendance</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="sm:hidden">Organiser</span>
+                    <span className="hidden sm:inline">Organiser view</span>
+                  </>
+                )}
               </Link>
             )}
             <NotificationBell supabase={supabase} userId={user.id} />
@@ -121,6 +130,7 @@ export default async function MemberLayout({
         {me && <MemberNav />}
       </header>
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-8">
+        <PreviewBanner />
         {children}
       </main>
     </div>

@@ -7,7 +7,6 @@ import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_TEAM_SLUG } from "@/lib/teams";
 import { DEFAULT_TZ, setRequestTz } from "@/lib/time";
 import { WhatsAppJoin } from "@/components/whatsapp";
-import { PreviewBanner } from "@/components/preview-banner";
 import { TaskCard } from "@/components/task-card";
 import { loadMyTasks } from "@/lib/tasks";
 import { MemberTutorial, ReplayTour } from "./member-tutorial";
@@ -70,7 +69,6 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
   if (!me && organiser) {
     return (
       <>
-        <PreviewBanner />
         <h1 className="text-2xl font-semibold tracking-tight">
           Set up your profile
         </h1>
@@ -135,7 +133,6 @@ export default async function MePage({ searchParams }: PageProps<"/me">) {
 
   return (
     <>
-      <PreviewBanner />
       <div className="mb-6 empty:hidden">
         <LivePlayers />
       </div>
