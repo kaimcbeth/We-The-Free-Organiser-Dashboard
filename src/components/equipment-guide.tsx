@@ -326,7 +326,7 @@ function EquipmentRow({
   photos: Record<string, string>; // uploaded, by photo key
   onUpload?: (key: string, file: File) => Promise<boolean>; // staff only
 }) {
-  // Open on the version the community has (its pink dot), else the first.
+  // Open on the version the community has, else the first.
   const [pick, setPick] = useState(() =>
     Math.max(
       0,
@@ -458,12 +458,6 @@ function EquipmentRow({
                     </span>
                   )}
                   {o.label}
-                  {inventory.has(invKey(item, o)) && (
-                    <span
-                      aria-label="in inventory"
-                      className={`ml-1 inline-block h-1.5 w-1.5 rounded-full align-middle ${pick === n ? "bg-pink" : "bg-navy"}`}
-                    />
-                  )}
                 </button>
               ))}
             </div>
