@@ -7,13 +7,15 @@ export type PhotoTag =
   | "watching"
   | "community"
   | "sign"
-  | "training";
+  | "training"
+  | "reaction";
 // short: the tiny label on photo thumbnails.
 export const PHOTO_TAGS: { id: PhotoTag; label: string; short: string }[] = [
   { id: "outreach", label: "Outreach", short: "Outreach" },
   { id: "group", label: "Group photo", short: "Group" },
   { id: "volunteers", label: "Volunteers", short: "Volunteers" },
   { id: "watching", label: "Watching", short: "Watching" },
+  { id: "reaction", label: "Reaction", short: "Reaction" },
   { id: "community", label: "Community event", short: "Community" },
   { id: "sign", label: "Holding sign", short: "Sign" },
   { id: "training", label: "Training", short: "Training" },
