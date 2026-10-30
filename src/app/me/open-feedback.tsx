@@ -3,8 +3,20 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-// Open feedback to the community's organisers, with your name or anonymously.
-export function OpenFeedback({ preview = false }: { preview?: boolean }) {
+// Open feedback, with your name or anonymously: members to their organisers
+// (send_my_feedback), or organisers to their Regional Support Lead
+// (send_organiser_feedback).
+export function OpenFeedback({
+  preview = false,
+  rpc = "send_my_feedback",
+  intro = "Anything you'd like your organisers to know: what's working, what could be better, ideas, worries. Every message gets read.",
+  to = "Your organisers",
+}: {
+  preview?: boolean;
+  rpc?: "send_my_feedback" | "send_organiser_feedback";
+  intro?: string;
+  to?: string; // who reads it, e.g. "Your Regional Support Lead"
+}) {
   const [text, setText] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -17,7 +29,7 @@ export function OpenFeedback({ preview = false }: { preview?: boolean }) {
     setError("");
     if (preview) return setSent(true); // God Mode preview: nothing saved
     setBusy(true);
-    const { data, error: err } = await createClient().rpc("send_my_feedback", {
+    const { data, error: err } = await createClient().rpc(rpc, {
       p_message: text,
       p_anonymous: anonymous,
     });
@@ -35,7 +47,7 @@ export function OpenFeedback({ preview = false }: { preview?: boolean }) {
         <p className="mt-1 text-sm text-stone-600">
           {anonymous
             ? "It went without your name."
-            : "Your organisers will see it came from you."}
+            : `${to} will see it came from you.`}
         </p>
         <button
           type="button"
@@ -52,10 +64,7 @@ export function OpenFeedback({ preview = false }: { preview?: boolean }) {
       onSubmit={send}
       className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
     >
-      <p className="text-sm text-stone-600">
-        Anything you&apos;d like your organisers to know: what&apos;s working,
-        what could be better, ideas, worries. Every message gets read.
-      </p>
+      <p className="text-sm text-stone-600">{intro}</p>
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value.slice(0, 20000))}

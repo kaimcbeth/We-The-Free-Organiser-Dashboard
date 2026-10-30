@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { RESOURCE_SECTIONS, RESOURCES_COMING_SOON } from "@/lib/resources";
 import { CommunityPhotos } from "@/components/community-photos";
 import { GuideShare } from "@/components/guide-share";
+import { FeedbackCards } from "@/components/feedback-cards";
 import { DISCUSSION_PROMPTS } from "@/lib/discussion-prompts";
 
 const has = (q: string, ...text: (string | undefined)[]) =>
@@ -109,6 +110,11 @@ export function ResourcesList({
           </span>
         </a>
       )}
+      {!core &&
+        has(
+          q,
+          "feedback form members organisers regional support lead anonymous link share",
+        ) && <FeedbackCards teamId={teamId} />}
       {sections.map((s) => (
         <section key={s.title} className="mt-3">
           <ul className="space-y-3">

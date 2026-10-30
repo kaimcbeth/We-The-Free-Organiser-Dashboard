@@ -10,6 +10,7 @@ const PUBLIC_PATHS = [
   "/invite",
   "/checkin",
   "/feedback", // volunteer feedback form (secret link per community)
+  "/tell", // members' open feedback for their organisers (same secret link)
   "/calendar", // calendar feeds (secret link per community; apps can't log in)
   "/guide", // Outreach guide questions (newcomers scan a QR code for it)
 ];

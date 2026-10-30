@@ -75,6 +75,14 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Two feedback forms in Resources: 💌 Feedback for your Regional Support Lead (with your name or anonymously), and 📣 Member feedback form, a link to copy or share with members so they can give you feedback any time (one box, name optional). You get a notification for each one, and What they've said opens the Feedback page.",
+      },
+      {
+        level: "regional_lead",
+        text: "Organisers' feedback for you arrives as a notification; the Feedback page has a From organisers tab. With no Regional Support Lead for a region yet, God accounts get it.",
+      },
+      {
+        level: "organiser",
         text: "Meet the Members: once a month (1st Monday, change the day on the action), Meet the Members: volunteer asked comes up with the questions to copy and send. Ticking it off brings up Meet the Members posted, due a week later. Change the questions for future months from the same place.",
       },
       {
