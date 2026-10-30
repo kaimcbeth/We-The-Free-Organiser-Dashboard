@@ -73,6 +73,14 @@ export const CHANGELOG: Release[] = [
         level: "organiser",
         text: "Members now choose how they get event reminders during their welcome tour, and can change it later in their profile.",
       },
+      {
+        level: "organiser",
+        text: "Micro roles in members' How you can help: engage with our posts, take photos, do attendance, post event photos on socials, create Facebook events and plan community events. They open up one by one as members come to more events (0, 1, 3, 5, 8 and 12), so nobody sees them all at once. You get a notification when someone signs up.",
+      },
+      {
+        level: "organiser",
+        text: "Attendance, posting photos and Facebook events need your OK (they need access set up). Say Yes or Not right now at the top of People, where everyone helping out is also listed.",
+      },
     ],
   },
   {

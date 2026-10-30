@@ -14,6 +14,7 @@ const ROLE_ORDER: Access[] = ["god", "regional_lead", "organiser", "core_team"];
 import { signPhotos } from "@/lib/photos";
 import { LoadError } from "@/components/load-error";
 import { PeopleList, type PersonRow } from "./people-list";
+import { HelpingOut, type HelperRow } from "./helping-out";
 
 type Row = Omit<
   PersonRow,
@@ -73,6 +74,14 @@ export default async function PeoplePage({
       loadTracking(supabase, organiser.team_id, now),
     ]);
   const communityDates = tracking.tracked;
+  const helpers =
+    organiser.allCommunities || organiser.exampleMode
+      ? []
+      : (((
+          await supabase.rpc("team_micro_roles", {
+            p_team_id: organiser.team_id,
+          })
+        ).data as HelperRow[] | null) ?? []);
   const leads = new Map<string, CoreRole[]>();
   for (const r of (leadRows ?? []) as {
     person_id: string;
@@ -223,6 +232,7 @@ export default async function PeoplePage({
           Person deleted.
         </p>
       )}
+      <HelpingOut rows={helpers} />
       <PeopleList
         initialFilter={
           show === "roles" ||
