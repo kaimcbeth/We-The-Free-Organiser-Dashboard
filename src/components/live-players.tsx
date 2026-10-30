@@ -275,8 +275,8 @@ export function LivePlayers({
       {everyone && !noIntro && (
         <p className="mt-1 text-sm text-stone-600">
           The Movie Challenge laptops right now. Pink: a film ends in 10
-          seconds. Light blue: they&apos;ve answered the question and are ready
-          to chat. Red: someone tapped out and may need support.
+          seconds, then stays pink once they&apos;ve answered and are ready to
+          chat. Red: someone tapped out and may need support.
         </p>
       )}
       {players.length === 0 ? (
@@ -304,7 +304,7 @@ export function LivePlayers({
                 : ending
                   ? "bg-pink text-navy ring-4 ring-pink/40 motion-safe:animate-[ring_1s_ease-in-out_infinite]"
                   : finished
-                    ? "bg-cyan text-navy ring-cyan"
+                    ? "bg-pink text-navy ring-4 ring-pink/40"
                     : p.state === "playing" || p.state === "paused"
                       ? "bg-navy text-white ring-navy"
                       : p.state === "survey"

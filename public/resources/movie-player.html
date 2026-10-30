@@ -971,7 +971,7 @@
   }
   function toggle() {
     if (!player.classList.contains("on") || $("err").classList.contains("on")) return;
-    if (video.paused) video.play(); else video.pause();
+    if (video.paused) { userPaused = false; video.play(); } else { userPaused = true; video.pause(); }
   }
   function setPaused() {
     player.classList.toggle("paused", video.paused);
@@ -981,11 +981,38 @@
   }
   video.addEventListener("play", setPaused);
   video.addEventListener("pause", setPaused);
-  video.addEventListener("ended", function () {
+  function endFilm() {
     var c = current;
     stopVideo();
     if (c) askSurvey(c.tile, c.version, c.viewers); else toMenu();
-  });
+  }
+  video.addEventListener("ended", endFilm);
+
+  // Some video files say they're a few seconds longer than the picture and
+  // sound actually are, so the browser stalls or pauses just before the end
+  // and never says it has ended. If a film is stuck (not paused by a person)
+  // in its last 10 seconds, treat it as finished; if it stalls anywhere else
+  // (still meant to be playing), give it one nudge.
+  var userPaused = false, lastT = -1, stuckSince = 0, nudged = false;
+  video.addEventListener("play", function () { userPaused = false; });
+  video.addEventListener("playing", function () { stuckSince = 0; nudged = false; });
+  setInterval(function () {
+    if (!current || stoppedNow || userPaused || !video.getAttribute("src") || $("err").classList.contains("on")) {
+      stuckSince = 0; lastT = -1; return;
+    }
+    var t = video.currentTime;
+    if (!video.paused && t !== lastT) { lastT = t; stuckSince = 0; return; }
+    if (!stuckSince) { stuckSince = Date.now(); return; }
+    var stuck = Date.now() - stuckSince;
+    var left = isFinite(video.duration) && video.duration ? video.duration - t : Infinity;
+    if (left < 10 && stuck > 2000) { stuckSince = 0; endFilm(); }
+    else if (stuck > 3000 && !nudged && !video.paused) {
+      nudged = true;
+      try { video.currentTime = t + 0.1; } catch (e) {}
+      var p = video.play();
+      if (p && p.catch) p.catch(function () {});
+    }
+  }, 500);
   video.addEventListener("timeupdate", function () {
     var d = video.duration;
     if (!isFinite(d) || !d) return;
