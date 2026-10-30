@@ -159,7 +159,7 @@ export const EQUIPMENT_GUIDE: {
             label: "DIY",
             about:
               "Print the sign on 8 portrait A3 sheets and stick them onto thick cardboard backing.",
-            price: "About $5 each",
+            price: "~$5 each",
             instructions: "/resources/signs",
           },
           {
@@ -201,7 +201,7 @@ export const EQUIPMENT_GUIDE: {
         name: "Viewing devices",
         about:
           "What people watch the footage on. Usually laptops, typically two.",
-        price: "Under $150 each",
+        price: "<$150 each",
         guide: [
           {
             label: "Priority 1",
@@ -217,7 +217,7 @@ export const EQUIPMENT_GUIDE: {
           {
             label: "DIY",
             about: "Make your own.",
-            price: "About $25",
+            price: "~$25",
             instructions: "",
           },
           {
