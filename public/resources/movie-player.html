@@ -198,6 +198,10 @@
     padding: clamp(20px, 4vw, 56px); text-align: center;
   }
   #survey.on, #count.on, #name-screen.on, #intro.on { display: flex; }
+  /* After a film: the question fades in slowly (5 s); taps count after the first 1.5 s */
+  #survey.fade-in { animation: surveyIn 5s ease forwards; }
+  #survey.fade-in.wait { pointer-events: none; }
+  @keyframes surveyIn { from { opacity: 0; } to { opacity: 1; } }
   #intro {
     position: fixed; inset: 0; z-index: 16; background: var(--navy);
     display: none; flex-direction: column; align-items: center; justify-content: center;
@@ -1348,7 +1352,12 @@
     surveyTotal = Math.max(1, viewers || 1);
     surveyPerson = 1;
     status("survey");
-    $("survey").classList.add("on");
+    var sv = $("survey");
+    sv.classList.remove("fade-in", "wait");
+    void sv.offsetWidth; // restart the fade
+    sv.classList.add("on", "fade-in", "wait");
+    setTimeout(function () { sv.classList.remove("wait"); }, 1500);
+    setTimeout(function () { sv.classList.remove("fade-in"); }, 5100);
     showQuestion();
   }
   function showQuestion() {

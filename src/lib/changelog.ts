@@ -111,6 +111,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Movie player: after a film, the impact question fades in slowly over 5 seconds instead of appearing straight away. Download the player again to get this.",
+      },
+      {
+        level: "organiser",
         text: "Members now see today's Movie Challenge numbers under the live laptops on their Events page while laptops are running: how many have watched, the average impact, tapouts, and each film (and laptop) when there's more than one.",
       },
       {
