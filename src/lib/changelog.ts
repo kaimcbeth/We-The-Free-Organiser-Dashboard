@@ -87,6 +87,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "The player asks which laptop it is (A, B, C…) when you open it at each event, so you know which one to walk to. Change it any time from the corner of the menu.",
+      },
+      {
+        level: "organiser",
         text: "The player asks how many people are watching, then asks each person the impact question. Language versions (like Mandarin) can be chosen on the menu, with the question in that language too.",
       },
       {

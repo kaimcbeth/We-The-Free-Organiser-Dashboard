@@ -197,7 +197,25 @@
     display: none; flex-direction: column; align-items: center; justify-content: center;
     padding: clamp(20px, 4vw, 56px); text-align: center;
   }
-  #survey.on, #count.on { display: flex; }
+  #survey.on, #count.on, #name-screen.on { display: flex; }
+  #name-screen {
+    position: fixed; inset: 0; z-index: 25; background: var(--navy);
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    padding: clamp(20px, 4vw, 56px); text-align: center;
+  }
+  #name-screen h2 { margin: 0; font-size: clamp(28px, 3.8vw, 48px); font-weight: 800; }
+  .name-sub { color: var(--muted); font-size: clamp(15px, 1.6vw, 19px); max-width: 640px; margin: 12px auto 0; line-height: 1.45; }
+  .counts button.on { background: var(--pink); color: var(--navy); }
+  .name-row { display: flex; gap: 12px; margin-top: 28px; width: 100%; max-width: 520px; }
+  .name-row .field { flex: 1; text-align: center; font-size: 20px; }
+  .laptop-chip {
+    position: absolute; top: clamp(14px, 2vw, 24px); left: clamp(14px, 2vw, 24px);
+    border: 0; border-radius: 999px; padding: 8px 14px; font-size: 14px; font-weight: 600;
+    background: rgba(255,255,255,.07); color: var(--muted);
+  }
+  .laptop-chip b { color: var(--text); }
+  .laptop-chip:hover { background: rgba(255,255,255,.14); color: var(--text); }
+  #menu { position: relative; }
   #count {
     position: fixed; inset: 0; z-index: 15; background: var(--navy);
     display: none; flex-direction: column; align-items: center; justify-content: center;
@@ -269,6 +287,7 @@
 <body>
 
 <main id="menu">
+  <button id="laptop-chip" class="laptop-chip" hidden></button>
   <header>
     <div class="brand">We The Free</div>
     <h1 id="heading">3-Minute Movie Challenge</h1>
@@ -317,6 +336,18 @@
     <span id="time"></span>
   </div>
   <div id="err"><div><p id="err-text"></p><button class="btn" id="err-back">Back to menu</button></div></div>
+</div>
+
+<div id="name-screen" role="dialog" aria-label="Name this laptop">
+  <div class="ask">
+    <h2>Which laptop is this?</h2>
+    <p class="name-sub">Give each laptop at the event its own name. Your phone shows it on the live screen in the Movement Hub.</p>
+    <div class="counts" id="name-quick"></div>
+    <div class="name-row">
+      <input id="name-input" class="field" maxlength="40" placeholder="Or type a name" aria-label="Laptop name">
+      <button class="btn" id="name-save">Done</button>
+    </div>
+  </div>
 </div>
 
 <div id="count" class="overlay" role="dialog" aria-label="How many are watching">
@@ -515,7 +546,13 @@
     $("heading").textContent = state.title;
     $("heading").hidden = editing;
     $("title-field").hidden = !editing;
-    $("laptop-row").hidden = !editing;
+    $("laptop-row").hidden = true;
+    $("laptop-chip").hidden = editing || !state.tiles.length;
+    $("laptop-chip").innerHTML = "";
+    var lb = document.createElement("b"); lb.textContent = laptop;
+    $("laptop-chip").appendChild(document.createTextNode("Laptop: "));
+    $("laptop-chip").appendChild(lb);
+    $("laptop-chip").appendChild(document.createTextNode(" · Change"));
     $("subline").hidden = editing || !state.tiles.length;
     $("empty").hidden = state.tiles.length > 0;
     $("footer").hidden = state.tiles.length === 0;
@@ -725,6 +762,7 @@
       }
     });
     save();
+    setTimeout(maybeAskName, 0);
     notice(memoryOnly
       ? "This browser won't let the player remember the films, so you'll need to choose them again next time. Opening the player in Chrome or Edge usually fixes this."
       : "");
@@ -901,7 +939,7 @@
   document.addEventListener("keydown", function (e) {
     if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "SELECT")) return;
     if ($("results").classList.contains("on")) { if (e.key === "Escape") $("results").classList.remove("on"); return; }
-    if ($("survey").classList.contains("on")) return;
+    if ($("survey").classList.contains("on") || $("name-screen").classList.contains("on")) return;
     if ($("count").classList.contains("on")) {
       if (/^[1-9]$/.test(e.key)) chooseCount(+e.key);
       else if (e.key === "Escape" || e.key === "Backspace") closeCount();
@@ -953,6 +991,53 @@
     try { localStorage.setItem("wtf-movie-player-laptop", laptop); } catch (e) {}
     status();
   });
+  // Name this laptop: asked when the player is first opened on a new day
+  // (each event), and any time from the corner of the menu.
+  function today() {
+    var d = new Date();
+    return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  }
+  ["A", "B", "C", "D", "E", "F"].forEach(function (n) {
+    var b = document.createElement("button");
+    b.textContent = n;
+    b.addEventListener("click", function () { setName(n); });
+    $("name-quick").appendChild(b);
+  });
+  function askName() {
+    var named = false;
+    try { named = !!localStorage.getItem("wtf-movie-player-named"); } catch (e) {}
+    Array.prototype.forEach.call($("name-quick").children, function (b) {
+      b.classList.toggle("on", named && b.textContent === laptop);
+    });
+    $("name-input").value = named && !/^[A-F]$/.test(laptop) ? laptop : "";
+    $("name-screen").classList.add("on");
+  }
+  function setName(n) {
+    n = String(n || "").trim().slice(0, 40);
+    if (!n) return;
+    laptop = n;
+    try {
+      localStorage.setItem("wtf-movie-player-laptop", laptop);
+      localStorage.setItem("wtf-movie-player-named", today());
+    } catch (e) {}
+    $("laptop-field").value = laptop;
+    $("name-screen").classList.remove("on");
+    render();
+    status();
+  }
+  $("name-save").onclick = function () {
+    var v = $("name-input").value.trim();
+    if (v) setName(v);
+    else if (laptop) setName(laptop);
+  };
+  $("name-input").addEventListener("keydown", function (e) { if (e.key === "Enter") $("name-save").click(); });
+  $("laptop-chip").onclick = askName;
+  function maybeAskName() {
+    var last = "";
+    try { last = localStorage.getItem("wtf-movie-player-named") || ""; } catch (e) {}
+    if (state.tiles.length && last !== today()) askName();
+  }
+
   var liveState = "idle";
   function status(state) {
     if (state) liveState = state;
@@ -1176,6 +1261,7 @@
   setTimeout(function () { sync(true); }, 1500);
 
   render();
+  maybeAskName();
   wake();
 })();
 </script>

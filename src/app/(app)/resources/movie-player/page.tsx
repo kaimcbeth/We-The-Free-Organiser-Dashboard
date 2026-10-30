@@ -66,7 +66,8 @@ export default async function MoviePlayerPage() {
             <b>Edit menu</b>.
           </li>
           <li>
-            Under <b>Edit menu</b>, give each laptop a short name (A, B, C…).
+            At each event, the player asks <b>which laptop it is</b> (A, B, C…)
+            when you open it. Change it any time from the corner of the menu.
             With the laptops online (your phone hotspot is fine),{" "}
             <b>Live at the event</b> below shows how far along each film is, and
             alerts you 10 seconds before one ends so a volunteer can be there.
