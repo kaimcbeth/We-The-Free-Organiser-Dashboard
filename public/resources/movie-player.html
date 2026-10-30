@@ -1128,9 +1128,33 @@
   }
 
   var liveState = "idle";
+  // Two copies of the player open on one laptop share its device id. Only the
+  // copy that's showing a film reports; a copy sitting on the menu stays quiet
+  // while another one is busy, so the live screen doesn't flick to "Free".
+  var tabId = uid();
+  function otherTabBusy() {
+    try {
+      var a = JSON.parse(localStorage.getItem("wtf-movie-player-active") || "null");
+      return !!a && a.tab !== tabId && Date.now() - a.at < 40000;
+    } catch (e) { return false; }
+  }
+  function claim(busy) {
+    try {
+      if (busy) localStorage.setItem("wtf-movie-player-active", JSON.stringify({ tab: tabId, at: Date.now() }));
+      else {
+        var a = JSON.parse(localStorage.getItem("wtf-movie-player-active") || "null");
+        if (a && a.tab === tabId) localStorage.removeItem("wtf-movie-player-active");
+      }
+    } catch (e) {}
+  }
   function status(state) {
+    var was = liveState;
     if (state) liveState = state;
     if (!CONFIG) return;
+    if (liveState === "idle") {
+      claim(false);
+      if (was === "idle" && otherTabBusy()) return;
+    } else claim(true);
     var c = current || (surveyFilm ? { tile: surveyFilm, version: surveyVersion, viewers: surveyTotal } : null);
     var left = null, d = null;
     if (liveState === "playing" || liveState === "paused" || liveState === "stopped") {
