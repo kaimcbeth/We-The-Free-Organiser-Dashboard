@@ -87,7 +87,13 @@ function urgent(ctx: AudioContext) {
 // someone presses Stop. Organisers pass their community (Movie player page);
 // members and Core Team see their own community's laptops, only while they're
 // running (on their Events / attendance pages).
-export function LivePlayers({ teamId }: { teamId?: string }) {
+export function LivePlayers({
+  teamId,
+  noIntro = false,
+}: {
+  teamId?: string;
+  noIntro?: boolean; // members' Events page: just the laptops, no explainer
+}) {
   const everyone = !teamId;
   const [players, setPlayers] = useState<Player[] | null>(null);
   const [skew, setSkew] = useState(0); // server clock minus this phone's clock
@@ -266,7 +272,7 @@ export function LivePlayers({ teamId }: { teamId?: string }) {
             </button>
           ))}
       </div>
-      {everyone && (
+      {everyone && !noIntro && (
         <p className="mt-1 text-sm text-stone-600">
           The Movie Challenge laptops right now. Pink: a film ends in 10
           seconds. Light blue: they&apos;ve answered the question and are ready
