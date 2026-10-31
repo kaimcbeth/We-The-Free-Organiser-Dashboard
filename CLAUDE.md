@@ -112,8 +112,10 @@ git push origin main
 
 ## Open threads
 
-- Movie player: first real use 31 Oct (Halloween Movie Challenge, laptops on Kai's hotspot). Not yet tried on a real Windows/Mac laptop or with real films (.mov from phones may not play in Chrome on Windows; MP4/H.264 is safe). Live screen not yet tried with real laptops (only via net.http_post + a mock page); iPhone has no vibration from web pages. Ask Kai: tutorial step for the movie player; whether members/Core Team should see it.
-- Micro roles: built 31 Oct (see above). Not built: per-event asks ("Saturday needs…"), organisers personally asking someone. Training prompts for regulars discussed 31 Oct.
+- Movie player: first real use 31 Oct (Halloween Movie Challenge, 3 laptops on Kai's hotspot). Found at the event: Mac "._" files on the USB added as broken A/B versions (fixed), two copies of the player open on one laptop (fixed), films stalling just before the end (watchdog). Every laptop needs the player re-downloaded to get the 31 Oct fixes. Still to ask Kai: how the rest of the day went; what the film files inside each language folder are called (tiles assume "Standard.mp4" etc.); which languages need translated player screens (only Mandarin has them); whether to delete the 31 Oct test answers from results; tutorial step for the movie player. iPhone has no vibration from web pages.
+- Handover (1 Nov 2026): this file is mirrored to the claude.ai Project doc `claude/movement_hub_start_here.md`; update both at the end of a session.
+- Micro roles and trainings: built 31 Oct (see above). Not built: per-event asks ("Saturday needs…"), organisers personally asking someone, more trainings (Kai to send links + event thresholds), tick box on buddy-prompt notifications (offered). Micro-role event thresholds (0/1/3/5/8/12) are my guess; Kai hasn't confirmed.
+- 31 Oct, not yet checked on a real phone: member Events page (live laptops + results, countdown, Share our events), notification tick boxes, Photo Hub Share, `/upcoming/<slug>`.
 - Members' "Welcome to We The Free": hidden on their Events page once they reach the last card (`people.welcome_done_at`, `mark_welcome_done()`, in migration 0150); 👋 card on member Resources to reread.
 - Have a Mandarin speaker check the player's Mandarin text (my translations).
 - 30 Oct evening mobile changes (event page, People, member profile, Photo Hub long-press) not yet checked on a real phone by me.
