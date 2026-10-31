@@ -360,11 +360,12 @@
 
   <section id="empty" hidden>
     <ol>
-      <li>Put this player file and the films in the <b>same folder</b> on this laptop (or on a USB stick).</li>
-      <li>Click <b>Choose films</b> and select the films in that folder.</li>
+      <li>Put this player file and the films in the <b>same folder</b> on this laptop (or on a USB stick). With language folders, put it in the folder that holds them.</li>
+      <li>Click <b>Choose films</b> and select the films in that folder. Films in language folders (French, Arabic…)? Click <b>Choose a folder</b> and pick the folder that holds them all: each film gets its language from its folder.</li>
       <li>That's it. Next time, just open this file and the menu will be here.</li>
     </ol>
     <button class="btn" id="choose-first">Choose films</button>
+    <button class="btn ghost-btn" id="choose-folder-first">Choose a folder</button>
     <p class="note">Works with no internet. MP4 films play on every laptop, Windows or Mac.<br>
       Need the films? Download them from the <a href="https://drive.google.com/drive/folders/1gzYY00Al3T6AOfjW2D5owmyibkqX-3LZ?usp=sharing" target="_blank" rel="noopener" style="color: var(--cyan)">videos folder on Google Drive</a>.</p>
   </section>
@@ -373,6 +374,7 @@
 
   <footer id="footer" hidden>
     <button class="link" id="add">Add films</button>
+    <button class="link" id="add-folder">Add a folder</button>
     <button class="link" id="edit">Edit menu</button>
     <button class="link" id="full">Full screen</button>
     <button class="link" id="res-open">Results</button>
@@ -480,6 +482,7 @@
 </div>
 
 <input type="file" id="picker" accept="video/*,.mp4,.m4v,.mov,.webm,.mkv" multiple hidden>
+<input type="file" id="folder-picker" webkitdirectory multiple hidden>
 
 <script>
 (function () {
@@ -538,11 +541,12 @@
     Japanese: { native: "日本語" },
     Korean: { native: "한국어" },
     Vietnamese: { native: "Tiếng Việt" },
-    Indonesian: { native: "Bahasa Indonesia" },
+    Indonesian: { native: "Bahasa Indonesia", aliases: ["bahasa indonesia", "bahasa", "indonesia"] },
     Malay: { native: "Bahasa Melayu" },
     Thai: { native: "ไทย" },
     Tagalog: { native: "Tagalog", aliases: ["filipino"] },
     Spanish: { native: "Español" },
+    "Brazilian Portuguese": { native: "Português (Brasil)", aliases: ["portuguese (brazil)", "portuguese brazil", "brazilian", "pt-br", "ptbr"] },
     Portuguese: { native: "Português" },
     French: { native: "Français" },
     German: { native: "Deutsch" },
@@ -555,7 +559,15 @@
     Punjabi: { native: "ਪੰਜਾਬੀ" },
     Bengali: { native: "বাংলা" },
     Tamil: { native: "தமிழ்" },
-    Nepali: { native: "नेपाली" }
+    Nepali: { native: "नेपाली" },
+    Telugu: { native: "తెలుగు" },
+    Afrikaans: { native: "Afrikaans" },
+    Croatian: { native: "Hrvatski" },
+    Finnish: { native: "Suomi" },
+    Hebrew: { native: "עברית", dir: "rtl" },
+    Lithuanian: { native: "Lietuvių" },
+    Romanian: { native: "Română" },
+    Swedish: { native: "Svenska" }
   };
   var EN_UI = {
     choose: "Choose a film to watch", menu: "Menu",
@@ -594,6 +606,17 @@
     var m = stem.match(/^(.*?)\s*[-–_(]\s*([^-–_()]+?)\)?\s*$/);
     var lang = m && m[1] ? canonLang(m[2]) : null;
     return lang ? { base: m[1], lang: lang } : { base: stem, lang: "English" };
+  }
+  // "French/Standard.mp4" -> French (from the folder), unless the file name
+  // itself names a language.
+  function langOf(path) {
+    var parts = String(path).split("/"), file = parts.pop(), fromName = splitName(file);
+    if (fromName.lang !== "English" || /english/i.test(file)) return fromName.lang;
+    for (var i = parts.length - 1; i >= 0; i--) {
+      var l = canonLang(parts[i]);
+      if (l) return l;
+    }
+    return "English";
   }
   function ui(lang) {
     var t = (LANGS[lang] && LANGS[lang].ui) || {};
@@ -635,7 +658,7 @@
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { memoryOnly = true; }
   }
   state.tiles.forEach(function (t) {
-    t.versions.forEach(function (v) { if (!v.lang) v.lang = splitName(v.name).lang; });
+    t.versions.forEach(function (v) { if (!v.lang) v.lang = langOf(v.name); });
   });
   if (!state.lang) state.lang = "English";
 
@@ -645,7 +668,7 @@
   var editing = false;
 
   function niceTitle(name) {
-    var t = splitName(name).base.replace(/[_\-.]+/g, " ").replace(/\s+/g, " ").trim();
+    var t = splitName(String(name).split("/").pop()).base.replace(/[_\-.]+/g, " ").replace(/\s+/g, " ").trim();
     return t ? t.charAt(0).toUpperCase() + t.slice(1) : name;
   }
   function fmt(s) {
@@ -654,7 +677,7 @@
     return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
   }
   function srcFor(v) {
-    return picked[v.name] || encodeURIComponent(v.name);
+    return picked[v.name] || String(v.name).split("/").map(encodeURIComponent).join("/");
   }
   function letter(i) { return String.fromCharCode(65 + i); }
 
@@ -875,22 +898,42 @@
   function hasVideo(name) {
     return state.tiles.some(function (t) { return t.versions.some(function (v) { return v.name === name; }); });
   }
-  $("picker").addEventListener("change", function () {
-    var files = Array.prototype.slice.call(this.files || []);
-    files.sort(function (a, b) { return a.name.localeCompare(b.name, undefined, { numeric: true }); });
+  function chooseFolder() { $("folder-picker").value = ""; $("folder-picker").click(); }
+  $("choose-folder-first").onclick = chooseFolder;
+  $("add-folder").onclick = chooseFolder;
+  var VIDEO = /\.(mp4|m4v|mov|webm|mkv)$/i;
+  $("folder-picker").addEventListener("change", function () { addFiles(this.files, true); });
+  $("picker").addEventListener("change", function () { addFiles(this.files, false); });
+  // From a folder, each film is kept by its path inside the chosen folder
+  // ("French/Standard.mp4"), so later it plays from there when this player
+  // file sits in that folder. Subtitle files and the like are skipped.
+  function addFiles(list, fromFolder) {
+    var files = Array.prototype.slice.call(list || []).filter(function (f) { return VIDEO.test(f.name); });
+    var keyOf = function (f) {
+      var rel = fromFolder && f.webkitRelativePath ? f.webkitRelativePath.split("/").slice(1).join("/") : "";
+      return rel || f.name;
+    };
+    // Films in language folders first; anything else (like "Alternative
+    // Edits") after them.
+    var inLangFolder = function (f) { var k = keyOf(f); return k.indexOf("/") > 0 && !!canonLang(k.split("/")[0]) ? 0 : 1; };
+    files.sort(function (a, b) {
+      return inLangFolder(a) - inLangFolder(b) || keyOf(a).localeCompare(keyOf(b), undefined, { numeric: true });
+    });
     files.forEach(function (file) {
-      if (picked[file.name]) URL.revokeObjectURL(picked[file.name]);
-      picked[file.name] = URL.createObjectURL(file);
-      if (hasVideo(file.name)) return;
-      var v = { name: file.name, lang: splitName(file.name).lang, secs: 0, plays: 0 };
+      var key = keyOf(file);
+      if (/(^|\/)(all subtitles|subtitles)\//i.test(key)) return;
+      if (picked[key]) URL.revokeObjectURL(picked[key]);
+      picked[key] = URL.createObjectURL(file);
+      if (hasVideo(key)) return;
+      var v = { name: key, lang: langOf(key), secs: 0, plays: 0 };
       // "Standard A.mp4", "Standard B.mp4" and "Standard - Mandarin.mp4" all go
       // in the "Standard" tile.
-      var m = niceTitle(file.name).match(/^(.+?)\s+\(?([A-Ea-e])\)?$/);
+      var m = niceTitle(key).match(/^(.+?)\s+\(?([A-Ea-e])\)?$/);
       var base = m ? m[1] : null;
       var same = base && state.tiles.filter(function (t) { return t.title.toLowerCase() === base.toLowerCase(); })[0];
       if (same) same.versions.push(v);
       else {
-        var title = base || niceTitle(file.name);
+        var title = base || niceTitle(key);
         var sameTitle = state.tiles.filter(function (t) { return t.title.toLowerCase() === title.toLowerCase(); })[0];
         if (sameTitle) sameTitle.versions.push(v);
         else state.tiles.push({ title: title, versions: [v] });
@@ -902,7 +945,7 @@
       ? "This browser won't let the player remember the films, so you'll need to choose them again next time. Opening the player in Chrome or Edge usually fixes this."
       : "");
     render();
-  });
+  }
 
   $("edit").onclick = function () { editing = !editing; render(); };
   $("title-field").addEventListener("input", function () {

@@ -53,11 +53,16 @@ export default async function MoviePlayerPage() {
               videos folder on Google Drive
             </a>
             . Put them and the player in the same folder on each laptop (or a
-            USB stick). MP4 videos play on Windows and Mac.
+            USB stick formatted as exFAT). With the language folders (French,
+            Arabic…), put the player in the folder that holds them. MP4 videos
+            play on Windows and Mac.
           </li>
           <li>
-            Open the player (double-click it), click <b>Choose films</b> and
-            select the videos. Each laptop remembers them after that.
+            Open the player (double-click it) and click <b>Choose films</b> to
+            pick videos, or <b>Choose a folder</b> to pick the folder with all
+            the language folders: each film gets its language from its folder,
+            and the menu shows a button for each language. Subtitle files are
+            skipped. Each laptop remembers them after that.
           </li>
           <li>
             For an A/B test, name the files like <i>Standard A.mp4</i> and{" "}

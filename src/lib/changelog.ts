@@ -135,6 +135,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: 'Movie player: "Choose a folder" (and "Add a folder") picks a whole folder of language folders at once, and each film gets its language from its folder. Now knows Afrikaans, Brazilian Portuguese, Croatian, Finnish, Hebrew, Lithuanian, Romanian, Swedish and Telugu too, and "Bahasa Indonesia" as Indonesian. Subtitle files are skipped. Download the player again to get this.',
+      },
+      {
+        level: "organiser",
         text: 'Share our events: a public page listing your community\'s upcoming events that anyone can open, no account needed (with Details and RSVP links, Add to your calendar, and a nudge to create an account). Share it with "Share" next to Calendar on your Events tab; members have "Share our events" next to Coming up. It shows a link to copy, your phone\'s share sheet, and a QR code.',
       },
       {
