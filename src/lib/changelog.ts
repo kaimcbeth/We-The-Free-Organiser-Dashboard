@@ -139,6 +139,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: 'Movie player: ignores the hidden "._" files a Mac leaves on USB sticks (they were being added as broken copies of films), and removes any already in the menu. Download the player again to get this.',
+      },
+      {
+        level: "organiser",
         text: 'On the day of an event, its card shows a live countdown: "Starts in 2h 15m", minutes and seconds in the last hour, then a pink "On now · 45m left". On your Today cards, Core Team\'s, and members\' Coming up.',
       },
       {

@@ -657,9 +657,14 @@
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { memoryOnly = true; }
   }
+  // Hidden files a Mac leaves on USB sticks ("._Standard A.mp4") aren't
+  // videos: drop any that were added before, and tiles left empty.
+  var junk = function (path) { return String(path).split("/").some(function (p) { return p.charAt(0) === "."; }); };
   state.tiles.forEach(function (t) {
+    t.versions = t.versions.filter(function (v) { return !junk(v.name); });
     t.versions.forEach(function (v) { if (!v.lang) v.lang = langOf(v.name); });
   });
+  state.tiles = state.tiles.filter(function (t) { return t.versions.length; });
   if (!state.lang) state.lang = "English";
 
   // Videos picked in this session play straight from the chosen file. On later
@@ -908,7 +913,9 @@
   // ("French/Standard.mp4"), so later it plays from there when this player
   // file sits in that folder. Subtitle files and the like are skipped.
   function addFiles(list, fromFolder) {
-    var files = Array.prototype.slice.call(list || []).filter(function (f) { return VIDEO.test(f.name); });
+    var files = Array.prototype.slice.call(list || []).filter(function (f) {
+      return VIDEO.test(f.name) && f.name.charAt(0) !== "." && !junk(f.webkitRelativePath || "");
+    });
     var keyOf = function (f) {
       var rel = fromFolder && f.webkitRelativePath ? f.webkitRelativePath.split("/").slice(1).join("/") : "";
       return rel || f.name;
