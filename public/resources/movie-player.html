@@ -984,9 +984,14 @@
   var video = $("video"), player = $("player"), current = null, idleTimer = 0;
 
   // A/B: the version played least on this laptop, picking at random between ties.
+  // Files that wouldn't load this session (moved, renamed, not on this
+  // laptop): skipped while another copy works.
+  var broken = {};
   function pickVersion(tile) {
     var pool = inLang(tile, state.lang);
     if (!pool.length) pool = tile.versions;
+    var ok = pool.filter(function (v) { return !broken[v.name]; });
+    if (ok.length) pool = ok;
     var least = Math.min.apply(null, pool.map(function (v) { return v.plays || 0; }));
     var options = pool.filter(function (v) { return (v.plays || 0) === least; });
     return options[Math.floor(Math.random() * options.length)];
@@ -1140,6 +1145,21 @@
   video.addEventListener("error", function () {
     if (!current || !video.getAttribute("src")) return;
     var name = current.version.name;
+    // Another copy of this film that might work? Play that instead, quietly.
+    broken[name] = true;
+    var pool = inLang(current.tile, state.lang);
+    if (!pool.length) pool = current.tile.versions;
+    var other = pool.filter(function (v) { return !broken[v.name]; })[0];
+    if (other) {
+      current.version.plays = Math.max(0, (current.version.plays || 1) - 1);
+      other.plays = (other.plays || 0) + 1; save();
+      current.version = other;
+      video.src = srcFor(other);
+      video.currentTime = 0;
+      var p = video.play();
+      if (p && p.catch) p.catch(function () { setPaused(); });
+      return;
+    }
     $("err-text").textContent = picked[name]
       ? "“" + name + "” won't play in this browser. MP4 videos play everywhere; try converting it to MP4."
       : "Can't find “" + name + "”. Make sure the video is in the same folder as this player, then choose it again with Add films.";
