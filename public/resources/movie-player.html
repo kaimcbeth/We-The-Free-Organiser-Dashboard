@@ -154,6 +154,7 @@
     display: none;
   }
   #player.on { display: block; }
+  #player.ended .bar, #player.ended #big-pause, #player.ended .stop-btn, #player.ended .help-btn { display: none; }
   #player.idle { cursor: none; }
   #video { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
   .bar {
@@ -200,8 +201,8 @@
     padding: clamp(20px, 4vw, 56px); text-align: center;
   }
   #survey.on, #count.on, #name-screen.on, #intro.on { display: flex; }
-  /* After a film: the question fades in slowly (5 s); taps count after the first 1.5 s */
-  #survey.fade-in { animation: surveyIn 5s ease forwards; }
+  /* After a film: the question fades in (3 s) over its last frame; taps count after the first 1 s */
+  #survey.fade-in { animation: surveyIn 3s ease forwards; }
   #survey.fade-in.wait { pointer-events: none; }
   @keyframes surveyIn { from { opacity: 0; } to { opacity: 1; } }
   #intro {
@@ -460,7 +461,7 @@
     <div class="ends"><span id="end0">0: Not at all</span><span id="end10">10: Extremely impactful</span></div>
     <button class="link" id="skip">Skip</button>
   </div>
-  <div id="thanks" hidden><span id="thanks-main">Thank you!</span><span id="thanks-next" class="thanks-next" hidden></span><small id="thanks-sub">Someone will be with you in a few seconds.</small></div>
+  <div id="thanks" hidden><span id="thanks-main">Thank you.</span><span id="thanks-next" class="thanks-next" hidden></span><small id="thanks-sub">Someone will be with you in a few seconds.</small></div>
 </div>
 
 <div id="results" role="dialog" aria-label="Survey results">
@@ -507,7 +508,7 @@
         end0: "0：完全没有",
         end10: "10：触动极大",
         skip: "跳过",
-        thanks: "谢谢！",
+        thanks: "谢谢。",
         chat: "马上就会有人过来。",
         howMany: "请问有几位一起观看？",
         more: "更多",
@@ -560,7 +561,7 @@
     choose: "Choose a film to watch", menu: "Menu",
     q: "How much did viewing this video impact you?",
     end0: "0: Not at all", end10: "10: Extremely impactful",
-    skip: "Skip", thanks: "Thank you!", chat: "Someone will be with you in a few seconds.",
+    skip: "Skip", thanks: "Thank you.", chat: "Someone will be with you in a few seconds.",
     howMany: "How many people are watching?", more: "More", start: "Start", back: "Back",
     person: "Person {n} of {t}", next: "Now Person {n}.",
     stopBtn: "I'm not comfortable watching this anymore",
@@ -1019,7 +1020,7 @@
     video.pause();
     video.removeAttribute("src");
     video.load();
-    player.classList.remove("on", "paused", "idle");
+    player.classList.remove("on", "paused", "idle", "ended");
     current = null;
   }
   function toMenu() {
@@ -1043,8 +1044,19 @@
   video.addEventListener("pause", setPaused);
   function endFilm() {
     var c = current;
-    stopVideo();
-    if (c) askSurvey(c.tile, c.version, c.viewers); else toMenu();
+    if (!c) { toMenu(); return; }
+    // Keep the film's last frame showing (controls and buttons hidden) so the
+    // question fades in over it, not over the menu. toMenu() clears it later.
+    current = null;
+    stoppedNow = false;
+    problemNow = false;
+    $("stopped").classList.remove("on");
+    $("problem").classList.remove("on");
+    player.classList.remove("stopped-on", "paused");
+    player.classList.add("ended");
+    clearTimeout(idleTimer);
+    video.pause();
+    askSurvey(c.tile, c.version, c.viewers);
   }
   video.addEventListener("ended", endFilm);
 
@@ -1384,11 +1396,7 @@
     if (p && p.catch) p.catch(function () { setPaused(); });
     status("playing");
   };
-  $("stopped-finish").onclick = function () {
-    var c = current;
-    stopVideo();
-    if (c) askSurvey(c.tile, c.version, c.viewers); else toMenu();
-  };
+  $("stopped-finish").onclick = endFilm;
 
   var surveyFilm = null, surveyVersion = null, surveyTimer = 0, surveyPerson = 1, surveyTotal = 1;
   for (var n = 0; n <= 10; n++) (function (score) {
@@ -1411,8 +1419,8 @@
     sv.classList.remove("fade-in", "wait");
     void sv.offsetWidth; // restart the fade
     sv.classList.add("on", "fade-in", "wait");
-    setTimeout(function () { sv.classList.remove("wait"); }, 1500);
-    setTimeout(function () { sv.classList.remove("fade-in"); }, 5100);
+    setTimeout(function () { sv.classList.remove("wait"); }, 1000);
+    setTimeout(function () { sv.classList.remove("fade-in"); }, 3100);
     showQuestion();
   }
   function showQuestion() {

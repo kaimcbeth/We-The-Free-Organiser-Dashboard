@@ -123,6 +123,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: 'Movie player: the impact question now fades in over 3 seconds, over the film\'s last frame (not the film menu). The thank-you screen reads "Thank you." (no exclamation mark). Download the player again to get these.',
+      },
+      {
+        level: "organiser",
         text: "Members now see today's Movie Challenge numbers under the live laptops on their Events page while laptops are running: how many have watched, the average impact, tapouts, and each film (and laptop) when there's more than one.",
       },
       {
