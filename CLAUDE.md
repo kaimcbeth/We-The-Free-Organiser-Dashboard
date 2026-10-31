@@ -115,6 +115,7 @@ git push origin main
 - 30 Oct evening mobile changes (event page, People, member profile, Photo Hub long-press) not yet checked on a real phone by me.
 - Townsville's activism.wtf calendar returns 404 every hour (team moved or closed?): ask Kai.
 - No real RSL accounts yet; leaked-password protection needs Supabase Pro (org is on Free).
+- Never put a `begin; … rollback;` test in the same `execute_sql` call as DDL: the whole call is one transaction, so the rollback undoes the migration too (31 Oct: 0152 trainings and 0155 my_film_results were silently lost this way and re-applied). Apply first, then test in a separate call, then confirm the objects exist.
 - Supabase approval prompts often time out here; `execute_sql` usually goes through without one (avoid `drop trigger`, use `create or replace trigger`; deletes may prompt). Otherwise send Kai the migration file for the SQL Editor.
 - Local dev server can't reach Supabase server-side (pages that load data on the server 404 locally); check those on the live site (fetch via `net.http_get` from SQL).
 - Not yet tried on a real device: Copy image in the graphic maker, Share on the member feedback link, double-tap photos on phones, Location picker; Write new options for prompt/incident, Find a throwback, Plan later; a real print of the sign splitter/table banner.
