@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LivePlayers } from "@/components/live-players";
 import { currentTz } from "@/lib/time";
+import { Countdown } from "@/components/countdown";
 import { requireCore } from "@/lib/organiser";
 import { LoadError } from "@/components/load-error";
 import {
@@ -91,6 +92,13 @@ export default async function AttendanceHome() {
                 <p className="mt-1 text-lg font-semibold leading-snug">
                   {e.title}
                 </p>
+                <Countdown
+                  start={e.starts_at}
+                  end={e.ends_at}
+                  tz={currentTz()}
+                  dark
+                  className="mt-2"
+                />
                 <div className="mt-4 flex items-center justify-between">
                   <span className="text-sm text-white/80">{e.here} here</span>
                   <span className="rounded-lg bg-pink px-3 py-1.5 text-sm font-semibold text-navy">

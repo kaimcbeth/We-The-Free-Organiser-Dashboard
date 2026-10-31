@@ -1,5 +1,7 @@
 "use client";
 
+import { Countdown } from "@/components/countdown";
+
 import { useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -81,6 +83,12 @@ export function MyEvents({ events, tz }: { events: MyEvent[]; tz: string }) {
                 ` – ${fmt(e.ends_at, { hour: "numeric", minute: "2-digit" })}`}
             </p>
             <p className="mt-0.5 font-semibold text-navy">{e.title}</p>
+            <Countdown
+              start={e.starts_at}
+              end={e.ends_at}
+              tz={tz}
+              className="mt-1"
+            />
             <p className="text-sm text-stone-500">
               {[e.type, e.venue ?? e.address].filter(Boolean).join(" · ")}
               {e.going > 0 && ` · ${e.going} going`}

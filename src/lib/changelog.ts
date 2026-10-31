@@ -135,6 +135,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: 'On the day of an event, its card shows a live countdown: "Starts in 2h 15m", minutes and seconds in the last hour, then a pink "On now · 45m left". On your Today cards, Core Team\'s, and members\' Coming up.',
+      },
+      {
+        level: "organiser",
         text: 'Movie player: "Choose a folder" (and "Add a folder") picks a whole folder of language folders at once, and each film gets its language from its folder. Now knows Afrikaans, Brazilian Portuguese, Croatian, Finnish, Hebrew, Lithuanian, Romanian, Swedish and Telugu too, and "Bahasa Indonesia" as Indonesian. Subtitle files are skipped. Download the player again to get this.',
       },
       {

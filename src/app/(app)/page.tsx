@@ -1,3 +1,4 @@
+import { Countdown } from "@/components/countdown";
 import { EventsShare } from "@/components/events-share";
 import { LivePlayers } from "@/components/live-players";
 import Link from "next/link";
@@ -321,6 +322,13 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
                   <p className="mt-1 text-lg font-semibold leading-snug">
                     {e.title}
                   </p>
+                  <Countdown
+                    start={e.starts_at}
+                    end={e.ends_at}
+                    tz={organiser.team.timezone}
+                    dark
+                    className="mt-2"
+                  />
                   <div className="mt-4 flex items-center justify-between">
                     <span className="text-sm text-white/80">
                       {e.attendance[0]?.count ?? 0} here
