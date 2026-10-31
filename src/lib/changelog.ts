@@ -67,6 +67,14 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Photos attached to an event now stay in the Photo Hub too (they used to disappear from it). They're dated by their event.",
+      },
+      {
+        level: "organiser",
+        text: "Make graphic from any photo: tap a photo in the Photo Hub, choose Make graphic, pick the event, and the graphic maker opens with that photo.",
+      },
+      {
+        level: "organiser",
         text: "Rain on the way? When the forecast for an upcoming event (in the next week) is more than 30% chance of rain, you'll get an action to make a backup plan. The forecast is checked every 3 hours and shown on the action. You can switch it off in Choose actions.",
       },
       {

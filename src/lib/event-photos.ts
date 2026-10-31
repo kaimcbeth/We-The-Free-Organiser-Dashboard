@@ -33,6 +33,7 @@ export type EventPhoto = {
   tags: PhotoTag[];
   cropped: boolean; // the original is kept and can be restored
   eventKind: string | null; // e.g. Potluck (see event-kinds)
+  eventTitle?: string | null; // when attached to an event
 };
 
 type Row = {
@@ -47,6 +48,7 @@ type Row = {
   tags: PhotoTag[] | null;
   original_path: string | null;
   event_kind: string | null;
+  event?: { starts_at: string; title: string } | null;
 };
 
 async function sign(supabase: SupabaseClient, rows: Row[]) {
@@ -64,8 +66,17 @@ async function sign(supabase: SupabaseClient, rows: Row[]) {
       favourite: r.favourite,
       noPromo: r.no_promo,
       eventId: r.event_id,
-      takenYear: r.taken_year,
-      takenMonth: r.taken_month,
+      // Photos attached to an event are dated by it unless set by hand.
+      takenYear:
+        r.taken_year ??
+        (r.event ? new Date(r.event.starts_at).getFullYear() : null),
+      takenMonth:
+        r.taken_year != null
+          ? r.taken_month
+          : r.event
+            ? new Date(r.event.starts_at).getMonth() + 1
+            : null,
+      eventTitle: r.event?.title ?? null,
       caption: r.caption,
       tags: r.tags ?? [],
       cropped: !!r.original_path,
@@ -111,24 +122,29 @@ export async function loadPromoPhotos(
   return sign(supabase, data ?? []);
 }
 
-// Community photos (not from one event): newest rough date first, then
-// undated ones.
+// Newest rough date first, then undated ones (keeps the order otherwise).
+const byDate = (list: EventPhoto[]) =>
+  list.sort(
+    (a, b) =>
+      (b.takenYear ?? 0) - (a.takenYear ?? 0) ||
+      (b.takenMonth ?? 0) - (a.takenMonth ?? 0),
+  );
+
+// The Photo Hub: all a community's photos, including ones attached to an
+// event (Kai, 1 Nov 2026: attaching must not take them out of the hub).
 export async function loadCommunityPhotos(
   supabase: SupabaseClient,
   teamId: string,
 ): Promise<EventPhoto[]> {
   const { data } = await supabase
     .from("event_photos")
-    .select(COLS)
+    .select(`${COLS}, event:events(starts_at, title)`)
     .eq("team_id", teamId)
-    .is("event_id", null)
     .is("archived_at", null)
-    .order("taken_year", { ascending: false, nullsFirst: false })
-    .order("taken_month", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
-    .limit(500)
+    .limit(1000)
     .returns<Row[]>();
-  return sign(supabase, data ?? []);
+  return byDate(await sign(supabase, data ?? []));
 }
 
 // Promo photos from a community's events in one month (in its time zone),
@@ -174,7 +190,6 @@ export async function loadRemovedCommunityPhotos(
     .from("event_photos")
     .select(COLS)
     .eq("team_id", teamId)
-    .is("event_id", null)
     .not("archived_at", "is", null)
     .order("archived_at", { ascending: false })
     .limit(200)

@@ -298,6 +298,9 @@ export function GraphicMaker({
   label,
   className = "text-xs font-medium text-pink-ink hover:underline",
   carousel = false,
+  photo,
+  startOpen = false,
+  onClose,
 }: {
   event: GraphicEvent;
   tz: string;
@@ -306,8 +309,15 @@ export function GraphicMaker({
   label?: string;
   className?: string;
   carousel?: boolean; // a carousel of the event's photos instead of one graphic
+  photo?: EventPhoto; // started from a Photo Hub photo: use it
+  startOpen?: boolean; // opened straight away (no button)
+  onClose?: () => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(startOpen);
+  const close = () => {
+    setOpen(false);
+    onClose?.();
+  };
   const [size, setSize] = useState<GraphicSize>(initialSize);
   // Past events start on "Thanks for coming", upcoming ones on "Promote it".
   const [template, setTemplate] = useState<Template>(
@@ -317,7 +327,7 @@ export function GraphicMaker({
   );
   const [promoPhotos, setPromoPhotos] = useState<EventPhoto[]>([]);
   const [ownPhotos, setOwnPhotos] = useState<EventPhoto[]>([]);
-  const [chosen, setChosen] = useState<string | null>(null); // photo id, "" = none
+  const [chosen, setChosen] = useState<string | null>(photo?.id ?? null); // photo id, "" = none
   const [tag, setTag] = useState<PhotoFilter>(null);
   const [imgs, setImgs] = useState<HTMLImageElement[]>([]);
   const [logo, setLogo] = useState<HTMLImageElement | null>(null);
@@ -341,8 +351,11 @@ export function GraphicMaker({
         : Promise.resolve([]),
     ]).then(([promo, own]) => {
       if (!live) return;
-      setPromoPhotos(promo);
-      const usable = own.filter((p) => !p.noPromo);
+      // A photo picked in the Photo Hub comes first in both lists.
+      const lead = (list: EventPhoto[]) =>
+        photo ? [photo, ...list.filter((p) => p.id !== photo.id)] : list;
+      setPromoPhotos(lead(promo));
+      const usable = lead(own.filter((p) => !p.noPromo));
       setOwnPhotos(usable);
       // No photos from this event yet: nothing to thank people with.
       if (usable.length === 0) setTemplate("promo");
@@ -350,7 +363,7 @@ export function GraphicMaker({
     return () => {
       live = false;
     };
-  }, [open, event.teamId, event.eventId, reload]);
+  }, [open, event.teamId, event.eventId, reload, photo]);
 
   // Which photos the current template uses.
   const all = template === "recap" ? ownPhotos : promoPhotos;
@@ -472,14 +485,17 @@ export function GraphicMaker({
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={className}>
-        {label ?? (carousel ? "Make carousel" : "Make graphic")}
-      </button>
-      {open && (
-        <Sheet
-          title={carousel ? "Carousel" : "Event graphic"}
-          onClose={() => setOpen(false)}
+      {!startOpen && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className={className}
         >
+          {label ?? (carousel ? "Make carousel" : "Make graphic")}
+        </button>
+      )}
+      {open && (
+        <Sheet title={carousel ? "Carousel" : "Event graphic"} onClose={close}>
           {carousel && ownPhotos.length === 0 ? (
             <p className="mt-1 text-sm text-stone-600">
               Add photos from this event and you can make a carousel from them.

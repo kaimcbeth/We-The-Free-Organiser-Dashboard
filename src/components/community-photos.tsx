@@ -278,6 +278,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                     onChange={(c) => change(p, c)}
                     canRemove
                     kinds={kinds}
+                    graphic
                     selected={sel?.has(p.id)}
                     onModSelect={() => {
                       setOpen(null);
@@ -336,7 +337,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                 .in("id", ids);
               setSel(null);
               setMoved(
-                `${ids.length} photo${ids.length === 1 ? "" : "s"} moved to ${ev?.label ?? "the event"}. Find them on that event's page.`,
+                `${ids.length} photo${ids.length === 1 ? "" : "s"} attached to ${ev?.label ?? "the event"}. They're on that event's page and still here in the Photo Hub.`,
               );
               setReload((r) => r + 1);
             }}

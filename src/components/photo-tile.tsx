@@ -1,5 +1,6 @@
 "use client";
 
+import { PhotoGraphic } from "@/components/photo-graphic";
 import { useEffect, useRef, useState } from "react";
 import { PhotoCrop, resetCrop } from "@/components/photo-crop";
 import { CarouselMaker } from "@/components/carousel-maker";
@@ -45,8 +46,10 @@ export function PhotoTile({
   onSelect,
   onModSelect,
   kinds,
+  graphic = false,
 }: {
   kinds?: string[]; // event kinds to choose from (Photo Hub)
+  graphic?: boolean; // "Make graphic" in the menu (Photo Hub)
   p: EventPhoto;
   teamId: string;
   open: boolean;
@@ -62,6 +65,7 @@ export function PhotoTile({
   const item = "block w-full rounded-lg px-2 py-1 text-left hover:bg-stone-100";
   const box = useRef<HTMLLIElement>(null);
   const [cropping, setCropping] = useState(false);
+  const [making, setMaking] = useState(false); // Make graphic
   const [big, setBig] = useState(false); // double-click: full screen
   // Long press (phones): select this photo, like Ctrl/Cmd-click on a computer.
   const press = useRef<{
@@ -257,6 +261,18 @@ export function PhotoTile({
               Reset to original
             </button>
           )}
+          {graphic && (
+            <button
+              type="button"
+              onClick={() => {
+                onToggle();
+                setMaking(true);
+              }}
+              className={item}
+            >
+              Make graphic
+            </button>
+          )}
           <a
             href={p.url}
             download
@@ -296,6 +312,13 @@ export function PhotoTile({
             </p>
           )}
         </div>
+      )}
+      {making && (
+        <PhotoGraphic
+          photo={p}
+          teamId={teamId}
+          onClose={() => setMaking(false)}
+        />
       )}
       {cropping && (
         <PhotoCrop
