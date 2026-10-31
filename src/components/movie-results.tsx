@@ -268,13 +268,8 @@ export function MovieResults({
 
       <section className="mt-6">
         <h2 className="text-lg font-semibold tracking-tight">
-          Which film has the most impact
+          Average Impact Survey Responses
         </h2>
-        <p className="mt-0.5 text-sm text-stone-600">
-          Average answer to &ldquo;How much did viewing this video impact
-          you?&rdquo; (0 to 10), all events so far. {all.views} viewers, {all.n}{" "}
-          answered.
-        </p>
         {ranked.length === 0 ? (
           <p className="mt-3 text-sm text-stone-500">
             No answers yet. They&apos;ll show here after your first Movie
@@ -603,11 +598,7 @@ function Row({
           <span className="text-red-700">
             {" "}
             · {s.stops}
-            {s.stops === 1 ? " tapout" : " tapouts"}, on average at{" "}
-            {mmss(s.secs / s.stops)}
-            {s.fracN
-              ? ` (${Math.round((s.frac / s.fracN) * 100)}% through)`
-              : ""}
+            {s.stops === 1 ? " tapout" : " tapouts"}
           </span>
         )}
       </p>

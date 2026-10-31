@@ -135,6 +135,14 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: 'Share our events: a public page listing your community\'s upcoming events that anyone can open, no account needed (with Details and RSVP links, Add to your calendar, and a nudge to create an account). Share it with "Share" next to Calendar on your Events tab; members have "Share our events" next to Coming up. It shows a link to copy, your phone\'s share sheet, and a QR code.',
+      },
+      {
+        level: "organiser",
+        text: 'Movie Challenge results: the section is now called "Average Impact Survey Responses", and tapouts show just how many (no average time).',
+      },
+      {
+        level: "organiser",
         text: "Members' Photo Hub: a Share button on the big view of a photo, which sends the photo itself through the phone's share sheet (or downloads it on a computer). Photos marked not for promo can't be shared, only downloaded.",
       },
       {

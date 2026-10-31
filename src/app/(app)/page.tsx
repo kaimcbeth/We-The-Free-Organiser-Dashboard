@@ -1,3 +1,4 @@
+import { EventsShare } from "@/components/events-share";
 import { LivePlayers } from "@/components/live-players";
 import Link from "next/link";
 import { CalendarFeed } from "@/components/add-to-calendar";
@@ -234,6 +235,17 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
         <div className="flex items-baseline gap-3">
           <h1 className="text-2xl font-semibold tracking-tight">Events</h1>
           {calendarToken && <CalendarFeed token={calendarToken} />}
+          {!organiser.exampleMode && !organiser.allCommunities && (
+            <EventsShare
+              slug={organiser.team.slug}
+              community={organiser.team.name.replace(
+                /, (Australia|New Zealand)$/,
+                "",
+              )}
+              label="Share"
+              className="text-xs font-medium text-stone-500 hover:text-stone-800 hover:underline"
+            />
+          )}
         </div>
         <div className="flex gap-2">
           <TeamLinkButton

@@ -11,6 +11,7 @@ import { TaskCard } from "@/components/task-card";
 import { loadMyTasks } from "@/lib/tasks";
 import { MemberTutorial, ReplayTour } from "./member-tutorial";
 import { MyEvents, type MyEvent } from "./my-events";
+import { EventsShare } from "@/components/events-share";
 import { TrainingNudge, type MyTrainings } from "./trainings";
 
 type Me = {
@@ -33,6 +34,7 @@ type Me = {
   welcome_done_at: string | null;
   team: {
     name: string;
+    slug: string;
     whatsapp_url: string | null;
     timezone: string;
     activism_team_url: string | null;
@@ -50,7 +52,7 @@ export default async function MePage() {
     supabase
       .from("people")
       .select(
-        "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, started_on, found_via, found_via_person_id, found_via_note, photo_updated_at, tutorial_done_at, notify_channel, whatsapp_joined_at, welcome_done_at, team:teams!people_team_id_fkey(name, whatsapp_url, timezone, activism_team_url)",
+        "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, started_on, found_via, found_via_person_id, found_via_note, photo_updated_at, tutorial_done_at, notify_channel, whatsapp_joined_at, welcome_done_at, team:teams!people_team_id_fkey(name, slug, whatsapp_url, timezone, activism_team_url)",
       )
       .eq("user_id", user.id)
       .maybeSingle<Me>(),
@@ -138,9 +140,17 @@ export default async function MePage() {
       )}
 
       <section id="coming-up" className="scroll-mt-4">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
-          Coming up
-        </h2>
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+            Coming up
+          </h2>
+          {me.team?.slug && (
+            <EventsShare
+              slug={me.team.slug}
+              community={me.team.name.replace(/, (Australia|New Zealand)$/, "")}
+            />
+          )}
+        </div>
         <MyEvents
           events={(upcoming as MyEvent[] | null) ?? []}
           tz={me.team?.timezone ?? DEFAULT_TZ}
