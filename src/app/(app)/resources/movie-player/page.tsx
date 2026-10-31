@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireOrganiser } from "@/lib/organiser";
-import { MovieResults } from "./movie-results";
+import { MovieResults } from "@/components/movie-results";
 import { LivePlayers } from "@/components/live-players";
 
 export default async function MoviePlayerPage() {

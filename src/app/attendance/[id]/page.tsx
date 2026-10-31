@@ -2,7 +2,7 @@ import Link from "next/link";
 import { LivePlayers } from "@/components/live-players";
 import { showLivePlayers } from "@/lib/live-window";
 import { requireCore } from "@/lib/organiser";
-import { formatEventDate, formatTimeRange } from "@/lib/time";
+import { currentTz, formatEventDate, formatTimeRange } from "@/lib/time";
 import type { HelperState } from "@/app/checkin/[token]/helper-check-in";
 import { CoreCheckIn } from "./core-check-in";
 import { EventPhotos } from "@/components/event-photos";
@@ -54,17 +54,17 @@ export default async function CoreAttendancePage({
       <h1 className="mt-0.5 text-2xl font-semibold leading-tight tracking-tight">
         {e.title}
       </h1>
+      {showLivePlayers(e.title, e.starts_at, e.ends_at) && (
+        <div className="mt-6">
+          <LivePlayers withToday={currentTz()} />
+        </div>
+      )}
       <EventPhotos
         key={photos.map((p) => p.id).join()}
         teamId={organiser.team_id}
         eventId={id}
         photos={photos}
       />
-      {showLivePlayers(e.title, e.starts_at, e.ends_at) && (
-        <div className="mt-6">
-          <LivePlayers />
-        </div>
-      )}
       <CoreCheckIn eventId={id} state={state} />
     </div>
   );

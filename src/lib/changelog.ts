@@ -127,7 +127,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Members now see today's Movie Challenge numbers under the live laptops on their Events page while laptops are running: how many have watched, the average impact, tapouts, and each film (and laptop) when there's more than one.",
+        text: "While Movie Challenge laptops are running, the full results (live watched today, and which film has the most impact, by language and A/B test) now show under the live laptops at the top of members' Events page, your Events tab, Core Team's Attendance page, and Movie Challenge event pages. They're also still in Resources → Movie player.",
       },
       {
         level: "organiser",

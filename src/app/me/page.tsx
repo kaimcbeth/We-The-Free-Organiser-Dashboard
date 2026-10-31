@@ -128,7 +128,7 @@ export default async function MePage() {
   return (
     <>
       <div className="mb-6 empty:hidden">
-        <LivePlayers noIntro withToday />
+        <LivePlayers noIntro withToday={me.team?.timezone ?? DEFAULT_TZ} />
       </div>
 
       {me.team?.whatsapp_url && !me.whatsapp_joined_at && (

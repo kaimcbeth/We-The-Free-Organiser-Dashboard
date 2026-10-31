@@ -271,7 +271,7 @@ export default async function EventCheckInPage({
 
       {showLivePlayers(event.title, event.starts_at, event.ends_at) && (
         <div className="mt-6">
-          <LivePlayers teamId={event.team_id} />
+          <LivePlayers teamId={event.team_id} withToday={team.timezone} />
           <Link
             href="/resources/movie-player"
             className="mt-2 inline-block text-xs font-medium text-stone-500 hover:text-stone-800 hover:underline"

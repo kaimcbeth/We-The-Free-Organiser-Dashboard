@@ -1,3 +1,4 @@
+import { LivePlayers } from "@/components/live-players";
 import Link from "next/link";
 import { CalendarFeed } from "@/components/add-to-calendar";
 import { cookies } from "next/headers";
@@ -220,6 +221,15 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
 
   return (
     <div className="space-y-8">
+      {!organiser.exampleMode && !organiser.allCommunities && (
+        <div className="empty:hidden">
+          <LivePlayers
+            teamId={organiser.team_id}
+            withToday={organiser.team.timezone}
+            hideWhenEmpty
+          />
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div className="flex items-baseline gap-3">
           <h1 className="text-2xl font-semibold tracking-tight">Events</h1>

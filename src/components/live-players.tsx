@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { MovieResults } from "@/components/movie-results";
 
 type Player = {
   device: string;
@@ -90,11 +91,15 @@ function urgent(ctx: AudioContext) {
 export function LivePlayers({
   teamId,
   noIntro = false,
-  withToday = false,
+  withToday,
+  hideWhenEmpty = false,
 }: {
   teamId?: string;
   noIntro?: boolean; // members' Events page: just the laptops, no explainer
-  withToday?: boolean; // also today's views and impact (members' Events page)
+  // The community's timezone, to also show the Movie Challenge results
+  // (watched today, which film has the most impact) while laptops run.
+  withToday?: string;
+  hideWhenEmpty?: boolean; // with teamId: show nothing until laptops run
 }) {
   const everyone = !teamId;
   const [players, setPlayers] = useState<Player[] | null>(null);
@@ -110,8 +115,7 @@ export function LivePlayers({
   const alertsRef = useRef(false);
 
   const count = useRef(0);
-  const [today, setToday] = useState<Today | null>(null);
-  const todayAt = useRef(0);
+
   const load = useCallback(async () => {
     const supabase = createClient();
     const { data } = teamId
@@ -142,14 +146,9 @@ export function LivePlayers({
       }
     }
     prev.current = Object.fromEntries(d.players.map((p) => [p.device, p]));
-    if (withToday && d.players.length && Date.now() - todayAt.current > 9000) {
-      todayAt.current = Date.now();
-      const { data: t } = await supabase.rpc("my_movie_today");
-      if (t) setToday(t as Today);
-    }
     if (Object.keys(finished).length) setDone((x) => ({ ...x, ...finished }));
     setPlayers(d.players);
-  }, [teamId, withToday]);
+  }, [teamId]);
 
   useEffect(() => {
     // Every 3 s while laptops are running; members' pages check every 20 s
@@ -159,7 +158,10 @@ export function LivePlayers({
     const loop = async () => {
       if (document.visibilityState === "visible") await load();
       if (!stop)
-        timer = setTimeout(loop, everyone && !count.current ? 20000 : 3000);
+        timer = setTimeout(
+          loop,
+          (everyone || hideWhenEmpty) && !count.current ? 20000 : 3000,
+        );
     };
     timer = setTimeout(loop, 0);
     const tick = setInterval(() => setNow(Date.now()), 250);
@@ -168,7 +170,7 @@ export function LivePlayers({
       clearTimeout(timer);
       clearInterval(tick);
     };
-  }, [load, everyone]);
+  }, [load, everyone, hideWhenEmpty]);
 
   const serverNow = now + skew;
   const left = (p: Player) =>
@@ -279,10 +281,10 @@ export function LivePlayers({
   }, [alertsOn]);
 
   if (!players) return null;
-  if (everyone && players.length === 0) return null;
+  if ((everyone || hideWhenEmpty) && players.length === 0) return null;
 
   return (
-    <section className={everyone ? "" : "mt-6"}>
+    <section className={everyone || hideWhenEmpty ? "" : "mt-6"}>
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="text-lg font-semibold tracking-tight">
           Live at the event
@@ -417,8 +419,8 @@ export function LivePlayers({
           })}
         </ul>
       )}
-      {withToday && today && today.views > 0 && players.length > 0 && (
-        <TodayStats today={today} />
+      {withToday && players.length > 0 && (
+        <MovieResults member teamId={teamId} tz={withToday} />
       )}
     </section>
   );
@@ -448,70 +450,6 @@ function Progress({
       <p className="mt-1 text-xs tabular-nums opacity-75">
         {mmss(done)} / {mmss(total)}
       </p>
-    </div>
-  );
-}
-
-type Today = {
-  views: number;
-  answered: number;
-  avg: number | null;
-  tapouts: number;
-  films: { film: string; views: number; avg: number | null }[];
-  laptops: { laptop: string; views: number }[];
-};
-
-// Today's numbers so far: how many have watched and how much it impacted them.
-function TodayStats({ today }: { today: Today }) {
-  const top = Math.max(1, ...today.films.map((f) => f.views));
-  return (
-    <div className="mt-4 rounded-2xl bg-navy p-4 text-white shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wide text-cyan">
-        Watched today
-      </p>
-      <div className="mt-1 flex flex-wrap items-baseline gap-x-5 gap-y-1">
-        <span className="text-4xl font-bold tabular-nums">{today.views}</span>
-        {today.avg !== null && (
-          <span className="text-sm text-white/80">
-            Average impact{" "}
-            <span className="text-lg font-semibold text-white">
-              {Number(today.avg).toFixed(1)}
-            </span>{" "}
-            / 10
-          </span>
-        )}
-        {today.tapouts > 0 && (
-          <span className="text-sm text-white/80">
-            {today.tapouts} {today.tapouts === 1 ? "tapout" : "tapouts"}
-          </span>
-        )}
-      </div>
-      {today.films.length > 1 && (
-        <ul className="mt-3 space-y-2">
-          {today.films.map((f) => (
-            <li key={f.film} className="text-sm">
-              <div className="flex justify-between gap-3">
-                <span>{f.film}</span>
-                <span className="tabular-nums text-white/80">
-                  {f.views}
-                  {f.avg !== null ? ` · ${Number(f.avg).toFixed(1)}` : ""}
-                </span>
-              </div>
-              <div className="mt-1 h-1.5 rounded-full bg-white/10">
-                <div
-                  className="h-1.5 rounded-full bg-pink"
-                  style={{ width: `${(f.views / top) * 100}%` }}
-                />
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-      {today.laptops.length > 1 && (
-        <p className="mt-3 text-xs text-white/60">
-          {today.laptops.map((l) => `${l.laptop}: ${l.views}`).join(" · ")}
-        </p>
-      )}
     </div>
   );
 }

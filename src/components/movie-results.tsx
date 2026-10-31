@@ -85,13 +85,32 @@ function ago(iso: string, now: number) {
 }
 
 // Live count for the day, and which film (and A/B version) has the most impact.
-export function MovieResults({ teamId, tz }: { teamId: string; tz: string }) {
+// With `member`, it's read-only: no list for deleting test answers (members,
+// Core Team, and event pages). Without `teamId`, it loads the caller's own
+// community through my_film_results().
+export function MovieResults({
+  teamId,
+  tz,
+  member = false,
+}: {
+  teamId?: string;
+  tz: string;
+  member?: boolean;
+}) {
   const [rows, setRows] = useState<Answer[] | null>(null);
   const [stops, setStops] = useState<Stop[]>([]);
   const [now, setNow] = useState(0);
 
   const load = useCallback(async () => {
     const supabase = createClient();
+    if (!teamId) {
+      const { data: r } = await supabase.rpc("my_film_results");
+      const d = r as { answers: Answer[]; stops: Stop[] } | null;
+      setRows(d?.answers ?? []);
+      setStops(d?.stops ?? []);
+      setNow(Date.now());
+      return;
+    }
     const [{ data }, { data: st }] = await Promise.all([
       supabase
         .from("film_survey_responses")
@@ -111,7 +130,7 @@ export function MovieResults({ teamId, tz }: { teamId: string; tz: string }) {
     setRows((data ?? []) as Answer[]);
     setStops((st ?? []) as Stop[]);
     setNow(Date.now());
-  }, [teamId]);
+  }, [teamId, member]);
 
   useEffect(() => {
     const first = setTimeout(load, 0);
@@ -321,7 +340,7 @@ export function MovieResults({ teamId, tz }: { teamId: string; tz: string }) {
         )}
       </section>
 
-      {rows.length + stops.length > 0 && (
+      {!member && rows.length + stops.length > 0 && (
         <AllAnswers rows={rows} stops={stops} tz={tz} onChange={load} />
       )}
     </>
