@@ -6,7 +6,7 @@
 // overwrites an event type an organiser has chosen.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { cleanTitle, guessType, parseIcs, splitLocation } from "./ics.ts";
+import { displayTitle, guessType, isCoworking, parseIcs, splitLocation } from "./ics.ts";
 
 const LOOKBACK_DAYS = 14;
 const BATCH = 70; // communities per scheduled run
@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
 
       const { data: existing } = await supabase
         .from("events")
-        .select("id, source_uid, title, starts_at, ends_at, venue, address, description, source_url")
+        .select("id, source_uid, title, starts_at, ends_at, venue, address, description, source_url, event_type_id")
         .eq("team_id", team.id)
         .not("source_uid", "is", null);
       const byUid = new Map((existing ?? []).map((e) => [e.source_uid as string, e]));
@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
         const venue = e.venueName && e.venueName !== e.location ? e.venueName : split.venue;
         const address = e.venueName ? e.location : split.address;
         const row = {
-          title: cleanTitle(e.summary),
+          title: displayTitle(e.summary, e.description),
           starts_at: e.startsAt,
           ends_at: e.endsAt,
           venue,
@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
         };
         const prev = byUid.get(e.uid);
         if (!prev) {
-          const guessed = guessType(e.summary);
+          const guessed = guessType(e.summary, e.description);
           const { error } = await supabase.from("events").insert({
             ...row,
             team_id: team.id,
@@ -97,10 +97,21 @@ Deno.serve(async (req) => {
             prev.address !== row.address ||
             prev.description !== row.description ||
             prev.source_url !== row.source_url;
-          if (changed) {
+          // Only a guessed "Community Event" (or no type) moves to Co-working;
+          // any other type an organiser picked is left alone.
+          const cowork =
+            isCoworking(e.summary, e.description) &&
+            (!prev.event_type_id || prev.event_type_id === typeId.get("Community Event"))
+              ? typeId.get("Co-working")
+              : undefined;
+          if (changed || cowork) {
             const { error } = await supabase
               .from("events")
-              .update({ ...row, updated_at: new Date().toISOString() })
+              .update({
+                ...row,
+                ...(cowork ? { event_type_id: cowork } : {}),
+                updated_at: new Date().toISOString(),
+              })
               .eq("id", prev.id);
             if (error) throw new Error(`Updating "${row.title}": ${error.message}`);
             run.updated++;

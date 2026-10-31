@@ -119,10 +119,29 @@ export function cleanTitle(summary: string): string {
   return t || summary.trim();
 }
 
-// Best guess at the event type from its title. null = leave for an organiser to pick.
-export function guessType(summary: string): string | null {
+// Co-working events are often listed on activism.wtf as just "Social", with
+// "co-working" only in the description (Kai, 1 Nov 2026). The opening of the
+// description is enough; FAQs further down can mention anything.
+const COWORK = /co-?working|\bcowork/i;
+export function isCoworking(summary: string, description?: string | null): boolean {
+  if (/movie challenge|3\s?mmc|minute movie/i.test(summary)) return false;
+  return COWORK.test(summary) || COWORK.test((description ?? "").slice(0, 600));
+}
+
+// The title shown in the Hub: a generic "Social" that's really co-working
+// becomes "Vegan Co-Working Hang"; anything more specific is kept.
+export function displayTitle(summary: string, description?: string | null): string {
+  const t = cleanTitle(summary);
+  if (isCoworking(summary, description) && /^(social|community event|hang ?out|co-?working|cowork(ing)?)$/i.test(t))
+    return "Vegan Co-Working Hang";
+  return t;
+}
+
+// Best guess at the event type from its title (and, for co-working, the
+// description). null = leave for an organiser to pick.
+export function guessType(summary: string, description?: string | null): string | null {
   if (/movie challenge|3\s?mmc|minute movie/i.test(summary)) return "Movie Challenge";
-  if (/co-?working|\bcowork/i.test(summary)) return "Co-working";
+  if (isCoworking(summary, description)) return "Co-working";
   if (/\bsocial\b|lunch|dinner|picnic|potluck|gathering|new years?|community/i.test(summary)) return "Community Event";
   if (/workshop|training|introduction to|intro to|strategy/i.test(summary)) return "Workshop/Training";
   if (/outreach|cube|vigil|stall|demo\b|protest|street/i.test(summary)) return "Other Outreach";

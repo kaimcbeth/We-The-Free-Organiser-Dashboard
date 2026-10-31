@@ -40,7 +40,7 @@ export type PosterText = {
   badge: [string, string];
   left: string | null;
   right: string | null;
-  footer: string;
+  footer: string | null; // null = no footer (rules and text left off)
 };
 
 const fmt = (iso: string, tz: string, o: Intl.DateTimeFormatOptions) =>
@@ -73,6 +73,8 @@ export function posterText(
   recap: boolean,
   heading: string,
   tagline: string,
+  footer = "", // the organiser's own footer; empty = the default
+  noFooter = false,
 ): PosterText {
   const d = posterDefaults(e, recap);
   const tag = tagline.trim() || d.tagline;
@@ -94,9 +96,12 @@ export function posterText(
         ? `${time(e.startsAt, tz)} – ${time(e.endsAt, tz)}`
         : time(e.startsAt, tz),
     right: (e.venue ?? e.address)?.toUpperCase() ?? null,
-    footer: [first, e.community?.toUpperCase(), "ACTIVISM.WTF"]
-      .filter(Boolean)
-      .join("  |  "),
+    footer: noFooter
+      ? null
+      : footer.trim().toUpperCase() ||
+        [first, e.community?.toUpperCase(), "ACTIVISM.WTF"]
+          .filter(Boolean)
+          .join("  |  "),
   };
 }
 
@@ -315,16 +320,19 @@ export function drawPoster(
   // From the bottom up: footer, time and place, tagline.
   const rule = Math.max(2, 3 * u);
   const rule2 = h - (wide ? 70 : 95) * u;
-  const rule1 = rule2 - 82 * u;
+  // No footer: the time and place drop down to where the footer was.
+  const rule1 = t.footer ? rule2 - 82 * u : rule2 + 10 * u;
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(colL, rule1, colW, rule);
-  ctx.fillRect(colL, rule2, colW, rule);
-  fit(ctx, t.footer, body(700), 26 * u, 14 * u, colW);
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(t.footer, (colL + colR) / 2, (rule1 + rule2 + rule) / 2);
-  ctx.textAlign = "left";
-  ctx.textBaseline = "alphabetic";
+  if (t.footer) {
+    ctx.fillRect(colL, rule1, colW, rule);
+    ctx.fillRect(colL, rule2, colW, rule);
+    fit(ctx, t.footer, body(700), 26 * u, 14 * u, colW);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(t.footer, (colL + colR) / 2, (rule1 + rule2 + rule) / 2);
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
+  }
 
   const ds = 54 * u;
   let detailTop = rule1 - 40 * u;

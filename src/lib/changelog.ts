@@ -75,6 +75,14 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Poster graphics: change the bottom line to your own words, or remove it.",
+      },
+      {
+        level: "organiser",
+        text: 'Co-working events are now recognised from activism.wtf even when they\'re listed as just "Social": they\'re marked as Co-working and called "Vegan Co-Working Hang".',
+      },
+      {
+        level: "organiser",
         text: "Rain on the way? When the forecast for an upcoming event (in the next week) is more than 30% chance of rain, you'll get an action to make a backup plan. The forecast is checked every 3 hours and shown on the action. You can switch it off in Choose actions.",
       },
       {

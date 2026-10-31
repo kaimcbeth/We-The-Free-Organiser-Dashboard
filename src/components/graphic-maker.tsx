@@ -336,6 +336,8 @@ export function GraphicMaker({
   const [fonts, setFonts] = useState(false);
   const [heading, setHeading] = useState("");
   const [tagline, setTagline] = useState("");
+  const [footer, setFooter] = useState("");
+  const [noFooter, setNoFooter] = useState(false);
   const [reload, setReload] = useState(0); // bumped after an upload
   const canvas = useRef<HTMLCanvasElement>(null);
 
@@ -427,7 +429,15 @@ export function GraphicMaker({
       drawPoster(canvas.current, {
         w,
         h,
-        text: posterText(event, tz, template === "recap", heading, tagline),
+        text: posterText(
+          event,
+          tz,
+          template === "recap",
+          heading,
+          tagline,
+          footer,
+          noFooter,
+        ),
         imgs,
         logo,
         mark,
@@ -448,8 +458,12 @@ export function GraphicMaker({
     mark,
     heading,
     tagline,
+    footer,
+    noFooter,
   ]);
   const defaults = posterDefaults(event, template === "recap");
+  const defaultFooter =
+    posterText(event, tz, template === "recap", heading, tagline).footer ?? "";
 
   const [copied, setCopied] = useState<"" | "done" | "failed">("");
   // Copy the picture, to paste straight into WhatsApp, Instagram or Facebook.
@@ -575,6 +589,28 @@ export function GraphicMaker({
                       className="mt-1 block w-full rounded-lg bg-white px-2.5 py-1.5 text-sm text-navy ring-1 ring-stone-300 placeholder:text-stone-400"
                     />
                   </label>
+                  <div className="text-xs font-medium text-stone-500 sm:col-span-2">
+                    <div className="flex items-center justify-between">
+                      <span>Bottom line</span>
+                      <label className="flex items-center gap-1.5 font-normal">
+                        <input
+                          type="checkbox"
+                          checked={noFooter}
+                          onChange={(e) => setNoFooter(e.target.checked)}
+                        />
+                        Remove it
+                      </label>
+                    </div>
+                    <input
+                      value={footer}
+                      onChange={(e) => setFooter(e.target.value)}
+                      placeholder={defaultFooter}
+                      maxLength={80}
+                      disabled={noFooter}
+                      aria-label="Bottom line"
+                      className="mt-1 block w-full rounded-lg bg-white px-2.5 py-1.5 text-sm text-navy ring-1 ring-stone-300 placeholder:text-stone-400 disabled:opacity-40"
+                    />
+                  </div>
                 </div>
               )}
 
