@@ -123,7 +123,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: 'Movie player: the impact question now fades in over 3 seconds, over the film\'s last frame (not the film menu). The thank-you screen reads "Thank you." (no exclamation mark). Download the player again to get these.',
+        text: 'Movie player: the impact question now fades in over 5 seconds, over the film\'s last frame (not the film menu). The thank-you screen reads "Thank you." (no exclamation mark). Download the player again to get these.',
       },
       {
         level: "organiser",

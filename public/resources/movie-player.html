@@ -201,8 +201,8 @@
     padding: clamp(20px, 4vw, 56px); text-align: center;
   }
   #survey.on, #count.on, #name-screen.on, #intro.on { display: flex; }
-  /* After a film: the question fades in (3 s) over its last frame; taps count after the first 1 s */
-  #survey.fade-in { animation: surveyIn 3s ease forwards; }
+  /* After a film: the question fades in (5 s) over its last frame; taps count after the first 1.5 s */
+  #survey.fade-in { animation: surveyIn 5s ease forwards; }
   #survey.fade-in.wait { pointer-events: none; }
   @keyframes surveyIn { from { opacity: 0; } to { opacity: 1; } }
   #intro {
@@ -1419,8 +1419,8 @@
     sv.classList.remove("fade-in", "wait");
     void sv.offsetWidth; // restart the fade
     sv.classList.add("on", "fade-in", "wait");
-    setTimeout(function () { sv.classList.remove("wait"); }, 1000);
-    setTimeout(function () { sv.classList.remove("fade-in"); }, 3100);
+    setTimeout(function () { sv.classList.remove("wait"); }, 1500);
+    setTimeout(function () { sv.classList.remove("fade-in"); }, 5100);
     showQuestion();
   }
   function showQuestion() {
