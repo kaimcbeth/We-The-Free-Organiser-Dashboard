@@ -577,9 +577,6 @@ function Row({
             Highest impact
           </span>
         )}
-        {bold && s.n > 0 && s.n < ENOUGH && (
-          <span className="text-xs text-stone-400">early days</span>
-        )}
         <span
           className={`ml-auto tabular-nums ${bold ? "text-lg font-semibold" : "text-sm font-medium"}`}
         >
