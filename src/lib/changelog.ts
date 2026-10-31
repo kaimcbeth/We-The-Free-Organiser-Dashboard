@@ -119,6 +119,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Movie player: the tapout button is now just a small red stop square in an outlined circle (no text), and the Before you start screen shows it the same way. There's also a volume control (slider and mute) on the play bar; up and down arrow keys work too, and each laptop remembers its volume. Download the player again to get these.",
+      },
+      {
+        level: "organiser",
         text: "Members now see today's Movie Challenge numbers under the live laptops on their Events page while laptops are running: how many have watched, the average impact, tapouts, and each film (and laptop) when there's more than one.",
       },
       {
