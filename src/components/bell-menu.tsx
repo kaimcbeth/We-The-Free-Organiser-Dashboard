@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { markAllNotificationsRead } from "@/app/buddy-actions";
+import { TaskDoneBox } from "@/components/task-done-box";
 
 export type BellItem = {
   id: string;
@@ -11,6 +12,8 @@ export type BellItem = {
   url: string | null;
   unread: boolean;
   when: string;
+  taskId?: string | null; // an action: show a tick box
+  taskDone?: boolean;
 };
 
 export function BellMenu({
@@ -24,6 +27,7 @@ export function BellMenu({
 }) {
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState(unread);
+  const [doneNow, setDoneNow] = useState<Record<string, boolean>>({});
   const [, start] = useTransition();
   const box = useRef<HTMLDivElement>(null);
 
@@ -113,12 +117,12 @@ export function BellMenu({
               {items.map((n) => (
                 <li
                   key={n.id}
-                  className="border-b border-black/5 last:border-0"
+                  className="flex items-center border-b border-black/5 last:border-0"
                 >
                   <Link
                     href={n.url ?? "/notifications"}
                     onClick={() => setOpen(false)}
-                    className="flex gap-3 px-4 py-3 hover:bg-stone-50"
+                    className={`flex min-w-0 flex-1 gap-3 py-3 pl-4 hover:bg-stone-50 ${n.taskId && !demo ? "pr-2" : "pr-4"} ${(doneNow[n.id] ?? n.taskDone) ? "opacity-50" : ""}`}
                   >
                     <span
                       className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.unread ? "bg-pink" : "bg-transparent"}`}
@@ -126,7 +130,9 @@ export function BellMenu({
                     />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-baseline justify-between gap-2">
-                        <span className="truncate text-sm font-medium">
+                        <span
+                          className={`truncate text-sm font-medium ${(doneNow[n.id] ?? n.taskDone) ? "line-through" : ""}`}
+                        >
                           {n.title}
                         </span>
                         <span className="shrink-0 text-xs text-stone-400">
@@ -140,6 +146,17 @@ export function BellMenu({
                       )}
                     </span>
                   </Link>
+                  {n.taskId && !demo && (
+                    <span className="pr-4">
+                      <TaskDoneBox
+                        taskId={n.taskId}
+                        initialDone={!!n.taskDone}
+                        onChange={(d) =>
+                          setDoneNow((x) => ({ ...x, [n.id]: d }))
+                        }
+                      />
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

@@ -61,10 +61,24 @@ export async function NotificationBell({
       .is("read_at", null),
     supabase
       .from("notifications")
-      .select("id, title, body, url, created_at, read_at")
+      .select(
+        "id, title, body, url, created_at, read_at, task_id, task:tasks(done_at, dismissed_at)",
+      )
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(6),
+      .limit(6)
+      .returns<
+        {
+          id: string;
+          title: string;
+          body: string | null;
+          url: string | null;
+          created_at: string;
+          read_at: string | null;
+          task_id: string | null;
+          task: { done_at: string | null; dismissed_at: string | null } | null;
+        }[]
+      >(),
   ]);
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now();
@@ -75,6 +89,9 @@ export async function NotificationBell({
     url: n.url,
     unread: !n.read_at,
     when: ago(n.created_at, now),
+    // Removed actions get no tick box.
+    taskId: n.task_id && !n.task?.dismissed_at ? n.task_id : null,
+    taskDone: !!n.task?.done_at,
   }));
   return <BellMenu unread={count ?? 0} items={items} />;
 }

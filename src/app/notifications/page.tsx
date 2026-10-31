@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AttendeeShell } from "@/components/attendee-shell";
 import { formatEventDate, formatTime } from "@/lib/time";
 import { MarkRead } from "./mark-read";
+import { TaskDoneBox } from "@/components/task-done-box";
 
 export default async function NotificationsPage() {
   const supabase = await createClient();
@@ -17,7 +18,9 @@ export default async function NotificationsPage() {
   const [{ data: items }, { data: organiser }] = await Promise.all([
     supabase
       .from("notifications")
-      .select("id, title, body, url, created_at, read_at")
+      .select(
+        "id, title, body, url, created_at, read_at, task_id, task:tasks(done_at, dismissed_at)",
+      )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(50),
@@ -66,10 +69,13 @@ export default async function NotificationsPage() {
       ) : (
         <ul className="mt-5 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
           {items.map((n) => (
-            <li key={n.id} className="border-b border-black/5 last:border-0">
+            <li
+              key={n.id}
+              className="flex items-center border-b border-black/5 last:border-0"
+            >
               <Link
                 href={n.url ?? "/me"}
-                className="flex gap-3 px-4 py-3 hover:bg-stone-50"
+                className="flex min-w-0 flex-1 gap-3 px-4 py-3 hover:bg-stone-50"
               >
                 <span
                   className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${n.read_at ? "bg-transparent" : "bg-pink"}`}
@@ -87,10 +93,25 @@ export default async function NotificationsPage() {
                   </span>
                 </span>
               </Link>
+              {n.task_id && !taskOf(n)?.dismissed_at && (
+                <span className="pr-4">
+                  <TaskDoneBox
+                    taskId={n.task_id}
+                    initialDone={!!taskOf(n)?.done_at}
+                  />
+                </span>
+              )}
             </li>
           ))}
         </ul>
       )}
     </AttendeeShell>
   );
+}
+
+type TaskRef = { done_at: string | null; dismissed_at: string | null };
+// The embedded action (Supabase may type it as a list).
+function taskOf(n: { task?: TaskRef | TaskRef[] | null }): TaskRef | null {
+  const t = n.task;
+  return Array.isArray(t) ? (t[0] ?? null) : (t ?? null);
 }

@@ -131,6 +131,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Notifications about an action now have a tick box, in the bell and on See all: tick it to mark the action done without opening it (tick again to undo). Done ones fade and get crossed out.",
+      },
+      {
+        level: "organiser",
         text: "Members' Photo Hub: a Share button on the big view of a photo, which sends the photo itself through the phone's share sheet (or downloads it on a computer). Photos marked not for promo can't be shared, only downloaded.",
       },
       {
