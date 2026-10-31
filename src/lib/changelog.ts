@@ -63,8 +63,16 @@ export const COMING_SOON: { title: string; text: string }[] = [
 export const CHANGELOG: Release[] = [
   {
     date: "2026-11-01",
-    title: "A new Poster style for event graphics",
+    title: "A new Poster style for event graphics, and rain backup plans",
     changes: [
+      {
+        level: "organiser",
+        text: "Rain on the way? When the forecast for an upcoming event (in the next week) is more than 30% chance of rain, you'll get an action to make a backup plan. The forecast is checked every 3 hours and shown on the action. You can switch it off in Choose actions.",
+      },
+      {
+        level: "god",
+        text: "rain-check Edge Function (cron :52 every 3 h) reads Open-Meteo hourly precipitation_probability at the team's lat/lng, max over the event's hours, → record_rain_forecast (events.rain_chance, rain_backup task, notifications). Migration 0158; task_kinds schedule 'weather'.",
+      },
       {
         level: "organiser",
         text: "Make graphic now has a Poster style: a big bold heading, the day circled in pink, your photo, a tagline and the time and place. You can change the heading and tagline, and it works for posts, stories and Facebook covers.",
