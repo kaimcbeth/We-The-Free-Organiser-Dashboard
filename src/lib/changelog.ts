@@ -62,6 +62,20 @@ export const COMING_SOON: { title: string; text: string }[] = [
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-11-01",
+    title: "A new Poster style for event graphics",
+    changes: [
+      {
+        level: "organiser",
+        text: "Make graphic now has a Poster style: a big bold heading, the day circled in pink, your photo, a tagline and the time and place. You can change the heading and tagline, and it works for posts, stories and Facebook covers.",
+      },
+      {
+        level: "god",
+        text: "graphic-poster.ts draws it (Archivo Black + Yellowtail in /public/fonts, loaded with FontFace); woff2 added to the proxy matcher's exclusions.",
+      },
+    ],
+  },
+  {
     date: "2026-10-31",
     title: "A simpler Events page for members",
     changes: [

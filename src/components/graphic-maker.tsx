@@ -16,6 +16,12 @@ import {
   matchesFilter,
   type PhotoFilter,
 } from "@/components/photo-tile";
+import {
+  drawPoster,
+  loadPosterFonts,
+  posterDefaults,
+  posterText,
+} from "@/components/graphic-poster";
 
 // Event graphics, drawn in the browser on a canvas from the event's details
 // and the community's own photos, in We The Free colours, downloaded as PNG.
@@ -39,6 +45,8 @@ const SIZES: Record<GraphicSize, { label: string; w: number; h: number }> = {
   cover: { label: "Facebook event cover", w: 1920, h: 1005 },
 };
 type Template = "promo" | "recap";
+type Style = "classic" | "poster";
+const STYLES: Record<Style, string> = { classic: "Classic", poster: "Poster" };
 
 const NAVY = "#071130";
 const PINK = "#ff47b9";
@@ -313,6 +321,11 @@ export function GraphicMaker({
   const [tag, setTag] = useState<PhotoFilter>(null);
   const [imgs, setImgs] = useState<HTMLImageElement[]>([]);
   const [logo, setLogo] = useState<HTMLImageElement | null>(null);
+  const [mark, setMark] = useState<HTMLImageElement | null>(null);
+  const [style, setStyle] = useState<Style>("classic");
+  const [fonts, setFonts] = useState(false);
+  const [heading, setHeading] = useState("");
+  const [tagline, setTagline] = useState("");
   const [reload, setReload] = useState(0); // bumped after an upload
   const canvas = useRef<HTMLCanvasElement>(null);
 
@@ -382,9 +395,48 @@ export function GraphicMaker({
   }, [open, logo]);
 
   useEffect(() => {
-    if (open && canvas.current)
-      draw(canvas.current, event, size, tz, template, imgs, logo);
-  }, [open, size, event, tz, template, imgs, logo]);
+    if (!open || style !== "poster") return;
+    let live = true;
+    loadPosterFonts().then(() => live && setFonts(true));
+    if (!mark)
+      loadImage("/brand/wtf-mark.png")
+        .then((m) => live && setMark(m))
+        .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [open, style, mark]);
+
+  useEffect(() => {
+    if (!open || !canvas.current) return;
+    if (style === "poster") {
+      const { w, h } = SIZES[size];
+      drawPoster(canvas.current, {
+        w,
+        h,
+        text: posterText(event, tz, template === "recap", heading, tagline),
+        imgs,
+        logo,
+        mark,
+        font:
+          getComputedStyle(document.body).fontFamily || "system-ui, sans-serif",
+      });
+    } else draw(canvas.current, event, size, tz, template, imgs, logo);
+  }, [
+    open,
+    size,
+    event,
+    tz,
+    template,
+    imgs,
+    logo,
+    style,
+    fonts,
+    mark,
+    heading,
+    tagline,
+  ]);
+  const defaults = posterDefaults(event, template === "recap");
 
   const [copied, setCopied] = useState<"" | "done" | "failed">("");
   // Copy the picture, to paste straight into WhatsApp, Instagram or Facebook.
@@ -414,7 +466,7 @@ export function GraphicMaker({
     const a = document.createElement("a");
     a.href = canvas.current.toDataURL("image/png");
     const slug = event.title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    a.download = `${slug}-${template}-${size}.png`;
+    a.download = `${slug}-${template}${style === "poster" ? "-poster" : ""}-${size}.png`;
     a.click();
   }
 
@@ -442,6 +494,25 @@ export function GraphicMaker({
             />
           ) : (
             <>
+              <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                <span className="mr-0.5 text-xs font-medium text-stone-500">
+                  Style
+                </span>
+                {(Object.keys(STYLES) as Style[]).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setStyle(s)}
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${
+                      style === s
+                        ? "bg-navy text-white ring-navy"
+                        : "bg-white text-stone-500 ring-stone-300"
+                    }`}
+                  >
+                    {STYLES[s]}
+                  </button>
+                ))}
+              </div>
               <div className="flex flex-wrap gap-1.5">
                 {(Object.keys(SIZES) as GraphicSize[]).map((s) => (
                   <button
@@ -465,6 +536,31 @@ export function GraphicMaker({
                   className="max-h-[48vh] w-auto max-w-full rounded-lg shadow"
                 />
               </div>
+
+              {style === "poster" && (
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <label className="text-xs font-medium text-stone-500">
+                    Heading
+                    <input
+                      value={heading}
+                      onChange={(e) => setHeading(e.target.value)}
+                      placeholder={defaults.heading}
+                      maxLength={60}
+                      className="mt-1 block w-full rounded-lg bg-white px-2.5 py-1.5 text-sm text-navy ring-1 ring-stone-300 placeholder:text-stone-400"
+                    />
+                  </label>
+                  <label className="text-xs font-medium text-stone-500">
+                    Tagline
+                    <input
+                      value={tagline}
+                      onChange={(e) => setTagline(e.target.value)}
+                      placeholder={defaults.tagline}
+                      maxLength={40}
+                      className="mt-1 block w-full rounded-lg bg-white px-2.5 py-1.5 text-sm text-navy ring-1 ring-stone-300 placeholder:text-stone-400"
+                    />
+                  </label>
+                </div>
+              )}
 
               {all.length > 0 && (
                 <div className="mt-3">
