@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { AttendeeShell } from "@/components/attendee-shell";
 import { AddToCalendar } from "@/components/add-to-calendar";
 import { EventsShare } from "@/components/events-share";
+import { AccountPrompt } from "@/components/account-prompt";
 import { formatEventDate, formatTimeRange } from "@/lib/time";
 
 type PublicEvent = {
@@ -123,18 +123,9 @@ export default async function UpcomingPage({
       )}
 
       {!user && (
-        <Link
-          href={`/join/${team.slug}`}
-          className="mt-8 block rounded-2xl bg-pink/15 px-4 py-4 text-navy ring-1 ring-pink/40 hover:bg-pink/25"
-        >
-          <span className="block font-semibold">
-            Been to an event? Create your free account →
-          </span>
-          <span className="block text-sm text-stone-700">
-            Reminders the day before, the Photo Hub, your impact, and a way to
-            share ideas with the organisers.
-          </span>
-        </Link>
+        <div className="mt-8">
+          <AccountPrompt href={`/join/${team.slug}`} />
+        </div>
       )}
     </AttendeeShell>
   );

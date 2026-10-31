@@ -86,7 +86,7 @@ git push origin main
 - Notification tick boxes (0156): `notifications.task_id` (FK tasks, set null); every action-notification insert (assign_task, create_event_tasks, create_monthly_tasks, create_hangout_tasks, create_special_promo_tasks) stores it; older ones backfilled by time. `TaskDoneBox` (`src/components/task-done-box.tsx`, calls `setTaskDone` → `complete_my_task`) in `bell-menu.tsx` and `/notifications`; hidden for dismissed actions. Buddy prompts don't have one yet.
 - Members' Photo Hub big view (`me/photos/photo-hub-view.tsx`): Share (fetches the signed URL as a File → `navigator.share({files})`, else downloads); hidden for `noPromo` photos. Members' Outreach tab (`me/guide`): IBC Masterclass card under the questions.
 - Sign splitter removed from the member view (31 Oct; card and `/me/resources/signs` gone). Organisers and Core Team still have it.
-- IBC Masterclass (activism.wtf/ibc/masterclass) card in Resources for organisers, Core Team (`resources-list.tsx`) and members (`me/resources`). `/guide` account prompt lists benefits (events + reminders, Photo Hub, impact, feedback).
+- IBC Masterclass (activism.wtf/ibc/masterclass) card in Resources for organisers, Core Team (`resources-list.tsx`) and members (`me/resources`). `/guide` account prompt lists benefits (events + reminders, Photo Hub, impact, feedback); it's `AccountPrompt` (`src/components/account-prompt.tsx`), shared with `/upcoming/<slug>` so both match (Kai).
 
 ## Recent features (29 Oct 2026)
 
