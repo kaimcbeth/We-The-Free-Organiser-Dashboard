@@ -130,7 +130,7 @@ export function MovieResults({
     setRows((data ?? []) as Answer[]);
     setStops((st ?? []) as Stop[]);
     setNow(Date.now());
-  }, [teamId, member]);
+  }, [teamId]);
 
   useEffect(() => {
     const first = setTimeout(load, 0);
