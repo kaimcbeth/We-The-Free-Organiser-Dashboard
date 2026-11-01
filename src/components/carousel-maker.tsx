@@ -45,7 +45,7 @@ const CENTRE: Pos = { x: 0.5, y: 0.5, z: 1 };
 
 async function renderSlide(
   photo: HTMLImageElement,
-  mark: HTMLImageElement,
+  mark: HTMLImageElement | null, // null: no logo or website (Kai, 1 Nov 2026)
   pos: Pos,
   H: number,
 ): Promise<Blob> {
@@ -60,22 +60,24 @@ async function renderSlide(
   const ph = photo.naturalHeight * s;
   ctx.drawImage(photo, (W - pw) * pos.x, (H - ph) * pos.y, pw, ph);
 
-  // Logo bubble, top right.
-  const mh = 72;
-  const mw = (mark.naturalWidth / mark.naturalHeight) * mh;
-  ctx.shadowColor = "rgba(0,0,0,0.35)";
-  ctx.shadowBlur = 12;
-  ctx.drawImage(mark, W - 44 - mw, 44, mw, mh);
+  if (mark) {
+    // Logo bubble, top right.
+    const mh = 72;
+    const mw = (mark.naturalWidth / mark.naturalHeight) * mh;
+    ctx.shadowColor = "rgba(0,0,0,0.35)";
+    ctx.shadowBlur = 12;
+    ctx.drawImage(mark, W - 44 - mw, 44, mw, mh);
 
-  // Website, bottom left.
-  const font =
-    getComputedStyle(document.body).fontFamily || "system-ui, sans-serif";
-  ctx.font = `500 34px ${font}`;
-  ctx.fillStyle = "#fff";
-  ctx.shadowColor = "rgba(0,0,0,0.55)";
-  ctx.shadowBlur = 10;
-  ctx.textBaseline = "alphabetic";
-  ctx.fillText(URL_TEXT, 68, H - 66);
+    // Website, bottom left.
+    const font =
+      getComputedStyle(document.body).fontFamily || "system-ui, sans-serif";
+    ctx.font = `500 34px ${font}`;
+    ctx.fillStyle = "#fff";
+    ctx.shadowColor = "rgba(0,0,0,0.55)";
+    ctx.shadowBlur = 10;
+    ctx.textBaseline = "alphabetic";
+    ctx.fillText(URL_TEXT, 68, H - 66);
+  }
 
   return new Promise((resolve, reject) =>
     canvas.toBlob(
@@ -119,6 +121,7 @@ export function CarouselMaker({
   const [pos, setPos] = useState<Record<string, Pos>>({});
   const [editing, setEditing] = useState<string | null>(null); // double-clicked slide
   const [shape, setShape] = useState<Shape>("portrait");
+  const [branded, setBranded] = useState(true); // WTF logo + website on slides
   const [ratios, setRatios] = useState<Record<string, number>>({}); // w / h, as loaded
   const setOne = (id: string, p: Pos) => {
     setPos((all) => ({ ...all, [id]: p }));
@@ -156,7 +159,7 @@ export function CarouselMaker({
   }
 
   async function build(): Promise<File[]> {
-    const mark = await loadImage("/brand/wtf-mark.png");
+    const mark = branded ? await loadImage("/brand/wtf-mark.png") : null;
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     const files: File[] = [];
     for (let i = 0; i < chosen.length; i++) {
@@ -262,6 +265,17 @@ export function CarouselMaker({
                 {sh.label}
               </button>
             ))}
+            <label className="ml-auto flex items-center gap-1.5 text-xs text-stone-500">
+              <input
+                type="checkbox"
+                checked={!branded}
+                onChange={(e) => {
+                  setBranded(!e.target.checked);
+                  setMade(null);
+                }}
+              />
+              No WTF logo
+            </label>
           </div>
           <p className="mt-4 text-xs font-medium text-stone-500">
             Preview · drag a photo to move it, double-click to zoom and crop
@@ -276,6 +290,7 @@ export function CarouselMaker({
                   onDoubleClick={() => setEditing(p.id)}
                   className="rounded-lg shadow"
                   small
+                  branded={branded}
                   aspect={W / slideH}
                   onRatio={(r) =>
                     setRatios((all) =>
@@ -654,9 +669,11 @@ function SlideFrame({
   onDoubleClick,
   className = "",
   small = false,
+  branded = true,
   aspect,
   onRatio,
 }: {
+  branded?: boolean;
   aspect: number; // width / height of the slide
   onRatio?: (r: number) => void; // the photo's own shape, once loaded
   photo: EventPhoto;
@@ -719,17 +736,21 @@ function SlideFrame({
         }}
         className="pointer-events-none h-full w-full object-cover"
       />
-      {/* eslint-disable-next-line @next/next/no-img-element -- static logo */}
-      <img
-        src="/brand/wtf-mark.png"
-        alt=""
-        className="absolute right-[4%] top-[3.3%] h-[5.3%] w-auto drop-shadow"
-      />
-      <span
-        className={`absolute bottom-[4%] left-[6.3%] font-medium text-white drop-shadow ${small ? "text-[5px] sm:text-[5.5px]" : "text-[9px]"}`}
-      >
-        {URL_TEXT}
-      </span>
+      {branded && (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element -- static logo */}
+          <img
+            src="/brand/wtf-mark.png"
+            alt=""
+            className="absolute right-[4%] top-[3.3%] h-[5.3%] w-auto drop-shadow"
+          />
+          <span
+            className={`absolute bottom-[4%] left-[6.3%] font-medium text-white drop-shadow ${small ? "text-[5px] sm:text-[5.5px]" : "text-[9px]"}`}
+          >
+            {URL_TEXT}
+          </span>
+        </>
+      )}
     </div>
   );
 }

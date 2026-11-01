@@ -79,6 +79,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: 'Carousels: tick "No WTF logo" to leave the logo and website off the slides.',
+      },
+      {
+        level: "organiser",
         text: 'Co-working events are now recognised from activism.wtf even when they\'re listed as just "Social": they\'re marked as Co-working and called "Vegan Co-Working Hang".',
       },
       {
