@@ -67,6 +67,22 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Movie player updates itself less painfully: when a laptop is online, the player checks the Hub and says when a newer version is ready to download.",
+      },
+      {
+        level: "organiser",
+        text: 'Movie player: "Check films" at the bottom of the menu opens every film on the laptop and lists any that won\'t, so missing files show up at setup.',
+      },
+      {
+        level: "organiser",
+        text: 'Live laptops show each laptop\'s battery, with a red "Battery low" at 20% or less (Chrome and Edge share it; re-download the player first).',
+      },
+      {
+        level: "organiser",
+        text: "Movie player screens are now translated into Afrikaans, Arabic, Finnish, French, Hebrew, Hindi, Indonesian, Japanese, Lithuanian, Portuguese and Swedish (as well as Mandarin).",
+      },
+      {
+        level: "organiser",
         text: 'Movie player: "Test video and sound" at the bottom of the menu plays 5 seconds of a film with sound, then asks whether you saw and heard it (with what to check if not). Nothing is recorded and the live screen isn\'t told.',
       },
       {

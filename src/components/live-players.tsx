@@ -15,11 +15,14 @@ type Player = {
   viewers: number | null;
   stopped_at: number | null; // seconds in, when someone pressed Stop
   ends_at: string | null;
+  battery?: number | null; // % (players from 2 Nov 2026, where the browser allows)
+  charging?: boolean | null;
   updated_at: string;
 };
 
 const WARN = 10; // seconds before the end to alert
 const OFFLINE = 45; // seconds without a word from a laptop
+const LOW_BATTERY = 20; // %: the card warns at or below this, unless charging
 
 const mmss = (s: number) => {
   const t = Math.max(0, Math.ceil(s));
@@ -371,7 +374,23 @@ export function LivePlayers({
                 className={`rounded-2xl p-4 shadow-sm ring-1 ${tone}`}
               >
                 <div className="flex items-baseline justify-between gap-3">
-                  <span className="text-2xl font-bold">{p.laptop}</span>
+                  <span className="flex items-baseline gap-2">
+                    <span className="text-2xl font-bold">{p.laptop}</span>
+                    {!off && p.battery != null && (
+                      <span
+                        className={`text-xs font-semibold tabular-nums ${
+                          p.battery <= LOW_BATTERY && !p.charging
+                            ? "rounded-full bg-red-600 px-2 py-0.5 text-white"
+                            : "opacity-70"
+                        }`}
+                        title={p.charging ? "Charging" : "Battery"}
+                      >
+                        {p.battery <= LOW_BATTERY && !p.charging
+                          ? `Battery low · ${p.battery}%`
+                          : `${p.battery}%${p.charging ? " charging" : ""}`}
+                      </span>
+                    )}
+                  </span>
                   <span className="text-lg font-semibold tabular-nums">
                     {what}
                   </span>

@@ -207,6 +207,18 @@
   #err div { max-width: 560px; text-align: center; font-size: 19px; line-height: 1.5; }
   #err .btn { margin-top: 22px; }
 
+  /* Check films: opens every film and lists any that won't (Kai, 2 Nov 2026) */
+  #check {
+    position: fixed; inset: 0; z-index: 35; background: rgba(3, 7, 22, .8);
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  #check.on { display: flex; }
+  #check-list { margin: 12px 0 0; padding: 0; list-style: none; font-size: 15px; }
+  #check-list li { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.1); }
+  #check-list li b { color: var(--pink); }
+  #check-list .ok { color: var(--muted); }
+  #update a { color: var(--cyan); }
+
   /* Setup test: 5 seconds of a film with sound (Kai, 2 Nov 2026) */
   #test { position: fixed; inset: 0; z-index: 40; background: #000; display: none; }
   #test.on { display: block; }
@@ -386,6 +398,7 @@
   </header>
 
   <div id="notice" class="notice" hidden></div>
+  <div id="update" class="notice" hidden></div>
 
   <section id="empty" hidden>
     <ol>
@@ -412,6 +425,7 @@
     <button class="link" id="res-open">Results</button>
     <button class="link" id="all-films" hidden>All films</button>
     <button class="link" id="test-open">Test video and sound</button>
+    <button class="link" id="check-open">Check films</button>
   </footer>
 </main>
 
@@ -518,6 +532,14 @@
 <input type="file" id="picker" accept="video/*,.mp4,.m4v,.mov,.webm,.mkv" multiple hidden>
 <input type="file" id="folder-picker" webkitdirectory multiple hidden>
 
+<div id="check" role="dialog" aria-label="Check films">
+  <div class="panel">
+    <h3>Check films</h3>
+    <p id="check-status">Opening each film on this laptop…</p>
+    <ul id="check-list"></ul>
+    <div class="close-row"><button class="btn" id="check-close">Done</button></div>
+  </div>
+</div>
 <div id="test" role="dialog" aria-label="Test video and sound">
   <video id="test-video" playsinline preload="auto"></video>
   <div id="test-badge">Testing video and sound… 5</div>
@@ -540,6 +562,10 @@
   // Filled in when the player is downloaded from the Movement Hub: where to
   // send the survey answers, and which community they're for.
   var CONFIG = /*WTF_CONFIG*/null;
+  // Bump this whenever the player changes: laptops with an older copy see
+  // "A newer version of the player is ready" when they're online.
+  var PLAYER_VERSION = "2026-11-02c";
+  var HUB = (CONFIG && CONFIG.hub) || "https://wtf-organiser.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
   // Languages. A video is in a language when its file name ends with
@@ -623,6 +649,12 @@
     Romanian: { native: "Română" },
     Swedish: { native: "Svenska" }
   };
+  // Viewer screens in the languages Kai's films come in (2 Nov 2026; my
+  // translations, worth a native speaker's check).
+  var MORE_UI = {"French": {"ui": {"choose": "Choisissez un film à regarder", "menu": "Menu", "q": "À quel point cette vidéo vous a-t-elle touché(e) ?", "end0": "0 : Pas du tout", "end10": "10 : Énormément", "skip": "Passer", "thanks": "Merci.", "chat": "Quelqu'un va venir vous voir dans quelques secondes.", "howMany": "Combien de personnes regardent ?", "more": "Plus", "start": "Commencer", "back": "Retour", "person": "Personne {n} sur {t}", "next": "Au tour de la personne {n}.", "stopBtn": "Je ne suis plus à l'aise pour regarder", "introTitle": "Avant de commencer", "introText": "Nous vous encourageons vraiment à regarder jusqu'au bout. Mais si c'est trop dur, vous pouvez arrêter à tout moment avec ce bouton :", "startFilm": "Lancer le film", "stoppedTitle": "C'est tout à fait normal.", "stoppedText": "Quelqu'un va venir vous voir dans quelques secondes.", "keepWatching": "Continuer pour les autres", "finish": "Terminer", "helpBtn": "La vidéo ne marche pas ?", "introHelp": "Si la vidéo ne fonctionne pas bien (pas de son, ou elle se fige), touchez ceci en bas à gauche :", "problemTitle": "Merci de nous l'avoir signalé.", "resume": "Continuer à regarder", "restart": "Recommencer", "startHere": "COMMENCEZ ICI", "startText": "La vidéo que vous allez voir parle de l'impact de nos systèmes alimentaires. Lesquelles de ces situations s'appliquent à vous ?", "optKids": "J'ai moins de 15 ans", "optHalal": "Je mange uniquement halal", "optVeg": "Je suis végétarien(ne)", "optNone": "Aucune de ces situations"}, "films": {"standard": "Standard", "children": "Enfants", "vegetarian": "Végétarien", "halal": "Halal"}}, "Portuguese": {"ui": {"choose": "Escolha um filme para ver", "menu": "Menu", "q": "Até que ponto este vídeo teve impacto em si?", "end0": "0: Nenhum", "end10": "10: Muitíssimo", "skip": "Saltar", "thanks": "Obrigado.", "chat": "Alguém vai ter consigo dentro de segundos.", "howMany": "Quantas pessoas estão a ver?", "more": "Mais", "start": "Começar", "back": "Voltar", "person": "Pessoa {n} de {t}", "next": "Agora, a pessoa {n}.", "stopBtn": "Já não me sinto confortável a ver isto", "introTitle": "Antes de começar", "introText": "Pedimos-lhe sinceramente que tente ver até ao fim. Mas, se for demasiado, pode parar a qualquer momento com este botão:", "startFilm": "Começar o filme", "stoppedTitle": "Não faz mal nenhum.", "stoppedText": "Alguém vai ter consigo dentro de segundos.", "keepWatching": "Continuar para os outros", "finish": "Terminar", "helpBtn": "O vídeo não funciona?", "introHelp": "Se o vídeo não estiver a funcionar bem (sem som, ou parado), toque aqui no canto inferior esquerdo:", "problemTitle": "Obrigado por nos avisar.", "resume": "Continuar a ver", "restart": "Recomeçar", "startHere": "COMECE AQUI", "startText": "O vídeo que vai ver fala sobre o impacto dos sistemas alimentares. Qual das seguintes opções se aplica a si?", "optKids": "Tenho menos de 15 anos", "optHalal": "Só como halal", "optVeg": "Sou vegetariano/a", "optNone": "Nenhuma destas"}, "films": {"standard": "Padrão", "children": "Crianças", "vegetarian": "Vegetariano", "halal": "Halal"}}, "Swedish": {"ui": {"choose": "Välj en film att titta på", "menu": "Meny", "q": "Hur mycket påverkade den här videon dig?", "end0": "0: Inte alls", "end10": "10: Extremt mycket", "skip": "Hoppa över", "thanks": "Tack.", "chat": "Någon kommer till dig om några sekunder.", "howMany": "Hur många tittar?", "more": "Fler", "start": "Starta", "back": "Tillbaka", "person": "Person {n} av {t}", "next": "Nu person {n}.", "stopBtn": "Jag vill inte titta på det här längre", "introTitle": "Innan du börjar", "introText": "Vi uppmuntrar dig verkligen att försöka se klart. Men om det blir för mycket kan du sluta när som helst med den här knappen:", "startFilm": "Starta filmen", "stoppedTitle": "Det är helt okej.", "stoppedText": "Någon kommer till dig om några sekunder.", "keepWatching": "Fortsätt titta för de andra", "finish": "Avsluta", "helpBtn": "Fungerar inte videon?", "introHelp": "Om videon inte spelas som den ska (inget ljud, eller den fryser), tryck här nere till vänster:", "problemTitle": "Tack för att du sa till.", "resume": "Fortsätt titta", "restart": "Börja om", "startHere": "BÖRJA HÄR", "startText": "Videon du ska se handlar om livsmedelssystemens påverkan. Vilket av följande stämmer in på dig?", "optKids": "Jag är under 15", "optHalal": "Jag äter bara halal", "optVeg": "Jag är vegetarian", "optNone": "Inget av dessa"}, "films": {"standard": "Standard", "children": "Barn", "vegetarian": "Vegetarisk", "halal": "Halal"}}, "Finnish": {"ui": {"choose": "Valitse katsottava elokuva", "menu": "Valikko", "q": "Kuinka paljon tämä video vaikutti sinuun?", "end0": "0: Ei lainkaan", "end10": "10: Erittäin paljon", "skip": "Ohita", "thanks": "Kiitos.", "chat": "Joku tulee luoksesi muutaman sekunnin kuluttua.", "howMany": "Montako ihmistä katsoo?", "more": "Lisää", "start": "Aloita", "back": "Takaisin", "person": "Henkilö {n}/{t}", "next": "Nyt henkilö {n}.", "stopBtn": "En halua katsoa tätä enää", "introTitle": "Ennen kuin aloitat", "introText": "Kannustamme sinua katsomaan videon loppuun asti. Mutta jos se tuntuu liian raskaalta, voit lopettaa milloin tahansa tästä painikkeesta:", "startFilm": "Aloita elokuva", "stoppedTitle": "Se on täysin ok.", "stoppedText": "Joku tulee luoksesi muutaman sekunnin kuluttua.", "keepWatching": "Jatka katsomista muille", "finish": "Lopeta", "helpBtn": "Eikö video toimi?", "introHelp": "Jos video ei toimi kunnolla (ei ääntä tai se jumittaa), napauta tätä vasemmasta alakulmasta:", "problemTitle": "Kiitos, että kerroit.", "resume": "Jatka katsomista", "restart": "Aloita alusta", "startHere": "ALOITA TÄSTÄ", "startText": "Video, jonka olet katsomassa, käsittelee ruokajärjestelmien vaikutuksia. Mitkä seuraavista koskevat sinua?", "optKids": "Olen alle 15-vuotias", "optHalal": "Syön vain halal-ruokaa", "optVeg": "Olen kasvissyöjä", "optNone": "Ei mikään näistä"}, "films": {"standard": "Perusversio", "children": "Lapset", "vegetarian": "Kasvissyöjät", "halal": "Halal"}}, "Lithuanian": {"ui": {"choose": "Pasirinkite filmą", "menu": "Meniu", "q": "Kiek šis vaizdo įrašas jus paveikė?", "end0": "0: Visiškai nepaveikė", "end10": "10: Labai stipriai", "skip": "Praleisti", "thanks": "Ačiū.", "chat": "Netrukus kas nors prie jūsų prieis.", "howMany": "Kiek žmonių žiūri?", "more": "Daugiau", "start": "Pradėti", "back": "Atgal", "person": "{n} asmuo iš {t}", "next": "Dabar {n} asmuo.", "stopBtn": "Nebenoriu to žiūrėti", "introTitle": "Prieš pradedant", "introText": "Labai raginame pabandyti pažiūrėti iki galo. Bet jei bus per sunku, bet kada galite sustabdyti šiuo mygtuku:", "startFilm": "Pradėti filmą", "stoppedTitle": "Viskas gerai.", "stoppedText": "Netrukus kas nors prie jūsų prieis.", "keepWatching": "Žiūrėti toliau kitiems", "finish": "Baigti", "helpBtn": "Neveikia vaizdo įrašas?", "introHelp": "Jei vaizdo įrašas neveikia (nėra garso arba jis stringa), paspauskite tai apatiniame kairiajame kampe:", "problemTitle": "Ačiū, kad pranešėte.", "resume": "Žiūrėti toliau", "restart": "Pradėti iš naujo", "startHere": "PRADĖKITE ČIA", "startText": "Vaizdo įrašas, kurį tuoj pamatysite, nagrinėja maisto sistemų poveikį. Kuris iš šių teiginių jums tinka?", "optKids": "Man mažiau nei 15 metų", "optHalal": "Valgau tik halal maistą", "optVeg": "Esu vegetaras (-ė)", "optNone": "Nė vienas"}, "films": {"standard": "Standartinis", "children": "Vaikams", "vegetarian": "Vegetariškas", "halal": "Halal"}}, "Afrikaans": {"ui": {"choose": "Kies 'n film om te kyk", "menu": "Kieslys", "q": "Hoeveel het hierdie video jou geraak?", "end0": "0: Glad nie", "end10": "10: Uiters baie", "skip": "Slaan oor", "thanks": "Dankie.", "chat": "Iemand sal oor 'n paar sekondes by jou wees.", "howMany": "Hoeveel mense kyk?", "more": "Meer", "start": "Begin", "back": "Terug", "person": "Persoon {n} van {t}", "next": "Nou persoon {n}.", "stopBtn": "Ek voel nie meer gemaklik om dit te kyk nie", "introTitle": "Voor jy begin", "introText": "Ons moedig jou regtig aan om dit tot die einde te kyk. Maar as dit ooit te veel word, kan jy enige tyd stop met hierdie knoppie:", "startFilm": "Begin die film", "stoppedTitle": "Dis heeltemal reg.", "stoppedText": "Iemand sal oor 'n paar sekondes by jou wees.", "keepWatching": "Kyk verder vir die ander", "finish": "Klaar", "helpBtn": "Werk die video nie?", "introHelp": "As die video nie reg speel nie (geen klank nie, of dit vries), tik hierdie in die onderste linkerhoek:", "problemTitle": "Dankie dat jy ons laat weet het.", "resume": "Kyk verder", "restart": "Begin weer", "startHere": "BEGIN HIER", "startText": "Die video wat jy gaan kyk, ondersoek die impak van voedselstelsels. Watter van die volgende is op jou van toepassing?", "optKids": "Ek is jonger as 15", "optHalal": "Ek eet net halal", "optVeg": "Ek is vegetariër", "optNone": "Geen van hierdie nie"}, "films": {"standard": "Standaard", "children": "Kinders", "vegetarian": "Vegetaries", "halal": "Halal"}}, "Indonesian": {"ui": {"choose": "Pilih film untuk ditonton", "menu": "Menu", "q": "Seberapa besar video ini memengaruhi Anda?", "end0": "0: Tidak sama sekali", "end10": "10: Sangat besar", "skip": "Lewati", "thanks": "Terima kasih.", "chat": "Seseorang akan menghampiri Anda dalam beberapa detik.", "howMany": "Berapa orang yang menonton?", "more": "Lainnya", "start": "Mulai", "back": "Kembali", "person": "Orang {n} dari {t}", "next": "Sekarang orang ke-{n}.", "stopBtn": "Saya tidak nyaman lagi menonton ini", "introTitle": "Sebelum mulai", "introText": "Kami sangat menganjurkan Anda untuk menontonnya sampai selesai. Tapi kalau terasa terlalu berat, Anda bisa berhenti kapan saja dengan tombol ini:", "startFilm": "Mulai film", "stoppedTitle": "Tidak apa-apa sama sekali.", "stoppedText": "Seseorang akan menghampiri Anda dalam beberapa detik.", "keepWatching": "Lanjutkan untuk yang lain", "finish": "Selesai", "helpBtn": "Video tidak berjalan?", "introHelp": "Kalau video tidak berjalan dengan baik (tidak ada suara, atau macet), ketuk ini di pojok kiri bawah:", "problemTitle": "Terima kasih sudah memberi tahu kami.", "resume": "Lanjut menonton", "restart": "Mulai lagi", "startHere": "MULAI DI SINI", "startText": "Video yang akan Anda tonton membahas dampak sistem pangan. Mana dari berikut ini yang berlaku untuk Anda?", "optKids": "Saya di bawah 15 tahun", "optHalal": "Saya hanya makan makanan halal", "optVeg": "Saya vegetarian", "optNone": "Tidak ada"}, "films": {"standard": "Standar", "children": "Anak-anak", "vegetarian": "Vegetarian", "halal": "Halal"}}, "Japanese": {"ui": {"choose": "見る映像を選んでください", "menu": "メニュー", "q": "この映像はあなたにどのくらい影響を与えましたか？", "end0": "0：まったくない", "end10": "10：非常に大きい", "skip": "スキップ", "thanks": "ありがとうございました。", "chat": "まもなく誰かがお声がけします。", "howMany": "何人で見ますか？", "more": "もっと", "start": "開始", "back": "戻る", "person": "{t}人中{n}人目", "next": "次は{n}人目の方です。", "stopBtn": "これ以上見るのがつらいです", "introTitle": "始める前に", "introText": "できれば最後まで見ていただきたいと思っています。でも、つらくなったら、いつでもこのボタンで止めることができます：", "startFilm": "映像を始める", "stoppedTitle": "まったく問題ありません。", "stoppedText": "まもなく誰かがお声がけします。", "keepWatching": "他の方は続けて見る", "finish": "終了", "helpBtn": "映像が正しく再生されませんか？", "introHelp": "映像がうまく再生されない場合（音が出ない、止まってしまうなど）は、左下のこちらを押してください：", "problemTitle": "お知らせいただきありがとうございます。", "resume": "見続ける", "restart": "最初から", "startHere": "ここから始めてください", "startText": "これから見る映像は、食のシステムが与える影響について取り上げています。次のうち、あなたに当てはまるものはどれですか？", "optKids": "15歳未満です", "optHalal": "ハラール食のみ食べます", "optVeg": "ベジタリアンです", "optNone": "どれも当てはまらない"}, "films": {"standard": "標準版", "children": "子ども向け", "vegetarian": "ベジタリアン向け", "halal": "ハラール"}}, "Hindi": {"ui": {"choose": "देखने के लिए एक फ़िल्म चुनें", "menu": "मेनू", "q": "इस वीडियो ने आप पर कितना असर डाला?", "end0": "0: बिल्कुल नहीं", "end10": "10: बहुत ज़्यादा", "skip": "छोड़ें", "thanks": "धन्यवाद।", "chat": "कुछ ही सेकंड में कोई आपके पास आएगा।", "howMany": "कितने लोग देख रहे हैं?", "more": "और", "start": "शुरू करें", "back": "वापस", "person": "{t} में से व्यक्ति {n}", "next": "अब व्यक्ति {n}।", "stopBtn": "मैं इसे अब और नहीं देखना चाहता/चाहती", "introTitle": "शुरू करने से पहले", "introText": "हम आपको इसे पूरा देखने के लिए प्रोत्साहित करते हैं। लेकिन अगर यह बहुत ज़्यादा लगे, तो आप इस बटन से कभी भी रोक सकते हैं:", "startFilm": "फ़िल्म शुरू करें", "stoppedTitle": "कोई बात नहीं।", "stoppedText": "कुछ ही सेकंड में कोई आपके पास आएगा।", "keepWatching": "बाकी लोगों के लिए देखना जारी रखें", "finish": "समाप्त करें", "helpBtn": "वीडियो नहीं चल रहा?", "introHelp": "अगर वीडियो ठीक से नहीं चल रहा (आवाज़ नहीं है या रुक जाता है), तो नीचे बाईं ओर इसे दबाएँ:", "problemTitle": "बताने के लिए धन्यवाद।", "resume": "देखना जारी रखें", "restart": "फिर से शुरू करें", "startHere": "यहाँ से शुरू करें", "startText": "आप जो वीडियो देखने वाले हैं, वह खाद्य प्रणालियों के प्रभाव के बारे में है। इनमें से कौन-सा आप पर लागू होता है?", "optKids": "मेरी उम्र 15 साल से कम है", "optHalal": "मैं सिर्फ़ हलाल खाता/खाती हूँ", "optVeg": "मैं शाकाहारी हूँ", "optNone": "इनमें से कोई नहीं"}, "films": {"standard": "मानक", "children": "बच्चों के लिए", "vegetarian": "शाकाहारी", "halal": "हलाल"}}, "Arabic": {"ui": {"choose": "اختر فيلمًا لمشاهدته", "menu": "القائمة", "q": "إلى أي مدى أثّر فيك هذا الفيديو؟", "end0": "0: لم يؤثر إطلاقًا", "end10": "10: أثّر كثيرًا جدًا", "skip": "تخطَّ", "thanks": "شكرًا لك.", "chat": "سيأتي إليك أحدٌ خلال ثوانٍ.", "howMany": "كم شخصًا يشاهد؟", "more": "المزيد", "start": "ابدأ", "back": "رجوع", "person": "الشخص {n} من {t}", "next": "الآن الشخص {n}.", "stopBtn": "لم أعد مرتاحًا لمتابعة المشاهدة", "introTitle": "قبل أن تبدأ", "introText": "نشجّعك حقًا على محاولة مشاهدته حتى النهاية. ولكن إن شعرت أنه صعب عليك، يمكنك التوقف في أي وقت بهذا الزر:", "startFilm": "ابدأ الفيلم", "stoppedTitle": "لا بأس على الإطلاق.", "stoppedText": "سيأتي إليك أحدٌ خلال ثوانٍ.", "keepWatching": "تابعوا المشاهدة للآخرين", "finish": "إنهاء", "helpBtn": "الفيديو لا يعمل؟", "introHelp": "إذا لم يعمل الفيديو بشكل صحيح (لا يوجد صوت أو يتوقف)، اضغط على هذا في الزاوية السفلية اليسرى:", "problemTitle": "شكرًا لإخبارنا.", "resume": "متابعة المشاهدة", "restart": "البدء من جديد", "startHere": "ابدأ من هنا", "startText": "يتناول الفيديو الذي ستشاهده تأثير أنظمة الغذاء. أيٌّ مما يلي ينطبق عليك؟", "optKids": "عمري أقل من 15 سنة", "optHalal": "آكل الطعام الحلال فقط", "optVeg": "أنا نباتي", "optNone": "لا شيء مما سبق"}, "films": {"standard": "النسخة العادية", "children": "للأطفال", "vegetarian": "للنباتيين", "halal": "حلال"}}, "Hebrew": {"ui": {"choose": "בחרו סרט לצפייה", "menu": "תפריט", "q": "עד כמה הסרטון הזה השפיע עליכם?", "end0": "0: בכלל לא", "end10": "10: במידה רבה מאוד", "skip": "דלגו", "thanks": "תודה.", "chat": "מישהו יגיע אליכם בעוד כמה שניות.", "howMany": "כמה אנשים צופים?", "more": "עוד", "start": "התחלה", "back": "חזרה", "person": "אדם {n} מתוך {t}", "next": "עכשיו אדם {n}.", "stopBtn": "לא נוח לי להמשיך לצפות", "introTitle": "לפני שמתחילים", "introText": "אנחנו ממש מעודדים אתכם לנסות לצפות עד הסוף. אבל אם זה יותר מדי, אפשר לעצור בכל רגע עם הכפתור הזה:", "startFilm": "התחלת הסרט", "stoppedTitle": "זה בסדר גמור.", "stoppedText": "מישהו יגיע אליכם בעוד כמה שניות.", "keepWatching": "להמשיך לצפות בשביל האחרים", "finish": "סיום", "helpBtn": "הסרטון לא עובד?", "introHelp": "אם הסרטון לא מתנגן כמו שצריך (אין קול או שהוא נתקע), לחצו על זה בפינה השמאלית התחתונה:", "problemTitle": "תודה שעדכנתם אותנו.", "resume": "להמשיך לצפות", "restart": "להתחיל מחדש", "startHere": "מתחילים כאן", "startText": "הסרטון שאתם עומדים לצפות בו עוסק בהשפעה של מערכות המזון. מה מהבאים נכון לגביכם?", "optKids": "אני מתחת לגיל 15", "optHalal": "אני אוכל/ת רק חלאל", "optVeg": "אני צמחוני/ת", "optNone": "אף אחד מאלה"}, "films": {"standard": "רגיל", "children": "לילדים", "vegetarian": "צמחוני", "halal": "חלאל"}}};
+  Object.keys(MORE_UI).forEach(function (k) {
+    if (LANGS[k]) { LANGS[k].ui = MORE_UI[k].ui; LANGS[k].films = MORE_UI[k].films; }
+  });
   var EN_UI = {
     choose: "Choose a film to watch", menu: "Menu",
     q: "How much did viewing this video impact you?",
@@ -817,7 +849,7 @@
     $("empty").hidden = state.tiles.length > 0;
     $("footer").hidden = state.tiles.length === 0;
     $("edit").textContent = editing ? "Done" : "Edit menu";
-    ["add", "full", "res-open", "test-open"].forEach(function (id) { $(id).hidden = editing; });
+    ["add", "full", "res-open", "test-open", "check-open"].forEach(function (id) { $(id).hidden = editing; });
     var langs = languages();
     if (langs.indexOf(state.lang) < 0) state.lang = langs[0] || "English";
     renderLangs(langs);
@@ -1162,6 +1194,87 @@
     var options = pool.filter(function (v) { return (v.plays || 0) === least; });
     return options[Math.floor(Math.random() * options.length)];
   }
+
+  // ---------- Check films (Kai, 2 Nov 2026) ----------
+  // Opens every film (a few at a time) and lists any that won't, so a
+  // missing file shows up at setup rather than in front of a viewer.
+  function probe(v) {
+    return new Promise(function (done) {
+      var el = document.createElement("video"), t;
+      el.preload = "metadata"; el.muted = true;
+      var finish = function (ok) {
+        clearTimeout(t); el.onloadedmetadata = el.onerror = null;
+        el.removeAttribute("src"); el.load(); done(ok);
+      };
+      el.onloadedmetadata = function () { if (!v.secs && el.duration) { v.secs = el.duration; } finish(true); };
+      el.onerror = function () { finish(false); };
+      t = setTimeout(function () { finish(false); }, 15000);
+      el.src = srcFor(v);
+    });
+  }
+  function runCheck() {
+    var all = [];
+    state.tiles.forEach(function (t) { t.versions.forEach(function (v) { all.push({ tile: t, v: v }); }); });
+    $("check").className = "on";
+    $("check-list").innerHTML = "";
+    var bad = [], n = 0, i = 0;
+    $("check-status").textContent = "Opening each film on this laptop… 0 of " + all.length;
+    function next() {
+      if (i >= all.length) return;
+      var item = all[i++];
+      probe(item.v).then(function (ok) {
+        n++;
+        if (ok) delete broken[item.v.name];
+        else { bad.push(item); broken[item.v.name] = true; }
+        $("check-status").textContent = "Opening each film on this laptop… " + n + " of " + all.length;
+        if (n === all.length) report(); else next();
+      });
+    }
+    function report() {
+      save();
+      var list = $("check-list");
+      if (!bad.length) {
+        $("check-status").textContent = "All " + all.length + " film" + (all.length === 1 ? "" : "s") + " open. Ready to go.";
+        return;
+      }
+      $("check-status").textContent = bad.length + " of " + all.length + " won't open on this laptop. Put them in the same folder as this player (or choose them again), or remove them in Edit menu.";
+      bad.forEach(function (item) {
+        var li = document.createElement("li");
+        var b = document.createElement("b"); b.textContent = item.v.name;
+        li.appendChild(b);
+        li.appendChild(document.createTextNode(" · " + item.tile.title + (item.v.lang && item.v.lang !== "English" ? " · " + item.v.lang : "")));
+        list.appendChild(li);
+      });
+    }
+    if (!all.length) { $("check-status").textContent = "No films added yet."; return; }
+    for (var k = 0; k < Math.min(4, all.length); k++) next();
+  }
+  $("check-open").onclick = runCheck;
+  $("check-close").onclick = function () { $("check").className = ""; render(); };
+
+  // ---------- Newer version (Kai, 2 Nov 2026) ----------
+  // When online, compare with the player on the Movement Hub.
+  function checkVersion() {
+    if (!navigator.onLine || typeof fetch !== "function") return;
+    fetch(HUB + "/resources/movie-player.html", { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.text() : ""; })
+      .then(function (html) {
+        var m = html.match(/PLAYER_VERSION = "([^"]+)"/);
+        if (!m || m[1] <= PLAYER_VERSION) return;
+        var u = $("update");
+        u.innerHTML = "";
+        u.appendChild(document.createTextNode("A newer version of this player is ready. Download it again from the Movement Hub ("));
+        var a = document.createElement("a");
+        a.href = HUB + "/resources/movie-player"; a.target = "_blank"; a.rel = "noopener";
+        a.textContent = "Resources → Movie player";
+        u.appendChild(a);
+        u.appendChild(document.createTextNode(") and replace this file."));
+        u.hidden = false;
+      })
+      .catch(function () {});
+  }
+  setTimeout(checkVersion, 2000);
+  window.addEventListener("online", checkVersion);
 
   // ---------- Setup test (Kai, 2 Nov 2026) ----------
   // Plays 5 seconds of a film, with sound, from a little way in (past any
@@ -1570,6 +1683,15 @@
       }
     } catch (e) {}
   }
+  // Battery, where the browser shares it (Chrome and Edge do): shown on the
+  // live laptop cards (Kai, 2 Nov 2026).
+  var batt = null;
+  try {
+    if (navigator.getBattery) navigator.getBattery().then(function (b) {
+      batt = b;
+      b.addEventListener("chargingchange", function () { status(); });
+    }).catch(function () {});
+  } catch (e) {}
   function status(state) {
     var was = liveState;
     if (state) liveState = state;
@@ -1594,7 +1716,9 @@
         p_seconds_left: left,
         p_duration: d,
         p_viewers: c && liveState !== "idle" ? c.viewers || 1 : null,
-        p_stopped_at: liveState === "stopped" ? stoppedAt : null
+        p_stopped_at: liveState === "stopped" ? stoppedAt : null,
+        p_battery: batt ? Math.round(batt.level * 100) : null,
+        p_charging: batt ? !!batt.charging : null
       })
     }).catch(function () {});
   }

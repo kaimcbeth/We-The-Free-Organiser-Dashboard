@@ -27,6 +27,8 @@ export async function GET(request: NextRequest) {
       key: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
       token,
       community,
+      // Where the player checks for a newer version of itself.
+      hub: request.nextUrl.origin,
     }).replace(/</g, "\\u003c");
     html = html.replace("/*WTF_CONFIG*/null", config);
   }
