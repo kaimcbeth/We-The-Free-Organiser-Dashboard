@@ -62,6 +62,20 @@ export const COMING_SOON: { title: string; text: string }[] = [
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-11-02",
+    title: "Movie player understands the language files",
+    changes: [
+      {
+        level: "organiser",
+        text: 'The movie player now understands film names that start with the language, like "Afrikaans - WTF 3 min cut (with warning).mp4": each one goes into the Standard film under its own language button, instead of showing up as an odd extra film. Re-download the player on each laptop; films you\'ve already added are sorted out the next time it opens.',
+      },
+      {
+        level: "god",
+        text: 'movie-player.html: splitName reads a language before " - " too; canonLang ignores (brackets); tileFor (Standard / 3 min cut / A/B); one-off migration moves versions from the old odd tiles (oldTileFor) unless renamed by hand.',
+      },
+    ],
+  },
+  {
     date: "2026-11-01",
     title: "A new Poster style for event graphics, and rain backup plans",
     changes: [

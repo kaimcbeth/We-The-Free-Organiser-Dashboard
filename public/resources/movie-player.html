@@ -592,7 +592,8 @@
   };
   function fill(text, n, t) { return text.replace("{n}", n).replace("{t}", t); }
   function canonLang(word) {
-    var w = String(word || "").trim().toLowerCase();
+    // "French (subbed)" -> French: notes in brackets aren't part of the name.
+    var w = String(word || "").replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim().toLowerCase();
     if (!w) return null;
     for (var k in LANGS) {
       if (k.toLowerCase() === w) return k;
@@ -601,8 +602,12 @@
     return null;
   }
   // "Standard A - Mandarin.mp4" -> { base: "Standard A", lang: "Mandarin" }
+  // "Afrikaans - WTF 3 min cut.mp4" -> { base: "WTF 3 min cut", lang: "Afrikaans" }
+  // (the language first, as in the shared Drive folder; Kai, 2 Nov 2026)
   function splitName(name) {
     var stem = name.replace(/\.[^.]+$/, "");
+    var first = stem.match(/^\s*([^-–]+?)\s+[-–]\s+(.+)$/);
+    if (first && canonLang(first[1])) return { base: first[2], lang: canonLang(first[1]) };
     var m = stem.match(/^(.*?)\s*[-–_(]\s*([^-–_()]+?)\)?\s*$/);
     var lang = m && m[1] ? canonLang(m[2]) : null;
     return lang ? { base: m[1], lang: lang } : { base: stem, lang: "English" };
@@ -673,9 +678,59 @@
   var editing = false;
 
   function niceTitle(name) {
-    var t = splitName(String(name).split("/").pop()).base.replace(/[_\-.]+/g, " ").replace(/\s+/g, " ").trim();
+    var t = splitName(String(name).split("/").pop()).base
+      .replace(/\s*\([^)]*\)/g, "") // "(with warning)", "(export 2)"
+      .replace(/[_\-.]+/g, " ").replace(/\s+/g, " ").trim();
     return t ? t.charAt(0).toUpperCase() + t.slice(1) : name;
   }
+  // Which tile a file goes in. "Standard A", "Standard B", "Standard AU -
+  // Mandarin" and "<Language> - WTF 3 min cut (with warning)" are all the
+  // Standard film; other files go by their tidied name.
+  function tileFor(name) {
+    var t = niceTitle(name);
+    if (/^standard\b/i.test(t) || /\b3\s*min(ute)?s?\b/i.test(t)) return "Standard";
+    var m = t.match(/^(.+?)\s+\(?([A-Ea-e])\)?$/);
+    return m ? m[1] : t;
+  }
+  // How the player used to name tiles (before 2 Nov 2026), so films added
+  // then can be moved to the right tile and language.
+  function oldTileFor(name) {
+    var stem = String(name).split("/").pop().replace(/\.[^.]+$/, "");
+    var m = stem.match(/^(.*?)\s*[-–_(]\s*([^-–_()]+?)\)?\s*$/);
+    var base = m && m[1] && canonLang(m[2]) ? m[1] : stem;
+    var t = base.replace(/[_\-.]+/g, " ").replace(/\s+/g, " ").trim();
+    t = t ? t.charAt(0).toUpperCase() + t.slice(1) : name;
+    var ab = t.match(/^(.+?)\s+\(?([A-Ea-e])\)?$/);
+    return ab ? ab[1] : t;
+  }
+  function tileNamed(title) {
+    var t = state.tiles.filter(function (x) { return x.title.toLowerCase() === title.toLowerCase(); })[0];
+    if (!t) { t = { title: title, versions: [] }; state.tiles.push(t); }
+    return t;
+  }
+  // Films added before the language-first names were understood: set their
+  // language, and move them from their odd tile ("Afrikaans WTF 3 min cut")
+  // into the right one, unless that tile has been renamed by hand.
+  (function () {
+    var moved = false;
+    state.tiles.slice().forEach(function (t) {
+      t.versions.slice().forEach(function (v) {
+        var lang = langOf(v.name);
+        if (v.lang === "English" && lang !== "English") { v.lang = lang; moved = true; }
+        var was = oldTileFor(v.name), now = tileFor(v.name);
+        var same = function (x, y) { return x.replace(/\s+/g, " ").trim().toLowerCase() === y.replace(/\s+/g, " ").trim().toLowerCase(); };
+        if (!same(was, now) && same(t.title, was)) {
+          t.versions.splice(t.versions.indexOf(v), 1);
+          tileNamed(now).versions.push(v);
+          moved = true;
+        }
+      });
+    });
+    if (moved) {
+      state.tiles = state.tiles.filter(function (t) { return t.versions.length; });
+      save();
+    }
+  })();
   function fmt(s) {
     if (!isFinite(s) || s < 0) s = 0;
     s = Math.round(s);
@@ -933,18 +988,9 @@
       picked[key] = URL.createObjectURL(file);
       if (hasVideo(key)) return;
       var v = { name: key, lang: langOf(key), secs: 0, plays: 0 };
-      // "Standard A.mp4", "Standard B.mp4" and "Standard - Mandarin.mp4" all go
-      // in the "Standard" tile.
-      var m = niceTitle(key).match(/^(.+?)\s+\(?([A-Ea-e])\)?$/);
-      var base = m ? m[1] : null;
-      var same = base && state.tiles.filter(function (t) { return t.title.toLowerCase() === base.toLowerCase(); })[0];
-      if (same) same.versions.push(v);
-      else {
-        var title = base || niceTitle(key);
-        var sameTitle = state.tiles.filter(function (t) { return t.title.toLowerCase() === title.toLowerCase(); })[0];
-        if (sameTitle) sameTitle.versions.push(v);
-        else state.tiles.push({ title: title, versions: [v] });
-      }
+      // "Standard A.mp4", "Standard B.mp4", "Standard - Mandarin.mp4" and
+      // "Afrikaans - WTF 3 min cut.mp4" all go in the "Standard" tile.
+      tileNamed(tileFor(key)).versions.push(v);
     });
     save();
     setTimeout(maybeAskName, 0);
