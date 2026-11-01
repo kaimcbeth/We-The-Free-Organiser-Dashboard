@@ -17,12 +17,26 @@ type Player = {
   ends_at: string | null;
   battery?: number | null; // % (players from 2 Nov 2026, where the browser allows)
   charging?: boolean | null;
+  team?: string; // community (for "I've got it")
+  film_started_at?: string | null; // this viewing started
+  handled_by?: string | null; // "I've got it": who
+  handled_at?: string | null;
   updated_at: string;
 };
 
 const WARN = 10; // seconds before the end to alert
 const OFFLINE = 45; // seconds without a word from a laptop
 const LOW_BATTERY = 20; // %: the card warns at or below this, unless charging
+const CLAIM_MINUTES = 10; // an "I've got it" lasts this long (or until the next film)
+
+// Someone has said "I've got it" for this viewing.
+const isClaimed = (p: Player, nowMs: number) =>
+  !!p.handled_by &&
+  !!p.handled_at &&
+  (!p.film_started_at ||
+    new Date(p.handled_at).getTime() >=
+      new Date(p.film_started_at).getTime()) &&
+  nowMs - new Date(p.handled_at).getTime() < CLAIM_MINUTES * 60000;
 
 const mmss = (s: number) => {
   const t = Math.max(0, Math.ceil(s));
@@ -118,6 +132,8 @@ export function LivePlayers({
   const alertsRef = useRef(false);
 
   const count = useRef(0);
+  // "I've got it" (Kai, 2 Nov 2026): the name the Hub gave us, per laptop.
+  const [mine, setMine] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     const supabase = createClient();
@@ -137,7 +153,7 @@ export function LivePlayers({
           film: was.film,
           viewers: was.viewers,
         };
-        if (alertsRef.current) {
+        if (alertsRef.current && !isClaimed(p, Date.now())) {
           if (audio.current) chime(audio.current);
           navigator.vibrate?.([120, 80, 120]);
           notify(
@@ -180,6 +196,24 @@ export function LivePlayers({
     p.ends_at ? (new Date(p.ends_at).getTime() - serverNow) / 1000 : null;
   const offline = (p: Player) =>
     serverNow - new Date(p.updated_at).getTime() > OFFLINE * 1000;
+  const claimed = (p: Player) => isClaimed(p, serverNow);
+
+  async function claim(p: Player, on: boolean) {
+    const team = p.team ?? teamId;
+    if (!team) return;
+    const { data } = await createClient().rpc("claim_live_player", {
+      p_team_id: team,
+      p_device: p.device,
+      p_on: on,
+    });
+    setMine((m) => {
+      const next = { ...m };
+      if (on && typeof data === "string") next[p.device] = data;
+      else delete next[p.device];
+      return next;
+    });
+    await load();
+  }
 
   // Alert once per film, as it crosses the warning line.
   useEffect(() => {
@@ -422,6 +456,35 @@ export function LivePlayers({
                               .join(" · ")
                           : "On the menu"}
                 </p>
+                {(ending ||
+                  stopped ||
+                  problem ||
+                  finished ||
+                  (!off && p.state === "survey")) &&
+                  (claimed(p) ? (
+                    <p className="mt-2 text-sm font-semibold">
+                      {mine[p.device] && mine[p.device] === p.handled_by
+                        ? "You're on it"
+                        : `${p.handled_by}'s on it`}
+                      {mine[p.device] && mine[p.device] === p.handled_by && (
+                        <button
+                          type="button"
+                          onClick={() => claim(p, false)}
+                          className="ml-2 font-normal underline opacity-80 hover:opacity-100"
+                        >
+                          Undo
+                        </button>
+                      )}
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => claim(p, true)}
+                      className="mt-2 rounded-full bg-white px-3.5 py-1.5 text-sm font-semibold text-navy shadow-sm ring-1 ring-black/10 hover:bg-stone-50"
+                    >
+                      I&apos;ve got it
+                    </button>
+                  ))}
                 {!off &&
                   (p.state === "playing" || p.state === "paused") &&
                   p.duration && (

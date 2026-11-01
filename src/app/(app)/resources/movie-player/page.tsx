@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireOrganiser } from "@/lib/organiser";
 import { MovieResults } from "@/components/movie-results";
 import { LivePlayers } from "@/components/live-players";
+import { MovieDaySummary } from "@/components/movie-day-summary";
 
 export default async function MoviePlayerPage() {
   const { organiser } = await requireOrganiser();
@@ -97,6 +98,16 @@ export default async function MoviePlayerPage() {
       </section>
 
       {teamId && <LivePlayers teamId={teamId} />}
+      {teamId && (
+        <MovieDaySummary
+          teamId={teamId}
+          tz={organiser.team.timezone}
+          community={organiser.team.name.replace(
+            /, (Australia|New Zealand)$/,
+            "",
+          )}
+        />
+      )}
       {teamId && <MovieResults teamId={teamId} tz={organiser.team.timezone} />}
     </>
   );

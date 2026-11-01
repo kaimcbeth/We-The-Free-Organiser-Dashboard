@@ -1,6 +1,7 @@
 import { WhosComing } from "./whos-coming";
 import { LivePlayers } from "@/components/live-players";
-import { showLivePlayers } from "@/lib/live-window";
+import { isMovieChallenge, showLivePlayers } from "@/lib/live-window";
+import { MovieDaySummary } from "@/components/movie-day-summary";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
@@ -279,6 +280,17 @@ export default async function EventCheckInPage({
             Movie player: set-up and results →
           </Link>
         </div>
+      )}
+      {isMovieChallenge(event.title) && (
+        // After a Movie Challenge: the day in numbers, with a post to share.
+        <MovieDaySummary
+          teamId={event.team_id}
+          tz={team.timezone}
+          community={team.name.replace(/, (Australia|New Zealand)$/, "")}
+          day={new Intl.DateTimeFormat("en-CA", {
+            timeZone: team.timezone,
+          }).format(new Date(event.starts_at))}
+        />
       )}
 
       <WhosComing supabase={supabase} eventId={event.id} />

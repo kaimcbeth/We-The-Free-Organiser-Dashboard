@@ -2,6 +2,8 @@
 // page from an hour before they start until an hour after they end.
 const MOVIE = /movie challenge|3mmc/i;
 
+export const isMovieChallenge = (title: string) => MOVIE.test(title);
+
 export function showLivePlayers(
   title: string,
   startsAt: string,

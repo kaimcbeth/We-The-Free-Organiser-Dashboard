@@ -207,6 +207,26 @@
   #err div { max-width: 560px; text-align: center; font-size: 19px; line-height: 1.5; }
   #err .btn { margin-top: 22px; }
 
+  /* Setup mode (opens like this) → event mode (Kai, 2 Nov 2026) */
+  #setup-bar {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 18px;
+    max-width: 1100px; margin: 0 auto clamp(16px, 3vh, 28px); padding: 12px 18px; border-radius: 16px;
+    background: rgba(47,217,223,.08); box-shadow: inset 0 0 0 1px rgba(47,217,223,.35); font-size: 15px;
+  }
+  #setup-bar[hidden] { display: none; }
+  .setup-tag { color: var(--cyan); font-weight: 800; font-size: 12px; letter-spacing: .16em; }
+  #setup-bar .link { opacity: .95; color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+  #setup-bar .btn { padding: 10px 22px; font-size: 16px; }
+  #unsent { color: var(--muted); }
+  #mode-hint {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 12;
+    padding: 10px 18px; border-radius: 999px; background: rgba(255,255,255,.1); color: var(--muted);
+    font-size: 14px; opacity: 0; transition: opacity .4s ease; pointer-events: none;
+  }
+  #mode-hint.on { opacity: 1; }
+  #unsent.waiting { color: var(--pink); font-weight: 600; }
+  body.event #footer, body.event #laptop-chip, body.event #update, body.event #notice { display: none !important; }
+
   /* Check films: opens every film and lists any that won't (Kai, 2 Nov 2026) */
   #check {
     position: fixed; inset: 0; z-index: 35; background: rgba(3, 7, 22, .8);
@@ -397,8 +417,16 @@
     <p class="sub" id="subline">Choose a film to watch</p>
   </header>
 
+  <div id="setup-bar" hidden>
+    <span class="setup-tag">SETUP</span>
+    <button class="link" id="test-open">Test video and sound</button>
+    <button class="link" id="check-open">Check films</button>
+    <span id="unsent"></span>
+    <button class="btn" id="start-event">Start the event</button>
+  </div>
   <div id="notice" class="notice" hidden></div>
   <div id="update" class="notice" hidden></div>
+  <div id="mode-hint">To get back to setup, press and hold the heading for 2 seconds.</div>
 
   <section id="empty" hidden>
     <ol>
@@ -424,8 +452,6 @@
     <button class="link" id="full">Full screen</button>
     <button class="link" id="res-open">Results</button>
     <button class="link" id="all-films" hidden>All films</button>
-    <button class="link" id="test-open">Test video and sound</button>
-    <button class="link" id="check-open">Check films</button>
   </footer>
 </main>
 
@@ -564,7 +590,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-02c";
+  var PLAYER_VERSION = "2026-11-02d";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-organiser.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
@@ -840,6 +866,9 @@
     $("title-field").hidden = !editing;
     $("laptop-row").hidden = true;
     $("laptop-chip").hidden = editing || !state.tiles.length;
+    document.body.classList.toggle("event", !!eventMode);
+    $("setup-bar").hidden = eventMode || editing || !state.tiles.length;
+    showUnsent();
     $("laptop-chip").innerHTML = "";
     var lb = document.createElement("b"); lb.textContent = laptop;
     $("laptop-chip").appendChild(document.createTextNode("Laptop: "));
@@ -1194,6 +1223,43 @@
     var options = pool.filter(function (v) { return (v.plays || 0) === least; });
     return options[Math.floor(Math.random() * options.length)];
   }
+
+  // ---------- Setup mode → event mode (Kai, 2 Nov 2026) ----------
+  // The player always opens in setup mode: test, check films, laptop name,
+  // and the organiser links. "Start the event" hides all of that (and goes
+  // full screen) so viewers only see the films. Press and hold the heading
+  // for 2 seconds to get back to setup.
+  var eventMode = false;
+  $("start-event").onclick = function () {
+    eventMode = true; goFull(); render();
+    $("mode-hint").classList.add("on");
+    setTimeout(function () { $("mode-hint").classList.remove("on"); }, 5000);
+  };
+  (function () {
+    var hold = 0;
+    var head = document.querySelector("#menu header");
+    var cancel = function () { clearTimeout(hold); };
+    head.addEventListener("pointerdown", function () {
+      if (!eventMode) return;
+      hold = setTimeout(function () { eventMode = false; render(); }, 2000);
+    });
+    ["pointerup", "pointerleave", "pointercancel"].forEach(function (e) { head.addEventListener(e, cancel); });
+    head.addEventListener("contextmenu", function (e) { if (eventMode) e.preventDefault(); });
+  })();
+  // How many survey answers haven't reached the Hub yet.
+  function showUnsent() {
+    var el = $("unsent");
+    if (!el || typeof answers === "undefined" || !answers) return;
+    var n = answers.filter(function (a) { return !a.sent; }).length;
+    el.className = n ? "waiting" : "";
+    el.textContent = !CONFIG
+      ? (answers.length ? answers.length + " answers on this laptop (not linked to the Hub: use Results → Save results file)" : "")
+      : n
+        ? n + " answer" + (n === 1 ? "" : "s") + " waiting to send" + (navigator.onLine === false ? " (offline)" : "")
+        : answers.length ? "All answers sent" : "";
+  }
+  window.addEventListener("online", showUnsent);
+  window.addEventListener("offline", showUnsent);
 
   // ---------- Check films (Kai, 2 Nov 2026) ----------
   // Opens every film (a few at a time) and lists any that won't, so a
@@ -1593,6 +1659,7 @@
   if (!Array.isArray(answers)) answers = [];
   function saveAnswers() {
     try { localStorage.setItem(ANSWERS, JSON.stringify(answers)); } catch (e) {}
+    showUnsent();
   }
   var laptop = "";
   try {
@@ -1985,6 +2052,7 @@
       if (n !== batch.length) throw new Error("Only some were saved. Try again.");
       batch.forEach(function (a) { a.sent = true; });
       saveAnswers();
+      showUnsent();
       syncing = false;
       if (unsent().length) return sync(quiet);
       if ($("results").classList.contains("on")) {

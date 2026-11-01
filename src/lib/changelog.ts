@@ -67,6 +67,18 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'Movie player opens in setup mode (test, check films, answers waiting to send, laptop name, all the links). "Start the event" goes full screen and hides all of that, so viewers only see the films. Press and hold the heading for 2 seconds to get back to setup.',
+      },
+      {
+        level: "organiser",
+        text: "Live laptops: \"I've got it\" on laptops that need someone (finishing, answering, tapout, video not working). Everyone else sees who's on it, and the finished chime stays quiet for them.",
+      },
+      {
+        level: "organiser",
+        text: "Movie Challenge day summary on the Movie player page and on each Movie Challenge event: how many watched, average impact, languages, films and tapouts. Copy it as text, or make a We The Free post to share (tapouts aren't on the image).",
+      },
+      {
+        level: "organiser",
         text: "Movie player updates itself less painfully: when a laptop is online, the player checks the Hub and says when a newer version is ready to download.",
       },
       {
