@@ -70,6 +70,10 @@ const add = (m: Map<string, Stat>, k: string, a: Answer) => {
   m.set(k, s);
 };
 const avg = (s: Stat) => (s.n ? s.sum / s.n : null);
+// Viewers who skipped the question (or walked off before answering).
+const skipped = (s: Stat) => s.views - s.n;
+const pct = (part: number, whole: number) =>
+  whole ? `${Math.round((part / whole) * 100)}%` : "0%";
 const ENOUGH = 30; // answers before a result is worth comparing
 
 const dayOf = (iso: string, tz: string) =>
@@ -198,6 +202,18 @@ export function MovieResults({
       versions.set(x.film, fv);
     }
   }
+  // Skip rate on each of the last few days with answers, newest first.
+  const days = new Map<string, Stat>();
+  for (const a of rows) add(days, dayOf(a.answered_at, tz), a);
+  const recentDays = [...days.entries()]
+    .sort((x, y) => y[0].localeCompare(x[0]))
+    .slice(0, 6);
+  const dayLabel = (d: string) =>
+    new Date(`${d}T12:00:00`).toLocaleDateString("en-AU", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
   const byLang = (m: Map<string, unknown>) =>
     [...m.keys()].sort((x, y) =>
       x === "English" ? -1 : y === "English" ? 1 : x.localeCompare(y),
@@ -223,6 +239,10 @@ export function MovieResults({
         <p className="mt-1 text-sm text-white/70">
           {todayStat.views
             ? `${todayStat.n} answered${
+                skipped(todayStat)
+                  ? ` · ${skipped(todayStat)} skipped (${pct(skipped(todayStat), todayStat.views)})`
+                  : ""
+              }${
                 todayStat.n
                   ? ` · average impact ${avg(todayStat)!.toFixed(1)} / 10`
                   : ""
@@ -270,6 +290,19 @@ export function MovieResults({
         <h2 className="text-lg font-semibold tracking-tight">
           Average Impact Survey Responses
         </h2>
+        {recentDays.length > 0 && (
+          <div className="mt-2 rounded-xl bg-stone-50 px-3 py-2 text-xs text-stone-600">
+            <span className="font-semibold text-stone-700">
+              Skipped the question:
+            </span>{" "}
+            {recentDays
+              .map(
+                ([d, st]) =>
+                  `${dayLabel(d)} ${pct(skipped(st), st.views)} (${skipped(st)} of ${st.views})`,
+              )
+              .join(" · ")}
+          </div>
+        )}
         {ranked.length === 0 ? (
           <p className="mt-3 text-sm text-stone-500">
             No answers yet. They&apos;ll show here after your first Movie
@@ -591,6 +624,8 @@ function Row({
       </div>
       <p className="mt-1 text-xs text-stone-500">
         {s.views} {s.views === 1 ? "viewer" : "viewers"}, {s.n} answered
+        {skipped(s) > 0 &&
+          ` · ${skipped(s)} skipped (${pct(skipped(s), s.views)})`}
         {s.stops > 0 && (
           <span className="text-red-700">
             {" "}

@@ -373,7 +373,7 @@
     transition: transform .12s ease, background .12s ease;
   }
   #survey.fresh .scale button:hover { background: var(--navy-2); color: inherit; transform: none; }
-  .scale button:hover, .scale button:focus-visible { outline: none; background: var(--pink); color: var(--navy); transform: translateY(-3px); }
+  .scale button.pressed, .scale button:hover, .scale button:focus-visible { outline: none; background: var(--pink); color: var(--navy); transform: translateY(-3px); }
   .ends { display: flex; justify-content: space-between; width: 100%; max-width: 1100px; margin-top: 14px; color: var(--muted); font-size: clamp(14px, 1.5vw, 19px); }
   #skip { margin-top: clamp(28px, 6vh, 56px); }
   #thanks { font-size: clamp(30px, 4vw, 52px); font-weight: 800; }
@@ -593,7 +593,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-02e";
+  var PLAYER_VERSION = "2026-11-02f";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-organiser.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
@@ -1641,7 +1641,8 @@
   document.addEventListener("keydown", function (e) {
     if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "SELECT")) return;
     if ($("results").classList.contains("on")) { if (e.key === "Escape") $("results").classList.remove("on"); return; }
-    if ($("survey").classList.contains("on") || $("name-screen").classList.contains("on")) return;
+    if ($("survey").classList.contains("on")) { surveyKey(e); return; }
+    if ($("name-screen").classList.contains("on")) return;
     if ($("intro").classList.contains("on")) {
       if (e.key === "Enter") $("intro-start").click();
       else if (e.key === "Escape" || e.key === "Backspace") $("intro-back").click();
@@ -1891,6 +1892,32 @@
     $("scale").appendChild(b);
   })(n);
   $("skip").onclick = function () { answer(null); };
+
+  // Number keys answer too: 0-9 straight away; "1" waits a moment in case
+  // a "0" follows (10). Ignored during the first 1.5 s, like taps.
+  var keyOne = 0;
+  function pressScore(score) {
+    var b = $("scale").children[score];
+    if (b) { b.classList.add("pressed"); setTimeout(function () { b.classList.remove("pressed"); }, 400); }
+    answer(score);
+  }
+  function surveyKey(e) {
+    if (!/^[0-9]$/.test(e.key) || !surveyFilm || answering || $("ask").hidden) return;
+    if ($("survey").classList.contains("wait")) return;
+    e.preventDefault();
+    if (keyOne) {
+      clearTimeout(keyOne); keyOne = 0;
+      if (e.key === "0") { pressScore(10); return; }
+      pressScore(1);
+      return;
+    }
+    if (e.key === "1") {
+      $("scale").children[1].classList.add("pressed");
+      keyOne = setTimeout(function () { keyOne = 0; pressScore(1); }, 700);
+      return;
+    }
+    pressScore(+e.key);
+  }
 
   // One question per person watching ("Person 1 of 3", then Person 2...).
   function askSurvey(tile, version, viewers) {

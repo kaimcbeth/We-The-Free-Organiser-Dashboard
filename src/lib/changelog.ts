@@ -67,6 +67,14 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Movie player results show how many people skipped the question, per film and for each of your last few days, so you can see if fewer people are skipping.",
+      },
+      {
+        level: "organiser",
+        text: "Movie player: viewers can answer the question with the number keys (press 1 then 0 for 10).",
+      },
+      {
+        level: "organiser",
         text: 'Movie player: the "Before you start" screen now tells viewers they\'ll be asked one quick question after the film, the survey fades in over 3 seconds (was 5), and the Start here question sits on its own line.',
       },
       {
