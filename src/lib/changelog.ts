@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'Movie player: the "Before you start" screen now tells viewers they\'ll be asked one quick question after the film, the survey fades in over 3 seconds (was 5), and the Start here question sits on its own line.',
+      },
+      {
+        level: "organiser",
         text: 'Movie player opens in setup mode (test, check films, answers waiting to send, laptop name, all the links). "Start the event" goes full screen and hides all of that, so viewers only see the films. Press and hold the heading for 2 seconds to get back to setup.',
       },
       {
