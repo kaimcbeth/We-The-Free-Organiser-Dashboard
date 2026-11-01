@@ -89,6 +89,19 @@
   .tile .title { font-size: clamp(20px, 2.2vw, 30px); font-weight: 700; line-height: 1.15; }
   .tile .len { margin-top: 6px; color: var(--muted); font-size: 15px; min-height: 1.2em; }
 
+  /* "Start here": which film suits the viewer (Kai, 2 Nov 2026) */
+  #tiles.chooser { display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: clamp(10px, 1.6vh, 18px); max-width: 720px; }
+  .choice {
+    border: 0; border-radius: 18px; padding: clamp(18px, 2.8vh, 28px) clamp(20px, 2.4vw, 32px);
+    font-size: clamp(20px, 2.3vw, 30px); font-weight: 700; text-align: left;
+    background: var(--navy-2); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+  }
+  .choice:hover, .choice:focus-visible { outline: none; transform: translateY(-3px); box-shadow: inset 0 0 0 3px var(--pink); }
+  .choice.none { background: var(--pink); color: var(--navy); box-shadow: none; }
+  .choice.none:hover, .choice.none:focus-visible { box-shadow: 0 14px 40px rgba(0,0,0,.35); }
+  .start-sub { max-width: 760px; margin: 14px auto 0; line-height: 1.4; }
+
   /* Language buttons */
   .langs { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 0 auto clamp(18px, 3vh, 32px); }
   .langs button {
@@ -378,6 +391,7 @@
     <button class="link" id="edit">Edit menu</button>
     <button class="link" id="full">Full screen</button>
     <button class="link" id="res-open">Results</button>
+    <button class="link" id="all-films" hidden>All films</button>
   </footer>
 </main>
 
@@ -531,7 +545,13 @@
         introHelp: "如果视频无法正常播放（没有声音或画面卡住），请点击左下角的：",
         problemTitle: "谢谢您告诉我们。",
         resume: "继续观看",
-        restart: "从头开始"
+        restart: "从头开始",
+        startHere: "从这里开始",
+        startText: "您即将观看的视频探讨了食物系统的影响。以下哪项适用于您？",
+        optKids: "我未满 15 岁",
+        optHalal: "我只吃清真食品",
+        optVeg: "我是素食者",
+        optNone: "以上都不是"
       },
       films: { standard: "标准版", children: "儿童版", vegetarian: "素食者版", halal: "清真版" }
     },
@@ -588,7 +608,13 @@
     introHelp: "If the video isn't playing properly (no sound, or it freezes), tap this in the bottom-left corner:",
     problemTitle: "Thanks for letting us know.",
     resume: "Keep watching",
-    restart: "Start again"
+    restart: "Start again",
+    startHere: "START HERE",
+    startText: "The video you're about to watch explores the impact of food systems. Which of the following apply to you?",
+    optKids: "I'm under 15",
+    optHalal: "I only eat halal",
+    optVeg: "I'm vegetarian",
+    optNone: "None of these"
   };
   function fill(text, n, t) { return text.replace("{n}", n).replace("{t}", t); }
   function canonLang(word) {
@@ -764,6 +790,26 @@
     applyUI();
     var visible = editing ? state.tiles : shown();
     var tiles = $("tiles");
+    var picks = editing ? null : chooser();
+    $("all-films").hidden = editing || !picks;
+    $("all-films").textContent = showAll ? "Back to start" : "All films";
+    $("heading").classList.toggle("start", !!picks && !showAll);
+    $("subline").classList.toggle("start-sub", !!picks && !showAll);
+    if (picks && !showAll) {
+      var tu = ui(state.lang);
+      $("heading").textContent = tu.startHere;
+      $("subline").textContent = tu.startText;
+      tiles.className = "chooser";
+      tiles.innerHTML = "";
+      picks.forEach(function (c) {
+        var b = document.createElement("button");
+        b.className = "choice" + (c.key === "standard" ? " none" : "");
+        b.textContent = tu[c.label];
+        b.addEventListener("click", function () { askCount(state.tiles.indexOf(c.tile)); });
+        tiles.appendChild(b);
+      });
+      return;
+    }
     tiles.className = visible.length === 4 || visible.length === 2 ? "two" : "";
     tiles.innerHTML = "";
     visible.forEach(function (tile, n) {
@@ -798,6 +844,24 @@
   function shown() {
     return state.tiles.filter(function (t) { return inLang(t, state.lang).length; });
   }
+  // "Start here" (Kai, 2 Nov 2026): rather than choosing a film, the viewer
+  // says what applies to them: under 15 → Children's, halal → Halal,
+  // vegetarian → Vegetarian, none → Standard. Only answers whose film is here
+  // in this language; no question when Standard is the only one of them.
+  var showAll = false;
+  function chooser() {
+    var films = {};
+    shown().forEach(function (t) { var k = filmKey(t.title); if (k && !films[k]) films[k] = t; });
+    if (!films.standard) return null;
+    var picks = [
+      { key: "children", label: "optKids" },
+      { key: "halal", label: "optHalal" },
+      { key: "vegetarian", label: "optVeg" },
+      { key: "standard", label: "optNone" }
+    ].filter(function (c) { return films[c.key]; }).map(function (c) { c.tile = films[c.key]; return c; });
+    return picks.length > 1 ? picks : null;
+  }
+  $("all-films").onclick = function () { showAll = !showAll; render(); };
   function renderLangs(langs) {
     var nav = $("langs");
     nav.hidden = editing || langs.length < 2;
@@ -1125,10 +1189,11 @@
     current = null;
   }
   function toMenu() {
+    showAll = false;
     stopVideo();
     if (liveState !== "idle" && !surveyFilm) status("idle");
     render();
-    var first = document.querySelector(".tile");
+    var first = document.querySelector(".choice, .tile");
     if (first && first.focus) first.focus({ preventScroll: true });
   }
   function toggle() {

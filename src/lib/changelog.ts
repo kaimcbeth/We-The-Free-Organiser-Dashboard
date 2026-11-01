@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'Movie player "Start here" screen: instead of picking a film, viewers read "The video you\'re about to watch explores the impact of food systems. Which of the following apply to you?" and tap I\'m under 15, I only eat halal, I\'m vegetarian or None of these; the matching film starts. "All films" at the bottom shows the usual tiles. Only answers whose film is on the laptop (in the chosen language) appear.',
+      },
+      {
+        level: "organiser",
         text: 'The movie player now understands film names that start with the language, like "Afrikaans - WTF 3 min cut (with warning).mp4": each one goes into the Standard film under its own language button, instead of showing up as an odd extra film. Re-download the player on each laptop; films you\'ve already added are sorted out the next time it opens.',
       },
       {
