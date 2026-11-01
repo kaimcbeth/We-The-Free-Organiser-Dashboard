@@ -207,6 +207,24 @@
   #err div { max-width: 560px; text-align: center; font-size: 19px; line-height: 1.5; }
   #err .btn { margin-top: 22px; }
 
+  /* Setup test: 5 seconds of a film with sound (Kai, 2 Nov 2026) */
+  #test { position: fixed; inset: 0; z-index: 40; background: #000; display: none; }
+  #test.on { display: block; }
+  #test video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+  #test-badge {
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    padding: 10px 20px; border-radius: 999px; background: rgba(7,17,48,.85);
+    font-size: 18px; font-weight: 700; box-shadow: inset 0 0 0 1px rgba(255,255,255,.15);
+  }
+  #test-done {
+    position: absolute; inset: 0; display: none; place-items: center; padding: 30px;
+    background: var(--navy); text-align: center;
+  }
+  #test.done #test-done { display: grid; }
+  #test.done #test-badge { display: none; }
+  #test-done h2 { margin: 0; font-size: clamp(26px, 3.4vw, 42px); font-weight: 800; }
+  #test-done p { max-width: 620px; margin: 14px auto 0; font-size: clamp(17px, 1.8vw, 22px); line-height: 1.5; color: #d7dbea; }
+
   /* Survey */
   #survey {
     position: fixed; inset: 0; z-index: 20; background: var(--navy);
@@ -393,6 +411,7 @@
     <button class="link" id="full">Full screen</button>
     <button class="link" id="res-open">Results</button>
     <button class="link" id="all-films" hidden>All films</button>
+    <button class="link" id="test-open">Test video and sound</button>
   </footer>
 </main>
 
@@ -499,6 +518,20 @@
 <input type="file" id="picker" accept="video/*,.mp4,.m4v,.mov,.webm,.mkv" multiple hidden>
 <input type="file" id="folder-picker" webkitdirectory multiple hidden>
 
+<div id="test" role="dialog" aria-label="Test video and sound">
+  <video id="test-video" playsinline preload="auto"></video>
+  <div id="test-badge">Testing video and sound… 5</div>
+  <div id="test-done">
+    <div>
+      <h2 id="test-title">Did you see the picture and hear the sound?</h2>
+      <p id="test-text">If not: check the laptop's volume and that the headphones or speaker are plugged in, then test again.</p>
+      <div class="stopped-actions">
+        <button class="btn ghost-btn" id="test-again">Test again</button>
+        <button class="btn" id="test-close">All good</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
 (function () {
   "use strict";
@@ -784,7 +817,7 @@
     $("empty").hidden = state.tiles.length > 0;
     $("footer").hidden = state.tiles.length === 0;
     $("edit").textContent = editing ? "Done" : "Edit menu";
-    ["add", "full", "res-open"].forEach(function (id) { $(id).hidden = editing; });
+    ["add", "full", "res-open", "test-open"].forEach(function (id) { $(id).hidden = editing; });
     var langs = languages();
     if (langs.indexOf(state.lang) < 0) state.lang = langs[0] || "English";
     renderLangs(langs);
@@ -1129,6 +1162,57 @@
     var options = pool.filter(function (v) { return (v.plays || 0) === least; });
     return options[Math.floor(Math.random() * options.length)];
   }
+
+  // ---------- Setup test (Kai, 2 Nov 2026) ----------
+  // Plays 5 seconds of a film, with sound, from a little way in (past any
+  // silent title), then asks whether it worked. Nothing is recorded and the
+  // live screen isn't told.
+  var testTimer = 0;
+  function testFilm() {
+    var tile = shown()[0] || state.tiles[0];
+    return tile ? pickVersion(tile) : null;
+  }
+  function runTest() {
+    var v = testFilm(), tv = $("test-video");
+    if (!v) return;
+    clearInterval(testTimer);
+    $("test").className = "on";
+    $("test-title").textContent = "Did you see the picture and hear the sound?";
+    $("test-text").textContent = "If not: check the laptop's volume and that the headphones or speaker are plugged in, then test again.";
+    var left = 5;
+    $("test-badge").textContent = "Testing video and sound… " + left;
+    tv.volume = video.volume; tv.muted = false;
+    tv.src = srcFor(v);
+    tv.onloadedmetadata = function () {
+      tv.currentTime = Math.min(30, (tv.duration || 0) * 0.25);
+      var p = tv.play();
+      if (p && p.catch) p.catch(function () {});
+      testTimer = setInterval(function () {
+        left--;
+        $("test-badge").textContent = "Testing video and sound… " + left;
+        if (left <= 0) endTest();
+      }, 1000);
+    };
+    tv.onerror = function () {
+      endTest();
+      $("test-title").textContent = "This film wouldn't play.";
+      $("test-text").textContent = "Couldn't open \"" + v.name + "\". Make sure this player file is in the same folder as the films, or choose the films again.";
+    };
+  }
+  function endTest() {
+    clearInterval(testTimer);
+    var tv = $("test-video");
+    tv.pause(); tv.onloadedmetadata = tv.onerror = null;
+    $("test").className = "on done";
+  }
+  $("test-open").onclick = runTest;
+  $("test-again").onclick = runTest;
+  $("test-close").onclick = function () {
+    endTest();
+    var tv = $("test-video");
+    tv.removeAttribute("src"); tv.load();
+    $("test").className = "";
+  };
 
   // ---------- How many are watching (headphone splitters) ----------
   var countFor = -1, moreN = 6;

@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'Movie player: "Test video and sound" at the bottom of the menu plays 5 seconds of a film with sound, then asks whether you saw and heard it (with what to check if not). Nothing is recorded and the live screen isn\'t told.',
+      },
+      {
+        level: "organiser",
         text: 'Movie player "Start here" screen: instead of picking a film, viewers read "The video you\'re about to watch explores the impact of food systems. Which of the following apply to you?" and tap I\'m under 15, I only eat halal, I\'m vegetarian or None of these; the matching film starts. "All films" at the bottom shows the usual tiles. Only answers whose film is on the laptop (in the chosen language) appear.',
       },
       {
