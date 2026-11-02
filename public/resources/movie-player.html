@@ -368,7 +368,8 @@
   }
   .thanks-next { display: block; margin-top: 14px; font-size: clamp(20px, 2.2vw, 30px); color: var(--cyan); }
   #ask { width: 100%; max-width: 1100px; display: flex; flex-direction: column; align-items: center; }
-  #survey h2 { margin: 0; font-size: clamp(26px, 3.6vw, 46px); font-weight: 800; line-height: 1.15; max-width: 960px; letter-spacing: -.01em; }
+  #survey h2 { margin: 0; font-size: clamp(26px, 3.6vw, 46px); font-weight: 800; line-height: 1.15; max-width: 100%; letter-spacing: -.01em; }
+  #survey h2.one-line { white-space: nowrap; }
   /* Even out headings and lines that wrap (Kai, 2 Nov). */
   h1, h2, .intro-after, #meaning, #thanks, .start-sub { text-wrap: balance; }
   .scale { display: grid; grid-template-columns: repeat(11, 1fr); gap: clamp(6px, 1vw, 14px); width: 100%; max-width: 1100px; margin-top: clamp(28px, 6vh, 56px); }
@@ -609,7 +610,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-02m";
+  var PLAYER_VERSION = "2026-11-02n";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-organiser.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
@@ -2095,10 +2096,23 @@
     setTimeout(function () { sv.classList.remove("fade-in"); }, 3100);
     showQuestion();
   }
+  // The question on one line (Kai, 2 Nov): shrink it until it fits, down to
+  // 22px; a longer translation that still won't fit wraps instead.
+  function fitQuestion() {
+    var h = $("q");
+    if (!$("survey").classList.contains("on")) return;
+    h.style.fontSize = "";
+    h.classList.add("one-line");
+    var size = parseFloat(getComputedStyle(h).fontSize), room = $("ask").clientWidth;
+    while (h.scrollWidth > room && size > 22) { size -= 1; h.style.fontSize = size + "px"; }
+    if (h.scrollWidth > room) { h.classList.remove("one-line"); h.style.fontSize = ""; }
+  }
+  window.addEventListener("resize", fitQuestion);
   function showQuestion() {
     var t = ui(state.lang);
     $("person").hidden = surveyTotal < 2;
     $("person").textContent = fill(t.person, surveyPerson, surveyTotal);
+    setTimeout(fitQuestion, 0);
     $("ask").hidden = false;
     $("thanks").hidden = true;
     // Don't show the last person's button as picked until the mouse moves.
