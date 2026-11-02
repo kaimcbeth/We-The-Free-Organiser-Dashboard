@@ -385,14 +385,16 @@ const MONTH_NAMES = [
 
 // Write a caption to post with the carousel, from what the photos show
 // (their event types, tags, notes and dates).
-function CaptionWriter({
+export function CaptionWriter({
   teamId,
   eventId,
   photos,
+  extra,
 }: {
   teamId: string;
   eventId?: string;
   photos: EventPhoto[];
+  extra?: string; // more to tell the writer (e.g. a monthly recap's events)
 }) {
   const [open, setOpen] = useState(false);
   const [places, setPlaces] = useState<Set<"instagram" | "facebook">>(
@@ -438,6 +440,7 @@ function CaptionWriter({
       tags.length ? `showing: ${tags.join(", ")}` : "",
       notes.length ? `notes: ${notes.join("; ")}` : "",
       dates.length ? `taken: ${dates.join(", ")}` : "",
+      extra ?? "",
     ]
       .filter(Boolean)
       .join(". ");
@@ -542,7 +545,7 @@ function CaptionWriter({
 
 // One set of photos: the chosen ones first, in slide order (drag to
 // reorder, tap to take out), then the rest, faded (tap to add).
-function PhotoPicker({
+export function PhotoPicker({
   photos,
   order,
   max,

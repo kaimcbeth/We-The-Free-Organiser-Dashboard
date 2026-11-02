@@ -4,6 +4,7 @@ import { PhotoGraphic } from "@/components/photo-graphic";
 import { useEffect, useRef, useState } from "react";
 import { PhotoCrop, resetCrop } from "@/components/photo-crop";
 import { CarouselMaker } from "@/components/carousel-maker";
+import { RecapMaker } from "@/components/recap-maker";
 import { Sheet } from "@/components/sheet";
 import { createClient } from "@/lib/supabase/client";
 import { PHOTO_TAGS, type EventPhoto, type PhotoTag } from "@/lib/event-photos";
@@ -444,6 +445,7 @@ export function BulkBar({
 }) {
   const [sure, setSure] = useState(false);
   const [carousel, setCarousel] = useState(false);
+  const [recap, setRecap] = useState(false); // monthly recap carousel
   const n = photos.length;
   const chip =
     "rounded-full px-2.5 py-1 text-xs font-medium ring-1 disabled:opacity-40";
@@ -543,6 +545,16 @@ export function BulkBar({
             >
               {n > 20 ? "Carousel: 20 max" : "Make carousel"}
             </button>
+            {teamId && (
+              <button
+                type="button"
+                disabled={n === 0}
+                onClick={() => setRecap(true)}
+                className={`${chip} bg-pink text-navy ring-pink`}
+              >
+                Make a recap
+              </button>
+            )}
             <button
               type="button"
               disabled={n === 0}
@@ -586,6 +598,13 @@ export function BulkBar({
         </div>
       </div>
       {/* Outside the bar: its blur would otherwise trap the sheet inside it. */}
+      {recap && teamId && (
+        <RecapMaker
+          teamId={teamId}
+          selected={photos}
+          onClose={() => setRecap(false)}
+        />
+      )}
       {carousel && (
         <Sheet title="Carousel" onClose={() => setCarousel(false)}>
           <CarouselMaker

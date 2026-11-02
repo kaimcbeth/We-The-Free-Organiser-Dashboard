@@ -25,7 +25,7 @@ import { RegularsSheet } from "@/components/regulars-sheet";
 import { FbEventLink } from "@/components/fb-event-link";
 import { ScriptButton } from "@/components/script-button";
 import { CopyMaker, type CopyPlatform } from "@/components/copy-maker";
-import { MonthCarousel } from "@/components/month-carousel";
+import { RecapButton } from "@/components/recap-maker";
 import { ScheduleChanger } from "@/components/schedule-changer";
 import { MeetMembersQuestions } from "@/components/meet-members-questions";
 import { FbGroupsButton } from "@/components/fb-groups-button";
@@ -515,8 +515,8 @@ export function TaskCard({
               )}
               {task.kind === "promo_monthly_recap" &&
                 (() => {
-                  // The month it recaps: shows from the month's last days
-                  // until the 3rd of the next, so a week before it's due.
+                  // The month it recaps: shows from 5 days before the month
+                  // ends until the 5th of the next, so a week before it's due.
                   const [y, m] = new Intl.DateTimeFormat("en-CA", {
                     timeZone: tz,
                     year: "numeric",
@@ -526,12 +526,11 @@ export function TaskCard({
                     .split("-")
                     .map(Number);
                   return (
-                    <MonthCarousel
+                    <RecapButton
                       teamId={task.teamId}
                       year={y}
                       month={m}
-                      tz={tz}
-                      className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10"
+                      className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
                     />
                   );
                 })()}

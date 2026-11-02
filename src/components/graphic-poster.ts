@@ -163,7 +163,7 @@ function cover(
 
 // Fine film grain, the same every time (seeded), so redraws don't shimmer.
 let grainTile: HTMLCanvasElement | null = null;
-function grain(ctx: CanvasRenderingContext2D, w: number, h: number) {
+export function grain(ctx: CanvasRenderingContext2D, w: number, h: number) {
   if (!grainTile) {
     grainTile = document.createElement("canvas");
     grainTile.width = grainTile.height = 256;
