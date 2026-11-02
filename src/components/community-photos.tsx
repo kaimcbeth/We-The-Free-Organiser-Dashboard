@@ -10,6 +10,7 @@ import {
   type PhotoTag,
 } from "@/lib/event-photos";
 import { PhotoUploader } from "@/components/photo-uploader";
+import { duplicateSets, hashUrl, loadHashes } from "@/lib/photo-hash";
 import { Sheet } from "@/components/sheet";
 import { loadEventKinds } from "@/lib/event-kinds";
 import {
@@ -64,6 +65,8 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
   const [uploadEvent, setUploadEvent] = useState(""); // event for the next upload
   const [events, setEvents] = useState<{ id: string; label: string }[]>([]);
   const [moved, setMoved] = useState(""); // after attaching to an event
+  const [dupSets, setDupSets] = useState<string[][] | null>(null); // Find duplicates
+  const [dupNote, setDupNote] = useState(""); // progress / result
 
   useEffect(() => {
     let live = true;
@@ -122,6 +125,73 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
     savePhoto(p.id, c).then(() => moved && setReload((r) => r + 1));
   }
 
+  // Fingerprints every photo (saved ones are reused), groups look-alikes and
+  // ticks the extra copies, keeping the best one in each set.
+  async function findDuplicates() {
+    const list = photos ?? [];
+    setOpen(null);
+    setSel(null);
+    setDupNote("Checking photos…");
+    const db = createClient();
+    const known = await loadHashes(db, teamId);
+    const todo = list.filter((p) => !known.has(p.id));
+    let n = 0;
+    const work = [...todo];
+    await Promise.all(
+      Array.from({ length: 4 }, async () => {
+        for (let p = work.shift(); p; p = work.shift()) {
+          const h = await hashUrl(p.url);
+          if (h) {
+            known.set(p.id, h);
+            await db.from("event_photos").update({ phash: h }).eq("id", p.id);
+          }
+          setDupNote(`Checking photos… ${++n} of ${todo.length}`);
+        }
+      }),
+    );
+    const order = new Map(list.map((p, i) => [p.id, i]));
+    const byId = new Map(list.map((p) => [p.id, p]));
+    const score = (p: EventPhoto) =>
+      (p.favourite ? 8 : 0) +
+      (p.eventId ? 4 : 0) +
+      p.tags.length +
+      (p.caption ? 1 : 0) +
+      (p.eventKind ? 1 : 0);
+    const sets = duplicateSets(
+      list
+        .filter((p) => known.has(p.id))
+        .map((p) => ({ id: p.id, hash: known.get(p.id)! })),
+    )
+      .map((ids) =>
+        ids.sort(
+          (a, b) =>
+            score(byId.get(b)!) - score(byId.get(a)!) ||
+            order.get(a)! - order.get(b)!,
+        ),
+      )
+      .sort((a, b) => order.get(a[0])! - order.get(b[0])!);
+    if (sets.length === 0) {
+      setDupNote(
+        todo.length > 0 && known.size < list.length
+          ? "No duplicates found (a few photos couldn't be checked)."
+          : "No duplicates found.",
+      );
+      return;
+    }
+    const extras = sets.flatMap((ids) => ids.slice(1));
+    setDupSets(sets);
+    setSel(new Set(extras));
+    setDupNote(
+      `${sets.length} set${sets.length === 1 ? "" : "s"} of look-alike photos. The ${extras.length} extra ${extras.length === 1 ? "copy is" : "copies are"} ticked; the first in each set is kept (favourites and photos on an event come first). Check them, then press Remove. Removed photos can be restored.`,
+    );
+  }
+
+  function closeDuplicates() {
+    setDupSets(null);
+    setSel(null);
+    setDupNote("");
+  }
+
   function bulk(make: (p: EventPhoto) => PhotoChange) {
     const chosen = (photos ?? []).filter((x) => sel?.has(x.id));
     for (const p of chosen) change(p, make(p));
@@ -132,14 +202,24 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
   const thisYear = new Date().getFullYear();
   const years = Array.from({ length: thisYear - 2014 }, (_, i) => thisYear - i);
 
-  // Grouped by rough date, in the order they came back (newest first).
+  // Grouped by rough date, in the order they came back (newest first); or,
+  // after Find duplicates, by look-alike set (removed ones drop out).
   const groups: { label: string; list: EventPhoto[] }[] = [];
-  for (const p of (photos ?? []).filter((x) => matchesFilter(x, filter))) {
-    const label = when(p);
-    const g = groups.find((x) => x.label === label);
-    if (g) g.list.push(p);
-    else groups.push({ label, list: [p] });
-  }
+  if (dupSets) {
+    const byId = new Map((photos ?? []).map((p) => [p.id, p]));
+    for (const ids of dupSets) {
+      const list = ids.flatMap((id) => byId.get(id) ?? []);
+      if (list.length > 1)
+        groups.push({ label: `Look-alikes ${groups.length + 1}`, list });
+    }
+  } else
+    for (const p of (photos ?? []).filter((x) => matchesFilter(x, filter))) {
+      const label = when(p);
+      const g = groups.find((x) => x.label === label);
+      if (g) g.list.push(p);
+      else groups.push({ label, list: [p] });
+    }
+  const shown = groups.flatMap((g) => g.list);
 
   return (
     <section id="photos" className="mt-6">
@@ -275,8 +355,40 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
             </p>
           )}
           <div className="mt-3">
+            {(dupNote || dupSets) && (
+              <div className="mb-3 rounded-xl bg-cyan/15 px-3 py-2 text-sm text-navy">
+                {dupSets && groups.length === 0
+                  ? "All tidied up: no look-alikes left."
+                  : dupNote}{" "}
+                {(dupSets || !dupNote.startsWith("Checking")) && (
+                  <button
+                    type="button"
+                    onClick={closeDuplicates}
+                    className="font-semibold underline"
+                  >
+                    {dupSets ? "Back to all photos" : "OK"}
+                  </button>
+                )}
+              </div>
+            )}
             <div className="flex items-start justify-between gap-3">
-              <TagFilter photos={photos} value={filter} onChange={setFilter} />
+              {!dupSets && (
+                <TagFilter
+                  photos={photos}
+                  value={filter}
+                  onChange={setFilter}
+                />
+              )}
+              {photos.length > 1 && !sel && !dupSets && (
+                <button
+                  type="button"
+                  onClick={findDuplicates}
+                  disabled={dupNote.startsWith("Checking")}
+                  className="ml-auto shrink-0 text-sm font-medium text-stone-500 hover:text-stone-800 hover:underline disabled:opacity-50"
+                >
+                  Find duplicates
+                </button>
+              )}
               {photos.length > 1 && !sel && (
                 <button
                   type="button"
@@ -285,7 +397,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                     setSel(new Set());
                   }}
                   title="Or long-press a photo (Ctrl/Cmd-click on a computer)"
-                  className="ml-auto shrink-0 text-sm font-medium text-stone-500 hover:text-stone-800 hover:underline"
+                  className="shrink-0 text-sm font-medium text-stone-500 hover:text-stone-800 hover:underline"
                 >
                   Select
                 </button>
@@ -347,18 +459,10 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
           <div className="h-40" aria-hidden />
           <BulkBar
             photos={photos.filter((p) => sel.has(p.id))}
-            total={photos.filter((x) => matchesFilter(x, filter)).length}
+            total={shown.length}
             onApply={bulk}
-            onSelectAll={() =>
-              setSel(
-                new Set(
-                  photos
-                    .filter((x) => matchesFilter(x, filter))
-                    .map((p) => p.id),
-                ),
-              )
-            }
-            onDone={() => setSel(null)}
+            onSelectAll={() => setSel(new Set(shown.map((p) => p.id)))}
+            onDone={() => (dupSets ? closeDuplicates() : setSel(null))}
             canRemove
             kinds={kinds}
             events={events}

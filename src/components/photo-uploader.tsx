@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { distance, hashBlob, loadHashes, SAME_PHOTO } from "@/lib/photo-hash";
 
 const MAX = 2000; // longest side, px
 
@@ -58,10 +59,15 @@ export function PhotoUploader({
     const list = [...files];
     let done = 0;
     let failed = 0;
+    let dupes = 0; // look like a photo already in the hub
+    const known = [...(await loadHashes(supabase, teamId)).values()];
     for (const file of list) {
       setStatus(`Uploading ${done + failed + 1} of ${list.length}…`);
       try {
         const { blob, w, h } = await shrink(file);
+        const phash = await hashBlob(blob);
+        if (phash && known.some((k) => distance(k, phash) <= SAME_PHOTO))
+          dupes++;
         const id = crypto.randomUUID();
         const path = `${teamId}/${eventId ?? "library"}/${id}.jpg`;
         const up = await supabase.storage
@@ -75,18 +81,23 @@ export function PhotoUploader({
           path,
           width: w,
           height: h,
+          phash,
           ...extra,
         });
         if (row.error) throw row.error;
+        if (phash) known.push(phash);
         done++;
       } catch {
         failed++;
       }
     }
     setStatus(
-      failed
+      (failed
         ? `${done} uploaded, ${failed} didn't work. Try those again?`
-        : `${done} photo${done === 1 ? "" : "s"} added ✓`,
+        : `${done} photo${done === 1 ? "" : "s"} added ✓`) +
+        (dupes
+          ? ` ${dupes} look${dupes === 1 ? "s" : ""} like ${dupes === 1 ? "a photo" : "photos"} already in the Photo Hub: tidy up with Find duplicates.`
+          : ""),
     );
     router.refresh();
     if (done) onUploaded?.();

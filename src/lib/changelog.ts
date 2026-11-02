@@ -67,6 +67,14 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Photo Hub: Find duplicates (by Select) spots photos that were uploaded more than once, even at a different size, and ticks the extra copies so you can remove them in one go (they can be restored). Uploading a photo that's already there now tells you.",
+      },
+      {
+        level: "god",
+        text: "event_photos.phash (0163): 64-bit difference hash made in the browser (src/lib/photo-hash.ts), saved on upload and worked out for older photos the first time Find duplicates runs; cleared on crop. Look-alikes = 6 bits or fewer apart.",
+      },
+      {
+        level: "organiser",
         text: "Sydney's past events from activism.wtf (back to May 2025) are now in the Hub, so you can attach old photos to them in the Photo Hub. The photo's event list now goes all the way back, with the year on older events.",
       },
       {
