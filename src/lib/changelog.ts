@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'Movie player: if someone taps a film and walks off at "How many people are watching?" or "Before you start", the laptop goes back to the start after a minute, ready for the next person.',
+      },
+      {
+        level: "organiser",
         text: 'Movie player: films watched in setup mode are test plays and don\'t count in your results (the question says so). Press "Start the event" before viewers arrive. Event mode now survives a page reload.',
       },
       {

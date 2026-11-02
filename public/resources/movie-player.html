@@ -601,7 +601,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-02j";
+  var PLAYER_VERSION = "2026-11-02k";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-organiser.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
@@ -1546,6 +1546,23 @@
     if (f) play(f.i, f.n);
   };
   $("intro-back").onclick = function () { introFor = null; $("intro").classList.remove("on"); };
+
+  // Walked off half way (Kai, 2 Nov): if nobody touches the laptop for a
+  // minute on "How many people are watching?", "Before you start" or the
+  // All films list, go back to the start for the next person.
+  var lastTouch = Date.now();
+  ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"].forEach(function (e) {
+    document.addEventListener(e, function () { lastTouch = Date.now(); }, true);
+  });
+  setInterval(function () {
+    var waiting = $("count").classList.contains("on") || $("intro").classList.contains("on") ||
+      (showAll && !player.classList.contains("on") && !$("survey").classList.contains("on"));
+    if (!waiting || current || editing || Date.now() - lastTouch < 60000) return;
+    closeCount();
+    introFor = null;
+    $("intro").classList.remove("on");
+    toMenu();
+  }, 5000);
 
   function play(i, viewers) {
     var tile = state.tiles[i];
