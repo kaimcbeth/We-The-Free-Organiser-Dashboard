@@ -13,7 +13,15 @@ import { PHOTO_TAGS, type EventPhoto, type PhotoTag } from "@/lib/event-photos";
 export type PhotoChange = Partial<
   Pick<
     EventPhoto,
-    "favourite" | "noPromo" | "tags" | "url" | "cropped" | "eventKind"
+    | "favourite"
+    | "noPromo"
+    | "tags"
+    | "url"
+    | "cropped"
+    | "eventKind"
+    | "eventId"
+    | "takenYear"
+    | "takenMonth"
   >
 > & {
   remove?: boolean;
@@ -28,10 +36,30 @@ export async function savePhoto(id: string, c: PhotoChange) {
       ...(c.noPromo !== undefined && { no_promo: c.noPromo }),
       ...(c.tags !== undefined && { tags: c.tags }),
       ...(c.eventKind !== undefined && { event_kind: c.eventKind }),
+      ...(c.eventId !== undefined && { event_id: c.eventId }),
+      ...(c.takenYear !== undefined && {
+        taken_year: c.takenYear,
+        taken_month: c.takenYear === null ? null : (c.takenMonth ?? null),
+      }),
       ...(c.remove && { archived_at: new Date().toISOString() }),
     })
     .eq("id", id);
 }
+
+const MONTH_NAMES = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 // One photo in a grid. The star in the corner favourites it; tap the photo
 // for tags, crop, download
@@ -48,7 +76,13 @@ export function PhotoTile({
   onModSelect,
   kinds,
   graphic = false,
+  events,
+  years,
 }: {
+  // Photo Hub: which event it's from, and its month (Kai, 2 Nov 2026: there
+  // was no way to take a photo off an event or change its date).
+  events?: { id: string; label: string }[];
+  years?: number[];
   kinds?: string[]; // event kinds to choose from (Photo Hub)
   graphic?: boolean; // "Make graphic" in the menu (Photo Hub)
   p: EventPhoto;
@@ -238,6 +272,77 @@ export function PhotoTile({
                 </option>
               ))}
             </select>
+          )}
+          {events && (
+            <select
+              value={p.eventId ?? ""}
+              onChange={(e) => onChange({ eventId: e.target.value || null })}
+              aria-label="Event"
+              className={`mx-1 mb-1 w-[calc(100%-0.5rem)] rounded-lg bg-white px-1.5 py-1 text-xs ring-1 ring-black/10 ${p.eventId ? "text-navy" : "text-stone-400"}`}
+            >
+              <option value="">Not attached to an event</option>
+              {p.eventId && !events.some((ev) => ev.id === p.eventId) && (
+                <option value={p.eventId}>{p.eventTitle ?? "Its event"}</option>
+              )}
+              {events.map((ev) => (
+                <option key={ev.id} value={ev.id}>
+                  {ev.label}
+                </option>
+              ))}
+            </select>
+          )}
+          {years && (
+            <div className="mx-1 mb-1 flex gap-1">
+              <select
+                value={p.handDated ? (p.takenMonth ?? "") : ""}
+                disabled={!p.handDated}
+                onChange={(e) =>
+                  onChange({
+                    takenYear: p.takenYear,
+                    takenMonth: e.target.value ? Number(e.target.value) : null,
+                  })
+                }
+                aria-label="Month taken"
+                className="min-w-0 flex-1 rounded-lg bg-white px-1.5 py-1 text-xs text-navy ring-1 ring-black/10 disabled:text-stone-400"
+              >
+                <option value="">
+                  {p.handDated
+                    ? "Month?"
+                    : p.eventId
+                      ? "Month from event"
+                      : "Month"}
+                </option>
+                {MONTH_NAMES.map((m, i) => (
+                  <option key={m} value={i + 1}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={p.handDated ? (p.takenYear ?? "") : ""}
+                onChange={(e) =>
+                  onChange(
+                    e.target.value
+                      ? {
+                          takenYear: Number(e.target.value),
+                          takenMonth: p.handDated ? p.takenMonth : null,
+                        }
+                      : { takenYear: null, takenMonth: null },
+                  )
+                }
+                aria-label="Year taken"
+                className={`min-w-0 flex-1 rounded-lg bg-white px-1.5 py-1 text-xs ring-1 ring-black/10 ${p.handDated ? "text-navy" : "text-stone-400"}`}
+              >
+                <option value="">
+                  {p.eventId ? "Year from event" : "Year unknown"}
+                </option>
+                {years.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
           <button
             type="button"
@@ -509,6 +614,7 @@ export function BulkBar({
                 className={`${chip} max-w-56 bg-white text-stone-700 ring-stone-300`}
               >
                 <option value="">Attach to event…</option>
+                <option value="-">Not attached to an event</option>
                 {events.map((ev) => (
                   <option key={ev.id} value={ev.id}>
                     {ev.label}

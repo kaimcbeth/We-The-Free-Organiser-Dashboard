@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'Photo Hub: tap a photo to change which event it\'s from (or choose "Not attached to an event") and the month and year it was taken. Selecting photos and choosing "Attach to event…" now also has "Not attached to an event".',
+      },
+      {
+        level: "organiser",
         text: "Monthly photo recap carousel: a big \"OCTOBER RECAP\" cover on your best photo, then one photo per slide with the event's name, date, place and type, and a last slide with next month's events. Pick the photos from the Photo Hub (select some, then Make a recap) or from the monthly recap action, which now shows up for every community 5 days before the month ends. Write caption is there too.",
       },
       {

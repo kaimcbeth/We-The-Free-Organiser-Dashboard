@@ -34,6 +34,7 @@ export type EventPhoto = {
   cropped: boolean; // the original is kept and can be restored
   eventKind: string | null; // e.g. Potluck (see event-kinds)
   eventTitle?: string | null; // when attached to an event
+  handDated?: boolean; // month/year set by hand (else from its event)
 };
 
 type Row = {
@@ -77,6 +78,7 @@ async function sign(supabase: SupabaseClient, rows: Row[]) {
             ? new Date(r.event.starts_at).getMonth() + 1
             : null,
       eventTitle: r.event?.title ?? null,
+      handDated: r.taken_year != null,
       caption: r.caption,
       tags: r.tags ?? [],
       cropped: !!r.original_path,

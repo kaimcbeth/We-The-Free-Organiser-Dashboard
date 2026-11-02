@@ -108,7 +108,10 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
         .filter((x) => !(c.remove && x.id === p.id))
         .map((x) => (x.id === p.id ? { ...x, ...c } : x)),
     );
-    savePhoto(p.id, c);
+    // A new event or date moves the photo to another month: reload so it's
+    // grouped (and dated by its event) right.
+    const moved = c.eventId !== undefined || c.takenYear !== undefined;
+    savePhoto(p.id, c).then(() => moved && setReload((r) => r + 1));
   }
 
   function bulk(make: (p: EventPhoto) => PhotoChange) {
@@ -278,6 +281,8 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                     onChange={(c) => change(p, c)}
                     canRemove
                     kinds={kinds}
+                    events={events}
+                    years={years}
                     graphic
                     selected={sel?.has(p.id)}
                     onModSelect={() => {
@@ -331,13 +336,16 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
             onAttach={async (eventId) => {
               const ids = [...sel];
               const ev = events.find((e) => e.id === eventId);
+              const off = eventId === "-";
               await createClient()
                 .from("event_photos")
-                .update({ event_id: eventId })
+                .update({ event_id: off ? null : eventId })
                 .in("id", ids);
               setSel(null);
               setMoved(
-                `${ids.length} photo${ids.length === 1 ? "" : "s"} attached to ${ev?.label ?? "the event"}. They're on that event's page and still here in the Photo Hub.`,
+                off
+                  ? `${ids.length} photo${ids.length === 1 ? "" : "s"} taken off ${ids.length === 1 ? "its event" : "their events"}. Set a month on ${ids.length === 1 ? "it" : "them"} from the photo's menu if you like.`
+                  : `${ids.length} photo${ids.length === 1 ? "" : "s"} attached to ${ev?.label ?? "the event"}. They're on that event's page and still here in the Photo Hub.`,
               );
               setReload((r) => r + 1);
             }}
