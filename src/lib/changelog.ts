@@ -75,6 +75,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: 'Movie player: every number on the question now has a label underneath (from "No impact" to "Most possible"), and the full wording, like "It made a strong impact", shows when someone points at a number. Translated for every language the player has screens for.',
+      },
+      {
+        level: "organiser",
         text: 'Movie player: the "Before you start" screen now tells viewers they\'ll be asked one quick question after the film, the survey fades in over 3 seconds (was 5), and the Start here question sits on its own line.',
       },
       {
