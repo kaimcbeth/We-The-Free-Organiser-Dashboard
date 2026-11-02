@@ -365,6 +365,8 @@
   .thanks-next { display: block; margin-top: 14px; font-size: clamp(20px, 2.2vw, 30px); color: var(--cyan); }
   #ask { width: 100%; max-width: 1100px; display: flex; flex-direction: column; align-items: center; }
   #survey h2 { margin: 0; font-size: clamp(26px, 3.6vw, 46px); font-weight: 800; line-height: 1.15; max-width: 960px; letter-spacing: -.01em; }
+  /* Even out headings and lines that wrap (Kai, 2 Nov). */
+  h1, h2, .intro-after, #meaning, #thanks, .start-sub { text-wrap: balance; }
   .scale { display: grid; grid-template-columns: repeat(11, 1fr); gap: clamp(6px, 1vw, 14px); width: 100%; max-width: 1100px; margin-top: clamp(28px, 6vh, 56px); }
   .scale button {
     aspect-ratio: 1; border: 0; border-radius: 16px; background: var(--navy-2);
@@ -595,7 +597,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-02h";
+  var PLAYER_VERSION = "2026-11-02i";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-organiser.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
