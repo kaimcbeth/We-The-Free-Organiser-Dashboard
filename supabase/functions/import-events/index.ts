@@ -2,6 +2,9 @@
 // Runs every hour (pg_cron) on the communities checked longest ago, a batch at
 // a time so it stays inside the time limit with 200+ communities, and for one
 // community when an organiser taps "Import now" ({ teamId }).
+// { teamId, backfill: true } also brings in the community's past events (the
+// whole feed, not just the last 14 days). Past events never get actions:
+// actions are only made for events from 8 days ago on.
 // Adds new events and updates changed ones; never deletes, and never
 // overwrites an event type an organiser has chosen.
 
@@ -19,6 +22,7 @@ Deno.serve(async (req) => {
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const body = await req.json().catch(() => ({}));
   const teamId: string | null = typeof body?.teamId === "string" ? body.teamId : null;
+  const backfill = teamId !== null && body?.backfill === true;
 
   let teamsQuery = supabase
     .from("teams")
@@ -40,7 +44,7 @@ Deno.serve(async (req) => {
       return Response.json({ skipped: "ran less than a minute ago" });
   }
   const typeId = new Map((types ?? []).map((t) => [t.name as string, t.id as string]));
-  const cutoff = Date.now() - LOOKBACK_DAYS * 864e5;
+  const cutoff = backfill ? -Infinity : Date.now() - LOOKBACK_DAYS * 864e5;
   const results = [];
 
   for (const team of (teams ?? []) as Team[]) {
