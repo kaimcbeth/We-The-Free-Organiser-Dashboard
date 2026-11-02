@@ -70,6 +70,10 @@ export const CHANGELOG: Release[] = [
         text: "Sydney's past events from activism.wtf (back to May 2025) are now in the Hub, so you can attach old photos to them in the Photo Hub. The photo's event list now goes all the way back, with the year on older events.",
       },
       {
+        level: "organiser",
+        text: "Photo Hub: pick an event when you upload, and the photos go straight onto it (dated and typed by the event). Leave it blank for older photos, with a rough year and month as before.",
+      },
+      {
         level: "god",
         text: "import-events takes { teamId, backfill: true } to import a community's whole activism.wtf feed. Past events get no actions (create_event_tasks only looks 8 days back).",
       },

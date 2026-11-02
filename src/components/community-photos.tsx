@@ -61,6 +61,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
   const [trash, setTrash] = useState<EventPhoto[] | null>(null); // Removed, open
   const [kinds, setKinds] = useState<string[]>([]); // from the event listings
   const [kind, setKind] = useState(""); // for the next upload
+  const [uploadEvent, setUploadEvent] = useState(""); // event for the next upload
   const [events, setEvents] = useState<{ id: string; label: string }[]>([]);
   const [moved, setMoved] = useState(""); // after attaching to an event
 
@@ -147,40 +148,57 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
       </h2>
       <div className="rounded-2xl bg-white p-3 ring-1 ring-black/5">
         <p className="text-sm text-stone-600">
-          Good photos that aren&apos;t from an event in the app, like older
-          ones. They&apos;re used on your promo graphics too.
+          Good photos from your events, or older ones. They&apos;re used on your
+          promo graphics too.
         </p>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <select
-            value={year}
-            onChange={(e) => {
-              setYear(e.target.value);
-              if (!e.target.value) setMonth("");
-            }}
-            className="rounded-lg bg-white px-2 py-1.5 text-sm ring-1 ring-black/10"
-            aria-label="Year"
-          >
-            <option value="">Year (if you know)</option>
-            {years.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-          <select
-            value={month}
-            onChange={(e) => setMonth(e.target.value)}
-            disabled={!year}
-            className="rounded-lg bg-white px-2 py-1.5 text-sm ring-1 ring-black/10 disabled:opacity-50"
-            aria-label="Month"
-          >
-            <option value="">Month (optional)</option>
-            {MONTHS.map((m, i) => (
-              <option key={m} value={i + 1}>
-                {m}
-              </option>
-            ))}
-          </select>
+        <select
+          value={uploadEvent}
+          onChange={(e) => setUploadEvent(e.target.value)}
+          aria-label="Event"
+          className={`mt-3 w-full max-w-md rounded-lg bg-white px-2 py-1.5 text-sm ring-1 ring-black/10 ${uploadEvent ? "" : "text-stone-400"}`}
+        >
+          <option value="">Event (optional)</option>
+          {events.map((ev) => (
+            <option key={ev.id} value={ev.id}>
+              {ev.label}
+            </option>
+          ))}
+        </select>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          {!uploadEvent && (
+            <>
+              <select
+                value={year}
+                onChange={(e) => {
+                  setYear(e.target.value);
+                  if (!e.target.value) setMonth("");
+                }}
+                className="rounded-lg bg-white px-2 py-1.5 text-sm ring-1 ring-black/10"
+                aria-label="Year"
+              >
+                <option value="">Year (if you know)</option>
+                {years.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+                disabled={!year}
+                className="rounded-lg bg-white px-2 py-1.5 text-sm ring-1 ring-black/10 disabled:opacity-50"
+                aria-label="Month"
+              >
+                <option value="">Month (optional)</option>
+                {MONTHS.map((m, i) => (
+                  <option key={m} value={i + 1}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
           <input
             value={caption}
             onChange={(e) => setCaption(e.target.value.slice(0, 120))}
@@ -188,7 +206,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
             className="min-w-0 basis-full rounded-lg bg-white px-2 py-1.5 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
           />
         </div>
-        {kinds.length > 0 && (
+        {kinds.length > 0 && !uploadEvent && (
           <select
             value={kind}
             onChange={(e) => setKind(e.target.value)}
@@ -224,14 +242,19 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
         <div className="mt-2">
           <PhotoUploader
             teamId={teamId}
-            eventId={null}
-            extra={{
-              taken_year: year ? Number(year) : null,
-              taken_month: year && month ? Number(month) : null,
-              caption: caption.trim() || null,
-              tags,
-              event_kind: kind || null,
-            }}
+            eventId={uploadEvent || null}
+            extra={
+              uploadEvent
+                ? // Dated and typed by the event.
+                  { caption: caption.trim() || null, tags }
+                : {
+                    taken_year: year ? Number(year) : null,
+                    taken_month: year && month ? Number(month) : null,
+                    caption: caption.trim() || null,
+                    tags,
+                    event_kind: kind || null,
+                  }
+            }
             label="Upload photos"
             onUploaded={() => setReload((r) => r + 1)}
           />
