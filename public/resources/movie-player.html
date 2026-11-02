@@ -510,6 +510,11 @@
     <h2>Which laptop is this?</h2>
     <p class="name-sub">Give each laptop at the event its own name. Your phone shows it on the live screen in the Movement Hub.</p>
     <div class="counts names" id="name-quick"></div>
+    <button class="link" id="name-other" style="margin-top:22px">Another name</button>
+    <div class="name-row" id="name-custom" hidden>
+      <input class="field" id="name-field" maxlength="40" placeholder="E, Laptop 5, Kai's laptop…" aria-label="Laptop name">
+      <button class="btn" id="name-save">Save</button>
+    </div>
   </div>
 </div>
 
@@ -601,7 +606,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-02k";
+  var PLAYER_VERSION = "2026-11-02l";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-organiser.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
@@ -1840,9 +1845,25 @@
     b.addEventListener("click", function () { setName(n); });
     $("name-quick").appendChild(b);
   });
+  // More than four laptops, or a name of your own (Kai, 2 Nov).
+  function showCustom(on) {
+    $("name-custom").hidden = !on;
+    $("name-other").hidden = on;
+    if (on) { $("name-field").focus(); $("name-field").select(); }
+  }
+  $("name-other").onclick = function () { showCustom(true); };
+  $("name-save").onclick = function () { setName($("name-field").value); };
+  $("name-field").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") setName(this.value);
+    if (e.key === "Escape") showCustom(false);
+  });
   function askName() {
     var named = false;
     try { named = !!localStorage.getItem("wtf-movie-player-named"); } catch (e) {}
+    var custom = named && ["A", "B", "C", "D"].indexOf(laptop) < 0;
+    $("name-field").value = custom ? laptop : "";
+    $("name-custom").hidden = !custom;
+    $("name-other").hidden = custom;
     Array.prototype.forEach.call($("name-quick").children, function (b) {
       b.classList.toggle("on", named && b.textContent === laptop);
     });

@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: '"Which laptop is this?" now has "Another name" under A–D, for a fifth laptop or a name of your own.',
+      },
+      {
+        level: "organiser",
         text: 'Movie player: if someone taps a film and walks off at "How many people are watching?" or "Before you start", the laptop goes back to the start after a minute, ready for the next person.',
       },
       {
