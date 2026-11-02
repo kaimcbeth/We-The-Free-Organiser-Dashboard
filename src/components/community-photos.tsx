@@ -69,21 +69,28 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
     loadEventKinds(createClient(), teamId).then((k) => {
       if (live) setKinds(k);
     });
-    // Events to attach photos to: the last 6 months and the next month.
+    // Events to attach photos to: every past event (incl. ones imported from
+    // activism.wtf's history) and the next month. Older years show the year.
+    const thisYear = new Date().getFullYear();
     createClient()
       .from("events")
       .select("id, title, starts_at")
       .eq("team_id", teamId)
-      .gte("starts_at", new Date(Date.now() - 183 * 864e5).toISOString())
       .lte("starts_at", new Date(Date.now() + 31 * 864e5).toISOString())
       .order("starts_at", { ascending: false })
+      .limit(500)
       .then(({ data }) => {
         if (live)
           setEvents(
-            (data ?? []).map((e) => ({
-              id: e.id as string,
-              label: `${new Date(e.starts_at as string).toLocaleDateString("en-AU", { day: "numeric", month: "short" })}: ${e.title}`,
-            })),
+            (data ?? []).map((e) => {
+              const d = new Date(e.starts_at as string);
+              const date = d.toLocaleDateString("en-AU", {
+                day: "numeric",
+                month: "short",
+                ...(d.getFullYear() !== thisYear ? { year: "numeric" } : {}),
+              });
+              return { id: e.id as string, label: `${date}: ${e.title}` };
+            }),
           );
       });
     return () => {
