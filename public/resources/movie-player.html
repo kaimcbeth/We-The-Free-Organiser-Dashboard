@@ -217,7 +217,8 @@
   .setup-tag { color: var(--cyan); font-weight: 800; font-size: 12px; letter-spacing: .16em; }
   #setup-bar .link { opacity: .95; color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
   #setup-bar .btn { padding: 10px 22px; font-size: 16px; }
-  #unsent { color: var(--muted); }
+  #unsent, #level-note { color: var(--muted); }
+  .test-note { display: block; margin-top: 18px; font-size: 14px; color: var(--yellow, #f5d000); }
   #mode-hint {
     position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 12;
     padding: 10px 18px; border-radius: 999px; background: rgba(255,255,255,.1); color: var(--muted);
@@ -427,6 +428,8 @@
     <span class="setup-tag">SETUP</span>
     <button class="link" id="test-open">Test video and sound</button>
     <button class="link" id="check-open">Check films</button>
+    <button class="link" id="level-open" hidden>Even out volume</button>
+    <span id="level-note"></span>
     <span id="unsent"></span>
     <button class="btn" id="start-event">Start the event</button>
   </div>
@@ -543,6 +546,7 @@
     <div class="scale" id="scale"></div>
     <p id="meaning" class="meaning" aria-live="polite"></p>
     <button class="link" id="skip">Skip</button>
+    <span id="test-note" class="test-note" hidden>Test play: answers aren't saved until you press "Start the event".</span>
   </div>
   <div id="thanks" hidden><span id="thanks-main">Thank you.</span><span id="thanks-next" class="thanks-next" hidden></span><small id="thanks-sub">Someone will be with you in a few seconds.</small></div>
 </div>
@@ -597,7 +601,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-02i";
+  var PLAYER_VERSION = "2026-11-02j";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-organiser.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
@@ -881,6 +885,7 @@
     $("laptop-chip").hidden = editing || !state.tiles.length;
     document.body.classList.toggle("event", !!eventMode);
     $("setup-bar").hidden = eventMode || editing || !state.tiles.length;
+    if (typeof showLevel === "function") showLevel();
     showUnsent();
     $("laptop-chip").innerHTML = "";
     var lb = document.createElement("b"); lb.textContent = laptop;
@@ -1185,6 +1190,7 @@
       if (/(^|\/)(all subtitles|subtitles)\//i.test(key)) return;
       if (picked[key]) URL.revokeObjectURL(picked[key]);
       picked[key] = URL.createObjectURL(file);
+      queueLevel(file, key);
       if (hasVideo(key)) return;
       var v = { name: key, lang: langOf(key), secs: 0, plays: 0 };
       // "Standard A.mp4", "Standard B.mp4", "Standard - Mandarin.mp4" and
@@ -1255,8 +1261,13 @@
   // full screen) so viewers only see the films. Press and hold the heading
   // for 2 seconds to get back to setup.
   var eventMode = false;
+  try { eventMode = sessionStorage.getItem("wtf-movie-player-event") === new Date().toDateString(); } catch (e) {}
+  function setEventMode(on) {
+    eventMode = on;
+    try { if (on) sessionStorage.setItem("wtf-movie-player-event", new Date().toDateString()); else sessionStorage.removeItem("wtf-movie-player-event"); } catch (e) {}
+  }
   $("start-event").onclick = function () {
-    eventMode = true; goFull(); render();
+    setEventMode(true); goFull(); render();
     $("mode-hint").classList.add("on");
     setTimeout(function () { $("mode-hint").classList.remove("on"); }, 5000);
   };
@@ -1266,7 +1277,7 @@
     var cancel = function () { clearTimeout(hold); };
     head.addEventListener("pointerdown", function () {
       if (!eventMode) return;
-      hold = setTimeout(function () { eventMode = false; render(); }, 2000);
+      hold = setTimeout(function () { setEventMode(false); render(); }, 2000);
     });
     ["pointerup", "pointerleave", "pointercancel"].forEach(function (e) { head.addEventListener(e, cancel); });
     head.addEventListener("contextmenu", function (e) { if (eventMode) e.preventDefault(); });
@@ -1285,6 +1296,80 @@
   }
   window.addEventListener("online", showUnsent);
   window.addEventListener("offline", showUnsent);
+
+  // ---------- Even volume (Kai, 2 Nov 2026) ----------
+  // Browsers won't let a page listen to local films while they play, so each
+  // film is measured once, when it's chosen (the file can be read then). The
+  // loudness is kept per film; louder films are turned down to match the
+  // quietest (by at most 12 dB), so the slider sets the level for all of them.
+  var LOUD = "wtf-movie-player-loudness";
+  var loud = {};
+  try { loud = JSON.parse(localStorage.getItem(LOUD) || "{}") || {}; } catch (e) {}
+  function allVersions() { return [].concat.apply([], state.tiles.map(function (t) { return t.versions; })); }
+  function gainOf(v) {
+    if (!v || !loud || loud[v.name] == null) return 1;
+    var known = allVersions().map(function (x) { return loud[x.name]; }).filter(function (x) { return x != null; });
+    if (known.length < 2) return 1;
+    var quietest = Math.min.apply(null, known);
+    return Math.pow(10, Math.max(-12, quietest - loud[v.name]) / 20);
+  }
+  // Average loudness of the parts with sound (dB), skipping silence.
+  function readFile(file) {
+    return new Promise(function (ok, no) {
+      var r = new FileReader();
+      r.onload = function () { ok(r.result); };
+      r.onerror = function () { no(r.error); };
+      r.readAsArrayBuffer(file);
+    });
+  }
+  function measureLoudness(file) {
+    return Promise.resolve().then(function () { return readFile(file); }).then(function (buf) {
+      var Ctx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+      var ac = new Ctx(1, 44100, 44100);
+      return new Promise(function (ok, no) { ac.decodeAudioData(buf, ok, no); });
+    }).then(function (audio) {
+      var block = Math.round(audio.sampleRate * 0.4), sum = 0, n = 0;
+      var chans = [];
+      for (var c = 0; c < audio.numberOfChannels; c++) chans.push(audio.getChannelData(c));
+      for (var i = 0; i + block <= audio.length; i += block) {
+        var e = 0, k = 0;
+        for (var j = i; j < i + block; j += 4) {
+          for (c = 0; c < chans.length; c++) { e += chans[c][j] * chans[c][j]; k++; }
+        }
+        e /= k;
+        if (e > 1e-5) { sum += e; n++; } // ignore near-silence (below -50 dB)
+      }
+      return n ? 10 * Math.log10(sum / n) : null;
+    });
+  }
+  var levelQueue = [], levelling = false, levelDone = 0;
+  function queueLevel(file, key) {
+    if (loud[key] != null || levelQueue.some(function (q) { return q.key === key; })) return;
+    levelQueue.push({ file: file, key: key });
+    if (!levelling) { levelDone = 0; levelling = true; setTimeout(nextLevel, 300); }
+  }
+  function nextLevel() {
+    var q = levelQueue.shift();
+    if (!q) { levelling = false; showLevel(); return; }
+    levelling = true; showLevel();
+    measureLoudness(q.file).then(function (db) {
+      if (db != null) loud[q.key] = Math.round(db * 10) / 10;
+      try { localStorage.setItem(LOUD, JSON.stringify(loud)); } catch (e) {}
+    }).catch(function () {}).then(function () { levelDone++; setTimeout(nextLevel, 50); });
+  }
+  function showLevel() {
+    if (!loud || !levelQueue) return;
+    var missing = allVersions().filter(function (v) { return loud[v.name] == null; }).length;
+    $("level-note").textContent = levelling
+      ? "Evening out volume… " + (levelDone + 1) + " of " + (levelDone + levelQueue.length + 1)
+      : "";
+    $("level-open").hidden = levelling || !missing;
+  }
+  // Films chosen before this existed: choose them again so they can be measured.
+  $("level-open").onclick = function () {
+    var fromFolder = allVersions().some(function (v) { return v.name.indexOf("/") > 0; });
+    if (fromFolder) chooseFolder(); else { $("picker").value = ""; $("picker").click(); }
+  };
 
   // ---------- Check films (Kai, 2 Nov 2026) ----------
   // Opens every film (a few at a time) and lists any that won't, so a
@@ -1385,7 +1470,7 @@
     $("test-text").textContent = "If not: check the laptop's volume and that the headphones or speaker are plugged in, then test again.";
     var left = 5;
     $("test-badge").textContent = "Testing video and sound… " + left;
-    tv.volume = video.volume; tv.muted = false;
+    tv.volume = Math.min(1, window.masterVolume() * gainOf(v)); tv.muted = false;
     tv.src = srcFor(v);
     tv.onloadedmetadata = function () {
       tv.currentTime = Math.min(30, (tv.duration || 0) * 0.25);
@@ -1475,6 +1560,7 @@
     $("time").textContent = v.secs ? "-" + fmt(v.secs) : "";
     player.classList.add("on");
     video.src = srcFor(v);
+    window.applyGain();
     video.currentTime = 0;
     var p = video.play();
     if (p && p.catch) p.catch(function () { setPaused(); });
@@ -1617,19 +1703,28 @@
       var saved = JSON.parse(localStorage.getItem("wtf-movie-player-volume") || "null");
       if (saved) { v = Math.min(1, Math.max(0, +saved.v || 0)); m = !!saved.m; }
     } catch (e) {}
-    video.volume = v; video.muted = m;
+    var master = v;
+    // The film playing gets the laptop's level times its own adjustment
+    // (louder films turned down to match the quietest one).
+    function apply() {
+      var g = current ? gainOf(current.version) : 1;
+      video.volume = Math.min(1, Math.max(0, master * g));
+    }
+    window.applyGain = apply;
+    window.masterVolume = function () { return master; };
+    apply(); video.muted = m;
     function show() {
-      var off = video.muted || video.volume === 0;
+      var off = video.muted || master === 0;
       $("mute").innerHTML = off ? ICON_MUTE : ICON_VOL;
       $("mute").setAttribute("aria-label", off ? "Unmute" : "Mute");
-      $("volume").value = video.muted ? 0 : video.volume;
+      $("volume").value = video.muted ? 0 : master;
     }
     function keep() {
-      try { localStorage.setItem("wtf-movie-player-volume", JSON.stringify({ v: video.volume, m: video.muted })); } catch (e) {}
+      try { localStorage.setItem("wtf-movie-player-volume", JSON.stringify({ v: master, m: video.muted })); } catch (e) {}
     }
     $("volume").addEventListener("input", function (e) {
       e.stopPropagation();
-      video.volume = +this.value;
+      master = +this.value; apply();
       video.muted = +this.value === 0;
       show(); keep(); poke();
     });
@@ -1637,7 +1732,7 @@
     $("volume").addEventListener("change", function () { this.blur(); }); // keep space = pause
     $("mute").addEventListener("click", function (e) {
       e.stopPropagation();
-      if (video.muted || video.volume === 0) { video.muted = false; if (video.volume === 0) video.volume = 0.5; }
+      if (video.muted || master === 0) { video.muted = false; if (master === 0) { master = 0.5; apply(); } }
       else video.muted = true;
       this.blur(); // keep space = pause
       show(); keep(); poke();
@@ -1645,7 +1740,7 @@
     video.addEventListener("volumechange", show);
     window.changeVolume = function (d) {
       video.muted = false;
-      video.volume = Math.min(1, Math.max(0, Math.round((video.volume + d) * 20) / 20));
+      master = Math.min(1, Math.max(0, Math.round((master + d) * 20) / 20)); apply();
       show(); keep(); poke();
     };
     show();
@@ -1835,7 +1930,7 @@
     stoppedAt = Math.round(video.currentTime * 10) / 10;
     video.pause();
     var d = isFinite(video.duration) && video.duration ? video.duration : current.version.secs || null;
-    answers.push({ id: uid(), stop: true, film: current.tile.title, version: current.version.name,
+    if (eventMode) answers.push({ id: uid(), stop: true, film: current.tile.title, version: current.version.name,
       language: current.version.lang || "English", stopped_at: stoppedAt, duration: d,
       at: new Date().toISOString(), laptop: laptop, sent: false });
     saveAnswers();
@@ -1950,6 +2045,7 @@
     surveyTotal = Math.max(1, viewers || 1);
     surveyPerson = 1;
     status("survey");
+    $("test-note").hidden = eventMode;
     var sv = $("survey");
     sv.classList.remove("fade-in", "wait");
     void sv.offsetWidth; // restart the fade
@@ -1977,6 +2073,7 @@
   }
   $("survey").addEventListener("mousemove", function () { this.classList.remove("fresh"); });
   function record(score) {
+    if (!eventMode) return; // setup mode: a test play, not saved (Kai, 2 Nov)
     answers.push({ id: uid(), film: surveyFilm.title, version: surveyVersion.name, language: surveyVersion.lang || "English", impact: score, at: new Date().toISOString(), laptop: laptop, sent: false });
     saveAnswers();
   }

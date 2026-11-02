@@ -67,6 +67,14 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'Movie player: films watched in setup mode are test plays and don\'t count in your results (the question says so). Press "Start the event" before viewers arrive. Event mode now survives a page reload.',
+      },
+      {
+        level: "organiser",
+        text: 'Movie player evens out the volume: louder films are turned down to match the quieter ones, so the slider sets one level for everything. It measures each film when you add it; laptops set up before today show an "Even out volume" link to measure them.',
+      },
+      {
+        level: "organiser",
         text: "Movie player results show how many people skipped the question, per film and for each of your last few days, so you can see if fewer people are skipping.",
       },
       {
