@@ -61,6 +61,32 @@ const MONTH_NAMES = [
   "Dec",
 ];
 
+// Shift-click (Kai, 4 Nov 2026): ticks every photo between the last one
+// clicked (`anchor`) and this one, in the order they're shown. If this photo
+// was already ticked, the range is unticked instead, like Google Photos.
+export function selectRange(
+  sel: Set<string> | null,
+  order: string[],
+  anchor: string | null,
+  id: string,
+): Set<string> {
+  const n = new Set(sel ?? []);
+  const to = order.indexOf(id);
+  const from = anchor ? order.indexOf(anchor) : -1;
+  if (from < 0 || to < 0) {
+    if (n.has(id)) n.delete(id);
+    else n.add(id);
+    return n;
+  }
+  const untick = n.has(id) && from !== to;
+  const [a, b] = from < to ? [from, to] : [to, from];
+  for (const x of order.slice(a, b + 1)) {
+    if (untick) n.delete(x);
+    else n.add(x);
+  }
+  return n;
+}
+
 // One photo in a grid. The star in the corner favourites it; tap the photo
 // for tags, crop, download
 // (and remove, where that's allowed).
@@ -74,6 +100,7 @@ export function PhotoTile({
   selected,
   onSelect,
   onModSelect,
+  onShiftSelect,
   kinds,
   graphic = false,
   events,
@@ -96,6 +123,8 @@ export function PhotoTile({
   onSelect?: () => void;
   // Cmd/Ctrl-click: tick this photo (starting select mode if need be).
   onModSelect?: () => void;
+  // Shift-click: tick everything from the last clicked photo to this one.
+  onShiftSelect?: () => void;
 }) {
   const item = "block w-full rounded-lg px-2 py-1 text-left hover:bg-stone-100";
   const box = useRef<HTMLLIElement>(null);
@@ -141,6 +170,10 @@ export function PhotoTile({
     <li ref={box} className="relative">
       <button
         type="button"
+        onMouseDown={(e) => {
+          // Stop shift-click from highlighting text across the page.
+          if (e.shiftKey && onShiftSelect) e.preventDefault();
+        }}
         onPointerDown={(e) => {
           if (e.pointerType === "mouse" || !onModSelect) return;
           const x = e.clientX;
@@ -173,6 +206,7 @@ export function PhotoTile({
             press.current = null;
             return; // the long press already selected it
           }
+          if (e.shiftKey && onShiftSelect) return onShiftSelect();
           if ((e.metaKey || e.ctrlKey) && onModSelect) return onModSelect();
           (onSelect ?? onToggle)();
         }}

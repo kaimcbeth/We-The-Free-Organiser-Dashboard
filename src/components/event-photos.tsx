@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { EventPhoto } from "@/lib/event-photos";
 import { PhotoUploader } from "@/components/photo-uploader";
 import {
   BulkBar,
+  selectRange,
   PhotoTile,
   savePhoto,
   type PhotoChange,
@@ -24,6 +25,7 @@ export function EventPhotos({
   const [photos, setPhotos] = useState(initial);
   const [open, setOpen] = useState<string | null>(null);
   const [sel, setSel] = useState<Set<string> | null>(null); // select mode
+  const anchor = useRef<string | null>(null); // last photo clicked (shift-click)
 
   function flag(p: EventPhoto, c: PhotoChange) {
     setPhotos((all) => all.map((x) => (x.id === p.id ? { ...x, ...c } : x)));
@@ -76,6 +78,7 @@ export function EventPhotos({
               onChange={(c) => flag(p, c)}
               selected={sel?.has(p.id)}
               onModSelect={() => {
+                anchor.current = p.id;
                 setOpen(null);
                 setSel((s) => {
                   const n = new Set(s ?? []);
@@ -86,15 +89,30 @@ export function EventPhotos({
               }}
               onSelect={
                 sel
-                  ? () =>
+                  ? () => {
+                      anchor.current = p.id;
                       setSel((s) => {
                         const n = new Set(s);
                         if (n.has(p.id)) n.delete(p.id);
                         else n.add(p.id);
                         return n;
-                      })
+                      });
+                    }
                   : undefined
               }
+              onShiftSelect={() => {
+                const from = anchor.current;
+                anchor.current = p.id;
+                setOpen(null);
+                setSel((s) =>
+                  selectRange(
+                    s,
+                    photos.map((x) => x.id),
+                    from,
+                    p.id,
+                  ),
+                );
+              }}
             />
           ))}
         </ul>

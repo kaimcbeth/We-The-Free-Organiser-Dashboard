@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   loadCommunityPhotos,
@@ -15,6 +15,7 @@ import { Sheet } from "@/components/sheet";
 import { loadEventKinds } from "@/lib/event-kinds";
 import {
   BulkBar,
+  selectRange,
   PhotoTile,
   savePhoto,
   TagFilter,
@@ -59,6 +60,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
   const [tags, setTags] = useState<PhotoTag[]>([]);
   const [filter, setFilter] = useState<PhotoFilter>(null);
   const [sel, setSel] = useState<Set<string> | null>(null); // select mode
+  const anchor = useRef<string | null>(null); // last photo clicked (shift-click)
   const [trash, setTrash] = useState<EventPhoto[] | null>(null); // Removed, open
   const [kinds, setKinds] = useState<string[]>([]); // from the event listings
   const [kind, setKind] = useState(""); // for the next upload
@@ -396,7 +398,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                     setOpen(null);
                     setSel(new Set());
                   }}
-                  title="Or long-press a photo (Ctrl/Cmd-click on a computer)"
+                  title="Or long-press a photo (Ctrl/Cmd-click on a computer; Shift-click to select a run of photos)"
                   className="shrink-0 text-sm font-medium text-stone-500 hover:text-stone-800 hover:underline"
                 >
                   Select
@@ -428,6 +430,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                     graphic
                     selected={sel?.has(p.id)}
                     onModSelect={() => {
+                      anchor.current = p.id;
                       setOpen(null);
                       setSel((s) => {
                         const n = new Set(s ?? []);
@@ -438,15 +441,30 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                     }}
                     onSelect={
                       sel
-                        ? () =>
+                        ? () => {
+                            anchor.current = p.id;
                             setSel((s) => {
                               const n = new Set(s);
                               if (n.has(p.id)) n.delete(p.id);
                               else n.add(p.id);
                               return n;
-                            })
+                            });
+                          }
                         : undefined
                     }
+                    onShiftSelect={() => {
+                      const from = anchor.current;
+                      anchor.current = p.id;
+                      setOpen(null);
+                      setSel((s) =>
+                        selectRange(
+                          s,
+                          shown.map((x) => x.id),
+                          from,
+                          p.id,
+                        ),
+                      );
+                    }}
                   />
                 ))}
               </ul>

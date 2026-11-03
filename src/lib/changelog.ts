@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Photo Hub: Shift-click two photos to select them and every photo in between. Shift-click a ticked photo to untick the run.",
+      },
+      {
+        level: "organiser",
         text: "Everything from Kai's Facebook events list is in the Hub (349 events, back to January 2022), so old photos can go on the right event. They have a date but no time; the ones by other groups say who hosted them in the notes. Delete any you don't want.",
       },
       {
