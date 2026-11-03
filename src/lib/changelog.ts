@@ -79,7 +79,11 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Event recap: after an event ends, a card at the top of Events shows how many came, the first-timers and (for outreach) how many watched the film, the average impact and tapouts. \"Ask for onboarding support\" makes an image of the new faces (first names only) to share with your regulars. Close it with ×; it's also on the event's page.",
+        text: "Event recap: after an event ends, a card at the top of Events shows how many came, the first-timers and (for outreach) how many watched the film, the average impact and tapouts. Close it with ×; it's also on the event's page.",
+      },
+      {
+        level: "organiser",
+        text: 'Newcomers: every Monday a card on Events lists last week\'s newcomers (Monday to Sunday) by event. "Make the image" gives a NEWCOMERS image with the dates and their first names, to share with your regulars.',
       },
     ],
   },

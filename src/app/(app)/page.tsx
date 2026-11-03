@@ -13,6 +13,7 @@ import { requireOrganiser } from "@/lib/organiser";
 import { RegionEvents } from "./region-events";
 import { PastPicker } from "./past-picker";
 import { EventRecap } from "@/components/event-recap";
+import { NewcomerReport } from "@/components/newcomer-report";
 import { SetupChecklist, type SetupStatus } from "./setup-checklist";
 import { SuggestedEvents } from "./suggested-events";
 import type { Suggestion } from "@/lib/special-events";
@@ -240,6 +241,23 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
           .order("starts_at", { ascending: false }),
         supabase.from("event_recap_dismissals").select("event_id"),
       ]);
+  // Last week's newcomers (Monday–Sunday, team timezone), shown all this
+  // week until closed.
+  const localToday = todayInTz(organiser.team.timezone);
+  const dow = (new Date(`${localToday}T12:00:00Z`).getUTCDay() + 6) % 7; // Mon = 0
+  const lastWeek = new Date(
+    Date.parse(`${localToday}T12:00:00Z`) - (dow + 7) * 864e5,
+  )
+    .toISOString()
+    .slice(0, 10);
+  const { data: weekClosed } = organiser.exampleMode
+    ? { data: [{}] }
+    : await supabase
+        .from("newcomer_report_dismissals")
+        .select("week_start")
+        .eq("team_id", organiser.team_id)
+        .eq("week_start", lastWeek);
+  const showWeek = (weekClosed ?? []).length === 0;
   const closed = new Set(
     ((closedData ?? []) as { event_id: string }[]).map((d) => d.event_id),
   );
@@ -325,6 +343,16 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
             />
           </div>
         )}
+
+      {showWeek && (
+        <div className="empty:hidden">
+          <NewcomerReport
+            teamId={organiser.team_id}
+            weekStart={lastWeek}
+            tz={organiser.team.timezone}
+          />
+        </div>
+      )}
 
       {recaps.length > 0 && (
         <div className="space-y-3">
