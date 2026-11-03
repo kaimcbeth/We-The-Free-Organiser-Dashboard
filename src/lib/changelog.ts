@@ -77,6 +77,10 @@ export const CHANGELOG: Release[] = [
         level: "organiser",
         text: "Show all past events → Select: tick as many events as you like and delete them in one go. Each row says who hosted it, for the ones from Facebook.",
       },
+      {
+        level: "organiser",
+        text: "Event recap: after an event ends, a card at the top of Events shows how many came, the first-timers and (for outreach) how many watched the film, the average impact and tapouts. \"Ask for onboarding support\" makes an image of the new faces (first names only) to share with your regulars. Close it with ×; it's also on the event's page.",
+      },
     ],
   },
   {

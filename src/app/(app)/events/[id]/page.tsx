@@ -2,6 +2,7 @@ import { WhosComing } from "./whos-coming";
 import { LivePlayers } from "@/components/live-players";
 import { isMovieChallenge, showLivePlayers } from "@/lib/live-window";
 import { MovieDaySummary } from "@/components/movie-day-summary";
+import { EventRecap } from "@/components/event-recap";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
@@ -297,6 +298,18 @@ export default async function EventCheckInPage({
             timeZone: team.timezone,
           }).format(new Date(event.starts_at))}
         />
+      )}
+
+      {/* After the event: who came, who was new (Kai, 4 Nov 2026). */}
+      {event.starts_at < nowIso() && !event.time_unknown && (
+        <div className="mt-6">
+          <EventRecap
+            eventId={event.id}
+            title={event.title}
+            when={formatEventDate(event.starts_at)}
+            hideFilms={isMovieChallenge(event.title)}
+          />
+        </div>
       )}
 
       <WhosComing supabase={supabase} eventId={event.id} />

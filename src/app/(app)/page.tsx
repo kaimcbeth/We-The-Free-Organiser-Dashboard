@@ -12,6 +12,7 @@ import { describeImport } from "@/lib/import-status";
 import { requireOrganiser } from "@/lib/organiser";
 import { RegionEvents } from "./region-events";
 import { PastPicker } from "./past-picker";
+import { EventRecap } from "@/components/event-recap";
 import { SetupChecklist, type SetupStatus } from "./setup-checklist";
 import { SuggestedEvents } from "./suggested-events";
 import type { Suggestion } from "@/lib/special-events";
@@ -223,6 +224,46 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
     (h) => !lastShown || h.starts_at <= lastShown,
   );
   const suggestions = (suggestData ?? []) as Suggestion[];
+
+  // Event recaps: events that ended in the last week, until each organiser
+  // closes theirs (Kai, 4 Nov 2026). At most 3, newest first.
+  const recapNow = Date.parse(nowIso());
+  const [{ data: recentData }, { data: closedData }] = organiser.exampleMode
+    ? [{ data: [] }, { data: [] }]
+    : await Promise.all([
+        supabase
+          .from("events")
+          .select("id, title, starts_at, ends_at, time_unknown")
+          .eq("team_id", organiser.team_id)
+          .gte("starts_at", new Date(recapNow - 8 * 864e5).toISOString())
+          .lt("starts_at", nowIso())
+          .order("starts_at", { ascending: false }),
+        supabase.from("event_recap_dismissals").select("event_id"),
+      ]);
+  const closed = new Set(
+    ((closedData ?? []) as { event_id: string }[]).map((d) => d.event_id),
+  );
+  const recaps = (
+    (recentData ?? []) as {
+      id: string;
+      title: string;
+      starts_at: string;
+      ends_at: string | null;
+      time_unknown: boolean;
+    }[]
+  )
+    .filter((e) => {
+      const end = e.ends_at
+        ? Date.parse(e.ends_at)
+        : Date.parse(e.starts_at) + 3 * 36e5;
+      return (
+        !e.time_unknown &&
+        !closed.has(e.id) &&
+        end <= recapNow &&
+        end >= recapNow - 7 * 864e5
+      );
+    })
+    .slice(0, 3);
   const canManageSpecial =
     organiser.role === "god" || organiser.role === "regional_lead";
 
@@ -284,6 +325,20 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
             />
           </div>
         )}
+
+      {recaps.length > 0 && (
+        <div className="space-y-3">
+          {recaps.map((e) => (
+            <EventRecap
+              key={e.id}
+              eventId={e.id}
+              title={e.title}
+              when={formatEventDate(e.starts_at)}
+              dismissible
+            />
+          ))}
+        </div>
+      )}
 
       <ImportStatus
         teamId={organiser.team_id}
