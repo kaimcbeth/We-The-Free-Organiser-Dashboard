@@ -13,7 +13,7 @@ Also read AGENTS.md (this Next.js version differs from training data).
 - `src/app/actions.ts`: server actions. `src/lib/`: logic (tasks, invites, engagement, impact, outreach-guide, welcome, changelog, resources…).
 - `supabase/migrations`: numbered SQL, one file per change (latest 0168). Apply with `apply_migration`/`execute_sql`, then save the same SQL as the next numbered file.
 - `supabase/functions`: Edge Functions (import-events, import-hangouts, buddy-reminders, event-reminders, send-approval, write-copy, test-login, rain-check). Deploy with the MCP tool.
-- Secrets live only in Supabase (Edge Functions → Secrets): `ANTHROPIC_API_KEY` is set; `SMTP_USER`/`SMTP_PASS`/`SMTP_FROM` are not yet (email features say "not set up"). Never ask for or accept secrets in chat.
+- Secrets live only in Supabase (Edge Functions → Secrets): `ANTHROPIC_API_KEY` is set; `SMTP_USER` (kaimcbeth@gmail.com) + `SMTP_PASS` (Gmail app password "Movement Hub reminders") set by Kai 4 Nov 2026, `SMTP_FROM` not set (defaults to "We The Free <SMTP_USER>"). Test email: POST event-reminders `{"test": true}` (sends only to SMTP_USER; first test 4 Nov: sent). Never ask for or accept secrets in chat.
 
 ## Build, check, ship
 

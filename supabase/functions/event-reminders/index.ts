@@ -28,7 +28,8 @@ type Due = {
 const esc = (s: string) =>
   s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
+  const test = await req.json().then((b) => b?.test === true).catch(() => false);
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const now = Date.now();
   const { data: due, error } = await supabase
@@ -61,6 +62,25 @@ Deno.serve(async () => {
     }
     return mailer;
   }
+  // Test (Kai, 4 Nov 2026): POST {"test": true} sends one sample reminder to
+  // the sending address itself (SMTP_USER), and nothing to anyone else.
+  if (test) {
+    const m = await getMailer();
+    if (!m) return Response.json({ test: "email sender not set up" });
+    try {
+      await m.sendMail({
+        from: Deno.env.get("SMTP_FROM") ?? `We The Free <${smtpUser}>`,
+        to: smtpUser,
+        subject: "Tomorrow: Test event (Movement Hub test)",
+        text: `Hi Kai,\n\nThis is a test of the Movement Hub's day-before reminder email. If you can read this, it works.\n\n${APP_URL}/me\n\nWe The Free`,
+        html: `<p>Hi Kai,</p><p>This is a test of the Movement Hub's day-before reminder email. If you can read this, it works.</p><p><a href="${APP_URL}/me">Open the app</a></p><p>We The Free</p>`,
+      });
+      return Response.json({ test: "sent", to: smtpUser });
+    } catch (err) {
+      return Response.json({ test: "failed", error: err instanceof Error ? err.message : String(err) });
+    }
+  }
+
   // deno-lint-ignore no-explicit-any
   let push: any = null;
   async function getPush() {
