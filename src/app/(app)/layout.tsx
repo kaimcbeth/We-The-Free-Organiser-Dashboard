@@ -184,8 +184,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       )}
       {organiser.exampleMode && (
         <p className="bg-cyan/25 px-4 py-2 text-center text-sm text-navy">
-          You&apos;re looking at an <b>example community</b> for the tour. Your
-          own appears when the tour ends.
+          You&apos;re looking at an <b>example community</b> for the
+          introduction. Your own appears when the introduction ends.
         </p>
       )}
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-5">

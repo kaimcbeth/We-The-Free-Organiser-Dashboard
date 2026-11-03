@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { ReminderSetting, type BuddyDashboard } from "./buddy-section";
+import { MyReminders } from "@/components/reminders-link";
 
 type Step = {
   icon: string;
@@ -12,22 +12,19 @@ type Step = {
   extra?: React.ReactNode;
 };
 
-// A short welcome tour for new members. Shows once (until they finish or skip),
-// every time in God Mode's "View as New member", and on "Replay the tour".
+// The member introduction (Kai, 4 Nov 2026: "introduction", not "tour":
+// part walk-through, part setup). Shows once (until they finish or skip), Shows once (until they finish or skip),
+// every time in God Mode's "View as New member".
 export function MemberTutorial({
   firstName,
   teamName,
   whatsappUrl,
-  notifyChannel,
-  hasEmail,
   autoOpen,
   preview,
 }: {
   firstName: string;
   teamName: string;
   whatsappUrl: string | null;
-  notifyChannel: BuddyDashboard["notify_channel"];
-  hasEmail: boolean;
   autoOpen: boolean;
   preview: boolean; // God Mode preview: don't save anything
 }) {
@@ -49,7 +46,7 @@ export function MemberTutorial({
       icon: "👋",
       tone: "bg-pink",
       title: `Welcome, ${firstName}!`,
-      body: `You're now a member of We The Free ${teamName}. Here's a quick 30-second tour of your page.`,
+      body: `You're now a member of We The Free ${teamName}. Here's a quick introduction to your page, and a couple of things to set up.`,
     },
     {
       icon: "✅",
@@ -93,22 +90,18 @@ export function MemberTutorial({
       icon: "🔔",
       tone: "bg-cyan",
       title: "Stay in the loop",
-      body: "If you're going to an event, we'll remind you the day before. The bell at the top shows your notifications. Add this page to your home screen to open it like an app (on iPhone: Share → Add to Home Screen).",
+      body: "Switch on email reminders and pick the events you want to hear about. You can change it any time from Reminders on the Events tab.",
       extra: (
-        <ReminderSetting
-          initial={notifyChannel}
-          hasEmail={hasEmail}
-          intro="Also send reminders by (change it any time from Reminders on the Events tab):"
-          bare
-          dryRun={preview}
-        />
+        <div className="mt-4 text-left">
+          <MyReminders dryRun={preview} />
+        </div>
       ),
     },
     {
       icon: "🎉",
       tone: "bg-yellow",
       title: "You're all set",
-      body: "See you at the next event! You can replay this tour any time from the bottom of your page.",
+      body: "See you at the next event! The bell at the top shows your notifications. Add this page to your home screen to open it like an app (on iPhone: Share → Add to Home Screen).",
     },
   ];
 
@@ -129,7 +122,7 @@ export function MemberTutorial({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Welcome tour"
+        aria-label="Introduction"
         className="w-full rounded-t-3xl bg-background p-6 pb-8 text-center sm:max-w-sm sm:rounded-3xl"
       >
         <div className="flex items-center justify-between text-sm">
@@ -141,7 +134,7 @@ export function MemberTutorial({
               onClick={finish}
               className="rounded-lg px-2 py-1 text-stone-500 hover:bg-black/5"
             >
-              Skip tour
+              Skip introduction
             </button>
           )}
         </div>
@@ -194,7 +187,7 @@ export function ReplayTour() {
       onClick={() => window.dispatchEvent(new Event("wtf:replay-tour"))}
       className="text-sm font-medium text-pink-ink hover:underline"
     >
-      Replay the welcome tour
+      Replay the introduction
     </button>
   );
 }

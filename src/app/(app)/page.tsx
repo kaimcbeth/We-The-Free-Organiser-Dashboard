@@ -301,9 +301,9 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
         <div className="flex items-baseline gap-3">
           <h1 className="text-2xl font-semibold tracking-tight">Events</h1>
           {calendarToken && <CalendarFeed token={calendarToken} />}
-          {!organiser.exampleMode && (
+          {
             <RemindersLink className="text-xs font-medium text-stone-500 hover:text-stone-800 hover:underline" />
-          )}
+          }
           {!organiser.exampleMode && !organiser.allCommunities && (
             <EventsShare
               slug={organiser.team.slug}

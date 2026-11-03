@@ -57,7 +57,7 @@ export function TestRole({
         ))}
       </div>
       <p className="mt-2 text-xs text-stone-500">
-        Changing the role also resets their welcome tour, so you can see it
+        Changing the role also resets their introduction, so you can see it
         again.
       </p>
       {error && <p className="mt-1 text-sm text-red-700">{error}</p>}

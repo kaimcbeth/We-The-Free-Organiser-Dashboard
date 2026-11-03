@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { finishOrganiserTour } from "@/app/actions";
 import { TaskChooser } from "@/components/task-chooser";
+import { MyReminders } from "@/components/reminders-link";
 import type { TaskSetup } from "@/lib/task-setup";
 
 type Step = {
@@ -20,6 +21,7 @@ type Step = {
   whole?: boolean; // highlight all of it, even if it's tall
   choose?: boolean; // Next opens the action picker, then the tour carries on
   target?: string; // data-tour="…" element(s) to spotlight, first found wins
+  extra?: React.ReactNode; // something to set up right there (Kai, 4 Nov 2026)
 };
 
 const TOUR_MINUTES = 5;
@@ -63,7 +65,7 @@ export function OrganiserTour({
       icon: "👋",
       tone: "bg-pink",
       title: `Welcome, ${firstName}!`,
-      body: `You're now an organiser for ${communityName}. The tour has three short parts: your events, your people, and your actions.`,
+      body: `You're now an organiser for ${communityName}. The introduction has three short parts: your events, your people, and your actions. Along the way you'll set a couple of things up.`,
     },
     {
       section: 0,
@@ -82,6 +84,16 @@ export function OrganiserTour({
       href: "/calendar",
       target: "view-switch",
       body: "Calendar shows the whole month at a glance. List puts today's event at the top, with the next one just below. Switch between them here.",
+    },
+    {
+      section: 0,
+      icon: "⏰",
+      tone: "bg-pink",
+      title: "Your reminders",
+      href: "/",
+      target: "reminders-link",
+      body: "Set up email reminders for yourself: the day before events you're going to, and a heads-up about upcoming ones. Change it any time from Reminders at the top of Events.",
+      extra: <MyReminders />,
     },
     {
       section: 0,
@@ -175,7 +187,7 @@ export function OrganiserTour({
       click: "choose-open",
       target: "task-chooser,choose-tasks",
       whole: true,
-      body: "Actions are the regular jobs that keep a community growing. Tell us how much time you have each week and we'll suggest which ones to switch on. You'll pick yours at the end of the tour.",
+      body: "Actions are the regular jobs that keep a community growing. Tell us how much time you have each week and we'll suggest which ones to switch on. You'll pick yours at the end of the introduction.",
     },
     {
       section: 2,
@@ -460,7 +472,7 @@ export function OrganiserTour({
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Organiser welcome tour"
+          aria-label="Organiser introduction"
           className="fixed rounded-2xl bg-background p-4 text-left shadow-2xl ring-1 ring-black/5"
           style={{ ...place, left, width }}
         >
@@ -488,6 +500,7 @@ export function OrganiserTour({
           <p className="mt-1 text-sm leading-snug text-stone-600">
             {step.body}
           </p>
+          {step.extra && <div className="mt-3">{step.extra}</div>}
           <div className="mt-3 flex items-center justify-between">
             <button
               onClick={() => setI(i - 1)}
@@ -514,7 +527,7 @@ export function OrganiserTour({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Organiser welcome tour"
+        aria-label="Organiser introduction"
         className="relative w-full rounded-t-3xl bg-background p-6 pb-8 text-center sm:max-w-sm sm:rounded-3xl"
       >
         <div className="flex items-center justify-between text-sm">
@@ -526,7 +539,7 @@ export function OrganiserTour({
             onClick={finish}
             className="rounded-lg px-2 py-1 text-stone-500 hover:bg-black/5"
           >
-            Skip tour
+            Skip introduction
           </button>
         </div>
         {/* The parts of the tour: done ones ticked, the current one filled. */}
@@ -579,6 +592,7 @@ export function OrganiserTour({
           {step.title}
         </h2>
         <p className="mt-2 text-stone-600">{step.body}</p>
+        {step.extra && <div className="mt-4 text-left">{step.extra}</div>}
         <div className="mt-6 flex gap-2">
           {i > 0 && (
             <button

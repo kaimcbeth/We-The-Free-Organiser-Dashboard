@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Sheet } from "@/components/sheet";
 import { createClient } from "@/lib/supabase/client";
 import { setReminderPrefs } from "@/app/buddy-actions";
@@ -36,6 +36,33 @@ const KINDS = [
 ] as const;
 const ALL_KINDS: string[] = KINDS.map((k) => k.key);
 
+// Loads your reminder settings and shows the switch + buttons. Used in the
+// Reminders pop-up and as a setup step in every role's introduction.
+export function MyReminders({ dryRun = false }: { dryRun?: boolean }) {
+  const [s, setS] = useState<Settings | null>(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let live = true;
+    createClient()
+      .rpc("my_reminder_settings")
+      .then(({ data, error }) => {
+        if (!live) return;
+        if (error) setError("Couldn't load your reminders. Please try again.");
+        else if (!data)
+          setError(
+            "Your account isn't connected to a profile yet, so there's nothing to remind you about.",
+          );
+        else setS(data as Settings);
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
+  if (error) return <p className="text-sm text-stone-600">{error}</p>;
+  if (!s) return <p className="text-sm text-stone-400">Loading…</p>;
+  return <EmailReminders initial={s} dryRun={dryRun} />;
+}
+
 // "Reminders" (Kai, 4 Nov 2026): a small link in the Events page header that
 // opens the reminder settings (moved here from the profile).
 export function RemindersLink({
@@ -44,41 +71,19 @@ export function RemindersLink({
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [s, setS] = useState<Settings | null>(null);
-  const [error, setError] = useState("");
-
-  async function show() {
-    setOpen(true);
-    setError("");
-    const { data, error } = await createClient().rpc("my_reminder_settings");
-    if (error) setError("Couldn't load your reminders. Please try again.");
-    else if (!data)
-      setError(
-        "Your account isn't connected to a profile yet, so there's nothing to remind you about.",
-      );
-    else setS(data as Settings);
-  }
-
   return (
     <>
-      <button type="button" onClick={show} className={className}>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        data-tour="reminders-link"
+        className={className}
+      >
         Reminders
       </button>
       {open && (
-        <Sheet
-          title="Reminders"
-          onClose={() => {
-            setOpen(false);
-            setS(null);
-          }}
-        >
-          {error ? (
-            <p className="text-sm text-stone-600">{error}</p>
-          ) : !s ? (
-            <p className="text-sm text-stone-400">Loading…</p>
-          ) : (
-            <EmailReminders initial={s} />
-          )}
+        <Sheet title="Reminders" onClose={() => setOpen(false)}>
+          <MyReminders />
         </Sheet>
       )}
     </>
@@ -98,7 +103,13 @@ function chip(active: boolean) {
   }`;
 }
 
-export function EmailReminders({ initial }: { initial: Settings }) {
+export function EmailReminders({
+  initial,
+  dryRun = false,
+}: {
+  initial: Settings;
+  dryRun?: boolean; // God Mode previews: nothing is saved
+}) {
   const [p, setP] = useState<Prefs>({
     channel: initial.notify_channel,
     going: initial.going,
@@ -114,6 +125,7 @@ export function EmailReminders({ initial }: { initial: Settings }) {
     const before = p;
     setP(next);
     setMsg("");
+    if (dryRun) return;
     start(async () => {
       const r = await setReminderPrefs(next);
       if (r.error) {

@@ -115,7 +115,7 @@ export function StaffBar({
                   </option>
                 ))}
               </optgroup>
-              <optgroup label="Tutorials and setup">
+              <optgroup label="Introductions and setup">
                 {TUTORIAL_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value} className="text-navy">
                     {o.label}

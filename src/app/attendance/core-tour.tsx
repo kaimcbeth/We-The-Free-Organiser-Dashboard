@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { finishCoreTour } from "@/app/actions";
+import { MyReminders } from "@/components/reminders-link";
 
 const STEPS = [
   {
@@ -41,6 +42,14 @@ const STEPS = [
       "Hand an action to a helper, or set “I'm away until” and the organisers cover it while you're away.",
   },
   {
+    icon: "⏰",
+    tone: "bg-yellow",
+    title: () => "Your reminders",
+    body: () =>
+      "Set up email reminders for yourself: the day before events you're going to, and a heads-up about upcoming ones. Change it any time from Reminders on the Events page.",
+    reminders: true,
+  },
+  {
     icon: "🎯",
     tone: "bg-cyan",
     title: () => "Pick your actions",
@@ -49,7 +58,8 @@ const STEPS = [
   },
 ];
 
-// Welcome tour for new Core Team members, ending in choosing their actions.
+// The Core Team introduction (Kai, 4 Nov 2026: "introduction", not "tour"),
+// with a reminders setup step, ending in choosing their actions.
 export function CoreTour({
   firstName,
   communityName,
@@ -77,7 +87,7 @@ export function CoreTour({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Core Team welcome tour"
+        aria-label="Core Team introduction"
         className="w-full rounded-t-3xl bg-background p-6 pb-8 text-center sm:max-w-sm sm:rounded-3xl"
       >
         <div className="flex items-center justify-between text-sm">
@@ -100,6 +110,11 @@ export function CoreTour({
           {step.title(firstName)}
         </h2>
         <p className="mt-2 text-stone-600">{step.body(communityName)}</p>
+        {"reminders" in step && (
+          <div className="mt-4 text-left">
+            <MyReminders />
+          </div>
+        )}
         <div className="mt-6 flex justify-center gap-1.5" aria-hidden>
           {STEPS.map((_, n) => (
             <span

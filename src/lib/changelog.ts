@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "The welcome tour is now the Introduction, for every role, and it includes setting up your email reminders as you go.",
+      },
+      {
+        level: "organiser",
         text: "No more Maybe: people answer Going or Can't. The one Maybe answer so far was cleared, so that person will be asked again.",
       },
       {

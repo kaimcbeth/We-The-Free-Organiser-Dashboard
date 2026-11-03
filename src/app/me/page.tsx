@@ -195,8 +195,6 @@ export default async function MePage() {
           "",
         )}
         whatsappUrl={me.team?.whatsapp_url ?? null}
-        notifyChannel={me.notify_channel ?? "none"}
-        hasEmail={!!me.email}
         autoOpen={previewNewMember || !me.tutorial_done_at}
         preview={previewNewMember}
       />

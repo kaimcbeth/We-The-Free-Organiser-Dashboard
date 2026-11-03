@@ -55,6 +55,7 @@ git push origin main
 - `event-reminders` Edge Function is built around `reminders_due()` (wording per kind; marks reminded_at or inserts event_heads_up).
 - UI `src/components/reminders-link.tsx`: `RemindersLink` (Sheet, loads `my_reminder_settings()`) → `EmailReminders` (exported for tests): switch (on → email, going + upcoming, all kinds; off → channel none, upcoming off, going on so the bell still reminds); chips "Events I'm going to" / "All upcoming events" and the 10 `KINDS` (each row keeps one on). Saved by `setReminderPrefs` (buddy-actions). The member tour's Stay in the loop step still uses `ReminderSetting` (Email / Phone / Nothing). Turning off also wipes a Phone choice.
 - Members' Events page: "Replay welcome tour" removed (Kai); `ReplayTour` in member-tutorial.tsx is now unused.
+- **"Introduction", never "tour"/"tutorial"** in anything people see, for every role (Kai, 4 Nov 2026: "halfway between a tutorial and a setup"; code names like `OrganiserTour` stay). Each introduction has a reminders setup step using `MyReminders` (reminders-link.tsx; loads `my_reminder_settings()` itself; `dryRun` for God previews): organiser (section Events, "Your reminders", spotlights `data-tour="reminders-link"`, Step.extra), Core Team ("Your reminders" before Pick your actions), member ("Stay in the loop", replaced the Email/Phone/Nothing `ReminderSetting`; `MemberTutorial` lost notifyChannel/hasEmail props). The organiser Events header shows Reminders in example mode too.
 
 ## Event recap (4 Nov 2026)
 
