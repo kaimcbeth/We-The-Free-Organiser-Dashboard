@@ -225,6 +225,52 @@ export async function deleteEvent(
   redirect("/?past=all");
 }
 
+// Delete several hand-added events at once (the full Past list's Select
+// mode). Imported ones are skipped; photos stay in the Photo Hub, dated by
+// their event's month.
+export async function deleteEvents(
+  eventIds: string[],
+): Promise<{ deleted?: number; error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  if (eventIds.length === 0) return { deleted: 0 };
+  const { data: rows } = await supabase
+    .from("events")
+    .select("id, team_id, starts_at")
+    .in("id", eventIds)
+    .eq("source", "manual");
+  const events = (rows ?? []).filter((e) =>
+    organiser.teams.some((t) => t.id === e.team_id),
+  );
+  if (events.length === 0) return { error: "Nothing to delete." };
+  for (const e of events) {
+    const tz =
+      organiser.teams.find((t) => t.id === e.team_id)?.timezone ?? "UTC";
+    const [y, m] = new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+    })
+      .format(new Date(e.starts_at))
+      .split("-")
+      .map(Number);
+    await supabase
+      .from("event_photos")
+      .update({ taken_year: y, taken_month: m })
+      .eq("event_id", e.id)
+      .is("taken_year", null);
+  }
+  const ids = events.map((e) => e.id);
+  await supabase
+    .from("event_photos")
+    .update({ event_id: null })
+    .in("event_id", ids);
+  const { error } = await supabase.from("events").delete().in("id", ids);
+  if (error) return { error: "Couldn't delete them. Please try again." };
+  revalidatePath("/");
+  revalidatePath("/calendar");
+  return { deleted: ids.length };
+}
+
 // Change an event's type (imports never overwrite this once set).
 export async function setEventType(
   eventId: string,

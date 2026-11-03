@@ -11,10 +11,12 @@ import { TeamLinkButton } from "./team-link";
 import { describeImport } from "@/lib/import-status";
 import { requireOrganiser } from "@/lib/organiser";
 import { RegionEvents } from "./region-events";
+import { PastPicker } from "./past-picker";
 import { SetupChecklist, type SetupStatus } from "./setup-checklist";
 import { SuggestedEvents } from "./suggested-events";
 import type { Suggestion } from "@/lib/special-events";
 import {
+  currentTz,
   dayBoundsUtc,
   daysUntilLabel,
   formatEventDate,
@@ -32,6 +34,8 @@ type EventRow = {
   address: string | null;
   event_type: { name: string } | null;
   source_url: string | null;
+  source?: string;
+  notes?: string | null;
   attendance: { count: number }[];
 };
 
@@ -134,7 +138,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
         .returns<EventRow[]>(),
       supabase
         .from("events")
-        .select(select)
+        .select(`${select}, source, notes`)
         .eq("team_id", organiser.team_id)
         .lt("starts_at", todayStart)
         .order("starts_at", { ascending: false })
@@ -362,13 +366,30 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
         nextId={next?.id}
         actions={actionsFor}
       />
-      <EventList
-        title={allPast ? `Past (${past.data?.length ?? 0})` : "Past"}
-        events={past.data ?? []}
-        empty="No past events yet."
-        actions={actionsFor}
-        newestFirst={allPast}
-      />
+      {allPast ? (
+        <PastPicker
+          rows={(past.data ?? []).map((e) => ({
+            id: e.id,
+            title: e.title,
+            date: formatPastDate(e.starts_at),
+            sub: [e.event_type?.name, e.venue ?? e.address]
+              .filter(Boolean)
+              .join(" · "),
+            host: e.notes?.match(/Hosted by (.+?)\./)?.[1]
+              ? `by ${e.notes.match(/Hosted by (.+?)\./)![1]}`
+              : null,
+            canDelete: e.source === "manual",
+            checkedIn: e.attendance[0]?.count ?? 0,
+          }))}
+        />
+      ) : (
+        <EventList
+          title="Past"
+          events={past.data ?? []}
+          empty="No past events yet."
+          actions={actionsFor}
+        />
+      )}
       {(past.data?.length ?? 0) >= 20 && (
         <p className="-mt-6 text-right text-xs">
           <Link
@@ -558,4 +579,17 @@ function EventList({
       )}
     </section>
   );
+}
+
+// "Sat 16 Mar 2024" for the full Past list.
+function formatPastDate(iso: string) {
+  return new Intl.DateTimeFormat("en-AU", {
+    timeZone: currentTz(),
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  })
+    .format(new Date(iso))
+    .replace(/,/g, "");
 }

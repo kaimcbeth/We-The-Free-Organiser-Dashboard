@@ -73,6 +73,10 @@ export const CHANGELOG: Release[] = [
         level: "organiser",
         text: 'Events: "Show all past events" under the Past list, with the year on older ones. Events added by hand have a "Delete this event" link at the bottom of their page (their photos stay in the Photo Hub).',
       },
+      {
+        level: "organiser",
+        text: "Show all past events → Select: tick as many events as you like and delete them in one go. Each row says who hosted it, for the ones from Facebook.",
+      },
     ],
   },
   {
