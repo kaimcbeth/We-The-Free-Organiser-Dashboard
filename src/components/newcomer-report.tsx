@@ -41,17 +41,19 @@ export function graphicNames(
   });
 }
 
-// "26 October – 1 November" for a week starting on a Monday (YYYY-MM-DD).
+// "26 October – 1 November 2026" (the year on both ends when it changes).
 export function weekLabel(weekStart: string) {
-  const fmt = (d: Date) =>
+  const fmt = (d: Date, year: boolean) =>
     new Intl.DateTimeFormat("en-AU", {
       timeZone: "UTC",
       day: "numeric",
       month: "long",
+      ...(year ? { year: "numeric" as const } : {}),
     }).format(d);
   const start = new Date(`${weekStart}T12:00:00Z`);
   const end = new Date(start.getTime() + 6 * 864e5);
-  return `${fmt(start)} – ${fmt(end)}`;
+  const split = start.getUTCFullYear() !== end.getUTCFullYear();
+  return `${fmt(start, split)} – ${fmt(end, true)}`;
 }
 
 // ISO week number (weeks start on Monday; week 1 holds the first Thursday).
