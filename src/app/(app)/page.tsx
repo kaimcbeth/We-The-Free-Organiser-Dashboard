@@ -101,7 +101,8 @@ function WebsiteLink({ url, className }: { url: string; className: string }) {
 }
 
 export default async function EventsPage({ searchParams }: PageProps<"/">) {
-  const { setup: justToured } = await searchParams;
+  const { setup: justToured, past: pastParam } = await searchParams;
+  const allPast = pastParam === "all";
   const { supabase, organiser } = await requireOrganiser();
   // Last time they chose the calendar view.
   if ((await cookies()).get("events_view")?.value === "calendar")
@@ -137,7 +138,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
         .eq("team_id", organiser.team_id)
         .lt("starts_at", todayStart)
         .order("starts_at", { ascending: false })
-        .limit(20)
+        .limit(allPast ? 1000 : 20)
         .returns<EventRow[]>(),
       supabase
         .from("import_runs")
@@ -362,11 +363,22 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
         actions={actionsFor}
       />
       <EventList
-        title="Past"
+        title={allPast ? `Past (${past.data?.length ?? 0})` : "Past"}
         events={past.data ?? []}
         empty="No past events yet."
         actions={actionsFor}
+        newestFirst={allPast}
       />
+      {(past.data?.length ?? 0) >= 20 && (
+        <p className="-mt-6 text-right text-xs">
+          <Link
+            href={allPast ? "/" : "/?past=all"}
+            className="font-medium text-stone-400 hover:text-stone-700 hover:underline"
+          >
+            {allPast ? "Show fewer" : "Show all past events"}
+          </Link>
+        </p>
+      )}
     </div>
   );
 }
@@ -427,7 +439,9 @@ function EventList({
   nextId,
   actions,
   hangouts = [],
+  newestFirst = false,
 }: {
+  newestFirst?: boolean; // the full past list: newest at the top
   actions?: Map<string, number>;
   title: string;
   events: EventRow[];
@@ -439,7 +453,10 @@ function EventList({
   const rows = [
     ...events.map((e) => ({ at: e.starts_at, event: e, hangout: null })),
     ...hangouts.map((h) => ({ at: h.starts_at, event: null, hangout: h })),
-  ].sort((a, b) => a.at.localeCompare(b.at));
+  ].sort((a, b) =>
+    newestFirst ? b.at.localeCompare(a.at) : a.at.localeCompare(b.at),
+  );
+  const thisYear = nowIso().slice(0, 4);
   return (
     <section>
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
@@ -490,6 +507,11 @@ function EventList({
                 >
                   <div className="w-11 shrink-0 text-xs font-medium leading-tight text-stone-500 sm:w-16 sm:text-sm">
                     {formatEventDate(e.starts_at)}
+                    {e.starts_at.slice(0, 4) !== thisYear && (
+                      <span className="block text-[10px] text-stone-400 sm:text-xs">
+                        {e.starts_at.slice(0, 4)}
+                      </span>
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="flex items-start gap-2 font-medium leading-snug">

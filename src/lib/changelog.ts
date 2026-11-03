@@ -62,6 +62,20 @@ export const COMING_SOON: { title: string; text: string }[] = [
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-11-04",
+    title: "Sydney's history, back to January 2023",
+    changes: [
+      {
+        level: "organiser",
+        text: "Sydney's past events from Facebook are in the Hub (195, from the first Food For Thought outreach in January 2023), so old photos can go on the right event. Times on these are rough.",
+      },
+      {
+        level: "organiser",
+        text: 'Events: "Show all past events" under the Past list, with the year on older ones. Events added by hand have a "Delete this event" link at the bottom of their page (their photos stay in the Photo Hub).',
+      },
+    ],
+  },
+  {
     date: "2026-11-02",
     title: "Movie player understands the language files",
     changes: [

@@ -181,6 +181,50 @@ export async function deletePerson(
   redirect("/people?deleted=1");
 }
 
+// Delete an event added by hand (imported ones would just come back from
+// activism.wtf). Its photos stay in the Photo Hub, unattached; its
+// check-ins, RSVPs and actions go with it.
+export async function deleteEvent(
+  eventId: string,
+): Promise<{ error?: string }> {
+  const { supabase, organiser } = await requireOrganiser();
+  const { data: event } = await supabase
+    .from("events")
+    .select("id, team_id, source, starts_at")
+    .eq("id", eventId)
+    .maybeSingle();
+  const team = organiser.teams.find((t) => t.id === event?.team_id);
+  if (!event || !team) return { error: "Couldn't find that event." };
+  if (event.source !== "manual")
+    return {
+      error:
+        "This one comes from activism.wtf, so it would come back. Delete it there instead.",
+    };
+  // Keep the photos dated by the event's month once they're unattached.
+  const [y, m] = new Intl.DateTimeFormat("en-CA", {
+    timeZone: team.timezone,
+    year: "numeric",
+    month: "2-digit",
+  })
+    .format(new Date(event.starts_at))
+    .split("-")
+    .map(Number);
+  await supabase
+    .from("event_photos")
+    .update({ taken_year: y, taken_month: m })
+    .eq("event_id", eventId)
+    .is("taken_year", null);
+  await supabase
+    .from("event_photos")
+    .update({ event_id: null })
+    .eq("event_id", eventId);
+  const { error } = await supabase.from("events").delete().eq("id", eventId);
+  if (error) return { error: "Couldn't delete this event. Please try again." };
+  revalidatePath("/");
+  revalidatePath("/calendar");
+  redirect("/?past=all");
+}
+
 // Change an event's type (imports never overwrite this once set).
 export async function setEventType(
   eventId: string,

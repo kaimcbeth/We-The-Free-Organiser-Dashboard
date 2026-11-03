@@ -13,6 +13,7 @@ import {
 } from "@/lib/time";
 import { CheckIn, type Person } from "./check-in";
 import { EventNotes } from "./event-notes";
+import { DeleteEvent } from "./delete-event";
 import { EventActions } from "./event-actions";
 import { GraphicMaker } from "@/components/graphic-maker";
 import { CopyMaker } from "@/components/copy-maker";
@@ -41,6 +42,7 @@ type EventDetail = {
   event_type_id: string | null;
   special_event_id: string | null;
   notes: string | null;
+  source: string;
 };
 
 export default async function EventCheckInPage({
@@ -52,7 +54,7 @@ export default async function EventCheckInPage({
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, team_id, title, starts_at, ends_at, venue, address, source_url, facebook_url, description, event_type_id, notes, special_event_id",
+      "id, team_id, title, starts_at, ends_at, venue, address, source_url, facebook_url, description, event_type_id, notes, special_event_id, source",
     )
     .eq("id", id)
     .maybeSingle<EventDetail>();
@@ -335,6 +337,14 @@ export default async function EventCheckInPage({
         eventId={event.id}
         photos={eventPhotos}
       />
+
+      {event.source === "manual" && (
+        <DeleteEvent
+          eventId={event.id}
+          checkedIn={attendance.data?.length ?? 0}
+          photos={eventPhotos.length}
+        />
+      )}
     </div>
   );
 }
