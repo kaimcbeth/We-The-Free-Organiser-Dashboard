@@ -85,6 +85,10 @@ export const CHANGELOG: Release[] = [
         level: "organiser",
         text: 'Newcomers: every Monday a card on Events lists last week\'s newcomers (Monday to Sunday) by event. "Make the image" gives a NEWCOMERS image with the week number, the dates (with the year) and their first names, to share with your regulars. Tap × on a name to leave them off; tap it under "Left off" to put them back.',
       },
+      {
+        level: "organiser",
+        text: 'Check-in: "Add someone new" now also asks (all optional) how they found We The Free and the best way to reach them, with their number, email or handle. Profiles show and change the best contact too.',
+      },
     ],
   },
   {

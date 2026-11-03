@@ -6,6 +6,18 @@ import { inputClass } from "@/components/form";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar } from "@/components/avatar";
 import { isMilestone, ordinal } from "@/lib/insights";
+import { FOUND_VIA } from "@/components/origin-editor";
+import { BEST_CONTACT } from "@/lib/contact";
+
+// Optional extras asked when someone new is added (Kai, 4 Nov 2026).
+export type NewcomerExtras = {
+  newToActivism: boolean;
+  foundVia: string;
+  viaPerson: string;
+  viaNote: string;
+  bestContact: string;
+  contact: string;
+};
 
 export type CheckInPerson = {
   id: string;
@@ -184,18 +196,32 @@ export function CheckInList({
     }
   }
 
-  async function add(first: string, last: string, newToActivism: boolean) {
+  async function add(first: string, last: string, x: NewcomerExtras) {
     setError("");
     const person = await onAdd(first, last);
     if (!person) {
       setError("Couldn't add that person. Please try again.");
       return false;
     }
-    if (newToActivism)
+    if (x.newToActivism)
       void createClient().rpc("set_new_to_activism", {
         p_person_id: person.id,
         p_value: true,
         p_token: linkToken ?? null,
+      });
+    if (x.foundVia || x.bestContact)
+      void createClient().rpc("set_newcomer_details", {
+        p_person_id: person.id,
+        p_token: linkToken ?? null,
+        p_found_via: x.foundVia || null,
+        p_via_person:
+          x.foundVia === "person" && x.viaPerson ? x.viaPerson : null,
+        p_note:
+          x.foundVia === "other" || (x.foundVia === "person" && !x.viaPerson)
+            ? x.viaNote
+            : null,
+        p_best_contact: x.bestContact || null,
+        p_contact: x.bestContact ? x.contact : null,
       });
     setPeople((prev) => [...prev, person].sort(byName));
     flip(person.id, true);
@@ -323,6 +349,7 @@ export function CheckInList({
           initialName={query}
           onCancel={() => setAdding(false)}
           onSave={add}
+          people={people}
         />
       )}
 
@@ -453,26 +480,37 @@ function QuickAdd({
   initialName,
   onCancel,
   onSave,
+  people,
 }: {
   initialName: string;
   onCancel: () => void;
-  onSave: (
-    first: string,
-    last: string,
-    newToActivism: boolean,
-  ) => Promise<boolean>;
+  onSave: (first: string, last: string, x: NewcomerExtras) => Promise<boolean>;
+  people: CheckInPerson[];
 }) {
   const [first, ...rest] = initialName.trim().split(/\s+/);
   const [firstName, setFirstName] = useState(first ?? "");
   const [lastName, setLastName] = useState(rest.join(" "));
   const [saving, setSaving] = useState(false);
   const [newToActivism, setNewToActivism] = useState(false);
+  const [foundVia, setFoundVia] = useState("");
+  const [viaPerson, setViaPerson] = useState("");
+  const [viaNote, setViaNote] = useState("");
+  const [bestContact, setBestContact] = useState("");
+  const [contact, setContact] = useState("");
+  const how = BEST_CONTACT.find((c) => c.id === bestContact);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!firstName.trim()) return;
     setSaving(true);
-    const ok = await onSave(firstName.trim(), lastName.trim(), newToActivism);
+    const ok = await onSave(firstName.trim(), lastName.trim(), {
+      newToActivism,
+      foundVia,
+      viaPerson,
+      viaNote: viaNote.trim(),
+      bestContact,
+      contact: contact.trim(),
+    });
     if (!ok) setSaving(false);
   }
 
@@ -509,6 +547,73 @@ function QuickAdd({
         />
         New to activism (never done any before)
       </label>
+      <div className="space-y-2">
+        <select
+          value={foundVia}
+          onChange={(e) => setFoundVia(e.target.value)}
+          aria-label="How they found We The Free"
+          className={`${inputClass} ${foundVia ? "" : "text-stone-500"}`}
+        >
+          <option value="">How did they find us? (optional)</option>
+          {FOUND_VIA.map((f) => (
+            <option key={f.id} value={f.id}>
+              {f.label}
+            </option>
+          ))}
+        </select>
+        {foundVia === "person" && (
+          <select
+            value={viaPerson}
+            onChange={(e) => setViaPerson(e.target.value)}
+            aria-label="Who brought them"
+            className={inputClass}
+          >
+            <option value="">Who? (pick, or type below)</option>
+            {[...people].sort(byName).map((p) => (
+              <option key={p.id} value={p.id}>
+                {fullName(p)}
+              </option>
+            ))}
+          </select>
+        )}
+        {(foundVia === "other" || (foundVia === "person" && !viaPerson)) && (
+          <input
+            value={viaNote}
+            onChange={(e) => setViaNote(e.target.value)}
+            maxLength={100}
+            placeholder={foundVia === "person" ? "Their name" : "Where?"}
+            aria-label={
+              foundVia === "person" ? "Who brought them" : "Where they found us"
+            }
+            className={inputClass}
+          />
+        )}
+        <div className="grid grid-cols-2 gap-2">
+          <select
+            value={bestContact}
+            onChange={(e) => setBestContact(e.target.value)}
+            aria-label="Best way to reach them"
+            className={`${inputClass} ${bestContact ? "" : "text-stone-500"}`}
+          >
+            <option value="">Best contact (optional)</option>
+            {BEST_CONTACT.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+          {how && (
+            <input
+              type={how.input}
+              value={contact}
+              onChange={(e) => setContact(e.target.value)}
+              placeholder={how.placeholder}
+              aria-label={how.placeholder}
+              className={inputClass}
+            />
+          )}
+        </div>
+      </div>
       <div className="flex gap-2">
         <button
           type="submit"
