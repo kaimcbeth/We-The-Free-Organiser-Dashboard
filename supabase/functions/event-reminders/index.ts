@@ -1,6 +1,10 @@
-// Day-before reminders for volunteers who said they're Going. Runs hourly
-// (pg_cron): for events starting 18–30 hours from now, each Going answer not
-// yet reminded gets an in-app notification (the bell), plus an email or a
+// Event reminders. Runs hourly (pg_cron). `reminders_due()` (0169) says who
+// gets what:
+//   going    – the day before an event you're Going to (always)
+//   maybe    – the day before an event you said Maybe to (if chosen)
+//   upcoming – about 3 days before an event you haven't answered (if chosen)
+// Maybe and upcoming follow the person's event-type choice (all / outreach /
+// community). Each gets an in-app notification (the bell), plus an email or a
 // phone notification if they chose one. Email needs SMTP_USER / SMTP_PASS.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -8,45 +12,58 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const APP_URL = Deno.env.get("APP_URL") ?? "https://wtf-organiser.vercel.app";
 
 type Due = {
+  kind: "going" | "maybe" | "upcoming";
   event_id: string;
   person_id: string;
-  event: {
-    title: string;
-    starts_at: string;
-    venue: string | null;
-    address: string | null;
-    team: { timezone: string } | null;
-  } | null;
-  person: {
-    first_name: string;
-    user_id: string | null;
-    email: string | null;
-    notify_channel: string;
-  } | null;
+  title: string;
+  starts_at: string;
+  venue: string | null;
+  address: string | null;
+  timezone: string;
+  first_name: string;
+  user_id: string | null;
+  email: string | null;
+  notify_channel: string;
 };
 
 const esc = (s: string) =>
   s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
+function words(r: Due) {
+  const when = new Intl.DateTimeFormat("en-AU", {
+    timeZone: r.timezone, weekday: "long", hour: "numeric", minute: "2-digit",
+  }).format(new Date(r.starts_at));
+  const day = new Intl.DateTimeFormat("en-AU", {
+    timeZone: r.timezone, weekday: "long", day: "numeric", month: "long",
+  }).format(new Date(r.starts_at));
+  const time = new Intl.DateTimeFormat("en-AU", {
+    timeZone: r.timezone, hour: "numeric", minute: "2-digit",
+  }).format(new Date(r.starts_at));
+  const where = r.venue ?? r.address;
+  const at = where ? ` at ${where}` : "";
+  if (r.kind === "going")
+    return {
+      title: `Tomorrow: ${r.title}`,
+      body: `See you ${when}${at}. Can't make it any more? Let us know in the app.`,
+    };
+  if (r.kind === "maybe")
+    return {
+      title: `Tomorrow: ${r.title}`,
+      body: `You said maybe. It's on ${when}${at}. Can you make it? Tap Going or Can't in the app.`,
+    };
+  return {
+    title: `Coming up: ${r.title}`,
+    body: `${day}, ${time}${at}. Are you coming? Tap Going, Maybe or Can't in the app.`,
+  };
+}
+
 Deno.serve(async (req) => {
   const test = await req.json().then((b) => b?.test === true).catch(() => false);
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-  const now = Date.now();
-  const { data: due, error } = await supabase
-    .from("event_rsvps")
-    .select(
-      "event_id, person_id, event:events!inner(title, starts_at, venue, address, team:teams(timezone)), person:people(first_name, user_id, email, notify_channel)",
-    )
-    .eq("status", "going")
-    .is("reminded_at", null)
-    .gte("event.starts_at", new Date(now + 18 * 36e5).toISOString())
-    .lte("event.starts_at", new Date(now + 30 * 36e5).toISOString())
-    .limit(500)
-    .returns<Due[]>();
-  if (error) return Response.json({ error: error.message }, { status: 500 });
 
   const smtpUser = Deno.env.get("SMTP_USER");
   const smtpPass = Deno.env.get("SMTP_PASS");
+  const from = () => Deno.env.get("SMTP_FROM") ?? `We The Free <${smtpUser}>`;
   // deno-lint-ignore no-explicit-any
   let mailer: any = null;
   async function getMailer() {
@@ -62,6 +79,7 @@ Deno.serve(async (req) => {
     }
     return mailer;
   }
+
   // Test (Kai, 4 Nov 2026): POST {"test": true} sends one sample reminder to
   // the sending address itself (SMTP_USER), and nothing to anyone else.
   if (test) {
@@ -69,7 +87,7 @@ Deno.serve(async (req) => {
     if (!m) return Response.json({ test: "email sender not set up" });
     try {
       await m.sendMail({
-        from: Deno.env.get("SMTP_FROM") ?? `We The Free <${smtpUser}>`,
+        from: from(),
         to: smtpUser,
         subject: "Tomorrow: Test event (Movement Hub test)",
         text: `Hi Kai,\n\nThis is a test of the Movement Hub's day-before reminder email. If you can read this, it works.\n\n${APP_URL}/me\n\nWe The Free`,
@@ -80,6 +98,9 @@ Deno.serve(async (req) => {
       return Response.json({ test: "failed", error: err instanceof Error ? err.message : String(err) });
     }
   }
+
+  const { data: due, error } = await supabase.rpc("reminders_due").returns<Due[]>();
+  if (error) return Response.json({ error: error.message }, { status: 500 });
 
   // deno-lint-ignore no-explicit-any
   let push: any = null;
@@ -100,48 +121,42 @@ Deno.serve(async (req) => {
 
   const results: Record<string, unknown>[] = [];
   for (const r of due ?? []) {
-    const ev = r.event;
-    const p = r.person;
-    const result: Record<string, unknown> = { event: r.event_id, person: r.person_id };
+    const result: Record<string, unknown> = { kind: r.kind, event: r.event_id, person: r.person_id };
     const mark = () =>
-      supabase.from("event_rsvps").update({ reminded_at: new Date().toISOString() })
-        .eq("event_id", r.event_id).eq("person_id", r.person_id);
-    if (!ev || !p?.user_id) {
+      r.kind === "upcoming"
+        ? supabase.from("event_heads_up").upsert({ event_id: r.event_id, person_id: r.person_id })
+        : supabase.from("event_rsvps").update({ reminded_at: new Date().toISOString() })
+          .eq("event_id", r.event_id).eq("person_id", r.person_id);
+    if (!r.user_id) {
       await mark();
       results.push({ ...result, skipped: "no login" });
       continue;
     }
-    const tz = ev.team?.timezone ?? "Australia/Sydney";
-    const when = new Intl.DateTimeFormat("en-AU", {
-      timeZone: tz, weekday: "long", hour: "numeric", minute: "2-digit",
-    }).format(new Date(ev.starts_at));
-    const where = ev.venue ?? ev.address;
-    const title = `Tomorrow: ${ev.title}`;
-    const body = `See you ${when}${where ? ` at ${where}` : ""}. Can't make it any more? Let us know in the app.`;
+    const { title, body } = words(r);
     const url = "/me";
 
-    await supabase.from("notifications").insert({ user_id: p.user_id, kind: "event_reminder", title, body, url });
+    await supabase.from("notifications").insert({ user_id: r.user_id, kind: "event_reminder", title, body, url });
     result.inApp = true;
     try {
-      if (p.notify_channel === "email" && p.email) {
+      if (r.notify_channel === "email" && r.email) {
         const m = await getMailer();
         if (m) {
           await m.sendMail({
-            from: Deno.env.get("SMTP_FROM") ?? `We The Free <${smtpUser}>`,
-            to: p.email,
+            from: from(),
+            to: r.email,
             subject: title,
-            text: `Hi ${p.first_name},\n\n${body}\n\n${APP_URL}${url}\n\nWe The Free`,
-            html: `<p>Hi ${esc(p.first_name)},</p><p>${esc(body)}</p><p><a href="${APP_URL}${url}">Open the app</a></p><p>We The Free</p>`,
+            text: `Hi ${r.first_name},\n\n${body}\n\n${APP_URL}${url}\n\nWe The Free`,
+            html: `<p>Hi ${esc(r.first_name)},</p><p>${esc(body)}</p><p><a href="${APP_URL}${url}">Open the app</a></p><p>We The Free</p>`,
           });
           result.email = "sent";
         } else result.email = "email sender not set up";
-      } else if (p.notify_channel === "push") {
+      } else if (r.notify_channel === "push") {
         const wp = await getPush();
         if (wp) {
           const { data: subs } = await supabase
             .from("push_subscriptions")
             .select("id, endpoint, p256dh, auth")
-            .eq("user_id", p.user_id);
+            .eq("user_id", r.user_id);
           let sent = 0;
           for (const s of subs ?? []) {
             try {

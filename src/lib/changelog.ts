@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "More reminder choices on everyone's profile: a reminder the day before events you said Maybe to, a heads-up 3 days before upcoming events you haven't answered, and whether those cover all events, outreach only or community only. Reminders can now be emailed.",
+      },
+      {
+        level: "organiser",
         text: "Photo Hub: Shift-click two photos to select them and every photo in between. Shift-click a ticked photo to untick the run.",
       },
       {

@@ -24,6 +24,9 @@ type Me = {
   found_via_note: string | null;
   photo_updated_at: string | null;
   notify_channel: "none" | "email" | "push";
+  remind_maybe: boolean;
+  remind_upcoming: boolean;
+  remind_category: "all" | "outreach" | "community";
   team: { name: string; timezone: string } | null;
 };
 
@@ -47,7 +50,7 @@ export default async function ProfilePage() {
   const { data: me } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, started_on, found_via, found_via_person_id, found_via_note, photo_updated_at, notify_channel, team:teams!people_team_id_fkey(name, timezone)",
+      "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, started_on, found_via, found_via_person_id, found_via_note, photo_updated_at, notify_channel, remind_maybe, remind_upcoming, remind_category, team:teams!people_team_id_fkey(name, timezone)",
     )
     .eq("user_id", user.id)
     .maybeSingle<Me>();
@@ -145,6 +148,11 @@ export default async function ProfilePage() {
         <ReminderSetting
           initial={me.notify_channel ?? "none"}
           hasEmail={!!me.email}
+          choices={{
+            maybe: me.remind_maybe ?? false,
+            upcoming: me.remind_upcoming ?? false,
+            category: me.remind_category ?? "all",
+          }}
           intro="If you're going to an event, we'll remind you the day before. You'll always see it in the app (the bell). Also send it by:"
         />
       </section>
