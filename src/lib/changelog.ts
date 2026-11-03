@@ -89,6 +89,10 @@ export const CHANGELOG: Release[] = [
         level: "organiser",
         text: 'Check-in: "Add someone new" now also asks (all optional) how they found We The Free and the best way to reach them, with their number, email or handle. Profiles show and change the best contact too.',
       },
+      {
+        level: "organiser",
+        text: "Recommended prizes: each prize has a photo square (Regional Support Leads add photos, like the equipment guide), pack sizes of the same product share one card (Oreo Mini), the green vegan labels are gone, and each list folds up from its heading.",
+      },
     ],
   },
   {

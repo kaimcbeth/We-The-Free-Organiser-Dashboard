@@ -23,11 +23,16 @@ export type Prize = {
   season: string | null; // e.g. "Summer"
   shipping: string;
   notes: string[];
+  // Pack sizes of the same product share one card (Kai, 4 Nov 2026).
+  family?: string;
+  variant?: string;
 };
 
 export const PRIZES: Prize[] = [
   {
     name: "Oreo Mini Original 10-pack (10 x 20.4g bags)",
+    family: "Oreo Mini Original",
+    variant: "10-pack (10 x 20.4g bags)",
     brand: "Oreo",
     category: "Biscuits / cookies",
     where: "Woolworths | Coles",
@@ -49,6 +54,8 @@ export const PRIZES: Prize[] = [
   },
   {
     name: "Oreo Mini 18-pack (18 x 20.4g bags)",
+    family: "Oreo Mini Original",
+    variant: "18-pack (18 x 20.4g bags)",
     brand: "Oreo",
     category: "Biscuits / cookies",
     where: "Woolworths | Coles",
@@ -70,6 +77,8 @@ export const PRIZES: Prize[] = [
   },
   {
     name: "Oreo Mini Original bulk box (80 x 20.4g bags)",
+    family: "Oreo Mini Original",
+    variant: "Bulk box (80 x 20.4g bags)",
     brand: "Oreo",
     category: "Biscuits / cookies",
     where: "Amazon AU",

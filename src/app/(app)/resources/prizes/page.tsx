@@ -4,7 +4,7 @@ import { MOCK_BANKED } from "@/lib/funding";
 import { PrizeGuide } from "@/components/prize-guide";
 
 export default async function PrizesPage() {
-  await requireOrganiser();
+  const { organiser } = await requireOrganiser();
   return (
     <>
       <Link
@@ -21,7 +21,12 @@ export default async function PrizesPage() {
         where to buy them, and how many to get.
       </p>
       <div className="mt-5">
-        <PrizeGuide banked={MOCK_BANKED} />
+        <PrizeGuide
+          banked={MOCK_BANKED}
+          canEditPhotos={
+            organiser.role === "god" || organiser.role === "regional_lead"
+          }
+        />
       </div>
     </>
   );
