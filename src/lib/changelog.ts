@@ -67,7 +67,15 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "Email reminders: tap Reminders at the top of the Events page and switch them on (everything) or off (nothing). Fine-tune picks which reminders (events you're going to, maybe, or all upcoming) and which types (outreach, community). Moved from the profile.",
+        text: "Email reminders: tap Reminders at the top of the Events page and switch them on (everything) or off. Pick events you're going to and/or all upcoming events, and which kinds: Movie Challenges, other outreach, demos, socials, potlucks and dinners, co-working, workshops, sanctuary days, hikes and everything else. Potlucks and the rest are spotted from the event title.",
+      },
+      {
+        level: "organiser",
+        text: "No more Maybe: people answer Going or Can't. The one Maybe answer so far was cleared, so that person will be asked again.",
+      },
+      {
+        level: "organiser",
+        text: 'Members\' Events page no longer has "Replay welcome tour" at the bottom.',
       },
       {
         level: "organiser",

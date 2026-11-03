@@ -5,30 +5,36 @@ import { Sheet } from "@/components/sheet";
 import { createClient } from "@/lib/supabase/client";
 import { setReminderPrefs } from "@/app/buddy-actions";
 
-type Category = "all" | "outreach" | "community";
 type Prefs = {
   channel: "none" | "email" | "push";
   going: boolean;
-  maybe: boolean;
   upcoming: boolean;
-  category: Category;
+  kinds: string[] | null; // null = every kind
 };
 type Settings = {
   notify_channel: Prefs["channel"];
   has_email: boolean;
   going: boolean;
-  maybe: boolean;
   upcoming: boolean;
-  category: Category;
+  kinds: string[] | null;
 };
 
-// On = everything, off = nothing (Kai, 4 Nov 2026).
-const EVERYTHING = {
-  going: true,
-  maybe: true,
-  upcoming: true,
-  category: "all",
-} as const;
+// Kinds of event, worked out from the type and title by `event_kind()`
+// (0172), so potlucks, demos etc. count even though activism.wtf doesn't
+// type them.
+const KINDS = [
+  { key: "movie_challenge", label: "Movie Challenges" },
+  { key: "outreach", label: "Other outreach" },
+  { key: "demonstration", label: "Demonstrations" },
+  { key: "social", label: "Socials" },
+  { key: "potluck", label: "Potlucks & dinners" },
+  { key: "coworking", label: "Co-working" },
+  { key: "workshop", label: "Workshops & training" },
+  { key: "sanctuary", label: "Sanctuary days" },
+  { key: "hike", label: "Hikes" },
+  { key: "other", label: "Everything else" },
+] as const;
+const ALL_KINDS: string[] = KINDS.map((k) => k.key);
 
 // "Reminders" (Kai, 4 Nov 2026): a small link in the Events page header that
 // opens the reminder settings (moved here from the profile).
@@ -81,7 +87,6 @@ export function RemindersLink({
 
 const WHICH = [
   { key: "going", label: "Events I'm going to" },
-  { key: "maybe", label: "Events I said maybe to" },
   { key: "upcoming", label: "All upcoming events" },
 ] as const;
 
@@ -97,17 +102,15 @@ export function EmailReminders({ initial }: { initial: Settings }) {
   const [p, setP] = useState<Prefs>({
     channel: initial.notify_channel,
     going: initial.going,
-    maybe: initial.maybe,
     upcoming: initial.upcoming,
-    category: initial.category,
+    kinds: initial.kinds,
   });
   const on = p.channel === "email";
-  const everything = p.going && p.maybe && p.upcoming && p.category === "all";
-  const [more, setMore] = useState(on && !everything);
   const [msg, setMsg] = useState("");
   const [pending, start] = useTransition();
+  const kindOn = (k: string) => !p.kinds || p.kinds.includes(k);
 
-  function save(next: Prefs, note = "Saved.") {
+  function save(next: Prefs) {
     const before = p;
     setP(next);
     setMsg("");
@@ -116,47 +119,36 @@ export function EmailReminders({ initial }: { initial: Settings }) {
       if (r.error) {
         setP(before);
         setMsg(r.error);
-      } else setMsg(note);
+      }
     });
   }
 
   function flip() {
-    if (on) {
-      setMore(false);
-      save(
-        {
-          channel: "none",
-          going: true,
-          maybe: false,
-          upcoming: false,
-          category: "all",
-        },
-        "Email reminders are off.",
-      );
-    } else if (!initial.has_email) {
+    if (on)
+      save({ channel: "none", going: true, upcoming: false, kinds: null });
+    else if (!initial.has_email)
       setMsg("Add your email on your profile first (your photo, top right).");
-    } else save({ channel: "email", ...EVERYTHING }, "Email reminders are on.");
+    // On = everything (Kai, 4 Nov 2026).
+    else save({ channel: "email", going: true, upcoming: true, kinds: null });
   }
 
   // Each row keeps at least one button on.
-  function toggleWhich(key: (typeof WHICH)[number]["key"]) {
+  function toggleWhich(key: "going" | "upcoming") {
     const next = { ...p, [key]: !p[key] };
-    if (!next.going && !next.maybe && !next.upcoming) {
+    if (!next.going && !next.upcoming) {
       setMsg("Keep at least one on, or switch email reminders off.");
       return;
     }
     save(next);
   }
-  const outreach = p.category !== "community";
-  const community = p.category !== "outreach";
-  function toggleType(type: "outreach" | "community") {
-    const o = type === "outreach" ? !outreach : outreach;
-    const c = type === "community" ? !community : community;
-    if (!o && !c) {
+  function toggleKind(k: string) {
+    const now = ALL_KINDS.filter(kindOn);
+    const next = now.includes(k) ? now.filter((x) => x !== k) : [...now, k];
+    if (!next.length) {
       setMsg("Keep at least one on, or switch email reminders off.");
       return;
     }
-    save({ ...p, category: o && c ? "all" : o ? "outreach" : "community" });
+    save({ ...p, kinds: next.length === ALL_KINDS.length ? null : next });
   }
 
   return (
@@ -165,11 +157,7 @@ export function EmailReminders({ initial }: { initial: Settings }) {
         <div>
           <p className="font-semibold text-navy">Email reminders</p>
           <p className="mt-0.5 text-sm text-stone-500">
-            {on
-              ? everything
-                ? "On: the day before your events, and a heads-up about upcoming ones."
-                : "On, fine-tuned below."
-              : "Off: no emails."}
+            {on ? "Choose what you hear about below." : "Off: no emails."}
           </p>
         </div>
         <button
@@ -188,18 +176,7 @@ export function EmailReminders({ initial }: { initial: Settings }) {
       </div>
 
       {on && (
-        <button
-          type="button"
-          onClick={() => setMore(!more)}
-          aria-expanded={more}
-          className="mt-3 text-sm text-stone-500 hover:text-stone-800 hover:underline"
-        >
-          {more ? "Hide fine-tuning" : "Fine-tune"}
-        </button>
-      )}
-
-      {on && more && (
-        <div className="mt-3 space-y-4 rounded-2xl bg-stone-50 p-3">
+        <div className="mt-4 space-y-4 rounded-2xl bg-stone-50 p-3">
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">
               Remind me about
@@ -219,8 +196,8 @@ export function EmailReminders({ initial }: { initial: Settings }) {
               ))}
             </div>
             <p className="mt-2 text-xs text-stone-400">
-              Going and maybe: the day before. Upcoming: 3 days before, for
-              events you haven&apos;t answered.
+              Going: the day before. Upcoming: 3 days before, for events you
+              haven&apos;t answered.
             </p>
           </div>
           <div>
@@ -228,29 +205,19 @@ export function EmailReminders({ initial }: { initial: Settings }) {
               Types of events
             </p>
             <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                aria-pressed={outreach}
-                disabled={pending}
-                onClick={() => toggleType("outreach")}
-                className={chip(outreach)}
-              >
-                Outreach
-              </button>
-              <button
-                type="button"
-                aria-pressed={community}
-                disabled={pending}
-                onClick={() => toggleType("community")}
-                className={chip(community)}
-              >
-                Community
-              </button>
+              {KINDS.map((k) => (
+                <button
+                  key={k.key}
+                  type="button"
+                  aria-pressed={kindOn(k.key)}
+                  disabled={pending}
+                  onClick={() => toggleKind(k.key)}
+                  className={chip(kindOn(k.key))}
+                >
+                  {k.label}
+                </button>
+              ))}
             </div>
-            <p className="mt-2 text-xs text-stone-400">
-              Outreach: Movie Challenges and other outreach. Community: socials
-              and co-working.
-            </p>
           </div>
         </div>
       )}

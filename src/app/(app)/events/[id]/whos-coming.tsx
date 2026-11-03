@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type Row = {
-  status: "going" | "maybe" | "no";
+  status: "going" | "no";
   person: { id: string; first_name: string; last_name: string | null } | null;
 };
 
@@ -26,8 +26,7 @@ export async function WhosComing({
       .map((r) => r.person!)
       .sort((a, b) => a.first_name.localeCompare(b.first_name));
   const going = of("going");
-  const maybe = of("maybe");
-  if (!going.length && !maybe.length) return null;
+  if (!going.length) return null;
   const names = (list: typeof going) =>
     list.map((p, i) => (
       <span key={p.id}>
@@ -41,20 +40,9 @@ export async function WhosComing({
     <section className="mt-5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
       <h2 className="font-semibold text-navy">
         Who&apos;s coming{" "}
-        <span className="font-normal text-stone-500">
-          {going.length} going{maybe.length ? ` · ${maybe.length} maybe` : ""}
-        </span>
+        <span className="font-normal text-stone-500">{going.length} going</span>
       </h2>
-      {going.length > 0 && (
-        <p className="mt-1.5 text-sm text-stone-700">
-          <span className="font-medium">Going:</span> {names(going)}
-        </p>
-      )}
-      {maybe.length > 0 && (
-        <p className="mt-1 text-sm text-stone-500">
-          <span className="font-medium">Maybe:</span> {names(maybe)}
-        </p>
-      )}
+      <p className="mt-1.5 text-sm text-stone-700">{names(going)}</p>
     </section>
   );
 }

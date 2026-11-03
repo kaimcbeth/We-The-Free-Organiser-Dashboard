@@ -10,7 +10,7 @@ import { DEFAULT_TZ, setRequestTz } from "@/lib/time";
 import { WhatsAppJoin } from "@/components/whatsapp";
 import { TaskCard } from "@/components/task-card";
 import { loadMyTasks } from "@/lib/tasks";
-import { MemberTutorial, ReplayTour } from "./member-tutorial";
+import { MemberTutorial } from "./member-tutorial";
 import { MyEvents, type MyEvent } from "./my-events";
 import { EventsShare } from "@/components/events-share";
 import { TrainingNudge, type MyTrainings } from "./trainings";
@@ -188,9 +188,6 @@ export default async function MePage() {
         preview={previewNewMember}
       />
 
-      <div className="mt-10 flex items-center justify-center gap-4">
-        <ReplayTour />
-      </div>
       <MemberTutorial
         firstName={me.first_name}
         teamName={(me.team?.name ?? "").replace(

@@ -1,10 +1,9 @@
 // Event reminders. Runs hourly (pg_cron). `reminders_due()` (0169) says who
 // gets what:
 //   going    – the day before an event you're Going to (always)
-//   maybe    – the day before an event you said Maybe to (if chosen)
 //   upcoming – about 3 days before an event you haven't answered (if chosen)
-// Maybe and upcoming follow the person's event-type choice (all / outreach /
-// community). Each gets an in-app notification (the bell), plus an email or a
+// Both follow the person's choice of event kinds (`event_kind()`, 0172).
+// No Maybe answers since 0173 (Kai, 4 Nov 2026). Each gets an in-app notification (the bell), plus an email or a
 // phone notification if they chose one. Email needs SMTP_USER / SMTP_PASS.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -12,7 +11,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const APP_URL = Deno.env.get("APP_URL") ?? "https://wtf-organiser.vercel.app";
 
 type Due = {
-  kind: "going" | "maybe" | "upcoming";
+  kind: "going" | "upcoming";
   event_id: string;
   person_id: string;
   title: string;
@@ -46,14 +45,9 @@ function words(r: Due) {
       title: `Tomorrow: ${r.title}`,
       body: `See you ${when}${at}. Can't make it any more? Let us know in the app.`,
     };
-  if (r.kind === "maybe")
-    return {
-      title: `Tomorrow: ${r.title}`,
-      body: `You said maybe. It's on ${when}${at}. Can you make it? Tap Going or Can't in the app.`,
-    };
   return {
     title: `Coming up: ${r.title}`,
-    body: `${day}, ${time}${at}. Are you coming? Tap Going, Maybe or Can't in the app.`,
+    body: `${day}, ${time}${at}. Are you coming? Tap Going or Can't in the app.`,
   };
 }
 

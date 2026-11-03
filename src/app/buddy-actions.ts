@@ -54,17 +54,15 @@ export async function setNotifyChannel(
 export async function setReminderPrefs(p: {
   channel: "none" | "email" | "push";
   going: boolean;
-  maybe: boolean;
   upcoming: boolean;
-  category: "all" | "outreach" | "community";
+  kinds: string[] | null; // null = every kind of event
 }): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("set_my_reminder_prefs", {
     p_channel: p.channel,
     p_going: p.going,
-    p_maybe: p.maybe,
     p_upcoming: p.upcoming,
-    p_category: p.category,
+    p_kinds: p.kinds,
   });
   if (error || !data) return { error: "Couldn't save. Please try again." };
   revalidatePath("/me");

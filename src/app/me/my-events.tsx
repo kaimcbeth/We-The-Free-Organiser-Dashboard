@@ -14,17 +14,17 @@ export type MyEvent = {
   address: string | null;
   type: string | null;
   source_url: string | null;
-  my_status: "going" | "maybe" | "no" | null;
+  my_status: "going" | "no" | null;
   going: number;
 };
 
 const CHOICES = [
   { value: "going", label: "Going" },
-  { value: "maybe", label: "Maybe" },
   { value: "no", label: "Can't" },
 ] as const;
 
-// Upcoming events in their community, with Going / Maybe / Can't.
+// Upcoming events in their community, with Going / Can't (no Maybe: Kai,
+// 4 Nov 2026).
 const SHOW = 3; // events shown before "Show more"
 
 export function MyEvents({ events, tz }: { events: MyEvent[]; tz: string }) {
