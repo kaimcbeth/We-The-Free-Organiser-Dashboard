@@ -13,6 +13,7 @@ export type CalEvent = {
   title: string;
   startsAt: string;
   endsAt: string | null;
+  timeUnknown?: boolean; // date only (old events copied from Facebook)
   venue: string | null;
   type: string | null;
   here: number;
@@ -381,7 +382,9 @@ export function CalendarView({
                             style={{ background: team?.colour }}
                           />
                           <span className="w-16 shrink-0 text-sm font-medium text-stone-600">
-                            {formatTime(e.startsAt, team?.tz)}
+                            {e.timeUnknown
+                              ? ""
+                              : formatTime(e.startsAt, team?.tz)}
                           </span>
                           <span className="min-w-0 flex-1">
                             <span className="block truncate font-medium">

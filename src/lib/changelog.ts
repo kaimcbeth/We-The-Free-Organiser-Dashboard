@@ -67,7 +67,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "Sydney's past events from Facebook are in the Hub (195, from the first Food For Thought outreach in January 2023), so old photos can go on the right event. Times on these are rough.",
+        text: "Everything from Kai's Facebook events list is in the Hub (349 events, back to January 2022), so old photos can go on the right event. They have a date but no time; the ones by other groups say who hosted them in the notes. Delete any you don't want.",
       },
       {
         level: "organiser",

@@ -43,6 +43,7 @@ type EventDetail = {
   special_event_id: string | null;
   notes: string | null;
   source: string;
+  time_unknown: boolean;
 };
 
 export default async function EventCheckInPage({
@@ -54,7 +55,7 @@ export default async function EventCheckInPage({
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, team_id, title, starts_at, ends_at, venue, address, source_url, facebook_url, description, event_type_id, notes, special_event_id, source",
+      "id, team_id, title, starts_at, ends_at, venue, address, source_url, facebook_url, description, event_type_id, notes, special_event_id, source, time_unknown",
     )
     .eq("id", id)
     .maybeSingle<EventDetail>();
@@ -146,8 +147,11 @@ export default async function EventCheckInPage({
       </Link>
       <div className="mt-2">
         <p className="text-sm text-stone-500">
-          {formatEventDate(event.starts_at)} ·{" "}
-          {formatTimeRange(event.starts_at, event.ends_at)}
+          {formatEventDate(event.starts_at)}
+          {/* Old events copied from Facebook have a date but no time. */}
+          {event.time_unknown
+            ? ""
+            : ` · ${formatTimeRange(event.starts_at, event.ends_at)}`}
           {event.venue || event.address
             ? ` · ${event.venue ?? event.address}`
             : ""}

@@ -16,6 +16,7 @@ type EventRow = {
   id: string;
   title: string;
   starts_at: string;
+  time_unknown: boolean;
   venue: string | null;
   event_type: { name: string } | null;
 };
@@ -40,7 +41,9 @@ export default async function MonthPage({
     loadInsightData(supabase, organiser.team_id),
     supabase
       .from("events")
-      .select("id, title, starts_at, venue, event_type:event_types(name)")
+      .select(
+        "id, title, starts_at, time_unknown, venue, event_type:event_types(name)",
+      )
       .eq("team_id", organiser.team_id)
       .gte("starts_at", start)
       .lt("starts_at", end)
@@ -116,7 +119,11 @@ export default async function MonthPage({
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{e.title}</p>
                     <p className="truncate text-sm text-stone-500">
-                      {[e.event_type?.name, formatTime(e.starts_at), e.venue]
+                      {[
+                        e.event_type?.name,
+                        e.time_unknown ? null : formatTime(e.starts_at),
+                        e.venue,
+                      ]
                         .filter(Boolean)
                         .join(" · ")}
                     </p>

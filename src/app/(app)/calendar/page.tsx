@@ -103,7 +103,7 @@ export default async function CalendarPage({
     ? await supabase
         .from("events")
         .select(
-          "id, team_id, title, starts_at, ends_at, venue, address, event_type:event_types(name), attendance(count)",
+          "id, team_id, title, starts_at, ends_at, time_unknown, venue, address, event_type:event_types(name), attendance(count)",
         )
         .in(
           "team_id",
@@ -121,6 +121,7 @@ export default async function CalendarPage({
     title: e.title,
     startsAt: e.starts_at,
     endsAt: e.ends_at,
+    timeUnknown: e.time_unknown,
     venue: e.venue ?? e.address,
     type: (e.event_type as unknown as { name: string } | null)?.name ?? null,
     here: (e.attendance as unknown as { count: number }[])[0]?.count ?? 0,
