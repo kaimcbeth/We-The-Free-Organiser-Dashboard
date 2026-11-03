@@ -83,7 +83,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: 'Newcomers: every Monday a card on Events lists last week\'s newcomers (Monday to Sunday) by event. "Make the image" gives a NEWCOMERS image with the dates and their first names, to share with your regulars. Tap × on a name to leave them off; tap it under "Left off" to put them back.',
+        text: 'Newcomers: every Monday a card on Events lists last week\'s newcomers (Monday to Sunday) by event. "Make the image" gives a NEWCOMERS image with the week number, the dates and their first names, to share with your regulars. Tap × on a name to leave them off; tap it under "Left off" to put them back.',
       },
     ],
   },

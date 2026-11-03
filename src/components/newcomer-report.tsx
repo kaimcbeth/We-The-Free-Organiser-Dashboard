@@ -54,6 +54,14 @@ export function weekLabel(weekStart: string) {
   return `${fmt(start)} – ${fmt(end)}`;
 }
 
+// ISO week number (weeks start on Monday; week 1 holds the first Thursday).
+export function weekNumber(weekStart: string) {
+  const d = new Date(`${weekStart}T12:00:00Z`);
+  const thursday = new Date(d.getTime() + 3 * 864e5);
+  const jan1 = Date.UTC(thursday.getUTCFullYear(), 0, 1);
+  return Math.floor((thursday.getTime() - jan1) / (7 * 864e5)) + 1;
+}
+
 const loadImage = (url: string) =>
   new Promise<HTMLImageElement>((ok, fail) => {
     const img = new Image();
@@ -213,7 +221,7 @@ export function NewcomerReport({
     };
   }, [open, logo]);
 
-  const dates = weekLabel(weekStart);
+  const dates = `Week ${weekNumber(weekStart)} · ${weekLabel(weekStart)}`;
   const kept = (rows ?? []).filter((r) => !hidden.includes(r.person_id));
   const left = (rows ?? []).filter((r) => hidden.includes(r.person_id));
   const names = graphicNames(kept);
