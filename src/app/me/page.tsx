@@ -1,3 +1,4 @@
+import { RemindersLink } from "@/components/reminders-link";
 import { LivePlayers } from "@/components/live-players";
 import { cookies } from "next/headers";
 import { VIEW_AS_COOKIE } from "@/lib/organiser";
@@ -144,12 +145,18 @@ export default async function MePage() {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
             Coming up
           </h2>
-          {me.team?.slug && (
-            <EventsShare
-              slug={me.team.slug}
-              community={me.team.name.replace(/, (Australia|New Zealand)$/, "")}
-            />
-          )}
+          <span className="flex items-baseline gap-4">
+            <RemindersLink />
+            {me.team?.slug && (
+              <EventsShare
+                slug={me.team.slug}
+                community={me.team.name.replace(
+                  /, (Australia|New Zealand)$/,
+                  "",
+                )}
+              />
+            )}
+          </span>
         </div>
         <MyEvents
           events={(upcoming as MyEvent[] | null) ?? []}

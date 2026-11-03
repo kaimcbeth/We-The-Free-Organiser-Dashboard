@@ -5,7 +5,6 @@ import {
   claimNewcomer,
   completePrompt,
   setNotifyChannel,
-  setReminderChoices,
 } from "@/app/buddy-actions";
 import { enablePush } from "@/lib/push-client";
 import { formatEventDate, formatTime, nowIso } from "@/lib/time";
@@ -290,10 +289,7 @@ export function ReminderSetting({
   intro = "You always get them in the app (the bell). Also send them by:",
   bare = false,
   dryRun = false,
-  choices,
 }: {
-  // Profile only: Maybe / upcoming reminders and which events (0169).
-  choices?: ReminderChoices;
   initial: BuddyDashboard["notify_channel"];
   hasEmail: boolean;
   intro?: string;
@@ -368,125 +364,6 @@ export function ReminderSetting({
           </button>
         ))}
       </div>
-      {msg && <p className="mt-2 text-sm text-stone-600">{msg}</p>}
-      {choices && <MoreReminders initial={choices} dryRun={dryRun} />}
-    </div>
-  );
-}
-
-export type ReminderChoices = {
-  maybe: boolean;
-  upcoming: boolean;
-  category: "all" | "outreach" | "community";
-};
-
-const CATEGORIES = [
-  { value: "all", label: "All events" },
-  { value: "outreach", label: "Outreach only" },
-  { value: "community", label: "Community only" },
-] as const;
-
-// Kai, 4 Nov 2026: reminders for Maybe answers and for upcoming events,
-// and which kind of events those cover.
-function MoreReminders({
-  initial,
-  dryRun,
-}: {
-  initial: ReminderChoices;
-  dryRun: boolean;
-}) {
-  const [c, setC] = useState(initial);
-  const [msg, setMsg] = useState("");
-  const [pending, start] = useTransition();
-
-  function save(next: ReminderChoices) {
-    const before = c;
-    setC(next);
-    if (dryRun) return;
-    start(async () => {
-      const r = await setReminderChoices(
-        next.maybe,
-        next.upcoming,
-        next.category,
-      );
-      if (r.error) {
-        setC(before);
-        setMsg(r.error);
-      } else setMsg("Saved.");
-    });
-  }
-
-  const tick = "mt-0.5 h-4 w-4 shrink-0 accent-navy";
-  return (
-    <div className="mt-5 border-t border-stone-100 pt-4">
-      <p className="text-sm font-semibold text-navy">Also remind me about</p>
-      <label className="mt-2 flex gap-2 text-sm">
-        <input type="checkbox" checked disabled className={tick} />
-        <span>
-          Events I&apos;m going to{" "}
-          <span className="text-stone-400">· the day before</span>
-        </span>
-      </label>
-      <label className="mt-2 flex cursor-pointer gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={c.maybe}
-          disabled={pending}
-          onChange={(e) => save({ ...c, maybe: e.target.checked })}
-          className={tick}
-        />
-        <span>
-          Events I said maybe to{" "}
-          <span className="text-stone-400">· the day before</span>
-        </span>
-      </label>
-      <label className="mt-2 flex cursor-pointer gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={c.upcoming}
-          disabled={pending}
-          onChange={(e) => save({ ...c, upcoming: e.target.checked })}
-          className={tick}
-        />
-        <span>
-          Upcoming events I haven&apos;t answered{" "}
-          <span className="text-stone-400">· 3 days before</span>
-        </span>
-      </label>
-      {(c.maybe || c.upcoming) && (
-        <>
-          <p className="mt-4 text-sm font-semibold text-navy">Which events?</p>
-          <div
-            className="mt-2 grid grid-cols-3 gap-2"
-            role="radiogroup"
-            aria-label="Which events"
-          >
-            {CATEGORIES.map((k) => (
-              <button
-                key={k.value}
-                type="button"
-                role="radio"
-                aria-checked={c.category === k.value}
-                disabled={pending}
-                onClick={() =>
-                  c.category !== k.value && save({ ...c, category: k.value })
-                }
-                className={`rounded-xl px-2 py-2 text-sm font-semibold ring-1 disabled:opacity-60 ${
-                  c.category === k.value
-                    ? "bg-navy text-white ring-navy"
-                    : "bg-white text-navy ring-stone-300 hover:bg-stone-50"
-                }`}
-              >
-                {k.label}
-              </button>
-            ))}
-          </div>
-          <p className="mt-2 text-xs text-stone-400">
-            Outreach: Movie Challenges and other outreach. Community: socials
-            and co-working.
-          </p>
-        </>
-      )}
       {msg && <p className="mt-2 text-sm text-stone-600">{msg}</p>}
     </div>
   );

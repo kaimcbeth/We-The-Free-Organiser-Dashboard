@@ -49,22 +49,25 @@ export async function setNotifyChannel(
   return {};
 }
 
-// Which other events to be reminded about (0169): Maybe answers (day
-// before), upcoming events not answered yet (3 days before), and which kind.
-export async function setReminderChoices(
-  maybe: boolean,
-  upcoming: boolean,
-  category: "all" | "outreach" | "community",
-): Promise<{ error?: string }> {
+// The Reminders pop-up on the Events pages (0171): email on/off plus
+// which reminders and which kinds of events.
+export async function setReminderPrefs(p: {
+  channel: "none" | "email" | "push";
+  going: boolean;
+  maybe: boolean;
+  upcoming: boolean;
+  category: "all" | "outreach" | "community";
+}): Promise<{ error?: string }> {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("set_my_reminders", {
-    p_maybe: maybe,
-    p_upcoming: upcoming,
-    p_category: category,
+  const { data, error } = await supabase.rpc("set_my_reminder_prefs", {
+    p_channel: p.channel,
+    p_going: p.going,
+    p_maybe: p.maybe,
+    p_upcoming: p.upcoming,
+    p_category: p.category,
   });
   if (error || !data) return { error: "Couldn't save. Please try again." };
   revalidatePath("/me");
-  revalidatePath("/me/profile");
   return {};
 }
 

@@ -67,7 +67,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "More reminder choices on everyone's profile: a reminder the day before events you said Maybe to, a heads-up 3 days before upcoming events you haven't answered, and whether those cover all events, outreach only or community only. Reminders can now be emailed.",
+        text: "Email reminders: tap Reminders at the top of the Events page and switch them on (everything) or off (nothing). Fine-tune picks which reminders (events you're going to, maybe, or all upcoming) and which types (outreach, community). Moved from the profile.",
       },
       {
         level: "organiser",

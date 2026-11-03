@@ -98,7 +98,7 @@ export function MemberTutorial({
         <ReminderSetting
           initial={notifyChannel}
           hasEmail={hasEmail}
-          intro="Also send reminders by (you can change this in your profile):"
+          intro="Also send reminders by (change it any time from Reminders on the Events tab):"
           bare
           dryRun={preview}
         />
