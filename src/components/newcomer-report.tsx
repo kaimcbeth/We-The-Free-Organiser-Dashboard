@@ -173,6 +173,9 @@ export function NewcomerReport({
 }) {
   const router = useRouter();
   const [rows, setRows] = useState<Newcomer[] | null>(null);
+  // People left off this week's image (kept on this device).
+  const [hidden, setHidden] = useState<string[]>([]);
+  const hiddenKey = `wtf-newcomers-hidden-${teamId}-${weekStart}`;
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState("");
   const [logo, setLogo] = useState<HTMLImageElement | null>(null);
@@ -184,11 +187,18 @@ export function NewcomerReport({
     let live = true;
     createClient()
       .rpc("week_newcomers", { p_team_id: teamId, p_week_start: weekStart })
-      .then(({ data }) => live && setRows((data as Newcomer[] | null) ?? []));
+      .then(({ data }) => {
+        if (!live) return;
+        try {
+          const saved = JSON.parse(localStorage.getItem(hiddenKey) ?? "[]");
+          if (Array.isArray(saved)) setHidden(saved);
+        } catch {}
+        setRows((data as Newcomer[] | null) ?? []);
+      });
     return () => {
       live = false;
     };
-  }, [teamId, weekStart]);
+  }, [teamId, weekStart, hiddenKey]);
 
   useEffect(() => {
     if (!open) return;
@@ -204,11 +214,18 @@ export function NewcomerReport({
   }, [open, logo]);
 
   const dates = weekLabel(weekStart);
-  const names = rows ? graphicNames(rows) : [];
+  const kept = (rows ?? []).filter((r) => !hidden.includes(r.person_id));
+  const left = (rows ?? []).filter((r) => hidden.includes(r.person_id));
+  const names = graphicNames(kept);
   const namesKey = names.join("|");
   useEffect(() => {
-    if (open && canvas.current && namesKey)
-      drawNewcomers(canvas.current, namesKey.split("|"), dates, logo);
+    if (open && canvas.current)
+      drawNewcomers(
+        canvas.current,
+        namesKey ? namesKey.split("|") : [],
+        dates,
+        logo,
+      );
   }, [open, namesKey, dates, logo, fonts]);
 
   if (!rows || rows.length === 0 || closing) return null;
@@ -218,9 +235,9 @@ export function NewcomerReport({
     key: string;
     title: string;
     when: string;
-    people: string[];
+    people: { id: string; name: string }[];
   }[] = [];
-  for (const r of rows) {
+  for (const r of kept) {
     const key = `${r.event_starts_at}|${r.event_title}`;
     let g = byEvent.find((x) => x.key === key);
     if (!g) {
@@ -237,7 +254,18 @@ export function NewcomerReport({
       };
       byEvent.push(g);
     }
-    g.people.push([r.first_name, r.last_name].filter(Boolean).join(" "));
+    g.people.push({
+      id: r.person_id,
+      name: [r.first_name, r.last_name].filter(Boolean).join(" "),
+    });
+  }
+
+  function leaveOff(id: string, off: boolean) {
+    const next = off ? [...hidden, id] : hidden.filter((h) => h !== id);
+    setHidden(next);
+    try {
+      localStorage.setItem(hiddenKey, JSON.stringify(next));
+    } catch {}
   }
 
   async function close() {
@@ -310,19 +338,56 @@ export function NewcomerReport({
         Last week
       </p>
       <h2 className="mt-0.5 pr-6 text-lg font-semibold leading-snug tracking-tight">
-        {rows.length} newcomer{rows.length === 1 ? "" : "s"}
+        {kept.length} newcomer{kept.length === 1 ? "" : "s"}
         <span className="ml-2 text-sm font-normal text-stone-500">{dates}</span>
       </h2>
-      <ul className="mt-2 space-y-1 text-sm text-stone-700">
+      <ul className="mt-2 space-y-2 text-sm text-stone-700">
         {byEvent.map((g) => (
           <li key={g.key}>
-            <span className="text-stone-500">
-              {g.when} · {g.title}:
-            </span>{" "}
-            {g.people.join(", ")}
+            <p className="text-stone-500">
+              {g.when} · {g.title}
+            </p>
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              {g.people.map((p) => (
+                <span
+                  key={p.id}
+                  className="inline-flex items-center gap-1 rounded-full bg-stone-100 py-0.5 pl-2.5 pr-1 text-sm text-stone-800"
+                >
+                  {p.name}
+                  <button
+                    type="button"
+                    onClick={() => leaveOff(p.id, true)}
+                    aria-label={`Leave ${p.name} off`}
+                    title="Leave off the image"
+                    className="rounded-full px-1.5 leading-5 text-stone-400 hover:bg-stone-200 hover:text-stone-800"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
           </li>
         ))}
       </ul>
+      {left.length > 0 && (
+        <p className="mt-2 text-xs text-stone-500">
+          Left off:{" "}
+          {left.map((r, i) => (
+            <span key={r.person_id}>
+              {i > 0 && ", "}
+              <button
+                type="button"
+                onClick={() => leaveOff(r.person_id, false)}
+                title="Put back"
+                className="underline decoration-stone-300 hover:text-stone-800"
+              >
+                {[r.first_name, r.last_name].filter(Boolean).join(" ")}
+              </button>
+            </span>
+          ))}{" "}
+          (tap to put back)
+        </p>
+      )}
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
