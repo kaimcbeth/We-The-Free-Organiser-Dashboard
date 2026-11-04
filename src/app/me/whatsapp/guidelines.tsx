@@ -10,7 +10,7 @@ const RULES: { title: string; text: string }[] = [
   },
   {
     title: "Use the right chat",
-    text: "Our community has a few smaller chats (events, photos, food and more). Post where it fits, so nobody gets flooded.",
+    text: "Post in the chat that fits, so nobody gets flooded.",
   },
   {
     title: "Keep people's details private",
@@ -52,14 +52,31 @@ export function WhatsAppGuidelines({
       <h1 className="text-2xl font-semibold tracking-tight text-navy">
         Join our WhatsApp community
       </h1>
-      <p className="mt-2 text-stone-600">
-        Most of the chat for We The Free{community ? ` ${community}` : ""}{" "}
-        happens on WhatsApp: event updates, photos, food, and getting to know
-        everyone. Before you join, here&apos;s how we look after each other in
-        there.
-      </p>
-
       <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+        <p className="text-xs font-semibold tracking-wide text-pink uppercase">
+          Part 1
+        </p>
+        <h2 className="font-semibold text-navy">Welcome</h2>
+        <div className="mt-2 space-y-2 text-sm text-stone-700">
+          <p>
+            Most of the chat for We The Free{community ? ` ${community}` : ""}{" "}
+            happens on WhatsApp. It&apos;s set up as a community: one home with
+            a few smaller chats inside, each for something different, like
+            events, photos, food or just hanging out.
+          </p>
+          <p>
+            Join whichever chats you like. You don&apos;t have to be in all of
+            them, and you can mute or leave any chat whenever you want.
+            Important updates go to everyone in the community, so you won&apos;t
+            miss anything big.
+          </p>
+        </div>
+      </section>
+
+      <section className="mt-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+        <p className="text-xs font-semibold tracking-wide text-pink uppercase">
+          Part 2
+        </p>
         <h2 className="font-semibold text-navy">Community guidelines</h2>
         <ol className="mt-3 space-y-3">
           {RULES.map((r, i) => (

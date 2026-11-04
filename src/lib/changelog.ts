@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "The WhatsApp join page now has two parts: a welcome explaining the smaller chats inside the community (join whichever you like), then the community guidelines.",
+      },
+      {
+        level: "organiser",
         text: "Email reminders: tap Reminders at the top of the Events page and switch them on (everything) or off. Pick events you're going to and/or all upcoming events, and which kinds: Movie Challenges, other outreach, demos, socials, potlucks and dinners, co-working, workshops, sanctuary days, hikes and everything else. Potlucks and the rest are spotted from the event title.",
       },
       {
