@@ -177,6 +177,7 @@ export function MeetMembersMaker({
   const [note, setNote] = useState("");
   const [made, setMade] = useState<File[] | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const textRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let live = true;
@@ -363,6 +364,98 @@ export function MeetMembersMaker({
           </label>
 
           <section>
+            <h3 className={h3}>Their answers</h3>
+            <p className="mt-1 text-sm text-stone-500">
+              Paste their whole reply, or upload it as a text file. It&apos;s
+              split into one caption per slide.
+            </p>
+            <textarea
+              value={reply}
+              onChange={(e) => split(e.target.value)}
+              rows={4}
+              placeholder="Paste their reply here"
+              className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm"
+            />
+            <input
+              ref={textRef}
+              type="file"
+              accept=".txt,.md,text/plain"
+              hidden
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (f) split(await f.text());
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => textRef.current?.click()}
+              className="mt-1 text-xs font-medium text-stone-500 underline-offset-2 hover:text-navy hover:underline"
+            >
+              Upload a text file instead
+            </button>
+          </section>
+
+          <section className="space-y-3">
+            <div className="flex items-baseline justify-between">
+              <h3 className={h3}>Captions</h3>
+              <button
+                type="button"
+                onClick={() => copy(allCaption, "all")}
+                className="text-xs font-semibold text-navy underline-offset-2 hover:underline"
+              >
+                {copied === "all" ? "Copied" : "Copy all as one"}
+              </button>
+            </div>
+            {Array.from({ length: need }, (_, i) => (
+              <div
+                key={i}
+                className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/5"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-medium text-navy">
+                    <span className="mr-1.5 text-xs text-stone-400">
+                      {i + 1}
+                    </span>
+                    {i === 0 ? "Cover" : qs[i - 1].full}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => copy(captionFor(i), `c${i}`)}
+                    className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold ${
+                      copied === `c${i}`
+                        ? "bg-cyan text-navy"
+                        : "bg-pink text-navy hover:bg-pink-strong"
+                    }`}
+                  >
+                    {copied === `c${i}` ? "Copied" : "Copy"}
+                  </button>
+                </div>
+                {i === 0 ? (
+                  <input
+                    value={coverCaption}
+                    onChange={(e) => setCoverCaption(e.target.value)}
+                    placeholder={cover}
+                    className="mt-2 w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm"
+                  />
+                ) : (
+                  <textarea
+                    value={answers[i - 1] ?? ""}
+                    onChange={(e) => {
+                      const a = [...answers];
+                      a[i - 1] = e.target.value;
+                      setAnswers(a);
+                    }}
+                    rows={2}
+                    placeholder="Their answer"
+                    className="mt-2 w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm"
+                  />
+                )}
+              </div>
+            ))}
+          </section>
+
+          <section>
             <div className="flex items-baseline justify-between">
               <h3 className={h3}>Photos</h3>
               <span className="text-xs text-stone-500">
@@ -398,23 +491,8 @@ export function MeetMembersMaker({
             )}
           </section>
 
-          <section>
-            <h3 className={h3}>Their answers</h3>
-            <p className="mt-1 text-sm text-stone-500">
-              Paste their whole reply and it&apos;s split into the {total}{" "}
-              answers. Fix any below.
-            </p>
-            <textarea
-              value={reply}
-              onChange={(e) => split(e.target.value)}
-              rows={4}
-              placeholder="Paste their reply here"
-              className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm"
-            />
-          </section>
-
           <section className="space-y-5">
-            <h3 className={h3}>Slides and captions</h3>
+            <h3 className={h3}>Slides</h3>
             {Array.from({ length: need }, (_, i) => {
               const p = shown[i];
               return (
@@ -475,51 +553,12 @@ export function MeetMembersMaker({
                       {i === 0 ? "Cover photo" : `Photo for: ${qs[i - 1].text}`}
                     </button>
                   )}
-                  {i === 0 ? (
-                    <input
-                      value={coverCaption}
-                      onChange={(e) => setCoverCaption(e.target.value)}
-                      placeholder={cover}
-                      className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm"
-                    />
-                  ) : (
-                    <div>
-                      <p className="text-sm font-medium text-navy">
-                        {qs[i - 1].full}
-                      </p>
-                      <textarea
-                        value={answers[i - 1] ?? ""}
-                        onChange={(e) => {
-                          const a = [...answers];
-                          a[i - 1] = e.target.value;
-                          setAnswers(a);
-                        }}
-                        rows={2}
-                        placeholder="Their answer"
-                        className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm"
-                      />
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => copy(captionFor(i), `c${i}`)}
-                    className="text-xs font-semibold text-navy underline-offset-2 hover:underline"
-                  >
-                    {copied === `c${i}` ? "Copied" : "Copy caption"}
-                  </button>
                 </div>
               );
             })}
           </section>
 
           <section className="space-y-3 border-t border-stone-200 pt-4">
-            <button
-              type="button"
-              onClick={() => copy(allCaption, "all")}
-              className="text-sm font-semibold text-navy underline-offset-2 hover:underline"
-            >
-              {copied === "all" ? "Copied" : "Copy all as one caption"}
-            </button>
             {photos.length < need && (
               <p className="text-sm text-stone-500">
                 Add {need - photos.length} more photo
