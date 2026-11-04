@@ -51,7 +51,7 @@ export function PhotoUploader({
   };
   label?: string;
   className?: string;
-  onUploaded?: () => void; // e.g. the graphics panel reloads its photos
+  onUploaded?: (ids: string[]) => void; // e.g. the graphics panel reloads its photos
   droppable?: boolean; // photos dragged anywhere onto the page upload here
   dropLabel?: string;
   dropHint?: string;
@@ -114,6 +114,7 @@ export function PhotoUploader({
     let done = 0;
     let failed = 0;
     let dupes = 0; // look like a photo already in the hub
+    const ids: string[] = [];
     const known = [...(await loadHashes(supabase, teamId)).values()];
     for (const file of list) {
       setStatus(`Uploading ${done + failed + 1} of ${list.length}…`);
@@ -140,6 +141,7 @@ export function PhotoUploader({
         });
         if (row.error) throw row.error;
         if (phash) known.push(phash);
+        ids.push(id);
         done++;
       } catch {
         failed++;
@@ -154,7 +156,7 @@ export function PhotoUploader({
           : ""),
     );
     router.refresh();
-    if (done) onUploaded?.();
+    if (done) onUploaded?.(ids);
   }
 
   useEffect(() => {

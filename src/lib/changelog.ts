@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "After uploading to the Photo Hub, a prompt offers to add details to just the new photos: event, date, type, tags and favourites, all at once. The select bar can now set a year and month too.",
+      },
+      {
+        level: "organiser",
         text: "Drag and drop: drop photos anywhere on the Photo Hub (or an event page) to upload them. On the Photo Hub they get the event, date, type and tags picked in Add photos.",
       },
       {

@@ -569,8 +569,10 @@ export function BulkBar({
   events,
   onAttach,
   teamId,
+  years,
 }: {
   teamId?: string; // lets the carousel write a caption
+  years?: number[]; // Photo Hub: set a hand date (year, then month)
   kinds?: string[]; // event kinds to set (Photo Hub)
   // Photo Hub: move the selected photos onto an event listing.
   events?: { id: string; label: string }[];
@@ -655,6 +657,58 @@ export function BulkBar({
                   </option>
                 ))}
               </select>
+            )}
+            {years && years.length > 0 && (
+              <>
+                <select
+                  value=""
+                  disabled={n === 0}
+                  onChange={(e) => {
+                    const y = Number(e.target.value);
+                    if (y)
+                      onApply((p) => ({
+                        takenYear: y,
+                        takenMonth: p.handDated ? p.takenMonth : null,
+                      }));
+                  }}
+                  aria-label="Set year"
+                  className={`${chip} bg-white text-stone-700 ring-stone-300`}
+                >
+                  <option value="">Year…</option>
+                  {years.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value=""
+                  disabled={n === 0 || !photos.some((p) => p.handDated)}
+                  title={
+                    photos.some((p) => p.handDated)
+                      ? undefined
+                      : "Pick a year first"
+                  }
+                  onChange={(e) => {
+                    const m = Number(e.target.value);
+                    if (m)
+                      onApply((p) =>
+                        p.handDated
+                          ? { takenYear: p.takenYear, takenMonth: m }
+                          : {},
+                      );
+                  }}
+                  aria-label="Set month"
+                  className={`${chip} bg-white text-stone-700 ring-stone-300`}
+                >
+                  <option value="">Month…</option>
+                  {MONTH_NAMES.map((name, i) => (
+                    <option key={name} value={i + 1}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </>
             )}
             {kinds && kinds.length > 0 && (
               <select

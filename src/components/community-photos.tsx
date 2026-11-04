@@ -80,6 +80,9 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
   const [tags, setTags] = useState<PhotoTag[]>([]);
   const [filter, setFilter] = useState<PhotoFilter>(null);
   const [sel, setSel] = useState<Set<string> | null>(null); // select mode
+  // Just uploaded (Kai, 5 Nov 2026): prompt to add details to them.
+  const [fresh, setFresh] = useState<string[] | null>(null);
+  const [onlyFresh, setOnlyFresh] = useState(false);
   const anchor = useRef<string | null>(null); // last photo clicked (shift-click)
   const [trash, setTrash] = useState<EventPhoto[] | null>(null); // Removed, open
   const [kinds, setKinds] = useState<string[]>([]); // from the event listings
@@ -216,7 +219,10 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
 
   function bulk(make: (p: EventPhoto) => PhotoChange) {
     const chosen = (photos ?? []).filter((x) => sel?.has(x.id));
-    for (const p of chosen) change(p, make(p));
+    for (const p of chosen) {
+      const c = make(p);
+      if (Object.keys(c).length) change(p, c);
+    }
     if (chosen.length && make(chosen[0]).remove) setSel(new Set());
   }
 
@@ -235,7 +241,9 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
         groups.push({ label: `Look-alikes ${groups.length + 1}`, list });
     }
   } else
-    for (const p of (photos ?? []).filter((x) => matchesFilter(x, filter))) {
+    for (const p of (photos ?? []).filter((x) =>
+      onlyFresh && fresh ? fresh.includes(x.id) : matchesFilter(x, filter),
+    )) {
       const label = when(p);
       const g = groups.find((x) => x.label === label);
       if (g) g.list.push(p);
@@ -366,7 +374,11 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                   }
             }
             label="Upload photos"
-            onUploaded={() => setReload((r) => r + 1)}
+            onUploaded={(ids) => {
+              setReload((r) => r + 1);
+              setFresh(ids);
+              setOnlyFresh(false);
+            }}
           />
         </div>
       </div>
@@ -379,6 +391,53 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
         </p>
       ) : (
         <>
+          {fresh && fresh.length > 0 && !onlyFresh && !sel && (
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl bg-pink/15 px-4 py-3 text-sm text-navy ring-1 ring-pink/30">
+              <p className="min-w-0 flex-1">
+                <span className="font-semibold">
+                  {fresh.length} new photo{fresh.length === 1 ? "" : "s"}.
+                </span>{" "}
+                Add details now so they&apos;re easy to find and use: event,
+                date, type, tags, favourites.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(null);
+                  setOnlyFresh(true);
+                  setSel(new Set(fresh));
+                }}
+                className="rounded-xl bg-pink px-3 py-1.5 font-semibold text-navy hover:bg-pink-strong"
+              >
+                Add details
+              </button>
+              <button
+                type="button"
+                onClick={() => setFresh(null)}
+                className="text-xs text-stone-500 hover:text-navy hover:underline"
+              >
+                Not now
+              </button>
+            </div>
+          )}
+          {onlyFresh && fresh && (
+            <p className="mt-3 rounded-xl bg-pink/15 px-3 py-2 text-sm text-navy">
+              Showing your {fresh.length} new photo
+              {fresh.length === 1 ? "" : "s"}. The bar below changes all the
+              ticked ones; untick any that need something different.{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setOnlyFresh(false);
+                  setFresh(null);
+                  setSel(null);
+                }}
+                className="font-semibold underline"
+              >
+                Finished
+              </button>
+            </p>
+          )}
           {moved && (
             <p className="mt-3 rounded-xl bg-cyan/15 px-3 py-2 text-sm text-navy">
               {moved}
@@ -543,7 +602,15 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
             total={shown.length}
             onApply={bulk}
             onSelectAll={() => setSel(new Set(shown.map((p) => p.id)))}
-            onDone={() => (dupSets ? closeDuplicates() : setSel(null))}
+            onDone={() => {
+              if (dupSets) closeDuplicates();
+              else setSel(null);
+              if (onlyFresh) {
+                setOnlyFresh(false);
+                setFresh(null);
+              }
+            }}
+            years={years}
             canRemove
             kinds={kinds}
             events={events}
