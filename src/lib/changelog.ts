@@ -71,6 +71,14 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Special events now get an 8-week promo cycle instead of the same weekly reminder: save the date, big announcement, throwback, helpers wanted, spread the word, what to expect, who's coming, countdown, final details, live stories, then a thank-you recap. Each one's Write post already knows what that post is for.",
+      },
+      {
+        level: "organiser",
+        text: "New suggested special event: New Year's Eve.",
+      },
+      {
+        level: "organiser",
         text: "New action every 3 months: share We The Free's mental health resources (activism.wtf/mental-health) in the WhatsApp chat, with ready-made caring messages to copy.",
       },
       {

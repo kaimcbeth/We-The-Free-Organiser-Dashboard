@@ -316,7 +316,7 @@ export async function setEventSpecial(
       .from("tasks")
       .update({ dismissed_at: new Date().toISOString() })
       .eq("event_id", eventId)
-      .eq("kind", "promote_special")
+      .or("kind.eq.promote_special,kind.like.special_*")
       .is("done_at", null)
       .is("dismissed_at", null);
   revalidatePath(`/events/${eventId}`);

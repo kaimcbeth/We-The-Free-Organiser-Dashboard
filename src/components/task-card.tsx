@@ -41,12 +41,23 @@ import {
 
 // Actions that come with "Write post": the place to write for, and whether
 // it's about how the event went (true) or inviting people (false).
-const COPY_FOR: Record<string, [CopyPlatform, boolean]> = {
+const COPY_FOR: Record<string, [CopyPlatform | CopyPlatform[], boolean]> = {
   promote_instagram: ["instagram", false],
   promote_facebook_groups: ["facebook", false],
   promote_fb_groups_weekly: ["facebook", false],
   promote_whatsapp: ["whatsapp", false],
   promote_special: ["whatsapp", false],
+  special_save_date: [["instagram", "whatsapp"], false],
+  special_announce: [["instagram", "facebook", "whatsapp"], false],
+  special_throwback: [["instagram", "facebook"], false],
+  special_helpers: ["whatsapp", false],
+  special_spread: ["facebook", false],
+  special_expect: [["instagram", "whatsapp"], false],
+  special_signup: ["whatsapp", false],
+  special_countdown: [["story", "whatsapp"], false],
+  special_final: ["whatsapp", false],
+  special_live: ["story", false],
+  special_thanks: [["instagram", "facebook", "whatsapp"], true],
   facebook_event: ["facebook", false],
   instagram_stories: ["story", true],
   post_photos: ["whatsapp", true],
@@ -56,7 +67,30 @@ const COPY_FOR: Record<string, [CopyPlatform, boolean]> = {
 };
 
 // Actions that use the event's Facebook event link.
+// What each special event promo post is for (prefills the writing note).
+const SPECIAL_NOTE: Record<string, string> = {
+  special_save_date:
+    "Save the date, about 8 weeks out: just the name, the date and one line on why it's special. Short.",
+  special_announce:
+    "The big announcement: what's happening, who it's for, how to come.",
+  special_throwback:
+    "A throwback to last time (or a similar event) to build excitement, then the date of this one.",
+  special_helpers:
+    "Asking for helpers on the day: setting up, welcoming people, photos, packing down. Ask people to reply if they can help.",
+  special_spread: "Ask everyone to share it and invite a friend or two.",
+  special_expect:
+    "What to expect: what to bring, where to meet, how long it runs, and that first-timers are welcome.",
+  special_signup: "One week to go: who's coming? Ask people to lock in.",
+  special_countdown: "A countdown: 3 days to go. Short and fun.",
+  special_final:
+    "Final details for tomorrow: meeting point, time, what to wear and bring, weather.",
+  special_live: "We're here right now: come down and join us.",
+  special_thanks:
+    "Thank everyone who came, share how it went, and invite them to the next event.",
+};
+
 const FB_KINDS = new Set([
+  "special_spread",
   "facebook_event",
   "facebook_invites",
   "post_photos_facebook",
@@ -454,6 +488,12 @@ export function TaskCard({
                   className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
                 />
               )}
+              {task.kind === "special_throwback" && (
+                <ThrowbackSheet
+                  teamId={task.teamId}
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
+              )}
               {task.kind === "promo_throwback" && (
                 <ThrowbackSheet
                   teamId={task.teamId}
@@ -525,7 +565,8 @@ export function TaskCard({
                   eventId={task.eventId}
                   teamId={task.teamId}
                   past={COPY_FOR[task.kind][1]}
-                  initial={[COPY_FOR[task.kind][0]]}
+                  initial={[COPY_FOR[task.kind][0]].flat()}
+                  initialNote={SPECIAL_NOTE[task.kind]}
                   className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10"
                 />
               )}

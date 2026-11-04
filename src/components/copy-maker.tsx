@@ -169,7 +169,9 @@ export function CopyMaker({
   initial = ["instagram", "facebook", "whatsapp"],
   label = "Write post",
   className = "text-xs font-medium text-pink-ink hover:underline",
+  initialNote = "",
 }: {
+  initialNote?: string; // what this post is for (special event promo steps)
   eventId: string;
   teamId: string;
   past: boolean; // after the event: share how it went + invite to the next one
@@ -179,7 +181,7 @@ export function CopyMaker({
 }) {
   const [open, setOpen] = useState(false);
   const [places, setPlaces] = useState<Set<CopyPlatform>>(new Set(initial));
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState(initialNote);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [options, setOptions] = useState<Record<string, string[]> | null>(null);
