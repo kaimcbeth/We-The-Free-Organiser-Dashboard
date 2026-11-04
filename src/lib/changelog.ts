@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'Meet the Members maker: on the "Meet the Members posted" action, tap Make the post. Add their name and 11 photos, paste their reply, and you get an Instagram carousel (a cover, then one question per photo) with each answer ready to copy as that slide\'s caption.',
+      },
+      {
+        level: "organiser",
         text: "The WhatsApp join page is now two panels you click through: a welcome showing the smaller chats inside the community (join whichever you like), then the community guidelines.",
       },
       {

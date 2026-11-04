@@ -26,6 +26,7 @@ import { FbEventLink } from "@/components/fb-event-link";
 import { ScriptButton } from "@/components/script-button";
 import { CopyMaker, type CopyPlatform } from "@/components/copy-maker";
 import { RecapButton } from "@/components/recap-maker";
+import { MeetMembersButton } from "@/components/meet-members-maker";
 import { ScheduleChanger } from "@/components/schedule-changer";
 import { MeetMembersQuestions } from "@/components/meet-members-questions";
 import { FbGroupsButton } from "@/components/fb-groups-button";
@@ -444,6 +445,12 @@ export function TaskCard({
                 />
               )}
               {task.kind === "meet_members_ask" && <MeetMembersQuestions />}
+              {task.kind === "meet_members_post" && task.teamId && (
+                <MeetMembersButton
+                  teamId={task.teamId}
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
+              )}
               {task.kind === "promo_throwback" && (
                 <ThrowbackSheet
                   teamId={task.teamId}

@@ -16,17 +16,17 @@ import { loadCommunityPhotos, type EventPhoto } from "@/lib/event-photos";
 // Opened from the monthly recap action or from photos selected in the
 // Photo Hub. Photos marked "not for promo" are left out.
 
-const W = 1080;
-const H = 1350;
+export const W = 1080;
+export const H = 1350;
 const MAX_PHOTOS = 18; // + cover text on the first, + the coming-up slide = 19
-const NAVY = "#071130";
-const PINK = "#ff47b9";
-const YELLOW = "#ffd90f";
-const DISPLAY = '"WTF Display", "Arial Black", sans-serif';
+export const NAVY = "#071130";
+export const PINK = "#ff47b9";
+export const YELLOW = "#ffd90f";
+export const DISPLAY = '"WTF Display", "Arial Black", sans-serif';
 const URL_TEXT = "www.activism.wtf";
 
-type Pos = { x: number; y: number };
-const CENTRE: Pos = { x: 0.5, y: 0.45 };
+export type Pos = { x: number; y: number };
+export const CENTRE: Pos = { x: 0.5, y: 0.45 };
 
 export type RecapEvent = {
   id: string;
@@ -75,13 +75,13 @@ const ymOf = (iso: string, tz: string) => {
 const same = (a: Month, b: Month) => a.year === b.year && a.month === b.month;
 
 // "WTF SYDNEY" from "Sydney, Australia".
-const communityLabel = (name: string) =>
+export const communityLabel = (name: string) =>
   `WE THE FREE ${name.split(",")[0].trim().toUpperCase()}`;
 
 const place = (e: RecapEvent) =>
   e.venue?.trim() || e.address?.split(",")[0].trim() || "";
 
-const loadImage = (url: string) =>
+export const loadImage = (url: string) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -90,14 +90,14 @@ const loadImage = (url: string) =>
     img.src = url;
   });
 
-const bodyFont = () =>
+export const bodyFont = () =>
   (typeof document !== "undefined" &&
     getComputedStyle(document.body).fontFamily) ||
   "system-ui, sans-serif";
 
 // ---------- Drawing (always in 1080 × 1350 units) ----------
 
-function drawPhoto(
+export function drawPhoto(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement,
   pos: Pos,
@@ -109,7 +109,11 @@ function drawPhoto(
 }
 
 // Dark fade up from the bottom, so white text reads on any photo.
-function shade(ctx: CanvasRenderingContext2D, from: number, alpha: number) {
+export function shade(
+  ctx: CanvasRenderingContext2D,
+  from: number,
+  alpha: number,
+) {
   const g = ctx.createLinearGradient(0, H * from, 0, H);
   g.addColorStop(0, "rgba(7,17,48,0)");
   g.addColorStop(0.55, `rgba(7,17,48,${alpha * 0.75})`);
@@ -118,7 +122,10 @@ function shade(ctx: CanvasRenderingContext2D, from: number, alpha: number) {
   ctx.fillRect(0, H * from, W, H * (1 - from));
 }
 
-function logo(ctx: CanvasRenderingContext2D, mark: HTMLImageElement | null) {
+export function logo(
+  ctx: CanvasRenderingContext2D,
+  mark: HTMLImageElement | null,
+) {
   if (!mark) return;
   const mh = 72;
   const mw = (mark.naturalWidth / mark.naturalHeight) * mh;
@@ -130,7 +137,7 @@ function logo(ctx: CanvasRenderingContext2D, mark: HTMLImageElement | null) {
 }
 
 // Biggest size (up to max) at which the text fits the width.
-function fit(
+export function fit(
   ctx: CanvasRenderingContext2D,
   text: string,
   font: (size: number) => string,
@@ -148,7 +155,7 @@ function fit(
 }
 
 // Up to `lines` lines, the last one cut with "…".
-function wrap(
+export function wrap(
   ctx: CanvasRenderingContext2D,
   text: string,
   width: number,
