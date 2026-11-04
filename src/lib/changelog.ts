@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: '🗓️ Two new seasonal actions. "Event hosts asked for next season" (4 weeks before a season starts) has ready-made messages asking who\'d like to host an event. "Seasonal calendar posted" (a week before) has Make the calendar: one graphic with up to 8 of the season\'s events, special events first, then trainings, collabs and new events, with weekly regulars as one "Every Wednesday" line. Tick to swap events, then share or copy as text.',
+      },
+      {
+        level: "organiser",
         text: "🐣 New suggested special event: Easter Movie Challenge, on Easter Saturday (27 March 2027), suggested 2 months before. Special events can now move with Easter, so it lands on the right weekend every year.",
       },
       {

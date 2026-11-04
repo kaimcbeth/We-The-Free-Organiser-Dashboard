@@ -107,6 +107,7 @@ function toRow(t: Raw): TaskRow {
           monthly: "Every month",
           month_end: "End of each month",
           quarterly: "Every 3 months",
+          season: "Every season",
           newcomer: "Each newcomer",
           birthday: "On their birthday",
         } as Record<string, string>

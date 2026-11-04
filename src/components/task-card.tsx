@@ -37,6 +37,10 @@ import { FbGroupsButton } from "@/components/fb-groups-button";
 import { inputClass } from "@/components/form";
 import { PodShareButton } from "@/components/engagement-pod";
 import {
+  SeasonCalendarButton,
+  SeasonHostsSheet,
+} from "@/components/season-calendar";
+import {
   FacebookEventButton,
   type FbEventDetails,
 } from "@/components/facebook-event";
@@ -456,6 +460,21 @@ export function TaskCard({
                 >
                   Pod chat
                 </a>
+              )}
+              {task.kind === "promo_season_calendar" && task.teamId && (
+                <SeasonCalendarButton
+                  teamId={task.teamId}
+                  dueAt={task.dueAt}
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
+              )}
+              {task.kind === "com_season_hosts" && task.teamId && (
+                <SeasonHostsSheet
+                  teamId={task.teamId}
+                  dueAt={task.dueAt}
+                  tz={tz}
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
               )}
               {task.kind === "com_engagement_pod" && task.teamId && (
                 <PodShareButton

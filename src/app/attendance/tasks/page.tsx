@@ -29,6 +29,7 @@ function when(t: { schedule: string; anchor: string; appear_hours: number }) {
   if (t.schedule === "weekly") return "Every week";
   if (t.schedule === "monthly") return "Every month";
   if (t.schedule === "quarterly") return "Every 3 months";
+  if (t.schedule === "season") return "A week before each season";
   if (t.schedule === "month_end") return "End of each month";
   if (t.schedule === "newcomer") return "Each newcomer";
   if (t.schedule === "birthday") return "On members' birthdays";
