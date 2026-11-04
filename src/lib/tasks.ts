@@ -40,10 +40,16 @@ type Raw = {
   } | null;
   assignee: { first_name: string; last_name: string | null } | null;
   person: { id: string; first_name: string; last_name: string | null } | null;
+  pod_post?: {
+    url: string;
+    note: string | null;
+    shared_by_name: string | null;
+    team: { pod_whatsapp_url: string | null } | null;
+  } | null;
 };
 
 const SELECT =
-  "id, team_id, due_at, show_from, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes, audience, schedule), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, facebook_url, rain_chance, event_type_id, event_type:event_types(name), team:teams(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name), person:people!tasks_person_id_fkey(id, first_name, last_name)";
+  "id, team_id, due_at, show_from, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes, audience, schedule), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, facebook_url, rain_chance, event_type_id, event_type:event_types(name), team:teams(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name), person:people!tasks_person_id_fkey(id, first_name, last_name), pod_post:pod_posts(url, note, shared_by_name, team:teams(pod_whatsapp_url))";
 
 // Promo actions that get a "Get graphic" button, and the size they need.
 const GRAPHIC_SIZE: Record<string, GraphicSize | undefined> = {
@@ -141,6 +147,14 @@ function toRow(t: Raw): TaskRow {
             },
           }
         : null,
+    podPost: t.pod_post
+      ? {
+          url: t.pod_post.url,
+          note: t.pod_post.note,
+          by: t.pod_post.shared_by_name,
+          chat: t.pod_post.team?.pod_whatsapp_url ?? null,
+        }
+      : null,
     assignedTo: t.assigned_to,
     assigneeName: t.assignee
       ? [t.assignee.first_name, t.assignee.last_name].filter(Boolean).join(" ")
@@ -162,6 +176,7 @@ export async function loadTeamTasks(
       .from("tasks")
       .select(SELECT)
       .in("team_id", ids)
+      .neq("kind", "pod_boost") // pod members' own (shown on their page)
       .is("done_at", null)
       .is("dismissed_at", null)
       .order("due_at")
@@ -170,6 +185,7 @@ export async function loadTeamTasks(
       .from("tasks")
       .select(SELECT)
       .in("team_id", ids)
+      .neq("kind", "pod_boost")
       .is("dismissed_at", null)
       .gte("done_at", since)
       .order("done_at", { ascending: false })

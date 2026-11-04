@@ -17,9 +17,12 @@ export default async function SupportPage() {
   if (!user) redirect("/login");
   const { data: me } = await supabase
     .from("people")
-    .select("id, team:teams!people_team_id_fkey(timezone)")
+    .select("id, team:teams!people_team_id_fkey(timezone, pod_whatsapp_url)")
     .eq("user_id", user.id)
-    .maybeSingle<{ id: string; team: { timezone: string } | null }>();
+    .maybeSingle<{
+      id: string;
+      team: { timezone: string; pod_whatsapp_url: string | null } | null;
+    }>();
   if (!me) redirect("/me");
   const tz = me.team?.timezone ?? DEFAULT_TZ;
   setRequestTz(tz);
@@ -46,7 +49,13 @@ export default async function SupportPage() {
         Small ways to help your community. More open up as you come to more
         events. Pick whatever suits you; there&apos;s no pressure.
       </p>
-      {roles && <MicroRoles data={roles as MyMicroRoles} preview={preview} />}
+      {roles && (
+        <MicroRoles
+          data={roles as MyMicroRoles}
+          preview={preview}
+          podChat={me.team?.pod_whatsapp_url ?? null}
+        />
+      )}
       {trainings && (
         <TrainingSection data={trainings as MyTrainings} preview={preview} />
       )}

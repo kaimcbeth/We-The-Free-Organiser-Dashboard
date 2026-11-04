@@ -67,7 +67,82 @@ export function MyReminders({ dryRun = false }: { dryRun?: boolean }) {
   }, []);
   if (error) return <p className="text-sm text-stone-600">{error}</p>;
   if (!s) return <p className="text-sm text-stone-400">Loading…</p>;
-  return <EmailReminders initial={s} dryRun={dryRun} />;
+  return (
+    <>
+      <EmailReminders initial={s} dryRun={dryRun} />
+      <PodOptIn dryRun={dryRun} />
+    </>
+  );
+}
+
+// Engagement pod opt-in (Kai, 5 Nov 2026): the same as saying yes to "Engage
+// with our posts" in How you can help (0180), so the two stay in step.
+export function PodOptIn({ dryRun = false }: { dryRun?: boolean }) {
+  const [on, setOn] = useState<boolean | null>(null);
+  const [msg, setMsg] = useState("");
+  const [pending, start] = useTransition();
+  useEffect(() => {
+    let live = true;
+    createClient()
+      .rpc("my_micro_roles")
+      .then(({ data }) => {
+        if (!live || !data) return;
+        const role = (
+          data as { roles: { key: string; status: string | null }[] }
+        ).roles.find((r) => r.key === "engage_posts");
+        setOn(role?.status === "active");
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
+  if (on === null) return null;
+
+  function flip() {
+    const next = !on;
+    setOn(next);
+    setMsg("");
+    if (dryRun) return;
+    start(async () => {
+      const { data, error } = await createClient().rpc(
+        next ? "offer_micro_role" : "stop_micro_role",
+        { p_key: "engage_posts" },
+      );
+      if (error || data === "not_allowed" || data === "unknown") {
+        setOn(!next);
+        setMsg("Couldn't save that. Please try again.");
+      }
+    });
+  }
+
+  return (
+    <div className="mt-5 border-t border-black/5 pt-4">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="font-semibold text-navy">Engagement pod</p>
+          <p className="mt-0.5 text-sm text-stone-500">
+            {on
+              ? "You'll get an action when there's a community member's Facebook post to like and comment on."
+              : "Get an action when someone from the community (like a newcomer) posts in a vegan Facebook group, to like and comment."}
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={on}
+          aria-label="Engagement pod"
+          disabled={pending}
+          onClick={flip}
+          className={`relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-60 ${on ? "bg-pink" : "bg-stone-300"}`}
+        >
+          <span
+            className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all ${on ? "left-[22px]" : "left-0.5"}`}
+          />
+        </button>
+      </div>
+      {msg && <p className="mt-2 text-sm text-red-700">{msg}</p>}
+    </div>
+  );
 }
 
 // "Reminders" (Kai, 4 Nov 2026): a small link in the Events page header that

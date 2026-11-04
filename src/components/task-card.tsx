@@ -34,6 +34,7 @@ import { ScheduleChanger } from "@/components/schedule-changer";
 import { MeetMembersQuestions } from "@/components/meet-members-questions";
 import { FbGroupsButton } from "@/components/fb-groups-button";
 import { inputClass } from "@/components/form";
+import { PodShareButton } from "@/components/engagement-pod";
 import {
   FacebookEventButton,
   type FbEventDetails,
@@ -125,6 +126,13 @@ export type TaskRow = {
   eventAt: string | null;
   fbEvent?: FbEventDetails | null; // "Facebook event created" tasks
   graphic?: { size: GraphicSize; event: GraphicEvent } | null; // promo actions
+  // "Post liked and commented on" (engagement pod, 0180): the post to cheer on.
+  podPost?: {
+    url: string;
+    note: string | null;
+    by: string | null;
+    chat: string | null; // the pod's WhatsApp chat
+  } | null;
   assignedTo: string | null;
   assigneeName: string | null;
   delegatedBy?: { name: string; photoUrl: string | null } | null; // who handed it to me
@@ -376,6 +384,20 @@ export function TaskCard({
               {task.people.join(", ")}
             </p>
           )}
+          {task.podPost && !done && (
+            <p className="mt-1 text-sm text-stone-700">
+              {task.podPost.note && (
+                <span className="font-medium">
+                  &ldquo;{task.podPost.note}&rdquo;
+                </span>
+              )}
+              {task.podPost.by && (
+                <span className="text-stone-500">
+                  {task.podPost.note ? " · " : ""}Shared by {task.podPost.by}
+                </span>
+              )}
+            </p>
+          )}
           {task.description && !done && (
             <p className="mt-1 text-sm text-stone-600">{task.description}</p>
           )}
@@ -410,6 +432,33 @@ export function TaskCard({
               {(task.kind === "promote_facebook_groups" ||
                 task.kind === "promote_fb_groups_weekly") && (
                 <FbGroupsButton teamId={task.teamId} canEdit={!!people} />
+              )}
+              {task.podPost && (
+                <a
+                  href={task.podPost.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                >
+                  Open the post ↗
+                </a>
+              )}
+              {task.podPost?.chat && (
+                <a
+                  href={task.podPost.chat}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-stone-500 hover:text-navy hover:underline"
+                >
+                  Pod chat
+                </a>
+              )}
+              {task.kind === "com_engagement_pod" && task.teamId && (
+                <PodShareButton
+                  teamId={task.teamId}
+                  canEditChat={!!people}
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
               )}
               {task.kind === "approval_submitted" && task.eventId && (
                 <a

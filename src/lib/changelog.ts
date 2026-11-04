@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: '🙌 Engagement pod: members who join (a switch in Reminders, or "Engage with our posts" in How you can help) get an action to like and comment whenever you share a community member\'s Facebook post, like a newcomer\'s first post in a vegan group. Share posts from the weekly "Posts shared in the engagement pod" action or the Engagement pod card in Resources, see how many have done it, and add your pod\'s WhatsApp chat link.',
+      },
+      {
+        level: "organiser",
         text: "💰 Team fundraising guide in Resources: WTF equipment grants, funding platforms, grant applications and crowdfunding tips.",
       },
       {

@@ -6,6 +6,7 @@ import { RESOURCE_SECTIONS, RESOURCES_COMING_SOON } from "@/lib/resources";
 import { CommunityPhotos } from "@/components/community-photos";
 import { GuideShare } from "@/components/guide-share";
 import { FeedbackCards } from "@/components/feedback-cards";
+import { PodShareButton } from "@/components/engagement-pod";
 import { DISCUSSION_PROMPTS } from "@/lib/discussion-prompts";
 
 const has = (q: string, ...text: (string | undefined)[]) =>
@@ -144,6 +145,33 @@ export function ResourcesList({
           q,
           "feedback form members organisers global support regional support lead anonymous link share",
         ) && <FeedbackCards teamId={teamId} />}
+      {teamId &&
+        has(
+          q,
+          "engagement pod facebook post like comment newcomer share boost",
+        ) && (
+          <PodShareButton
+            teamId={teamId}
+            canEditChat={!core}
+            className="mt-3 flex w-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-left text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+          >
+            <span>
+              <span className="block font-semibold">
+                <span aria-hidden className="mr-1.5">
+                  🙌
+                </span>
+                Engagement pod
+              </span>
+              <span className="block text-sm text-stone-600">
+                Share a community member&apos;s Facebook post so the pod likes
+                and comments on it. See who&apos;s in the pod.
+              </span>
+            </span>
+            <span aria-hidden className="text-xl">
+              →
+            </span>
+          </PodShareButton>
+        )}
       {sections.map((s) => (
         <section key={s.title} className="mt-3">
           <ul className="space-y-3">

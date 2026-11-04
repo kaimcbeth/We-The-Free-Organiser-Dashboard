@@ -19,9 +19,11 @@ export type MyMicroRoles = { events: number; roles: MicroRole[] };
 export function MicroRoles({
   data,
   preview,
+  podChat = null,
 }: {
   data: MyMicroRoles;
   preview: boolean; // God Mode preview: don't save anything
+  podChat?: string | null; // the engagement pod's WhatsApp chat (0180)
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -92,14 +94,26 @@ export function MicroRoles({
                 </button>
               </p>
             ) : r.status === "active" ? (
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => act(r, true)}
-                className="mt-3 text-sm text-stone-400 hover:text-navy hover:underline disabled:opacity-60"
-              >
-                Stop doing this
-              </button>
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+                {r.key === "engage_posts" && podChat && (
+                  <a
+                    href={podChat}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-xl bg-[#25D366] px-3 py-1.5 text-sm font-semibold text-white hover:brightness-95"
+                  >
+                    Join the pod chat
+                  </a>
+                )}
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() => act(r, true)}
+                  className="text-sm text-stone-400 hover:text-navy hover:underline disabled:opacity-60"
+                >
+                  Stop doing this
+                </button>
+              </div>
             ) : (
               <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
                 <button

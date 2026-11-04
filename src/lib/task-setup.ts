@@ -44,7 +44,7 @@ export async function loadTaskSetup(
       .eq("audience", "community")
       // Follow-ups come from another action, and special-event ones from
       // "Plan later": neither is chosen here.
-      .not("schedule", "in", "(follow_up,special)")
+      .not("schedule", "in", "(follow_up,special,pod)")
       .or(`team_id.is.null,team_id.eq.${teamId}`)
       .order("sort_order"),
     supabase

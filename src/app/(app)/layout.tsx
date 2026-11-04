@@ -48,6 +48,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         ? organiser.teams.map((t) => t.id)
         : [organiser.team_id],
     )
+    .neq("kind", "pod_boost") // pod members' own actions
     .is("done_at", null)
     .is("dismissed_at", null)
     .or(`show_from.is.null,show_from.lte.${new Date().toISOString()}`);
