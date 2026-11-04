@@ -53,6 +53,26 @@ function when(p: EventPhoto) {
 export function CommunityPhotos({ teamId }: { teamId: string }) {
   const [photos, setPhotos] = useState<EventPhoto[] | null>(null);
   const [reload, setReload] = useState(0);
+  // Months folded shut (Kai, 5 Nov 2026), remembered on this device.
+  const foldKey = `wtf-photohub-folded-${teamId}`;
+  const [folded, setFolded] = useState<Set<string>>(() => {
+    try {
+      return new Set(
+        JSON.parse(
+          (typeof window !== "undefined" && localStorage.getItem(foldKey)) ||
+            "[]",
+        ),
+      );
+    } catch {
+      return new Set();
+    }
+  });
+  const saveFolded = (next: Set<string>) => {
+    setFolded(next);
+    try {
+      localStorage.setItem(foldKey, JSON.stringify([...next]));
+    } catch {}
+  };
   const [open, setOpen] = useState<string | null>(null);
   const [year, setYear] = useState("");
   const [month, setMonth] = useState("");
@@ -221,7 +241,11 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
       if (g) g.list.push(p);
       else groups.push({ label, list: [p] });
     }
-  const shown = groups.flatMap((g) => g.list);
+  const shown = groups
+    .filter((g) => !folded.has(g.label))
+    .flatMap((g) => g.list);
+  const allFolded =
+    groups.length > 0 && groups.every((g) => folded.has(g.label));
 
   return (
     <section id="photos" className="mt-6">
@@ -406,68 +430,103 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
               )}
             </div>
           </div>
+          {groups.length > 1 && (
+            <div className="mt-3 text-right">
+              <button
+                type="button"
+                onClick={() =>
+                  saveFolded(
+                    allFolded ? new Set() : new Set(groups.map((g) => g.label)),
+                  )
+                }
+                className="text-xs text-stone-400 hover:text-navy hover:underline"
+              >
+                {allFolded ? "Open all" : "Fold all"}
+              </button>
+            </div>
+          )}
           {groups.map((g) => (
             <div key={g.label} className="mt-4">
               <h3 className="mb-1.5 text-sm font-semibold text-navy">
-                {g.label}{" "}
-                <span className="font-normal text-stone-400">
-                  {g.list.length}
-                </span>
+                <button
+                  type="button"
+                  aria-expanded={!folded.has(g.label)}
+                  onClick={() => {
+                    const n = new Set(folded);
+                    if (n.has(g.label)) n.delete(g.label);
+                    else n.add(g.label);
+                    saveFolded(n);
+                  }}
+                  className="flex items-center gap-1.5 hover:text-pink-strong"
+                >
+                  <span
+                    aria-hidden
+                    className={`inline-block text-xs text-stone-400 transition-transform ${folded.has(g.label) ? "-rotate-90" : ""}`}
+                  >
+                    ▼
+                  </span>
+                  {g.label}
+                  <span className="font-normal text-stone-400">
+                    {g.list.length}
+                  </span>
+                </button>
               </h3>
-              <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                {g.list.map((p) => (
-                  <PhotoTile
-                    key={p.id}
-                    p={p}
-                    teamId={teamId}
-                    open={open === p.id}
-                    onToggle={() => setOpen(open === p.id ? null : p.id)}
-                    onChange={(c) => change(p, c)}
-                    canRemove
-                    kinds={kinds}
-                    events={events}
-                    years={years}
-                    graphic
-                    selected={sel?.has(p.id)}
-                    onModSelect={() => {
-                      anchor.current = p.id;
-                      setOpen(null);
-                      setSel((s) => {
-                        const n = new Set(s ?? []);
-                        if (n.has(p.id)) n.delete(p.id);
-                        else n.add(p.id);
-                        return n;
-                      });
-                    }}
-                    onSelect={
-                      sel
-                        ? () => {
-                            anchor.current = p.id;
-                            setSel((s) => {
-                              const n = new Set(s);
-                              if (n.has(p.id)) n.delete(p.id);
-                              else n.add(p.id);
-                              return n;
-                            });
-                          }
-                        : undefined
-                    }
-                    onShiftSelect={() => {
-                      const from = anchor.current;
-                      anchor.current = p.id;
-                      setOpen(null);
-                      setSel((s) =>
-                        selectRange(
-                          s,
-                          shown.map((x) => x.id),
-                          from,
-                          p.id,
-                        ),
-                      );
-                    }}
-                  />
-                ))}
-              </ul>
+              {!folded.has(g.label) && (
+                <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  {g.list.map((p) => (
+                    <PhotoTile
+                      key={p.id}
+                      p={p}
+                      teamId={teamId}
+                      open={open === p.id}
+                      onToggle={() => setOpen(open === p.id ? null : p.id)}
+                      onChange={(c) => change(p, c)}
+                      canRemove
+                      kinds={kinds}
+                      events={events}
+                      years={years}
+                      graphic
+                      selected={sel?.has(p.id)}
+                      onModSelect={() => {
+                        anchor.current = p.id;
+                        setOpen(null);
+                        setSel((s) => {
+                          const n = new Set(s ?? []);
+                          if (n.has(p.id)) n.delete(p.id);
+                          else n.add(p.id);
+                          return n;
+                        });
+                      }}
+                      onSelect={
+                        sel
+                          ? () => {
+                              anchor.current = p.id;
+                              setSel((s) => {
+                                const n = new Set(s);
+                                if (n.has(p.id)) n.delete(p.id);
+                                else n.add(p.id);
+                                return n;
+                              });
+                            }
+                          : undefined
+                      }
+                      onShiftSelect={() => {
+                        const from = anchor.current;
+                        anchor.current = p.id;
+                        setOpen(null);
+                        setSel((s) =>
+                          selectRange(
+                            s,
+                            shown.map((x) => x.id),
+                            from,
+                            p.id,
+                          ),
+                        );
+                      }}
+                    />
+                  ))}
+                </ul>
+              )}
             </div>
           ))}
         </>

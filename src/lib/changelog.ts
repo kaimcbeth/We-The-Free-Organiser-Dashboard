@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Photo Hub: tap a month's heading to fold it away (and again to open it), or Fold all. Your phone or computer remembers which months you folded.",
+      },
+      {
+        level: "organiser",
         text: "Meet the Members: each question's emoji sits beside it on the slide, and a No logo button for photos that already have the WTF logo.",
       },
     ],
