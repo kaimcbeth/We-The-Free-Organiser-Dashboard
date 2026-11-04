@@ -28,7 +28,7 @@ export const COMING_SOON: { title: string; text: string }[] = [
   },
   {
     title: "More in Resources & Training",
-    text: "Our theory of change, a code of conduct, an incident report form and a fundraising guide.",
+    text: "Our theory of change and a code of conduct.",
   },
   {
     title: "Nearby communities: shared volunteers",
@@ -65,6 +65,10 @@ export const CHANGELOG: Release[] = [
     date: "2026-11-05",
     title: "Birthdays",
     changes: [
+      {
+        level: "organiser",
+        text: "💰 Team fundraising guide in Resources: WTF equipment grants, funding platforms, grant applications and crowdfunding tips.",
+      },
       {
         level: "organiser",
         text: "Birthdays: members can add theirs (day and month) on their profile, and you can add anyone's on their People profile. On the day, your community gets a \"Birthday wished in the WhatsApp chat\" action. Switch it off in Choose actions if you'd rather not.",

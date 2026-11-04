@@ -8,6 +8,7 @@ export type Resource = {
   members?: string; // also on members' Resources tab, under this heading
   area?: string; // e.g. "NSW" when it only applies there
   tip?: string;
+  organisersOnly?: boolean; // not on the Core Team's Resources
 };
 
 // We The Free's incident report form (Google Form).
@@ -37,6 +38,20 @@ export const RESOURCE_SECTIONS: { title: string; items: Resource[] }[] = [
       },
     ],
   },
+  {
+    title: "Fundraising",
+    items: [
+      {
+        title: "Team fundraising guide",
+        emoji: "💰",
+        about:
+          "How your community can raise money: WTF equipment grants, funding platforms, grant applications and crowdfunding tips.",
+        file: "/resources/team-fundraising-guide-2025.pdf",
+        tip: "December 2025 · PDF",
+        organisersOnly: true,
+      },
+    ],
+  },
 ];
 
 // Shown under "Coming soon" on the Resources page.
@@ -60,11 +75,6 @@ export const RESOURCES_COMING_SOON: {
   {
     title: "Code of conduct",
     about: "How we look after each other at events and online.",
-  },
-  {
-    title: "Fundraising guide",
-    about:
-      "Ways your community can raise money for gear, events and the movement.",
   },
   {
     title: "Brief and debrief guides",
