@@ -105,7 +105,7 @@ function drawQuestion(
   let lines: string[] = [];
   for (; size >= 48; size -= 4) {
     ctx.font = `${size}px ${DISPLAY}`;
-    lines = wrap(ctx, q.text, width, 4);
+    lines = wrap(ctx, q.emoji ? `${q.emoji} ${q.text}` : q.text, width, 4);
     if (!lines[lines.length - 1].endsWith("…")) break;
   }
   let y = H - 96;
@@ -169,6 +169,8 @@ export function MeetMembersMaker({
   const [name, setName] = useState("");
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [pos, setPos] = useState<Record<string, Pos>>({});
+  // Photos that already carry the WTF logo: don't add a second one.
+  const [noLogo, setNoLogo] = useState<Record<string, boolean>>({});
   const [reply, setReply] = useState("");
   const [answers, setAnswers] = useState<string[]>([]);
   const [coverCaption, setCoverCaption] = useState("");
@@ -279,7 +281,14 @@ export function MeetMembersMaker({
       const canvas = document.createElement("canvas");
       canvas.width = W;
       canvas.height = H;
-      draw(canvas, i, shown[i], pos[shown[i].id] ?? CENTRE, qs, look);
+      draw(
+        canvas,
+        i,
+        shown[i],
+        pos[shown[i].id] ?? CENTRE,
+        qs,
+        noLogo[shown[i].id] ? { ...look, mark: null } : look,
+      );
       const blob = await new Promise<Blob>((ok, no) =>
         canvas.toBlob(
           (b) => (b ? ok(b) : no(new Error("no image"))),
@@ -528,6 +537,16 @@ export function MeetMembersMaker({
                         >
                           Remove
                         </button>
+                        <button
+                          type="button"
+                          className={quiet}
+                          onClick={() => {
+                            setNoLogo((o) => ({ ...o, [p.id]: !o[p.id] }));
+                            changed();
+                          }}
+                        >
+                          {noLogo[p.id] ? "Add logo" : "No logo"}
+                        </button>
                       </span>
                     )}
                   </div>
@@ -537,7 +556,7 @@ export function MeetMembersMaker({
                       photo={p}
                       pos={pos[p.id] ?? CENTRE}
                       qs={qs}
-                      look={look}
+                      look={noLogo[p.id] ? { ...look, mark: null } : look}
                       ready={fontsOk}
                       onPos={(np) => {
                         setPos((o) => ({ ...o, [p.id]: np }));
