@@ -22,17 +22,25 @@ type Settings = {
 // Kinds of event, worked out from the type and title by `event_kind()`
 // (0172), so potlucks, demos etc. count even though activism.wtf doesn't
 // type them.
+// "Other outreach" and "Everything else" left off (Kai, 4 Nov 2026); those
+// events still come when every button here is on (kinds = null).
 const KINDS = [
-  { key: "movie_challenge", label: "Movie Challenges" },
-  { key: "outreach", label: "Other outreach" },
-  { key: "demonstration", label: "Demonstrations" },
-  { key: "social", label: "Socials" },
-  { key: "potluck", label: "Potlucks & dinners" },
-  { key: "coworking", label: "Co-working" },
-  { key: "workshop", label: "Workshops & training" },
-  { key: "sanctuary", label: "Sanctuary days" },
-  { key: "hike", label: "Hikes" },
-  { key: "other", label: "Everything else" },
+  {
+    key: "movie_challenge",
+    label: "Movie Challenges",
+    on: "bg-pink ring-pink",
+  },
+  { key: "demonstration", label: "Demonstrations", on: "bg-cyan ring-cyan" },
+  { key: "social", label: "Socials", on: "bg-yellow ring-yellow" },
+  { key: "potluck", label: "Potlucks & dinners", on: "bg-pink ring-pink" },
+  { key: "coworking", label: "Co-working", on: "bg-cyan ring-cyan" },
+  {
+    key: "workshop",
+    label: "Workshops & training",
+    on: "bg-yellow ring-yellow",
+  },
+  { key: "sanctuary", label: "Sanctuary days", on: "bg-pink ring-pink" },
+  { key: "hike", label: "Hikes", on: "bg-cyan ring-cyan" },
 ] as const;
 const ALL_KINDS: string[] = KINDS.map((k) => k.key);
 
@@ -95,10 +103,11 @@ const WHICH = [
   { key: "upcoming", label: "All upcoming events" },
 ] as const;
 
-function chip(active: boolean) {
+// Selected buttons get a brand colour (Kai, 4 Nov 2026), navy text.
+function chip(active: boolean, on = "bg-pink ring-pink") {
   return `rounded-full px-3.5 py-1.5 text-sm font-semibold ring-1 transition disabled:opacity-60 ${
     active
-      ? "bg-navy text-white ring-navy"
+      ? `${on} text-navy`
       : "bg-white text-stone-500 ring-stone-300 hover:bg-stone-50"
   }`;
 }
@@ -224,7 +233,7 @@ export function EmailReminders({
                   aria-pressed={kindOn(k.key)}
                   disabled={pending}
                   onClick={() => toggleKind(k.key)}
-                  className={chip(kindOn(k.key))}
+                  className={chip(kindOn(k.key), k.on)}
                 >
                   {k.label}
                 </button>
