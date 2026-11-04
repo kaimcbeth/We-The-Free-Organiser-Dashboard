@@ -169,6 +169,10 @@ export function PrizeGuide({
         </div>
       </div>
 
+      <div className="mt-6">
+        <PrizeUnlockBar banked={banked} people={n} />
+      </div>
+
       <Section
         title="Within the reimbursement"
         count={within.length}
@@ -562,5 +566,129 @@ function Caution({ text }: { text: string }) {
         ),
       )}
     </>
+  );
+}
+
+// Prize unlock bar (Kai, 5 Nov 2026): the community's funding fills the bar,
+// and each premium prize unlocks once the funding covers its extra (over the
+// reimbursement) for the crowd expected at one Movie Challenge.
+export function PrizeUnlockBar({
+  banked,
+  people,
+  link,
+}: {
+  banked: number;
+  people: number;
+  link?: string; // "See the prizes" (Funding page)
+}) {
+  const n = Math.max(1, people || 1);
+  const seen = new Set<string>();
+  const tiers: { key: string; title: string; cost: number; each: number }[] =
+    [];
+  for (const p of [...PRIZES].sort(
+    (a, b) => (perPrize(a) ?? 99) - (perPrize(b) ?? 99),
+  )) {
+    const key = entryKey(p);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const over = overBy(p);
+    if (!over) continue;
+    tiers.push({
+      key,
+      title: p.family ?? p.name.replace(/\s*\(.*\)$/, ""),
+      cost: Math.ceil(over * n),
+      each: perPrize(p)!,
+    });
+  }
+  tiers.sort((a, b) => a.cost - b.cost);
+  if (!tiers.length) return null;
+  const top = tiers[tiers.length - 1].cost;
+  const scale = Math.max(top, 1) * 1.08;
+  const fill = Math.min(1, banked / scale);
+  const next = tiers.find((t) => t.cost > banked);
+  const unlocked = tiers.filter((t) => t.cost <= banked).length;
+
+  return (
+    <div className="rounded-2xl bg-navy p-4 text-white shadow-sm">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="font-semibold">
+          Prize upgrades{" "}
+          <span className="font-normal text-white/60">
+            · {unlocked} of {tiers.length} unlocked
+          </span>
+        </p>
+        <p className="text-sm text-white/70">
+          {aud(banked)} raised · for {n} people
+        </p>
+      </div>
+      <div
+        className="relative mt-4 h-4 rounded-full bg-white/15"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={Math.round(scale)}
+        aria-valuenow={Math.round(banked)}
+        aria-label="Prize upgrades unlocked by your funding"
+      >
+        <div
+          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-pink to-yellow transition-all"
+          style={{ width: `${fill * 100}%` }}
+        />
+        {tiers.map((t) => (
+          <span
+            key={t.key}
+            title={`${t.title}: ${aud(t.cost)}`}
+            className={`absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ${
+              t.cost <= banked ? "bg-white ring-navy" : "bg-navy ring-white/50"
+            }`}
+            style={{ left: `${(t.cost / scale) * 100}%` }}
+          />
+        ))}
+      </div>
+      <p className="mt-3 text-sm text-white/80">
+        {next ? (
+          <>
+            <b className="text-yellow">{aud(next.cost - banked)} more</b>{" "}
+            unlocks <b className="text-white">{next.title}</b>.
+          </>
+        ) : (
+          <>Every upgrade is unlocked. Treat everyone to the good stuff.</>
+        )}
+      </p>
+      <ul className="mt-3 grid gap-1.5 text-sm sm:grid-cols-2">
+        {tiers.map((t) => {
+          const on = t.cost <= banked;
+          return (
+            <li
+              key={t.key}
+              className={`flex items-center justify-between gap-2 rounded-xl px-3 py-1.5 ${
+                on ? "bg-white/10" : "text-white/50"
+              }`}
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <span aria-hidden>{on ? "✓" : "🔒"}</span>
+                <span className="truncate" title={t.title}>
+                  {t.title}
+                </span>
+              </span>
+              <span className="shrink-0 text-xs">
+                {on ? `${cents(t.each)} each` : aud(t.cost)}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="mt-3 text-xs text-white/50">
+        Each upgrade unlocks when your funding covers the extra over the
+        reimbursement for one Movie Challenge.
+        {link && (
+          <>
+            {" "}
+            <a href={link} className="text-white/80 underline">
+              See the prizes
+            </a>
+          </>
+        )}
+      </p>
+    </div>
   );
 }

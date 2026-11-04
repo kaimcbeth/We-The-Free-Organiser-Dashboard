@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Prize upgrades bar on Recommended prizes and Funding: your community's funding fills the bar, and each premium Movie Challenge treat unlocks once it covers the extra for the crowd you expect. Shows what's unlocked and how much more unlocks the next one.",
+      },
+      {
+        level: "organiser",
         text: 'Special events: a new "After-party host asked for" action about 7 weeks before, due 5 weeks before, with ready-made messages asking if someone can offer their place for an after party.',
       },
       {

@@ -8,6 +8,7 @@ import {
   loadOwnedGear,
 } from "@/lib/funding";
 import { GearSuggestions } from "@/components/gear-suggestions";
+import { PrizeUnlockBar } from "@/components/prize-guide";
 
 // Funding: a home for reimbursements, grants and fundraising. For now a mock
 // with example numbers, until funding comes in from the main website.
@@ -96,6 +97,12 @@ export default async function FundingPage() {
           ))}
         </ul>
       </section>
+
+      <PrizeUnlockBar
+        banked={MOCK_BANKED}
+        people={50}
+        link="/resources/prizes"
+      />
 
       <GearSuggestions
         list={gear}
