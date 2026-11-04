@@ -199,7 +199,7 @@ export function EmailReminders({
     <div>
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="font-semibold text-navy">Reminders</p>
+          <p className="font-semibold text-navy">Send me reminders</p>
           <p className="mt-0.5 text-sm text-stone-500">
             {on
               ? "Choose how and what you hear about below."
