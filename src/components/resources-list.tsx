@@ -142,7 +142,7 @@ export function ResourcesList({
       {!core &&
         has(
           q,
-          "feedback form members organisers regional support lead anonymous link share",
+          "feedback form members organisers global support regional support lead anonymous link share",
         ) && <FeedbackCards teamId={teamId} />}
       {sections.map((s) => (
         <section key={s.title} className="mt-3">

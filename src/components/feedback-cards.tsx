@@ -94,7 +94,7 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
             <span aria-hidden className="mr-1.5">
               📢
             </span>
-            Feedback for your Regional Support Lead
+            Feedback for We The Free Global Support
           </span>
           <span className="block text-sm text-stone-600">
             How organising is going, what you need, ideas. With your name or
@@ -107,13 +107,13 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
       </button>
       {open && (
         <Sheet
-          title="Feedback for your Regional Support Lead"
+          title="Feedback for We The Free Global Support"
           onClose={() => setOpen(false)}
         >
           <OpenFeedback
             rpc="send_organiser_feedback"
-            intro="Anything you'd like your Regional Support Lead to know: how organising is going, what would help, ideas, worries. Every message gets read."
-            to="Your Regional Support Lead"
+            intro="Anything you'd like We The Free Global Support to know: how organising is going, what would help, ideas, worries. Every message gets read."
+            to="We The Free Global Support"
           />
         </Sheet>
       )}
