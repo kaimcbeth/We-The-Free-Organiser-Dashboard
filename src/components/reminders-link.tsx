@@ -22,14 +22,14 @@ type Settings = {
 // Kinds of event, worked out from the type and title by `event_kind()`
 // (0172), so potlucks, demos etc. count even though activism.wtf doesn't
 // type them.
-// "Other outreach" and "Everything else" left off (Kai, 4 Nov 2026); those
+// "Other outreach", "Demonstrations" and "Everything else" left off (Kai,
+// 4 Nov 2026); those
 // events still come when every button here is on (kinds = null).
 const KINDS = [
   {
     key: "movie_challenge",
     label: "Movie Challenges",
   },
-  { key: "demonstration", label: "Demonstrations" },
   { key: "social", label: "Socials" },
   { key: "potluck", label: "Potlucks & dinners" },
   { key: "coworking", label: "Co-working" },
@@ -101,8 +101,9 @@ const WHICH = [
   { key: "upcoming", label: "All upcoming events" },
 ] as const;
 
-// Selected buttons get a brand colour (Kai, 4 Nov 2026): yellow for which
-// reminders, cyan for event types; navy text.
+// Selected buttons get a brand colour (Kai, 4 Nov 2026): pink for "Events
+// I'm going to", a glowing gradient for "All upcoming events", cyan for event
+// types; navy text.
 function chip(active: boolean, on = "bg-pink ring-pink") {
   return `rounded-full px-3.5 py-1.5 text-sm font-semibold ring-1 transition disabled:opacity-60 ${
     active
@@ -209,7 +210,13 @@ export function EmailReminders({
                   aria-pressed={p[w.key]}
                   disabled={pending}
                   onClick={() => toggleWhich(w.key)}
-                  className={chip(p[w.key], "bg-yellow ring-yellow")}
+                  className={chip(
+                    p[w.key],
+                    w.key === "going"
+                      ? "bg-pink ring-pink"
+                      : // "All upcoming events" feels special (Kai, 4 Nov 2026).
+                        "reminder-special bg-linear-to-r from-yellow via-pink to-yellow ring-pink shadow-md shadow-pink/50",
+                  )}
                 >
                   {w.label}
                 </button>

@@ -77,3 +77,37 @@ body {
     box-shadow: 0 0 0 12px rgb(220 38 38 / 0);
   }
 }
+
+/* "All upcoming events" in Reminders: a little pop and shine when switched on
+   (Kai, 4 Nov 2026). */
+.reminder-special {
+  background-size: 200% 100%;
+  animation:
+    reminder-pop 450ms cubic-bezier(0.2, 1.6, 0.4, 1),
+    reminder-shine 4s ease-in-out infinite;
+}
+@keyframes reminder-pop {
+  0% {
+    transform: scale(0.92);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes reminder-shine {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reminder-special {
+    animation: none;
+  }
+}
