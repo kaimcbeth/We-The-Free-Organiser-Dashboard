@@ -115,13 +115,7 @@ function drawQuestion(
     ctx.fillText(lines[i], x, y);
     y -= step;
   }
-  // Emoji above it.
-  if (q.emoji) {
-    y -= 6;
-    ctx.font = `84px ${bodyFont()}`;
-    ctx.fillText(q.emoji, x, y);
-    y -= 100;
-  } else y -= 16;
+  y -= 16;
   ctx.shadowBlur = 0;
   // Pink tag: name · n of N.
   const label = `${(look.name.trim().split(/\s+/)[0] || "MEET THE MEMBERS").toUpperCase()}  ·  ${n} / ${look.total}`;
