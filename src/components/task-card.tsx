@@ -11,6 +11,7 @@ import {
 import { formatEventDate } from "@/lib/time";
 import { FeedbackSheet } from "@/components/feedback-sheet";
 import {
+  AfterPartySheet,
   IncidentFormSheet,
   MentalHealthSheet,
 } from "@/components/incident-form-sheet";
@@ -552,6 +553,23 @@ export function TaskCard({
               {task.kind === "com_mental_health" && (
                 <MentalHealthSheet
                   teamId={task.teamId}
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
+              )}
+              {task.kind === "special_afterparty" && task.eventTitle && (
+                <AfterPartySheet
+                  teamId={task.teamId}
+                  event={task.eventTitle}
+                  when={
+                    task.eventAt
+                      ? new Intl.DateTimeFormat("en-AU", {
+                          weekday: "short",
+                          day: "numeric",
+                          month: "short",
+                          timeZone: tz,
+                        }).format(new Date(task.eventAt))
+                      : "the day"
+                  }
                   className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
                 />
               )}

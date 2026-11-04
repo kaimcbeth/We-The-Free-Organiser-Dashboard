@@ -45,6 +45,7 @@ export function ChatMessageSheet({
   presets,
   label = "Write message",
   placeholder,
+  canWrite = true,
 }: {
   teamId: string | null;
   className?: string;
@@ -54,6 +55,7 @@ export function ChatMessageSheet({
   presets: string[];
   label?: string;
   placeholder: string;
+  canWrite?: boolean; // false: ready-made options only (no write-copy purpose)
 }) {
   const [open, setOpen] = useState(false);
   const [options, setOptions] = useState<string[]>(presets);
@@ -122,36 +124,40 @@ export function ChatMessageSheet({
                 <Option key={i} text={t} />
               ))}
             </ul>
-            <label className="block text-sm font-medium text-stone-700">
-              Anything to mention?{" "}
-              <span className="font-normal text-stone-400">(optional)</span>
-              <textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                rows={2}
-                placeholder={placeholder}
-                className="mt-1 w-full rounded-xl bg-white p-2 text-sm font-normal ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
-              />
-            </label>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={write}
-              className="w-full rounded-xl bg-pink px-4 py-2.5 font-semibold text-navy hover:bg-pink-strong disabled:opacity-60"
-            >
-              {busy ? "Writing…" : "Write new options"}
-            </button>
-            {error && <p className="text-sm text-red-700">{error}</p>}
-            <button
-              type="button"
-              onClick={() => setShowVoice(!showVoice)}
-              className="text-xs font-medium text-stone-500 hover:text-stone-800 hover:underline"
-            >
-              {showVoice
-                ? "Hide voice examples ▴"
-                : "Sound more like us: add examples of our voice ▾"}
-            </button>
-            {showVoice && teamId && <VoiceExamples teamId={teamId} />}
+            {canWrite && (
+              <>
+                <label className="block text-sm font-medium text-stone-700">
+                  Anything to mention?{" "}
+                  <span className="font-normal text-stone-400">(optional)</span>
+                  <textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    rows={2}
+                    placeholder={placeholder}
+                    className="mt-1 w-full rounded-xl bg-white p-2 text-sm font-normal ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
+                  />
+                </label>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={write}
+                  className="w-full rounded-xl bg-pink px-4 py-2.5 font-semibold text-navy hover:bg-pink-strong disabled:opacity-60"
+                >
+                  {busy ? "Writing…" : "Write new options"}
+                </button>
+                {error && <p className="text-sm text-red-700">{error}</p>}
+                <button
+                  type="button"
+                  onClick={() => setShowVoice(!showVoice)}
+                  className="text-xs font-medium text-stone-500 hover:text-stone-800 hover:underline"
+                >
+                  {showVoice
+                    ? "Hide voice examples ▴"
+                    : "Sound more like us: add examples of our voice ▾"}
+                </button>
+                {showVoice && teamId && <VoiceExamples teamId={teamId} />}
+              </>
+            )}
           </div>
         </Sheet>
       )}
@@ -183,6 +189,37 @@ export function MentalHealthSheet({
       title="Mental health resources"
       presets={MENTAL_HEALTH_PRESETS}
       placeholder="e.g. mention our next potluck as a chance to connect"
+    />
+  );
+}
+
+// "After-party host asked for" (special events, 0181): ready-made messages
+// asking if someone can offer their place for an after party.
+export function AfterPartySheet({
+  teamId,
+  event,
+  when,
+  className,
+}: {
+  teamId: string;
+  event: string;
+  when: string; // e.g. "Fri 25 Dec"
+  className?: string;
+}) {
+  const name = event.replace(/^WTF[:\s-]*/i, "").trim() || "our special event";
+  return (
+    <ChatMessageSheet
+      teamId={teamId}
+      className={className}
+      purpose="afterparty"
+      title="After-party host"
+      canWrite={false}
+      placeholder=""
+      presets={[
+        `Hey everyone! 🎉 ${name} is coming up on ${when}, and we'd love to keep the good times going afterwards with an after party. Does anyone have a place they'd be happy to host at? Nothing fancy needed, just somewhere to hang out, share some vegan food and celebrate together. Reply here or message one of the organisers 💛`,
+        `Calling all hosts! 🏡 We're looking for someone who'd be up for hosting a relaxed after party following ${name} on ${when}. We'll help with food, setting up and cleaning up. Backyard, balcony or living room, it all works. Let us know if you can!`,
+        `A little ask for ${name} (${when}) 🙌 Would anyone like to open up their place for an after party? Think bring-a-plate and good company. If you can, just reply here and we'll sort the details together.`,
+      ]}
     />
   );
 }
