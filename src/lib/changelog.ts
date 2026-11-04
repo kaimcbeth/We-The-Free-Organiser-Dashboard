@@ -67,7 +67,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "The WhatsApp join page now has two parts: a welcome explaining the smaller chats inside the community (join whichever you like), then the community guidelines.",
+        text: "The WhatsApp join page is now two panels you click through: a welcome showing the smaller chats inside the community (join whichever you like), then the community guidelines.",
       },
       {
         level: "organiser",
