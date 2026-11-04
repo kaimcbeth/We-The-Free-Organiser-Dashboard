@@ -200,11 +200,13 @@ export function AfterPartySheet({
   event,
   when,
   className,
+  label,
 }: {
   teamId: string;
   event: string;
   when: string; // e.g. "Fri 25 Dec"
   className?: string;
+  label?: string;
 }) {
   const name = event.replace(/^WTF[:\s-]*/i, "").trim() || "our special event";
   return (
@@ -213,6 +215,7 @@ export function AfterPartySheet({
       className={className}
       purpose="afterparty"
       title="After-party host"
+      label={label}
       canWrite={false}
       placeholder=""
       presets={[

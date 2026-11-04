@@ -61,6 +61,7 @@ const GRAPHIC_SIZE: Record<string, GraphicSize | undefined> = {
   special_save_date: "post",
   special_announce: "post",
   special_expect: "story",
+  special_afterparty: "story",
   special_countdown: "story",
   special_thanks: "post",
   post_photos: "story",

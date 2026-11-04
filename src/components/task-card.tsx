@@ -53,6 +53,7 @@ const COPY_FOR: Record<string, [CopyPlatform | CopyPlatform[], boolean]> = {
   special_announce: [["instagram", "facebook", "whatsapp"], false],
   special_throwback: [["instagram", "facebook"], false],
   special_helpers: ["whatsapp", false],
+  special_afterparty: [["whatsapp", "story"], false],
   special_spread: ["facebook", false],
   special_expect: [["instagram", "whatsapp"], false],
   special_signup: ["whatsapp", false],
@@ -77,6 +78,8 @@ const SPECIAL_NOTE: Record<string, string> = {
     "The big announcement: what's happening, who it's for, how to come.",
   special_throwback:
     "A throwback to last time (or a similar event) to build excitement, then the date of this one.",
+  special_afterparty:
+    "Asking if someone would like to offer their place for an after party once the event wraps up (relaxed, bring-a-plate, we'll help set up and clean up). Ask people to reply or message an organiser.",
   special_helpers:
     "Asking for helpers on the day: setting up, welcoming people, photos, packing down. Ask people to reply if they can help.",
   special_spread: "Ask everyone to share it and invite a friend or two.",
@@ -558,6 +561,7 @@ export function TaskCard({
               )}
               {task.kind === "special_afterparty" && task.eventTitle && (
                 <AfterPartySheet
+                  label="Ready-made messages"
                   teamId={task.teamId}
                   event={task.eventTitle}
                   when={
@@ -570,7 +574,7 @@ export function TaskCard({
                         }).format(new Date(task.eventAt))
                       : "the day"
                   }
-                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                  className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10"
                 />
               )}
               {task.kind === "com_incident_form" && (

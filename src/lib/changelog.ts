@@ -71,7 +71,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: 'Special events: a new "After-party host asked for" action about 7 weeks before, due 5 weeks before, with ready-made messages asking if someone can offer their place for an after party.',
+        text: 'Special events: a new "After-party host asked for" action about 7 weeks before, due 5 weeks before, asking if someone can offer their place for an after party. It has Write post (WhatsApp and a story, written for you), Get graphic and three ready-made messages.',
       },
       {
         level: "organiser",
