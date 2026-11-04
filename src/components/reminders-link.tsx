@@ -28,7 +28,6 @@ const KINDS = [
   {
     key: "movie_challenge",
     label: "Movie Challenges",
-    on: "bg-pink ring-pink",
   },
   { key: "demonstration", label: "Demonstrations" },
   { key: "social", label: "Socials" },
@@ -37,7 +36,6 @@ const KINDS = [
   {
     key: "workshop",
     label: "Workshops & training",
-    on: "bg-yellow ring-yellow",
   },
   { key: "sanctuary", label: "Sanctuary days" },
   { key: "hike", label: "Hikes" },
