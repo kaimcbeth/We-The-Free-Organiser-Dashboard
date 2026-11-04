@@ -96,6 +96,7 @@ function toRow(t: Raw): TaskRow {
           month_end: "End of each month",
           quarterly: "Every 3 months",
           newcomer: "Each newcomer",
+          birthday: "On their birthday",
         } as Record<string, string>
       )[t.kind?.schedule ?? ""] ?? null,
     eventFacebookUrl: t.event?.facebook_url ?? null,

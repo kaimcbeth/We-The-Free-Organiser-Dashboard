@@ -62,6 +62,20 @@ export const COMING_SOON: { title: string; text: string }[] = [
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-11-05",
+    title: "Birthdays",
+    changes: [
+      {
+        level: "organiser",
+        text: "Birthdays: members can add theirs (day and month) on their profile, and you can add anyone's on their People profile. On the day, your community gets a \"Birthday wished in the WhatsApp chat\" action. Switch it off in Choose actions if you'd rather not.",
+      },
+      {
+        level: "organiser",
+        text: "Meet the Members: each question's emoji sits beside it on the slide, and a No logo button for photos that already have the WTF logo.",
+      },
+    ],
+  },
+  {
     date: "2026-11-04",
     title: "Sydney's history, back to January 2023",
     changes: [

@@ -26,6 +26,7 @@ import { signPhotos } from "@/lib/photos";
 import { RolePicker } from "@/components/role-picker";
 import { PhoneField } from "./phone-field";
 import { BestContact } from "./best-contact";
+import { BirthdayField } from "@/components/birthday-field";
 import { MoveCommunity } from "./move-community";
 import { MessengerButton } from "@/components/messenger-button";
 import { WhatsAppButton } from "@/components/whatsapp-button";
@@ -57,6 +58,8 @@ type Person = {
   found_via: string | null;
   best_contact: string | null;
   contact_handle: string | null;
+  birth_month: number | null;
+  birth_day: number | null;
   found_via_person_id: string | null;
   found_via_note: string | null;
 };
@@ -81,7 +84,7 @@ export default async function PersonPage({
   const { data: person } = await supabase
     .from("people")
     .select(
-      "id, team_id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, new_to_activism, is_buddy, no_messages, started_on, found_via, found_via_person_id, found_via_note, best_contact, contact_handle",
+      "id, team_id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, new_to_activism, is_buddy, no_messages, started_on, found_via, found_via_person_id, found_via_note, best_contact, contact_handle, birth_month, birth_day",
     )
     .eq("id", id)
     .or(
@@ -424,6 +427,11 @@ export default async function PersonPage({
           personId={person.id}
           initial={person.best_contact}
           initialHandle={person.contact_handle}
+        />
+        <BirthdayField
+          personId={person.id}
+          month={person.birth_month}
+          day={person.birth_day}
         />
         <NoMessages personId={person.id} initial={person.no_messages} />
         {lastMessaged && (

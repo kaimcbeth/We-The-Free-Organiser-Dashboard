@@ -7,6 +7,7 @@ import { ProfileForm } from "../profile-form";
 import { PhotoPicker } from "@/components/photo-picker";
 import { OriginEditor } from "@/components/origin-editor";
 import { signPhotos } from "@/lib/photos";
+import { BirthdayField } from "@/components/birthday-field";
 
 type Me = {
   id: string;
@@ -23,6 +24,8 @@ type Me = {
   found_via_note: string | null;
   photo_updated_at: string | null;
   notify_channel: "none" | "email" | "push";
+  birth_month: number | null;
+  birth_day: number | null;
   team: { name: string; timezone: string } | null;
 };
 
@@ -46,7 +49,7 @@ export default async function ProfilePage() {
   const { data: me } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, started_on, found_via, found_via_person_id, found_via_note, photo_updated_at, notify_channel, team:teams!people_team_id_fkey(name, timezone)",
+      "id, first_name, last_name, phone, suburb, email, consent_marketing, starting_outreach_count, started_on, found_via, found_via_person_id, found_via_note, photo_updated_at, notify_channel, birth_month, birth_day, team:teams!people_team_id_fkey(name, timezone)",
     )
     .eq("user_id", user.id)
     .maybeSingle<Me>();
@@ -141,6 +144,15 @@ export default async function ProfilePage() {
           Your details
         </h2>
         <ProfileForm me={me} />
+        <div className="mt-5">
+          <BirthdayField
+            personId={me.id}
+            month={me.birth_month}
+            day={me.birth_day}
+            label="Your birthday"
+            hint="Optional. Day and month only, so we can wish you happy birthday in the WhatsApp chat."
+          />
+        </div>
       </section>
 
       <form action={signOut} className="mt-10 text-center">

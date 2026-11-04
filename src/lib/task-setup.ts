@@ -79,7 +79,7 @@ export async function loadTaskSetup(
           ? "monthly"
           : k.schedule === "quarterly"
             ? "quarterly"
-            : k.schedule === "month_end"
+            : k.schedule === "month_end" || k.schedule === "birthday"
               ? "monthly"
               : k.schedule === "newcomer"
                 ? "newcomer"
@@ -95,7 +95,7 @@ export async function loadTaskSetup(
           ? 0.25
           : k.schedule === "quarterly"
             ? 1 / 13
-            : k.schedule === "month_end"
+            : k.schedule === "month_end" || k.schedule === "birthday"
               ? 0.25
               : k.schedule === "newcomer"
                 ? 0.5
