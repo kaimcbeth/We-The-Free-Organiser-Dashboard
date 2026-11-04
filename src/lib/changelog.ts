@@ -71,7 +71,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Members who haven't joined the WhatsApp community see a green Join WhatsApp button in their top bar. It opens a page with the group's guidelines (based on the WTF Code of Conduct) and an \"I agree, join the group\" button.",
+        text: "Members who haven't joined the WhatsApp community see a green Join WhatsApp button in their top bar. It opens a page with the group's guidelines (based on the WTF Code of Conduct) with a tick box to agree before the Join the group button works.",
       },
       {
         level: "organiser",

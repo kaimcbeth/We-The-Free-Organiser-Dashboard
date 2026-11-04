@@ -85,29 +85,56 @@ export function WhatsAppJoin({
   );
 }
 
-// The guidelines page's button (Kai, 4 Nov 2026): agreeing opens the group
-// and counts as joined, so the top-bar "Join WhatsApp" goes away.
+// The guidelines page's buttons (Kai, 4 Nov 2026): tick "I agree" first,
+// then "Join the group" opens the group and counts as joined, so the
+// top-bar "Join WhatsApp" goes away.
 export function WhatsAppAgree({ url }: { url: string }) {
+  const [agreed, setAgreed] = useState(false);
   const [done, setDone] = useState(false);
   const mark = () =>
     createClient()
       .rpc("mark_whatsapp_joined")
       .then(() => {});
+  const look =
+    "flex w-full items-center justify-center gap-2.5 rounded-2xl px-4 py-3.5 font-semibold shadow-sm";
   return (
     <div className="mt-6">
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={() => {
-          mark();
-          setDone(true);
-        }}
-        className="flex items-center justify-center gap-2.5 rounded-2xl bg-[#25D366] px-4 py-3.5 font-semibold text-navy shadow-sm hover:brightness-95"
-      >
-        <WhatsAppIcon className="h-6 w-6 shrink-0" />I agree, join the group
-        <span aria-hidden>↗</span>
-      </a>
+      <label className="mb-3 flex cursor-pointer items-start gap-3 rounded-2xl bg-white p-4 text-sm text-stone-700 shadow-sm ring-1 ring-black/5">
+        <input
+          type="checkbox"
+          checked={agreed}
+          onChange={(e) => setAgreed(e.target.checked)}
+          className="mt-0.5 h-5 w-5 shrink-0 accent-[#25D366]"
+        />
+        <span>
+          I&apos;ve read the community guidelines and agree to follow them.
+        </span>
+      </label>
+      {agreed ? (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => {
+            mark();
+            setDone(true);
+          }}
+          className={`${look} bg-[#25D366] text-navy hover:brightness-95`}
+        >
+          <WhatsAppIcon className="h-6 w-6 shrink-0" />
+          Join the group
+          <span aria-hidden>↗</span>
+        </a>
+      ) : (
+        <button
+          type="button"
+          disabled
+          className={`${look} cursor-not-allowed bg-stone-200 text-stone-400 shadow-none`}
+        >
+          <WhatsAppIcon className="h-6 w-6 shrink-0" />
+          Join the group
+        </button>
+      )}
       {done ? (
         <p className="mt-2 text-center text-sm text-stone-500">
           Welcome! See you in the chat.
