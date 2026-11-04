@@ -4,7 +4,12 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Sheet } from "@/components/sheet";
-import { MONTHS, shortDate, type SpecialEvent } from "@/lib/special-events";
+import {
+  EASTER_DAYS,
+  MONTHS,
+  shortDate,
+  type SpecialEvent,
+} from "@/lib/special-events";
 
 const LEADS = [
   { days: 14, label: "2 weeks" },
@@ -62,11 +67,13 @@ export function SpecialEventsEditor({
                 {e.name}
               </p>
               <p className="text-sm text-stone-500">
-                {e.month && e.day
-                  ? `${e.day} ${MONTHS[e.month - 1]} every year`
-                  : e.next_date
-                    ? shortDate(e.next_date)
-                    : "No date set"}{" "}
+                {e.easter_offset != null
+                  ? `${EASTER_DAYS.find((d) => d.offset === e.easter_offset)?.label ?? "Around Easter"} every year (${e.on_date ? shortDate(e.on_date) : "date moves"})`
+                  : e.month && e.day
+                    ? `${e.day} ${MONTHS[e.month - 1]} every year`
+                    : e.next_date
+                      ? shortDate(e.next_date)
+                      : "No date set"}{" "}
                 · suggested {leadLabel(e.lead_days)} before ·{" "}
                 {regionName(e.region_ids)}
               </p>
@@ -141,7 +148,12 @@ function EditSheet({
   const [emoji, setEmoji] = useState(e?.emoji ?? "");
   const [blurb, setBlurb] = useState(e?.blurb ?? "");
   const [link, setLink] = useState(e?.link ?? "");
-  const [yearly, setYearly] = useState(e ? !!e.month : true);
+  // "fixed" = same date every year, "once" = set each year, "easter" = moves with Easter.
+  const [mode, setMode] = useState<"fixed" | "once" | "easter">(
+    e?.easter_offset != null ? "easter" : e && !e.month ? "once" : "fixed",
+  );
+  const yearly = mode === "fixed";
+  const [easter, setEaster] = useState(e?.easter_offset ?? -1);
   const [month, setMonth] = useState(e?.month ?? 1);
   const [day, setDay] = useState(e?.day ?? 1);
   const [date, setDate] = useState(e?.next_date ?? "");
@@ -153,7 +165,7 @@ function EditSheet({
   const save = () => {
     setError("");
     if (!name.trim()) return setError("Give it a name.");
-    if (!yearly && !date) return setError("Pick the date.");
+    if (mode === "once" && !date) return setError("Pick the date.");
     if (where && where.length === 0)
       return setError("Pick at least one region, or Worldwide.");
     const row = {
@@ -163,7 +175,8 @@ function EditSheet({
       link: link.trim() || null,
       month: yearly ? month : null,
       day: yearly ? day : null,
-      next_date: yearly ? null : date,
+      next_date: mode === "once" ? date : null,
+      easter_offset: mode === "easter" ? easter : null,
       lead_days: lead,
       region_ids: where,
     };
@@ -217,22 +230,37 @@ function EditSheet({
         </div>
         <div className="text-sm">
           <span className="font-medium">Date</span>
-          <div className="mt-1 flex gap-4">
-            {[
-              { v: true, label: "Same date every year" },
-              { v: false, label: "Set each year" },
-            ].map((o) => (
+          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+            {(
+              [
+                { v: "fixed", label: "Same date every year" },
+                { v: "easter", label: "Moves with Easter" },
+                { v: "once", label: "Set each year" },
+              ] as const
+            ).map((o) => (
               <label key={o.label} className="flex items-center gap-1.5">
                 <input
                   type="radio"
-                  checked={yearly === o.v}
-                  onChange={() => setYearly(o.v)}
+                  checked={mode === o.v}
+                  onChange={() => setMode(o.v)}
                 />
                 {o.label}
               </label>
             ))}
           </div>
-          {yearly ? (
+          {mode === "easter" ? (
+            <select
+              value={easter}
+              onChange={(v) => setEaster(Number(v.target.value))}
+              className={`mt-2 ${input}`}
+            >
+              {EASTER_DAYS.map((d) => (
+                <option key={d.offset} value={d.offset}>
+                  {d.label}
+                </option>
+              ))}
+            </select>
+          ) : yearly ? (
             <div className="mt-2 flex gap-2">
               <select
                 value={day}

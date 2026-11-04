@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "🐣 New suggested special event: Easter Movie Challenge, on Easter Saturday (27 March 2027), suggested 2 months before. Special events can now move with Easter, so it lands on the right weekend every year.",
+      },
+      {
+        level: "organiser",
         text: "🌭 Sizzle for Change on Recommended prizes: Vegan Australia pays for the vegan sausages at a sausage sizzle (up to A$500 an event, once a year), with the steps and the application form.",
       },
       {

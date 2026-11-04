@@ -2,11 +2,16 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
 import { todayInTz } from "@/lib/time";
-import type { SpecialEvent } from "@/lib/special-events";
+import { easterDate, type SpecialEvent } from "@/lib/special-events";
 import { SpecialEventsEditor } from "./special-events-editor";
 
 // Next date an event falls on (yyyy-mm-dd), on or after today.
 function nextDate(e: SpecialEvent, today: string): string | null {
+  if (e.easter_offset != null) {
+    const y = Number(today.slice(0, 4));
+    const d = easterDate(y, e.easter_offset);
+    return d >= today ? d : easterDate(y + 1, e.easter_offset);
+  }
   if (e.month && e.day) {
     const y = Number(today.slice(0, 4));
     const fmt = (yr: number) =>
@@ -26,7 +31,7 @@ export default async function SpecialEventsPage() {
     supabase
       .from("special_events")
       .select(
-        "id, name, emoji, blurb, link, month, day, next_date, lead_days, region_ids",
+        "id, name, emoji, blurb, link, month, day, next_date, easter_offset, lead_days, region_ids",
       )
       .order("month", { nullsFirst: false })
       .order("day")
