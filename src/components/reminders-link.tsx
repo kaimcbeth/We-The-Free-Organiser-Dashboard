@@ -30,17 +30,17 @@ const KINDS = [
     label: "Movie Challenges",
     on: "bg-pink ring-pink",
   },
-  { key: "demonstration", label: "Demonstrations", on: "bg-cyan ring-cyan" },
-  { key: "social", label: "Socials", on: "bg-yellow ring-yellow" },
-  { key: "potluck", label: "Potlucks & dinners", on: "bg-pink ring-pink" },
-  { key: "coworking", label: "Co-working", on: "bg-cyan ring-cyan" },
+  { key: "demonstration", label: "Demonstrations" },
+  { key: "social", label: "Socials" },
+  { key: "potluck", label: "Potlucks & dinners" },
+  { key: "coworking", label: "Co-working" },
   {
     key: "workshop",
     label: "Workshops & training",
     on: "bg-yellow ring-yellow",
   },
-  { key: "sanctuary", label: "Sanctuary days", on: "bg-pink ring-pink" },
-  { key: "hike", label: "Hikes", on: "bg-cyan ring-cyan" },
+  { key: "sanctuary", label: "Sanctuary days" },
+  { key: "hike", label: "Hikes" },
 ] as const;
 const ALL_KINDS: string[] = KINDS.map((k) => k.key);
 
@@ -103,7 +103,8 @@ const WHICH = [
   { key: "upcoming", label: "All upcoming events" },
 ] as const;
 
-// Selected buttons get a brand colour (Kai, 4 Nov 2026), navy text.
+// Selected buttons get a brand colour (Kai, 4 Nov 2026): yellow for which
+// reminders, cyan for event types; navy text.
 function chip(active: boolean, on = "bg-pink ring-pink") {
   return `rounded-full px-3.5 py-1.5 text-sm font-semibold ring-1 transition disabled:opacity-60 ${
     active
@@ -210,7 +211,7 @@ export function EmailReminders({
                   aria-pressed={p[w.key]}
                   disabled={pending}
                   onClick={() => toggleWhich(w.key)}
-                  className={chip(p[w.key])}
+                  className={chip(p[w.key], "bg-yellow ring-yellow")}
                 >
                   {w.label}
                 </button>
@@ -233,7 +234,7 @@ export function EmailReminders({
                   aria-pressed={kindOn(k.key)}
                   disabled={pending}
                   onClick={() => toggleKind(k.key)}
-                  className={chip(kindOn(k.key), k.on)}
+                  className={chip(kindOn(k.key), "bg-cyan ring-cyan")}
                 >
                   {k.label}
                 </button>
