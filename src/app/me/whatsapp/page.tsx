@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { VIEW_AS_COOKIE } from "@/lib/organiser";
 import { WhatsAppGuidelines } from "./guidelines";
 
 // Join the WhatsApp community (Kai, 4 Nov 2026): opened from "Join WhatsApp"
@@ -23,5 +25,10 @@ export default async function JoinWhatsAppPage() {
   );
   const url = me?.team?.whatsapp_url ?? null;
 
-  return <WhatsAppGuidelines community={community} url={url} />;
+  // God Mode "View as New member": show it as new, save nothing.
+  const preview = (await cookies()).get(VIEW_AS_COOKIE)?.value === "new_member";
+
+  return (
+    <WhatsAppGuidelines community={community} url={url} preview={preview} />
+  );
 }

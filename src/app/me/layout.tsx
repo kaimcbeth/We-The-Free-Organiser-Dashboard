@@ -88,16 +88,17 @@ export default async function MemberLayout({
           <div className="flex min-w-0 items-center gap-1">
             {/* Kai, 4 Nov 2026: until they've joined, the WhatsApp community
                 sits in the top bar (→ guidelines + join page). */}
-            {me?.team?.whatsapp_url && !me.whatsapp_joined_at && (
-              <Link
-                href="/me/whatsapp"
-                className="flex shrink-0 items-center gap-1.5 rounded-full bg-[#25D366] px-2.5 py-1.5 text-xs font-semibold text-navy hover:brightness-95 sm:text-sm"
-              >
-                <WhatsAppIcon className="h-4 w-4" />
-                <span className="sm:hidden">Join</span>
-                <span className="hidden sm:inline">Join WhatsApp</span>
-              </Link>
-            )}
+            {me?.team?.whatsapp_url &&
+              (!me.whatsapp_joined_at || viewAs === "new_member") && (
+                <Link
+                  href="/me/whatsapp"
+                  className="flex shrink-0 items-center gap-1.5 rounded-full bg-[#25D366] px-2.5 py-1.5 text-xs font-semibold text-navy hover:brightness-95 sm:text-sm"
+                >
+                  <WhatsAppIcon className="h-4 w-4" />
+                  <span className="sm:hidden">Join</span>
+                  <span className="hidden sm:inline">Join WhatsApp</span>
+                </Link>
+              )}
             {staffLink && (
               <Link
                 href="/"

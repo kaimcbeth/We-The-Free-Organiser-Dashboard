@@ -88,13 +88,21 @@ export function WhatsAppJoin({
 // The guidelines page's buttons (Kai, 4 Nov 2026): tick "I agree" first,
 // then "Join the group" opens the group and counts as joined, so the
 // top-bar "Join WhatsApp" goes away.
-export function WhatsAppAgree({ url }: { url: string }) {
+export function WhatsAppAgree({
+  url,
+  preview = false,
+}: {
+  url: string;
+  preview?: boolean; // God Mode preview: don't mark joined
+}) {
   const [agreed, setAgreed] = useState(false);
   const [done, setDone] = useState(false);
-  const mark = () =>
+  const mark = () => {
+    if (preview) return;
     createClient()
       .rpc("mark_whatsapp_joined")
       .then(() => {});
+  };
   const look =
     "flex w-full items-center justify-center gap-2.5 rounded-2xl px-4 py-3.5 font-semibold shadow-sm";
   return (

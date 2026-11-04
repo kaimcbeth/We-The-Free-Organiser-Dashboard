@@ -41,9 +41,11 @@ const RULES: { title: string; text: string }[] = [
 export function WhatsAppGuidelines({
   community,
   url,
+  preview = false,
 }: {
   community: string;
   url: string | null;
+  preview?: boolean;
 }) {
   return (
     <>
@@ -79,7 +81,7 @@ export function WhatsAppGuidelines({
       </section>
 
       {url ? (
-        <WhatsAppAgree url={url} />
+        <WhatsAppAgree url={url} preview={preview} />
       ) : (
         <p className="mt-6 rounded-2xl border border-dashed border-stone-300 px-4 py-5 text-center text-sm text-stone-500">
           Your community hasn&apos;t added its WhatsApp link yet. Ask an
