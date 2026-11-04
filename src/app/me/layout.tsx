@@ -9,6 +9,7 @@ import { Avatar } from "@/components/avatar";
 import { signPhotos } from "@/lib/photos";
 import { STAGE, STAGE_TAG, VERSION, BUILD } from "@/lib/changelog";
 import { MemberNav } from "./member-nav";
+import { WhatsAppIcon } from "@/components/whatsapp";
 
 // The member side of the Hub: the same top bar as the organiser Hub, with
 // member tabs (Events, Outreach, Photo Hub, How you can help, Resources, Feedback).
@@ -27,7 +28,7 @@ export default async function MemberLayout({
     supabase
       .from("people")
       .select(
-        "id, first_name, last_name, photo_updated_at, team:teams!people_team_id_fkey(name)",
+        "id, first_name, last_name, photo_updated_at, whatsapp_joined_at, team:teams!people_team_id_fkey(name, whatsapp_url)",
       )
       .eq("user_id", user.id)
       .maybeSingle<{
@@ -35,7 +36,8 @@ export default async function MemberLayout({
         first_name: string;
         last_name: string | null;
         photo_updated_at: string | null;
-        team: { name: string } | null;
+        whatsapp_joined_at: string | null;
+        team: { name: string; whatsapp_url: string | null } | null;
       }>(),
     supabase
       .from("organisers")
@@ -84,6 +86,18 @@ export default async function MemberLayout({
             </span>
           </Link>
           <div className="flex min-w-0 items-center gap-1">
+            {/* Kai, 4 Nov 2026: until they've joined, the WhatsApp community
+                sits in the top bar (→ guidelines + join page). */}
+            {me?.team?.whatsapp_url && !me.whatsapp_joined_at && (
+              <Link
+                href="/me/whatsapp"
+                className="flex shrink-0 items-center gap-1.5 rounded-full bg-[#25D366] px-2.5 py-1.5 text-xs font-semibold text-navy hover:brightness-95 sm:text-sm"
+              >
+                <WhatsAppIcon className="h-4 w-4" />
+                <span className="sm:hidden">Join</span>
+                <span className="hidden sm:inline">Join WhatsApp</span>
+              </Link>
+            )}
             {staffLink && (
               <Link
                 href="/"

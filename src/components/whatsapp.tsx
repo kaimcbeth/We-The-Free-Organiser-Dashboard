@@ -6,7 +6,11 @@ import { ShareLink } from "@/components/share-link";
 import { inputClass } from "@/components/form";
 import { createClient } from "@/lib/supabase/client";
 
-function WhatsAppIcon({ className = "h-5 w-5" }: { className?: string }) {
+export function WhatsAppIcon({
+  className = "h-5 w-5",
+}: {
+  className?: string;
+}) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -25,9 +29,13 @@ function WhatsAppIcon({ className = "h-5 w-5" }: { className?: string }) {
 export function WhatsAppJoin({
   url,
   hideOnceJoined = false,
+  guidelines = false,
 }: {
   url: string;
   hideOnceJoined?: boolean;
+  // Go to the guidelines + join page (/me/whatsapp) instead of straight to
+  // WhatsApp; joining is counted there.
+  guidelines?: boolean;
 }) {
   const [hidden, setHidden] = useState(false);
   const joined = () => {
@@ -39,10 +47,11 @@ export function WhatsAppJoin({
   if (hidden) return null;
   const card = (
     <a
-      href={url}
-      target="_blank"
+      href={guidelines ? "/me/whatsapp" : url}
+      target={guidelines ? undefined : "_blank"}
       rel="noopener noreferrer"
       onClick={() => {
+        if (guidelines) return;
         joined();
         // Leave it on screen while they're off in WhatsApp; gone next visit.
       }}
@@ -55,7 +64,7 @@ export function WhatsAppJoin({
           Event updates and chat with the community
         </span>
       </span>
-      <span aria-hidden>↗</span>
+      <span aria-hidden>{guidelines ? "→" : "↗"}</span>
     </a>
   );
   if (!hideOnceJoined) return card;
@@ -72,6 +81,49 @@ export function WhatsAppJoin({
       >
         Already joined? Hide this
       </button>
+    </div>
+  );
+}
+
+// The guidelines page's button (Kai, 4 Nov 2026): agreeing opens the group
+// and counts as joined, so the top-bar "Join WhatsApp" goes away.
+export function WhatsAppAgree({ url }: { url: string }) {
+  const [done, setDone] = useState(false);
+  const mark = () =>
+    createClient()
+      .rpc("mark_whatsapp_joined")
+      .then(() => {});
+  return (
+    <div className="mt-6">
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={() => {
+          mark();
+          setDone(true);
+        }}
+        className="flex items-center justify-center gap-2.5 rounded-2xl bg-[#25D366] px-4 py-3.5 font-semibold text-navy shadow-sm hover:brightness-95"
+      >
+        <WhatsAppIcon className="h-6 w-6 shrink-0" />I agree, join the group
+        <span aria-hidden>↗</span>
+      </a>
+      {done ? (
+        <p className="mt-2 text-center text-sm text-stone-500">
+          Welcome! See you in the chat.
+        </p>
+      ) : (
+        <button
+          type="button"
+          onClick={() => {
+            mark();
+            setDone(true);
+          }}
+          className="mx-auto mt-2 block text-xs text-stone-400 hover:text-navy hover:underline"
+        >
+          Already in the group? Hide the button
+        </button>
+      )}
     </div>
   );
 }

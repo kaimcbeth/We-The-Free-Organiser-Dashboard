@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Members who haven't joined the WhatsApp community see a green Join WhatsApp button in their top bar. It opens a page with the group's guidelines (based on the WTF Code of Conduct) and an \"I agree, join the group\" button.",
+      },
+      {
+        level: "organiser",
         text: "Reminders can now come by text message. In Reminders, switch them on and choose Email or Text message under Send by. Texts go to the mobile on your profile.",
       },
       {

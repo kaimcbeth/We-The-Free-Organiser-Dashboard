@@ -136,7 +136,7 @@ export default async function MePage() {
 
       {me.team?.whatsapp_url && !me.whatsapp_joined_at && (
         <div className="mb-6">
-          <WhatsAppJoin url={me.team.whatsapp_url} hideOnceJoined />
+          <WhatsAppJoin url={me.team.whatsapp_url} hideOnceJoined guidelines />
         </div>
       )}
 

@@ -74,8 +74,10 @@ export function MemberTutorial({
             title: "Join the community",
             body: "Most of the chat happens in our WhatsApp community: event updates, discussions about animal rights and activism, and getting to know everyone.",
             extra: (
+              // The guidelines page first (Kai, 4 Nov 2026), in a new tab so
+              // the introduction stays open.
               <a
-                href={whatsappUrl}
+                href="/me/whatsapp"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 inline-block rounded-xl bg-[#25D366] px-4 py-2.5 font-semibold text-navy"
