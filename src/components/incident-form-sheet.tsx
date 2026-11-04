@@ -158,3 +158,31 @@ export function ChatMessageSheet({
     </>
   );
 }
+
+const MENTAL_HEALTH_URL = "https://activism.wtf/mental-health";
+const MENTAL_HEALTH_PRESETS = [
+  `Hey everyone 💛 Caring about animals can weigh on you, and burnout and compassion fatigue are really common in our movement. We The Free has put together a mental health kit for activists: a free 24/7 support line run by counsellors who are animal advocates themselves, a free burnout course (code WTF), support groups and more:\n${MENTAL_HEALTH_URL}\n\nAnd you can always reach out to any of us.`,
+  `A gentle reminder to look after yourselves 🌱 If activism is feeling heavy lately, there are free resources made for people like us, from a 24/7 activist support line to meditation apps and a course on avoiding burnout:\n${MENTAL_HEALTH_URL}`,
+  `Quick check-in: how's everyone going? Sustainable activism means looking after your own wellbeing too. Here's We The Free's mental health first aid kit for activists, with support lines, support groups, therapists who get it, and more:\n${MENTAL_HEALTH_URL}\n\nIf you're in crisis, please contact your local emergency services or a crisis line.`,
+];
+
+// "Mental health resources shared" (quarterly): a caring message with the
+// activism.wtf/mental-health link for the community chat.
+export function MentalHealthSheet({
+  teamId,
+  className,
+}: {
+  teamId: string;
+  className?: string;
+}) {
+  return (
+    <ChatMessageSheet
+      teamId={teamId}
+      className={className}
+      purpose="mental_health"
+      title="Mental health resources"
+      presets={MENTAL_HEALTH_PRESETS}
+      placeholder="e.g. mention our next potluck as a chance to connect"
+    />
+  );
+}

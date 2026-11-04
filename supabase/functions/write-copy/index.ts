@@ -2,7 +2,8 @@
 // community's own voice (voice_examples) when it has some. Never posts
 // anything: it only returns text for a person to pick, edit and copy.
 // Also writes the quarterly volunteer feedback message ({ purpose: "feedback" }),
-// the incident report form reminder ({ purpose: "incident" }) and posts for
+// the incident report form reminder ({ purpose: "incident" }), the mental health
+// resources reminder ({ purpose: "mental_health" }) and posts for
 // group chat discussion questions ({ purpose: "prompt", question }).
 //
 // Needs the Edge Function secret ANTHROPIC_API_KEY (optional ANTHROPIC_MODEL).
@@ -16,6 +17,7 @@ const cors = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
+const MENTAL_HEALTH = "https://activism.wtf/mental-health";
 const INCIDENT_FORM =
   "https://docs.google.com/forms/d/e/1FAIpQLSeTH5tQQFNhgtFqllx_uMjCaO7JhGKwKjXQiiNvnF8RfXExQw/viewform";
 const DAILY_LIMIT = 40; // generations per community per day
@@ -55,6 +57,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     if (body?.purpose === "feedback") return await feedbackCopy(asUser, user.id, key, body);
     if (body?.purpose === "incident") return await feedbackCopy(asUser, user.id, key, body, "incident");
+    if (body?.purpose === "mental_health") return await feedbackCopy(asUser, user.id, key, body, "mental_health");
     if (body?.purpose === "prompt") return await feedbackCopy(asUser, user.id, key, body, "prompt");
     if (body?.purpose === "carousel") return await carouselCopy(asUser, user.id, key, body);
     const { eventId, platforms, note } = body;
@@ -222,12 +225,13 @@ Reply with JSON only, no other text, shaped like {${wanted.map((p) => `"${p}": [
 // that the incident report form exists, link fixed to WTF's form) and
 // "prompt" (a post for a group chat discussion question, no link).
 // deno-lint-ignore no-explicit-any
-async function feedbackCopy(asUser: any, userId: string, key: string, body: any, mode: "feedback" | "incident" | "prompt" = "feedback") {
+async function feedbackCopy(asUser: any, userId: string, key: string, body: any, mode: "feedback" | "incident" | "prompt" | "mental_health" = "feedback") {
   const { teamId, note } = body ?? {};
   const incident = mode === "incident";
   const question = mode === "prompt" ? String(body?.question ?? "").trim().slice(0, 300) : "";
   if (mode === "prompt" && !question) return json({ error: "Missing the question." }, 400);
-  const link = incident ? INCIDENT_FORM : mode === "prompt" ? "" : body?.link;
+  const mental = mode === "mental_health";
+  const link = incident ? INCIDENT_FORM : mental ? MENTAL_HEALTH : mode === "prompt" ? "" : body?.link;
   if (!teamId || typeof link !== "string" || (mode === "feedback" && !link.includes("/feedback/")))
     return json({ error: "Missing the form link." }, 400);
   const url = Deno.env.get("SUPABASE_URL")!;
@@ -255,6 +259,8 @@ async function feedbackCopy(asUser: any, userId: string, key: string, body: any,
   const community = String(team.name).replace(/, (Australia|New Zealand)$/, "");
   const ask = question
     ? `Write a WhatsApp message to the We The Free ${community} volunteer group chat posting this discussion question to get people chatting between events: "${question}". Keep the question itself clear (you can phrase it naturally), invite everyone to share, and keep it light and welcoming so newer people feel they can answer too.`
+    : mental
+    ? `Write a WhatsApp message to the We The Free ${community} volunteer group chat gently sharing We The Free's mental health resources for activists. Warm and caring, not preachy or alarming: burnout, grief and compassion fatigue are common for people who care about animals, and it's okay to look after yourself. Mention one or two of what's there: a free 24/7 support line run by counsellors who are animal advocates themselves, a free online course on sustainable advocacy and avoiding burnout (code WTF), support groups, therapists who understand animal advocacy, and meditation apps. Invite people to reach out to an organiser or each other too. Include this exact link on its own line: ${link}`
     : incident
     ? `Write a WhatsApp message to the We The Free ${community} volunteer group chat letting everyone know about our incident report form. It's a calm, low-key heads-up (nothing has happened): if anything ever goes wrong at an event, like harassment, someone getting hurt, or trouble with the public or police, they can report it with this form so it gets followed up properly. Make clear it's there to look after everyone and they can also talk to an organiser. Include this exact link on its own line: ${link}`
     : null;

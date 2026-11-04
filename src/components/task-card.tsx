@@ -10,7 +10,10 @@ import {
 } from "@/app/actions";
 import { formatEventDate } from "@/lib/time";
 import { FeedbackSheet } from "@/components/feedback-sheet";
-import { IncidentFormSheet } from "@/components/incident-form-sheet";
+import {
+  IncidentFormSheet,
+  MentalHealthSheet,
+} from "@/components/incident-form-sheet";
 import { ThrowbackSheet } from "@/components/throwback-sheet";
 import { Sheet } from "@/components/sheet";
 import { Avatar } from "@/components/avatar";
@@ -453,6 +456,12 @@ export function TaskCard({
               )}
               {task.kind === "promo_throwback" && (
                 <ThrowbackSheet
+                  teamId={task.teamId}
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
+              )}
+              {task.kind === "com_mental_health" && (
+                <MentalHealthSheet
                   teamId={task.teamId}
                   className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
                 />

@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "New action every 3 months: share We The Free's mental health resources (activism.wtf/mental-health) in the WhatsApp chat, with ready-made caring messages to copy.",
+      },
+      {
+        level: "organiser",
         text: "QR code for uploads: in the Photo Hub (or on an event page), make a QR code that lets anyone add their photos without logging in, for 2 hours up to a week. Stop it any time.",
       },
       {
