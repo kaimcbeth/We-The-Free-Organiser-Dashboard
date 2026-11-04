@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "QR code for uploads: in the Photo Hub (or on an event page), make a QR code that lets anyone add their photos without logging in, for 2 hours up to a week. Stop it any time.",
+      },
+      {
+        level: "organiser",
         text: "After uploading to the Photo Hub, a prompt offers to add details to just the new photos: event, date, type, tags and favourites, all at once. The select bar can now set a year and month too.",
       },
       {

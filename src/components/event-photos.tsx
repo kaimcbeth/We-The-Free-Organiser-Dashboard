@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import type { EventPhoto } from "@/lib/event-photos";
 import { PhotoUploader } from "@/components/photo-uploader";
+import { PhotoDropButton } from "@/components/photo-drop-button";
 import {
   BulkBar,
   selectRange,
@@ -63,6 +64,11 @@ export function EventPhotos({
             eventId={eventId}
             droppable
             dropLabel="Drop photos to add them to this event"
+          />
+          <PhotoDropButton
+            teamId={teamId}
+            eventId={eventId}
+            eventLabel="this event"
           />
         </span>
       </div>

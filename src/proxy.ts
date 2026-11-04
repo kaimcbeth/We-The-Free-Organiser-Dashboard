@@ -9,6 +9,7 @@ const PUBLIC_PATHS = [
   "/join",
   "/invite",
   "/checkin",
+  "/drop", // temporary photo upload links (Photo Hub QR code)
   "/feedback", // volunteer feedback form (secret link per community)
   "/tell", // members' open feedback for their organisers (same secret link)
   "/calendar", // calendar feeds (secret link per community; apps can't log in)

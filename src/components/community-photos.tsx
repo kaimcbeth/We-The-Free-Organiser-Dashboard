@@ -10,6 +10,7 @@ import {
   type PhotoTag,
 } from "@/lib/event-photos";
 import { PhotoUploader } from "@/components/photo-uploader";
+import { PhotoDropButton } from "@/components/photo-drop-button";
 import { duplicateSets, hashUrl, loadHashes } from "@/lib/photo-hash";
 import { Sheet } from "@/components/sheet";
 import { loadEventKinds } from "@/lib/event-kinds";
@@ -353,7 +354,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
             );
           })}
         </div>
-        <div className="mt-2">
+        <div className="mt-2 flex flex-wrap items-center gap-2">
           <PhotoUploader
             teamId={teamId}
             eventId={uploadEvent || null}
@@ -379,6 +380,11 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
               setFresh(ids);
               setOnlyFresh(false);
             }}
+          />
+          <PhotoDropButton
+            teamId={teamId}
+            eventId={uploadEvent || null}
+            eventLabel={events.find((e) => e.id === uploadEvent)?.label}
           />
         </div>
       </div>
