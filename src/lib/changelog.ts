@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "🌭 Sizzle for Change on Recommended prizes: Vegan Australia pays for the vegan sausages at a sausage sizzle (up to A$500 an event, once a year), with the steps and the application form.",
+      },
+      {
+        level: "organiser",
         text: "Prize upgrades bar on Recommended prizes and Funding: your community's funding fills the bar, and each premium Movie Challenge treat unlocks once it covers the extra for the crowd you expect. Shows what's unlocked and how much more unlocks the next one.",
       },
       {

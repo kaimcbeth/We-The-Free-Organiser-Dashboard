@@ -173,6 +173,8 @@ export function PrizeGuide({
         <PrizeUnlockBar banked={banked} people={n} />
       </div>
 
+      <SizzleForChange />
+
       <Section
         title="Within the reimbursement"
         count={within.length}
@@ -689,6 +691,62 @@ export function PrizeUnlockBar({
           </>
         )}
       </p>
+    </div>
+  );
+}
+
+// Vegan Australia's Sizzle for Change grant (Kai, 5 Nov 2026): covers vegan
+// sausages for a sausage sizzle, up to A$500 an event, once a year per group.
+// Details from veganaustralia.org.au/sizzle-for-change (checked 5 Nov 2026).
+export function SizzleForChange() {
+  return (
+    <div className="mt-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="font-semibold text-navy">
+          <span aria-hidden className="mr-1.5">
+            🌭
+          </span>
+          Sizzle for Change
+        </p>
+        <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
+          Vegan Australia grant
+        </span>
+      </div>
+      <p className="mt-1 text-sm text-stone-600">
+        Vegan Australia pays for the vegan sausages at a sausage sizzle, up to{" "}
+        <b className="text-navy">A$500 an event</b>. Great alongside a Movie
+        Challenge: free or by-donation snags for people who watch.
+      </p>
+      <ul className="mt-2 list-disc space-y-0.5 pl-5 text-sm text-stone-600">
+        <li>Apply first, then buy the sausages once you&apos;re approved.</li>
+        <li>Keep the receipts and send them in to be paid back.</li>
+        <li>
+          Sausages only (not bread, sauce or other supplies), and one grant a
+          year per group.
+        </li>
+        <li>
+          Vegan sausages are at Woolworths, Coles and most IGAs. Check
+          they&apos;re vegan with the Fussy Vegan Pro app.
+        </li>
+      </ul>
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <a
+          href="https://www.cognitoforms.com/VeganAustralia/VeganAustraliaSizzleForChangeGrantApplicationForm"
+          target="_blank"
+          rel="noreferrer"
+          className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+        >
+          Apply ↗
+        </a>
+        <a
+          href="https://veganaustralia.org.au/sizzle-for-change/"
+          target="_blank"
+          rel="noreferrer"
+          className="text-sm text-stone-500 hover:text-navy hover:underline"
+        >
+          About the program ↗
+        </a>
+      </div>
     </div>
   );
 }
