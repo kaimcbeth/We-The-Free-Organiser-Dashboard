@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Reminders can now come by text message. In Reminders, switch them on and choose Email or Text message under Send by. Texts go to the mobile on your profile.",
+      },
+      {
+        level: "organiser",
         text: "The welcome tour is now the Introduction, for every role, and it includes setting up your email reminders as you go.",
       },
       {

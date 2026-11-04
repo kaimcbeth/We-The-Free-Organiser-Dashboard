@@ -92,7 +92,7 @@ export function OrganiserTour({
       title: "Your reminders",
       href: "/",
       target: "reminders-link",
-      body: "Set up email reminders for yourself: the day before events you're going to, and a heads-up about upcoming ones. Change it any time from Reminders at the top of Events.",
+      body: "Set up reminders by email or text: the day before events you're going to, and a heads-up about upcoming ones. Change it any time from Reminders at the top of Events.",
       extra: <MyReminders />,
     },
     {

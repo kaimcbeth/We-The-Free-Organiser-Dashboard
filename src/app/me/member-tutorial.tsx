@@ -90,7 +90,7 @@ export function MemberTutorial({
       icon: "🔔",
       tone: "bg-cyan",
       title: "Stay in the loop",
-      body: "Switch on email reminders and pick the events you want to hear about. You can change it any time from Reminders on the Events tab.",
+      body: "Switch on reminders by email or text, and pick the events you want to hear about. You can change it any time from Reminders on the Events tab.",
       extra: (
         <div className="mt-4 text-left">
           <MyReminders dryRun={preview} />

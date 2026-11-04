@@ -46,7 +46,7 @@ const STEPS = [
     tone: "bg-yellow",
     title: () => "Your reminders",
     body: () =>
-      "Set up email reminders for yourself: the day before events you're going to, and a heads-up about upcoming ones. Change it any time from Reminders on the Events page.",
+      "Set up reminders by email or text: the day before events you're going to, and a heads-up about upcoming ones. Change it any time from Reminders on the Events page.",
     reminders: true,
   },
   {

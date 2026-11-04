@@ -4,7 +4,8 @@
 //   upcoming – about 3 days before an event you haven't answered (if chosen)
 // Both follow the person's choice of event kinds (`event_kind()`, 0172).
 // No Maybe answers since 0173 (Kai, 4 Nov 2026). Each gets an in-app notification (the bell), plus an email or a
-// phone notification if they chose one. Email needs SMTP_USER / SMTP_PASS.
+// phone notification or text if they chose one. Email needs SMTP_USER /
+// SMTP_PASS; texts need CLICKSEND_USER / CLICKSEND_KEY (+ SMS_FROM).
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -23,6 +24,7 @@ type Due = {
   user_id: string | null;
   email: string | null;
   notify_channel: string;
+  phone: string | null;
 };
 
 const esc = (s: string) =>
@@ -51,8 +53,45 @@ function words(r: Due) {
   };
 }
 
+// Phone number in international form for ClickSend: strips spaces and
+// invisible characters; local Australian / NZ numbers get +61 / +64.
+function intl(phone: string, timezone: string) {
+  const d = phone.replace(/[^\d+]/g, "");
+  if (d.startsWith("+")) return d;
+  if (d.startsWith("00")) return "+" + d.slice(2);
+  const cc = timezone.startsWith("Pacific/Auckland") ? "64" : timezone.startsWith("Australia/") ? "61" : null;
+  if (cc && d.startsWith("0")) return "+" + cc + d.slice(1);
+  return cc ? "+" + cc + d : "+" + d;
+}
+
+// Send one text through ClickSend. Username + API key (Basic auth); if
+// that's refused, the key is tried as a Bearer token.
+async function sendSms(to: string, body: string) {
+  const user = Deno.env.get("CLICKSEND_USER");
+  const key = Deno.env.get("CLICKSEND_KEY");
+  if (!key) return { ok: false, error: "text sender not set up" };
+  const from = (Deno.env.get("SMS_FROM") ?? "").replace(/\s+/g, "").slice(0, 11);
+  const payload = JSON.stringify({
+    messages: [{ source: "movementhub", body, to, ...(from ? { from } : {}) }],
+  });
+  const post = (auth: string) =>
+    fetch("https://rest.clicksend.com/v3/sms/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: auth },
+      body: payload,
+    });
+  let res = user ? await post("Basic " + btoa(`${user}:${key}`)) : null;
+  if (!res || res.status === 401) res = await post("Bearer " + key);
+  const json = await res.json().catch(() => null);
+  const msg = json?.data?.messages?.[0];
+  const ok = res.ok && (!msg || msg.status === "SUCCESS");
+  return ok ? { ok: true } : { ok: false, error: msg?.status ?? json?.response_msg ?? `HTTP ${res.status}` };
+}
+
 Deno.serve(async (req) => {
-  const test = await req.json().then((b) => b?.test === true).catch(() => false);
+  const reqBody = await req.json().catch(() => null);
+  const test = reqBody?.test === true;
+  const smsTest = reqBody?.smsTest === true;
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
   const smtpUser = Deno.env.get("SMTP_USER");
@@ -91,6 +130,19 @@ Deno.serve(async (req) => {
     } catch (err) {
       return Response.json({ test: "failed", error: err instanceof Error ? err.message : String(err) });
     }
+  }
+
+  // Text test (Kai, 4 Nov 2026): POST {"smsTest": true} texts God accounts'
+  // own phones only (sms_test_recipients), nobody else.
+  if (smsTest) {
+    const { data: to } = await supabase.rpc("sms_test_recipients")
+      .returns<{ first_name: string; phone: string; timezone: string }[]>();
+    const sent = [];
+    for (const r of to ?? []) {
+      sent.push(await sendSms(intl(r.phone, r.timezone),
+        `Hi ${r.first_name}, this is a test text from the Movement Hub. Event reminders by text are working. - We The Free`));
+    }
+    return Response.json({ smsTest: sent.length ? sent : "no God account has a phone number" });
   }
 
   const { data: due, error } = await supabase.rpc("reminders_due").returns<Due[]>();
@@ -144,6 +196,10 @@ Deno.serve(async (req) => {
           });
           result.email = "sent";
         } else result.email = "email sender not set up";
+      } else if (r.notify_channel === "sms" && r.phone) {
+        // Short, one text (160 characters) where possible; no link.
+        const sms = await sendSms(intl(r.phone, r.timezone), `${title}. ${body}`.slice(0, 300));
+        result.sms = sms.ok ? "sent" : sms.error;
       } else if (r.notify_channel === "push") {
         const wp = await getPush();
         if (wp) {

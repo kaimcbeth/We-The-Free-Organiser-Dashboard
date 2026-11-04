@@ -52,7 +52,7 @@ export async function setNotifyChannel(
 // The Reminders pop-up on the Events pages (0171): email on/off plus
 // which reminders and which kinds of events.
 export async function setReminderPrefs(p: {
-  channel: "none" | "email" | "push";
+  channel: "none" | "email" | "push" | "sms";
   going: boolean;
   upcoming: boolean;
   kinds: string[] | null; // null = every kind of event

@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { setReminderPrefs } from "@/app/buddy-actions";
 
 type Prefs = {
-  channel: "none" | "email" | "push";
+  channel: "none" | "email" | "push" | "sms";
   going: boolean;
   upcoming: boolean;
   kinds: string[] | null; // null = every kind
@@ -14,6 +14,7 @@ type Prefs = {
 type Settings = {
   notify_channel: Prefs["channel"];
   has_email: boolean;
+  has_phone?: boolean;
   going: boolean;
   upcoming: boolean;
   kinds: string[] | null;
@@ -125,7 +126,8 @@ export function EmailReminders({
     upcoming: initial.upcoming,
     kinds: initial.kinds,
   });
-  const on = p.channel === "email";
+  // On = email or text (Kai, 4 Nov 2026: texts through ClickSend).
+  const on = p.channel === "email" || p.channel === "sms";
   const [msg, setMsg] = useState("");
   const [pending, start] = useTransition();
   const kindOn = (k: string) => !p.kinds || p.kinds.includes(k);
@@ -147,17 +149,38 @@ export function EmailReminders({
   function flip() {
     if (on)
       save({ channel: "none", going: true, upcoming: false, kinds: null });
-    else if (!initial.has_email)
-      setMsg("Add your email on your profile first (your photo, top right).");
-    // On = everything (Kai, 4 Nov 2026).
-    else save({ channel: "email", going: true, upcoming: true, kinds: null });
+    else if (!initial.has_email && !initial.has_phone)
+      setMsg(
+        "Add your email or mobile on your profile first (your photo, top right).",
+      );
+    // On = everything (Kai, 4 Nov 2026), by email if they have one.
+    else
+      save({
+        channel: initial.has_email ? "email" : "sms",
+        going: true,
+        upcoming: true,
+        kinds: null,
+      });
+  }
+
+  function sendBy(channel: "email" | "sms") {
+    if (channel === p.channel) return;
+    if (channel === "sms" && !initial.has_phone)
+      return setMsg(
+        "Add your mobile on your profile first (your photo, top right).",
+      );
+    if (channel === "email" && !initial.has_email)
+      return setMsg(
+        "Add your email on your profile first (your photo, top right).",
+      );
+    save({ ...p, channel });
   }
 
   // Each row keeps at least one button on.
   function toggleWhich(key: "going" | "upcoming") {
     const next = { ...p, [key]: !p[key] };
     if (!next.going && !next.upcoming) {
-      setMsg("Keep at least one on, or switch email reminders off.");
+      setMsg("Keep at least one on, or switch reminders off.");
       return;
     }
     save(next);
@@ -166,7 +189,7 @@ export function EmailReminders({
     const now = ALL_KINDS.filter(kindOn);
     const next = now.includes(k) ? now.filter((x) => x !== k) : [...now, k];
     if (!next.length) {
-      setMsg("Keep at least one on, or switch email reminders off.");
+      setMsg("Keep at least one on, or switch reminders off.");
       return;
     }
     save({ ...p, kinds: next.length === ALL_KINDS.length ? null : next });
@@ -176,16 +199,18 @@ export function EmailReminders({
     <div>
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="font-semibold text-navy">Email reminders</p>
+          <p className="font-semibold text-navy">Reminders</p>
           <p className="mt-0.5 text-sm text-stone-500">
-            {on ? "Choose what you hear about below." : "Off: no emails."}
+            {on
+              ? "Choose how and what you hear about below."
+              : "Off: no emails or texts."}
           </p>
         </div>
         <button
           type="button"
           role="switch"
           aria-checked={on}
-          aria-label="Email reminders"
+          aria-label="Reminders"
           disabled={pending}
           onClick={flip}
           className={`relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-60 ${on ? "bg-pink" : "bg-stone-300"}`}
@@ -198,6 +223,34 @@ export function EmailReminders({
 
       {on && (
         <div className="mt-4 space-y-4 rounded-2xl bg-stone-50 p-3">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">
+              Send by
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["email", "Email"],
+                  ["sms", "Text message"],
+                ] as const
+              ).map(([c, label]) => (
+                <button
+                  key={c}
+                  type="button"
+                  role="radio"
+                  aria-checked={p.channel === c}
+                  disabled={pending}
+                  onClick={() => sendBy(c)}
+                  className={chip(
+                    p.channel === c,
+                    "bg-navy ring-navy !text-white",
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">
               Remind me about
