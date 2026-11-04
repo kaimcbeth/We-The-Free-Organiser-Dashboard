@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { distance, hashBlob, loadHashes, SAME_PHOTO } from "@/lib/photo-hash";
@@ -36,6 +36,9 @@ export function PhotoUploader({
   label = "Add photos",
   className = "rounded-xl bg-navy px-3 py-1.5 text-sm font-semibold text-white hover:bg-navy-2",
   onUploaded,
+  droppable = false,
+  dropLabel = "Drop photos to add them",
+  dropHint,
 }: {
   teamId: string;
   eventId: string | null;
@@ -49,12 +52,63 @@ export function PhotoUploader({
   label?: string;
   className?: string;
   onUploaded?: () => void; // e.g. the graphics panel reloads its photos
+  droppable?: boolean; // photos dragged anywhere onto the page upload here
+  dropLabel?: string;
+  dropHint?: string;
 }) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState("");
 
-  async function upload(files: FileList) {
+  const [dragging, setDragging] = useState(false);
+  const uploadRef = useRef<(files: File[]) => void>(() => {});
+
+  // Drag and drop (Kai, 5 Nov 2026): drop photos anywhere on the page.
+  useEffect(() => {
+    if (!droppable) return;
+    let depth = 0;
+    const hasFiles = (e: DragEvent) =>
+      !!e.dataTransfer && [...e.dataTransfer.types].includes("Files");
+    const enter = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      depth++;
+      setDragging(true);
+    };
+    const over = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      e.dataTransfer!.dropEffect = "copy";
+    };
+    const leave = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      depth = Math.max(0, depth - 1);
+      if (!depth) setDragging(false);
+    };
+    const drop = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      depth = 0;
+      setDragging(false);
+      const files = [...(e.dataTransfer?.files ?? [])].filter((f) =>
+        f.type.startsWith("image/"),
+      );
+      if (files.length) uploadRef.current(files);
+      else setStatus("Only photos can be added here.");
+    };
+    window.addEventListener("dragenter", enter);
+    window.addEventListener("dragover", over);
+    window.addEventListener("dragleave", leave);
+    window.addEventListener("drop", drop);
+    return () => {
+      window.removeEventListener("dragenter", enter);
+      window.removeEventListener("dragover", over);
+      window.removeEventListener("dragleave", leave);
+      window.removeEventListener("drop", drop);
+    };
+  }, [droppable]);
+
+  async function upload(files: FileList | File[]) {
     const supabase = createClient();
     const list = [...files];
     let done = 0;
@@ -103,8 +157,22 @@ export function PhotoUploader({
     if (done) onUploaded?.();
   }
 
+  useEffect(() => {
+    uploadRef.current = upload;
+  });
+
   return (
     <span className="inline-flex items-center gap-2">
+      {dragging && (
+        <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-navy/70 p-6">
+          <div className="rounded-3xl border-4 border-dashed border-white/80 px-10 py-12 text-center text-white">
+            <p className="text-2xl font-bold">{dropLabel}</p>
+            {dropHint && (
+              <p className="mt-1 text-sm text-white/80">{dropHint}</p>
+            )}
+          </div>
+        </div>
+      )}
       <input
         ref={input}
         type="file"

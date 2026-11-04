@@ -349,6 +349,10 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
           <PhotoUploader
             teamId={teamId}
             eventId={uploadEvent || null}
+            droppable
+            dropLabel="Drop photos to add them to the Photo Hub"
+            dropHint="They'll get the event, date, type and tags picked above."
+
             extra={
               uploadEvent
                 ? // Dated and typed by the event.

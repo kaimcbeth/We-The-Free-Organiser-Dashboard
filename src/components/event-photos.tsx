@@ -58,7 +58,12 @@ export function EventPhotos({
               Select
             </button>
           )}
-          <PhotoUploader teamId={teamId} eventId={eventId} />
+          <PhotoUploader
+            teamId={teamId}
+            eventId={eventId}
+            droppable
+            dropLabel="Drop photos to add them to this event"
+          />
         </span>
       </div>
       {photos.length === 0 ? (

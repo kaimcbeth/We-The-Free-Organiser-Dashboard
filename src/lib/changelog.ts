@@ -71,6 +71,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Drag and drop: drop photos anywhere on the Photo Hub (or an event page) to upload them. On the Photo Hub they get the event, date, type and tags picked in Add photos.",
+      },
+      {
+        level: "organiser",
         text: "Photo Hub: tap a month's heading to fold it away (and again to open it), or Fold all. Your phone or computer remembers which months you folded.",
       },
       {
