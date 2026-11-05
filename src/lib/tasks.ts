@@ -13,6 +13,7 @@ type Raw = {
   show_from: string | null;
   done_at: string | null;
   assigned_to: string | null;
+  checked?: string[] | null;
   kind: {
     kind: string;
     sort_order: number;
@@ -22,6 +23,7 @@ type Raw = {
     estimate_max_minutes: number | null;
     audience: string;
     schedule: string;
+    checklist?: { key: string; label: string }[] | null;
   } | null;
   event: {
     id: string;
@@ -49,12 +51,15 @@ type Raw = {
 };
 
 const SELECT =
-  "id, team_id, due_at, show_from, done_at, assigned_to, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes, audience, schedule), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, facebook_url, rain_chance, event_type_id, event_type:event_types(name), team:teams(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name), person:people!tasks_person_id_fkey(id, first_name, last_name), pod_post:pod_posts(url, note, shared_by_name, team:teams(pod_whatsapp_url))";
+  "id, team_id, due_at, show_from, done_at, assigned_to, checked, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes, audience, schedule, checklist), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, facebook_url, rain_chance, event_type_id, event_type:event_types(name), team:teams(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name), person:people!tasks_person_id_fkey(id, first_name, last_name), pod_post:pod_posts(url, note, shared_by_name, team:teams(pod_whatsapp_url))";
 
 // Promo actions that get a "Get graphic" button, and the size they need.
 const GRAPHIC_SIZE: Record<string, GraphicSize | undefined> = {
   promote_instagram: "post",
   facebook_event: "cover",
+  fb_event_setup: "cover",
+  promote_event: "post",
+  photos_shared: "post",
   promote_facebook_groups: "post",
   promote_whatsapp: "story",
   promote_special: "post",
@@ -99,6 +104,8 @@ function toRow(t: Raw): TaskRow {
     dueAt: t.due_at,
     showFrom: t.show_from,
     doneAt: t.done_at,
+    checklist: t.kind?.checklist ?? null,
+    checked: t.checked ?? [],
     eventTitle: t.event?.title ?? t.hangout?.title ?? null,
     repeats:
       (
@@ -120,7 +127,9 @@ function toRow(t: Raw): TaskRow {
       : null,
     eventAt: t.event?.starts_at ?? t.hangout?.starts_at ?? null,
     fbEvent:
-      t.kind?.kind === "facebook_event" && t.event
+      (t.kind?.kind === "facebook_event" ||
+        t.kind?.kind === "fb_event_setup") &&
+      t.event
         ? {
             title: t.event.title,
             startsAt: t.event.starts_at,

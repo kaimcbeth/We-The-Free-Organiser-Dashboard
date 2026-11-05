@@ -204,7 +204,7 @@ export function OrganiserTour({
       tone: "bg-yellow",
       title: "Promote your event",
       href: "/tasks",
-      target: "task-facebook_event,tasks-head",
+      target: "task-fb_event_setup,task-facebook_event,tasks-head",
       body: "Two weeks before, an action shows up to create the Facebook event. We copy the details for you, so you just paste them into Facebook.",
     },
     {

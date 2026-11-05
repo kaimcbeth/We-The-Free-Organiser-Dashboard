@@ -59,16 +59,11 @@ export function TaskChooser({
     const PRIORITY = [
       "take_attendance",
       "take_photos",
-      "promote_whatsapp",
-      "post_photos",
-      "promote_facebook_groups",
+      "promote_event",
+      "photos_shared",
+      "fb_event_setup",
       "promote_fb_groups_weekly",
-      "facebook_event",
-      "facebook_invites",
       "instagram_stories",
-      "promote_instagram",
-      "post_photos_instagram",
-      "post_photos_facebook",
     ];
     const rank = (kind: string) =>
       PRIORITY.includes(kind) ? PRIORITY.indexOf(kind) : PRIORITY.length;

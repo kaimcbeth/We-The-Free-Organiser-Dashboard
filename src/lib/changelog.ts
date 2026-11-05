@@ -67,6 +67,14 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'Fewer actions: "Facebook event created" and "invites sent" are now one action, Facebook event set up. The three promo actions (WhatsApp, Facebook groups, Instagram) are now Event promoted, and the three photo ones are now Photos shared. Each has tick boxes inside for every place, and ticking them all finishes the action.',
+      },
+      {
+        level: "god",
+        text: "0191: task_kinds.checklist (jsonb [{key,label}]), tasks.checked text[], set_task_check(task, key, on) (all ticked = done, unticking undoes done). New kinds fb_event_setup / promote_event / photos_shared; the 8 old kinds archived, open ones dismissed and carried over (ticks kept), community on/off carried (on if any was on). TaskChecklist component on the card.",
+      },
+      {
+        level: "organiser",
         text: '"Throwback photo posted" now comes every 2 weeks (on Thursdays) instead of every week. The next one shows up on 19 November.',
       },
       {

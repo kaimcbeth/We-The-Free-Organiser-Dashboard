@@ -1,5 +1,6 @@
 "use client";
 
+import { TaskChecklist } from "@/components/task-checklist";
 import { SeasonHostsGraphic } from "@/components/season-hosts-graphic";
 import { useState, useTransition } from "react";
 import {
@@ -67,6 +68,9 @@ const COPY_FOR: Record<string, [CopyPlatform | CopyPlatform[], boolean]> = {
   special_live: ["story", false],
   special_thanks: [["instagram", "facebook", "whatsapp"], true],
   facebook_event: ["facebook", false],
+  fb_event_setup: ["facebook", false],
+  promote_event: [["whatsapp", "facebook", "instagram"], false],
+  photos_shared: [["whatsapp", "facebook", "instagram"], true],
   instagram_stories: ["story", true],
   post_photos: ["whatsapp", true],
   post_photos_facebook: ["facebook", true],
@@ -101,6 +105,9 @@ const SPECIAL_NOTE: Record<string, string> = {
 
 const FB_KINDS = new Set([
   "special_spread",
+  "fb_event_setup",
+  "promote_event",
+  "photos_shared",
   "facebook_event",
   "facebook_invites",
   "post_photos_facebook",
@@ -126,6 +133,8 @@ export type TaskRow = {
   dueAt: string;
   showFrom: string | null; // moved: hidden until then
   doneAt: string | null;
+  checklist?: { key: string; label: string }[] | null; // merged actions (0191)
+  checked?: string[];
   eventTitle: string | null;
   repeats?: string | null; // "Every month": how often it comes round (not per event)
   eventFacebookUrl?: string | null; // pasted once, used by every Facebook action
@@ -410,6 +419,14 @@ export function TaskCard({
           {task.description && !done && (
             <p className="mt-1 text-sm text-stone-600">{task.description}</p>
           )}
+          {task.checklist && task.checklist.length > 0 && !done && (
+            <TaskChecklist
+              taskId={task.id}
+              items={task.checklist}
+              initial={task.checked ?? []}
+              onDone={(d) => d && setDone(true)}
+            />
+          )}
           {(task.kind === "com_feedback" || task.kind === "meet_members_ask") &&
             !done && (
               <p className="mt-1">
@@ -439,6 +456,7 @@ export function TaskCard({
                 </a>
               )}
               {(task.kind === "promote_facebook_groups" ||
+                task.kind === "promote_event" ||
                 task.kind === "promote_fb_groups_weekly") && (
                 <FbGroupsButton teamId={task.teamId} canEdit={!!people} />
               )}
@@ -532,7 +550,8 @@ export function TaskCard({
                   initial={task.eventFacebookUrl ?? null}
                   canAdd={
                     task.kind === "facebook_event" ||
-                    task.kind === "facebook_invites"
+                    task.kind === "facebook_invites" ||
+                    task.kind === "fb_event_setup"
                   }
                 />
               )}
@@ -651,11 +670,13 @@ export function TaskCard({
                   // Posting a set of photos: a carousel suits it best.
                   carousel={
                     task.kind === "post_photos_instagram" ||
-                    task.kind === "post_photos_facebook"
+                    task.kind === "post_photos_facebook" ||
+                    task.kind === "photos_shared"
                   }
                   label={
                     task.kind === "post_photos_instagram" ||
-                    task.kind === "post_photos_facebook"
+                    task.kind === "post_photos_facebook" ||
+                    task.kind === "photos_shared"
                       ? "Make carousel"
                       : "Get graphic"
                   }
@@ -701,7 +722,9 @@ export function TaskCard({
               )}
               {whatsappUrl &&
                 (task.kind === "post_photos" ||
-                  task.kind === "promote_whatsapp") && (
+                  task.kind === "promote_whatsapp" ||
+                  task.kind === "photos_shared" ||
+                  task.kind === "promote_event") && (
                   <a
                     href={whatsappUrl}
                     target="_blank"
