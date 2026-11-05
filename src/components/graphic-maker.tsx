@@ -22,6 +22,20 @@ import {
   posterDefaults,
   posterText,
 } from "@/components/graphic-poster";
+import {
+  TEASER_COLOURS,
+  drawTeaser,
+  loadTeaserFonts,
+  teaserDefaults,
+  teaserText,
+  type TeaserColours,
+} from "@/components/graphic-teaser";
+import {
+  drawBigPhoto,
+  drawPhotoDetails,
+  loadPhotoStyleFonts,
+  photoStyleDefaults,
+} from "@/components/graphic-photo-styles";
 
 // Event graphics, drawn in the browser on a canvas from the event's details
 // and the community's own photos, in We The Free colours, downloaded as PNG.
@@ -45,8 +59,16 @@ const SIZES: Record<GraphicSize, { label: string; w: number; h: number }> = {
   cover: { label: "Facebook event cover", w: 1920, h: 1005 },
 };
 type Template = "promo" | "recap";
-type Style = "classic" | "poster";
-const STYLES: Record<Style, string> = { classic: "Classic", poster: "Poster" };
+type Style = "classic" | "poster" | "teaser" | "bigphoto" | "details";
+const STYLES: Record<Style, string> = {
+  classic: "Classic",
+  poster: "Poster",
+  teaser: "Coming soon",
+  bigphoto: "Big photo",
+  details: "Photo + details",
+};
+// Styles with a Warm / WTF colours choice.
+const COLOURED: Style[] = ["teaser", "details"];
 
 const NAVY = "#071130";
 const PINK = "#ff47b9";
@@ -333,11 +355,16 @@ export function GraphicMaker({
   const [logo, setLogo] = useState<HTMLImageElement | null>(null);
   const [mark, setMark] = useState<HTMLImageElement | null>(null);
   const [style, setStyle] = useState<Style>("classic");
-  const [fonts, setFonts] = useState(false);
+  const [fonts, setFonts] = useState(0); // bumped when a style's fonts load
   const [heading, setHeading] = useState("");
   const [tagline, setTagline] = useState("");
   const [footer, setFooter] = useState("");
   const [noFooter, setNoFooter] = useState(false);
+  const [teaserName, setTeaserName] = useState("");
+  const [small, setSmall] = useState("");
+  const [words, setWords] = useState("");
+  const [colours, setColours] = useState<TeaserColours>("warm");
+  const [handle, setHandle] = useState<string | null>(null);
   const [reload, setReload] = useState(0); // bumped after an upload
   const canvas = useRef<HTMLCanvasElement>(null);
 
@@ -410,9 +437,15 @@ export function GraphicMaker({
   }, [open, logo]);
 
   useEffect(() => {
-    if (!open || style !== "poster") return;
+    if (!open || style === "classic") return;
     let live = true;
-    loadPosterFonts().then(() => live && setFonts(true));
+    const load =
+      style === "poster"
+        ? loadPosterFonts()
+        : style === "teaser"
+          ? loadTeaserFonts()
+          : loadPhotoStyleFonts();
+    load.then(() => live && setFonts((n) => n + 1));
     if (!mark)
       loadImage("/brand/wtf-mark.png")
         .then((m) => live && setMark(m))
@@ -422,9 +455,48 @@ export function GraphicMaker({
     };
   }, [open, style, mark]);
 
+  // The community's Instagram username, for the photo styles.
+  useEffect(() => {
+    if (!open || !event.teamId) return;
+    let live = true;
+    createClient()
+      .from("teams")
+      .select("instagram_handle")
+      .eq("id", event.teamId)
+      .maybeSingle()
+      .then(({ data }) => live && setHandle(data?.instagram_handle ?? null));
+    return () => {
+      live = false;
+    };
+  }, [open, event.teamId]);
+
   useEffect(() => {
     if (!open || !canvas.current) return;
-    if (style === "poster") {
+    const { w: cw, h: ch } = SIZES[size];
+    const recap = template === "recap";
+    if (style === "teaser") {
+      drawTeaser(canvas.current, {
+        w: cw,
+        h: ch,
+        text: teaserText(event, tz, recap, heading, teaserName, small),
+        colours,
+        mark,
+      });
+    } else if (style === "bigphoto" || style === "details") {
+      (style === "bigphoto" ? drawBigPhoto : drawPhotoDetails)(canvas.current, {
+        w: cw,
+        h: ch,
+        e: event,
+        tz,
+        recap,
+        heading,
+        words,
+        handle,
+        photo: imgs[0] ?? null,
+        mark,
+        colours,
+      });
+    } else if (style === "poster") {
       const { w, h } = SIZES[size];
       drawPoster(canvas.current, {
         w,
@@ -460,8 +532,17 @@ export function GraphicMaker({
     tagline,
     footer,
     noFooter,
+    teaserName,
+    small,
+    words,
+    colours,
+    handle,
   ]);
   const defaults = posterDefaults(event, template === "recap");
+  const tDefaults = teaserDefaults(event, template === "recap");
+  const pDefaults = photoStyleDefaults(event, template === "recap");
+  const input =
+    "mt-1 block w-full rounded-lg bg-white px-2.5 py-1.5 text-sm text-navy ring-1 ring-stone-300 placeholder:text-stone-400";
   const defaultFooter =
     posterText(event, tz, template === "recap", heading, tagline).footer ?? "";
 
@@ -493,7 +574,7 @@ export function GraphicMaker({
     const a = document.createElement("a");
     a.href = canvas.current.toDataURL("image/png");
     const slug = event.title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    a.download = `${slug}-${template}${style === "poster" ? "-poster" : ""}-${size}.png`;
+    a.download = `${slug}-${template}${style === "classic" ? "" : `-${style}`}-${size}.png`;
     a.click();
   }
 
@@ -614,7 +695,89 @@ export function GraphicMaker({
                 </div>
               )}
 
-              {all.length > 0 && (
+              {style !== "classic" && style !== "poster" && (
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <label className="text-xs font-medium text-stone-500">
+                    Heading
+                    <input
+                      value={heading}
+                      onChange={(e) => setHeading(e.target.value)}
+                      placeholder={
+                        style === "teaser"
+                          ? tDefaults.heading.toUpperCase()
+                          : pDefaults.heading.toUpperCase()
+                      }
+                      maxLength={60}
+                      className={input}
+                    />
+                  </label>
+                  {style === "teaser" && (
+                    <>
+                      <label className="text-xs font-medium text-stone-500">
+                        Event name
+                        <input
+                          value={teaserName}
+                          onChange={(e) => setTeaserName(e.target.value)}
+                          placeholder={tDefaults.name}
+                          maxLength={50}
+                          className={input}
+                        />
+                      </label>
+                      <label className="text-xs font-medium text-stone-500">
+                        Small line above the date
+                        <input
+                          value={small}
+                          onChange={(e) => setSmall(e.target.value)}
+                          placeholder={tDefaults.small.toUpperCase()}
+                          maxLength={30}
+                          className={input}
+                        />
+                      </label>
+                    </>
+                  )}
+                  {style === "bigphoto" && (
+                    <label className="text-xs font-medium text-stone-500">
+                      Words at the top right
+                      <input
+                        value={words}
+                        onChange={(e) => setWords(e.target.value)}
+                        placeholder={pDefaults.words}
+                        maxLength={70}
+                        className={input}
+                      />
+                    </label>
+                  )}
+                  {COLOURED.includes(style) && (
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-stone-500 sm:col-span-2">
+                      Colours
+                      {(Object.keys(TEASER_COLOURS) as TeaserColours[]).map(
+                        (c) => (
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => setColours(c)}
+                            className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${
+                              colours === c
+                                ? "bg-navy text-white ring-navy"
+                                : "bg-white text-stone-500 ring-stone-300"
+                            }`}
+                          >
+                            {TEASER_COLOURS[c]}
+                          </button>
+                        ),
+                      )}
+                    </div>
+                  )}
+                  {style !== "teaser" && !handle && (
+                    <p className="text-xs text-stone-500 sm:col-span-2">
+                      Add your community&apos;s Instagram username in the Social
+                      Media Hub and it goes on these.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {all.length > 0 && style !== "teaser" && (
                 <div className="mt-3">
                   <div className="mb-1.5 flex flex-wrap items-center gap-2">
                     <p className="text-xs font-medium text-stone-500">

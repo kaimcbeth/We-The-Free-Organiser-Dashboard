@@ -137,7 +137,7 @@ function fit(
   return s;
 }
 
-function cover(
+export function cover(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement,
   x: number,

@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Three new styles in Make graphic: Coming soon (a big save-the-date teaser), Big photo (your photo full page with a huge heading) and Photo + details (photo on top, place and time below). Coming soon and Photo + details come in Warm or WTF colours, and your community's @username goes on the photo ones.",
+      },
+      {
+        level: "organiser",
         text: 'New in the Social Media Hub: "We belong here, not here" (calves and their mothers in the dairy industry), "If the \'why\' is powerful, the \'how\' becomes easy" the Benjamin Hoff quote "Lots of people talk to animals" and "The first and probably the last time I feel the sunshine", each with your @username on it. The Hub is now a grid of covers: tap one to open it.',
       },
       {
