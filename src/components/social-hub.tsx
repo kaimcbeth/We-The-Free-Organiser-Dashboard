@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { zipSync } from "fflate";
 import { createClient } from "@/lib/supabase/client";
 import { inputClass } from "@/components/form";
+import { Sheet } from "@/components/sheet";
 import { SOCIAL_POSTS, slideUrl, type SocialPost } from "@/lib/social-posts";
 
 // Social Media Hub (Kai, 5 Nov 2026): main-page posts for communities to post
@@ -154,9 +155,15 @@ export function SocialHub({
         )}
       </div>
 
-      <ul className="space-y-5">
+      <p className="text-xs text-stone-500">
+        Tip: post it as your own (not a repost) so it shows on your grid, and
+        keep the local line in the caption. Instagram treats changed posts as
+        new, so they still reach people who don&apos;t follow you yet.
+      </p>
+
+      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {SOCIAL_POSTS.map((p) => (
-          <PostCard
+          <PostTile
             key={p.slug}
             post={p}
             handle={handle}
@@ -165,6 +172,51 @@ export function SocialHub({
         ))}
       </ul>
     </div>
+  );
+}
+
+// A cover in the grid; tap to open the post (slides, caption, buttons).
+function PostTile({
+  post,
+  handle,
+  community,
+}: {
+  post: SocialPost;
+  handle: string | null;
+  community: string;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="group block w-full text-left"
+      >
+        <span className="relative block overflow-hidden rounded-xl ring-1 ring-black/5 group-hover:ring-2 group-hover:ring-pink">
+          {/* eslint-disable-next-line @next/next/no-img-element -- static cover */}
+          <img
+            src={slideUrl(post, 1)}
+            alt=""
+            loading="lazy"
+            className="aspect-[4/5] w-full object-cover"
+          />
+          {post.slides > 1 && (
+            <span className="absolute right-1.5 top-1.5 rounded-full bg-navy/80 px-2 py-0.5 text-[11px] font-semibold text-white">
+              1/{post.slides}
+            </span>
+          )}
+        </span>
+        <span className="mt-1.5 line-clamp-2 block text-sm font-medium leading-snug text-navy">
+          {post.title}
+        </span>
+      </button>
+      {open && (
+        <Sheet title={post.title} onClose={() => setOpen(false)}>
+          <PostCard post={post} handle={handle} community={community} />
+        </Sheet>
+      )}
+    </li>
   );
 }
 
@@ -262,23 +314,18 @@ export function PostCard({
   }
 
   return (
-    <li className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="font-semibold text-navy">{post.title}</h3>
-        <span className="text-xs text-stone-500">
-          {post.slides > 1
-            ? `Carousel · ${post.slides} slides`
-            : "Single image"}
-        </span>
-      </div>
-      <div className="-mx-4 mt-3 flex snap-x gap-2 overflow-x-auto px-4 pb-2">
+    <div>
+      <p className="text-xs text-stone-500">
+        {post.slides > 1 ? `Carousel · ${post.slides} slides` : "Single image"}
+      </p>
+      <div className="-mx-5 mt-2 flex snap-x gap-2 overflow-x-auto px-5 pb-2">
         {Array.from({ length: post.slides }, (_, i) => (
           // eslint-disable-next-line @next/next/no-img-element -- generated slides
           <img
             key={i}
             src={urls[i] ?? slideUrl(post, i + 1)}
             alt={`Slide ${i + 1}`}
-            className={`${post.slides > 1 ? "h-56" : "h-80"} w-auto shrink-0 snap-start rounded-lg ring-1 ring-black/5`}
+            className={`${post.slides > 1 ? "h-52" : "h-72"} w-auto shrink-0 snap-start rounded-lg ring-1 ring-black/5`}
           />
         ))}
       </div>
@@ -303,7 +350,7 @@ export function PostCard({
             setCaption(e.target.value);
             setCopied(false);
           }}
-          rows={8}
+          rows={6}
           className="mt-1 w-full rounded-xl bg-white p-2 text-sm font-normal ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
         />
       </label>
@@ -344,11 +391,6 @@ export function PostCard({
         </button>
       </div>
       {note && <p className="mt-2 text-sm text-stone-600">{note}</p>}
-      <p className="mt-3 text-xs text-stone-500">
-        Tip: post it as your own (not a repost) so it shows on your grid, and
-        keep the local line in the caption. Instagram treats changed posts as
-        new, so they still reach people who don&apos;t follow you yet.
-      </p>
-    </li>
+    </div>
   );
 }

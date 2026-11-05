@@ -67,7 +67,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: 'New in the Social Media Hub: "We belong here, not here" (calves and their mothers in the dairy industry), "If the \'why\' is powerful, the \'how\' becomes easy" and the Benjamin Hoff quote "Lots of people talk to animals", each with your @username on it.',
+        text: 'New in the Social Media Hub: "We belong here, not here" (calves and their mothers in the dairy industry), "If the \'why\' is powerful, the \'how\' becomes easy" the Benjamin Hoff quote "Lots of people talk to animals" and "The first and probably the last time I feel the sunshine", each with your @username on it. The Hub is now a grid of covers: tap one to open it.',
       },
       {
         level: "organiser",
