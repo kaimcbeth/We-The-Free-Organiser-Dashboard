@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { updateMyProfile, type ProfileState } from "@/app/attendee-actions";
 import { Field, inputClass } from "@/components/form";
 import { ConsentCheckbox } from "@/components/consent-checkbox";
+import { BirthdayField } from "@/components/birthday-field";
 
 type Me = {
   id: string;
@@ -13,6 +14,8 @@ type Me = {
   suburb: string | null;
   email: string | null;
   consent_marketing: boolean;
+  birth_month: number | null;
+  birth_day: number | null;
 };
 
 export function ProfileForm({ me }: { me: Me }) {
@@ -57,6 +60,15 @@ export function ProfileForm({ me }: { me: Me }) {
       <Field label="Mobile" htmlFor="phone">
         <input {...field("phone")} type="tel" />
       </Field>
+      {/* Saves on its own as soon as day and month are picked. */}
+      <BirthdayField
+        personId={me.id}
+        month={me.birth_month}
+        day={me.birth_day}
+        label="Birthday"
+        hint="Optional. Day and month only, so we can wish you happy birthday in the WhatsApp chat."
+        inForm
+      />
       {me.email && (
         <p className="text-sm text-stone-500">
           Email: <span className="font-medium text-stone-800">{me.email}</span>

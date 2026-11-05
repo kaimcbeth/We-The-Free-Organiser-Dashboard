@@ -29,6 +29,7 @@ export function BirthdayField({
   label = "Birthday",
   hint,
   dryRun = false,
+  inForm = false,
 }: {
   personId: string;
   month: number | null;
@@ -36,6 +37,7 @@ export function BirthdayField({
   label?: string;
   hint?: string;
   dryRun?: boolean;
+  inForm?: boolean; // looks like the other boxes in a details form
 }) {
   const [month, setMonth] = useState<number | null>(m0);
   const [day, setDay] = useState<number | null>(d0);
@@ -56,11 +58,20 @@ export function BirthdayField({
   };
 
   const max = month ? DAYS_IN[month - 1] : 31;
-  const sel =
-    "rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm disabled:opacity-60";
+  const sel = inForm
+    ? "rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-base disabled:opacity-60"
+    : "rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm disabled:opacity-60";
   return (
     <div className="text-sm">
-      <p className="font-medium text-stone-700">{label}</p>
+      <p
+        className={
+          inForm
+            ? "mb-1.5 block text-sm font-medium text-stone-700"
+            : "font-medium text-stone-700"
+        }
+      >
+        {label}
+      </p>
       {hint && <p className="text-xs text-stone-500">{hint}</p>}
       <div className="mt-1 flex flex-wrap items-center gap-2">
         <select
