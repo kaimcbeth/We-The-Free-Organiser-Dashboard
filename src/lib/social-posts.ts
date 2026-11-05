@@ -20,6 +20,23 @@ const CORNER = { x: 51, baseline: 1307, size: 28 };
 
 export const SOCIAL_POSTS: SocialPost[] = [
   {
+    slug: "listen",
+    title: "Lots of people talk to animals… not very many listen",
+    added: "2026-11-05",
+    slides: 1,
+    // The main page's bottom-left "www.3movies.wtf" (Poppins 29px).
+    watermark: { x: 50, baseline: 1304, size: 29 },
+    caption: `How much louder must the animals cry before we acknowledge their misery? How many more mothers must bellow for their calves; how many more pigs scream as their lungs burn in gas chambers?
+
+As humans, we love to talk to the farmed animals we meet on countryside walks or the companionship-bred animals who reside in our households…now it's time for us to finally LISTEN.
+
+🌱 Ready to listen and act? Come along to one of our events in {community}. Everyone's welcome and no experience is needed. Find what's coming up at the link in our bio.
+
+.
+
+#veganpost #animals #animallovers #quotes #animalrightsquotes #benjaminhoff`,
+  },
+  {
     slug: "why-how",
     title: "If the 'why' is powerful, the 'how' becomes easy",
     added: "2026-11-05",
