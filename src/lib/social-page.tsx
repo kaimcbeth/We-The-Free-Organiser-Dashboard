@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { SocialHub } from "@/components/social-hub";
+import { SocialHubTabs } from "@/components/social-hub-tabs";
+import { SocialPlanner } from "@/components/social-planner";
 
 // The Social Media Hub page, shared by organisers and the Core Team.
 export async function SocialHubPage({
@@ -17,9 +19,13 @@ export async function SocialHubPage({
   const { data: team } = teamId
     ? await supabase
         .from("teams")
-        .select("name, instagram_handle")
+        .select("name, instagram_handle, timezone")
         .eq("id", teamId)
-        .maybeSingle<{ name: string; instagram_handle: string | null }>()
+        .maybeSingle<{
+          name: string;
+          instagram_handle: string | null;
+          timezone: string | null;
+        }>()
     : { data: null };
   return (
     <>
@@ -33,17 +39,33 @@ export async function SocialHubPage({
         Social Media Hub
       </h1>
       <p className="mt-1 text-stone-600">
-        Posts from the We The Free main page, ready to post on your own
-        Instagram with your username on them. Share the slides, paste the
-        caption, done.
+        Plan your community&apos;s posts around your events, and grab ready-made
+        posts from the We The Free main page with your username on them.
       </p>
       <div className="mt-5">
-        <SocialHub
-          teamId={teamId}
-          community={(team?.name ?? "").split(",")[0].trim()}
-          handle={team?.instagram_handle ?? null}
-          canEditHandle={canEdit && !!teamId}
-        />
+        {(() => {
+          const posts = (
+            <SocialHub
+              teamId={teamId}
+              community={(team?.name ?? "").split(",")[0].trim()}
+              handle={team?.instagram_handle ?? null}
+              canEditHandle={canEdit && !!teamId}
+            />
+          );
+          return teamId ? (
+            <SocialHubTabs
+              planner={
+                <SocialPlanner
+                  teamId={teamId}
+                  tz={team?.timezone ?? "Australia/Sydney"}
+                />
+              }
+              posts={posts}
+            />
+          ) : (
+            posts
+          );
+        })()}
       </div>
     </>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { SaveToPlanner } from "@/components/save-to-planner";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PhotoUploader } from "@/components/photo-uploader";
 import { CarouselMaker } from "@/components/carousel-maker";
@@ -382,7 +383,9 @@ export function GraphicMaker({
   photo,
   startOpen = false,
   onClose,
+  planDay,
 }: {
+  planDay?: string; // suggested planner day (an action's due date)
   event: GraphicEvent;
   tz: string;
   initialSize?: GraphicSize;
@@ -849,6 +852,30 @@ export function GraphicMaker({
                       : "Copy image"}
                 </button>
               </div>
+              {event.teamId && (
+                <div className="mt-2 flex justify-end">
+                  <SaveToPlanner
+                    teamId={event.teamId}
+                    eventId={event.eventId}
+                    day={planDay}
+                    tz={tz}
+                    platforms={
+                      size === "story"
+                        ? ["story"]
+                        : size === "cover"
+                          ? ["facebook"]
+                          : ["instagram"]
+                    }
+                    getImage={() =>
+                      new Promise<Blob | null>((resolve) =>
+                        canvas.current
+                          ? canvas.current.toBlob(resolve, "image/png")
+                          : resolve(null),
+                      )
+                    }
+                  />
+                </div>
+              )}
             </>
           )}
           {event.teamId && event.eventId && (

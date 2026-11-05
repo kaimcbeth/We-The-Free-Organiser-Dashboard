@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Social media planner: the Social Media Hub now opens on a calendar with your upcoming events and planned posts. Tap a day to jot a quick idea, then fill in the caption, platforms and images later. Write post and Get graphic in Actions have a new Save to planner button, and you can copy, share or mark each post as posted.",
+      },
+      {
+        level: "organiser",
         text: "More suggested special events: 🌱 World Vegan Day Social (1 Nov), 🐁 World Day for Laboratory Animals (24 Apr), 🎂 your Community Anniversary (add your start date on its card), and for Australian communities 🐎 Melbourne Cup and 🍩 the 12/12 Krispy Kreme Movie Challenge.",
       },
       {
@@ -84,6 +88,10 @@ export const CHANGELOG: Release[] = [
       {
         level: "god",
         text: "0187: teams.founded_on + set_team_founded_on; special_events.anniversary + countries (matched to the country in the team name); private.team_special_date used by suggested_events, guess_special_event, plan_special_event_later; more generic words never auto-tag (world, vegan, animals, community, outreach, melbourne…).",
+      },
+      {
+        level: "god",
+        text: "0188: social_plan (team, day, note, caption, platforms, image_paths, event, posted_at; Core Team+ RLS) + private bucket social-plan (<team>/<uuid>.png). SocialPlanner (social-planner.tsx), SocialHubTabs (#planner / #posts), SaveToPlanner on CopyMaker options and GraphicMaker (planDay = the action's due date).",
       },
       {
         level: "organiser",

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Sheet } from "@/components/sheet";
 import { createClient } from "@/lib/supabase/client";
+import { SaveToPlanner } from "@/components/save-to-planner";
 
 // Social media copy for an event, written by AI in the community's voice.
 // Shows a few options per place; you pick, tweak and copy. Never posts.
@@ -18,7 +19,14 @@ const PLACES: { id: CopyPlatform; label: string }[] = [
 
 type Example = { id: string; platform: string | null; body: string };
 
-export function Option({ text }: { text: string }) {
+export function Option({
+  text,
+  plan,
+}: {
+  text: string;
+  // Offer "Save to planner" (Write post for an event).
+  plan?: { teamId: string; day?: string; eventId?: string; platform: string };
+}) {
   const [value, setValue] = useState(text);
   const [copied, setCopied] = useState(false);
   return (
@@ -32,7 +40,16 @@ export function Option({ text }: { text: string }) {
         )}
         className="w-full resize-y bg-transparent text-sm leading-relaxed text-stone-800 focus:outline-none"
       />
-      <div className="mt-1 flex justify-end gap-2">
+      <div className="mt-1 flex flex-wrap items-center justify-end gap-2">
+        {plan && (
+          <SaveToPlanner
+            teamId={plan.teamId}
+            day={plan.day}
+            caption={value}
+            eventId={plan.eventId}
+            platforms={[plan.platform]}
+          />
+        )}
         {typeof navigator !== "undefined" && "share" in navigator && (
           <button
             type="button"
@@ -170,8 +187,10 @@ export function CopyMaker({
   label = "Write post",
   className = "text-xs font-medium text-pink-ink hover:underline",
   initialNote = "",
+  planDay,
 }: {
   initialNote?: string; // what this post is for (special event promo steps)
+  planDay?: string; // suggested planner day (an action's due date)
   eventId: string;
   teamId: string;
   past: boolean; // after the event: share how it went + invite to the next one
@@ -324,7 +343,16 @@ export function CopyMaker({
                 <h3 className="mb-1.5 text-sm font-semibold">{p.label}</h3>
                 <ul className="space-y-2">
                   {options[p.id].map((t, i) => (
-                    <Option key={i} text={t} />
+                    <Option
+                      key={i}
+                      text={t}
+                      plan={{
+                        teamId,
+                        eventId,
+                        platform: p.id,
+                        day: planDay,
+                      }}
+                    />
                   ))}
                 </ul>
               </section>
