@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'Write post sounds more like a person now: no more date, time and address listed on separate lines. It mentions when and where in a normal sentence ("this Sunday from 3 at Camperdown park") and leaves the rest to the event link.',
+      },
+      {
+        level: "organiser",
         text: "Fixed: selecting text in a pop-up and letting go outside it no longer closes the pop-up.",
       },
       {

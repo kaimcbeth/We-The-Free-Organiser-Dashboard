@@ -37,7 +37,8 @@ const RULES = `Write like a real volunteer from this community, not a brand or m
 - At most 2 emoji per option, and none if the voice examples don't use them.
 - No exclamation mark pile-ups. At most one per option.
 - Don't start every option the same way. Make the options genuinely different (e.g. one personal, one straight to the point, one built around a detail).
-- If voice examples are given, match their tone, length, emoji habits and sign-offs closely, but never copy sentences from them.`;
+- If voice examples are given, match their tone, length, emoji habits and sign-offs closely, but never copy sentences from them.
+- Never add a details block: no separate lines listing the date, time and address, no "When:"/"Where:", no full street addresses. Mention when and where once, inside a normal sentence, the way a person would say it ("this Sunday arvo from 3 at Camperdown park", "Wednesday night at Mama B's"). Use the day name ("this Sunday", "tomorrow") when it's within the next week, not the full date. Shorten the place to what locals call it and skip the street. The event link is enough for anyone who wants the details.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -93,11 +94,22 @@ Deno.serve(async (req) => {
     const when = (e: { starts_at: string; ends_at: string | null }) =>
       `${fmt(e.starts_at, { weekday: "long", day: "numeric", month: "long" })}, ${fmt(e.starts_at, { hour: "numeric", minute: "2-digit" })}${e.ends_at ? ` to ${fmt(e.ends_at, { hour: "numeric", minute: "2-digit" })}` : ""}`;
     const past = Date.parse(ev.starts_at) < Date.now();
+    // "(this Sunday)", "(tomorrow)" etc. when it's within the next week.
+    const relDay = (iso: string) => {
+      const day = (d: Date) => fmt(d.toISOString(), { year: "numeric", month: "2-digit", day: "2-digit" });
+      const target = day(new Date(iso));
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(Date.now() + i * 86400000);
+        if (day(d) === target)
+          return i === 0 ? " (today)" : i === 1 ? " (tomorrow)" : ` (this ${fmt(iso, { weekday: "long" })})`;
+      }
+      return "";
+    };
 
     const facts: string[] = [
       `Community: We The Free ${community}`,
       `Event: ${ev.title}${ev.event_type?.name ? ` (${ev.event_type.name})` : ""}`,
-      `When: ${when(ev)}`,
+      `When: ${when(ev)}${relDay(ev.starts_at)}`,
       ev.venue || ev.address ? `Where: ${[ev.venue, ev.address].filter(Boolean).join(", ")}` : "",
       ev.description ? `About the event (from our website): ${String(ev.description).slice(0, 800)}` : "",
       ev.source_url ? `Event link: ${ev.source_url}` : "",
