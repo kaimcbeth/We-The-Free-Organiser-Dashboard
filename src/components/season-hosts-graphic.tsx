@@ -28,23 +28,95 @@ const SIZES = {
 } as const;
 type Size = keyof typeof SIZES;
 const IDEAS = [
-  "Potluck",
   "Picnic",
   "Hike",
   "Movie night",
   "Games night",
   "Beach day",
   "Sanctuary visit",
+  "Your own idea",
 ];
 // Casual on purpose (Kai: "just reaching out to the community if anyone's keen").
+const SUMMER_IDEAS = [
+  "Beach day",
+  "Picnic",
+  "Swim",
+  "Sunset walk",
+  "Outdoor movie",
+  "Sanctuary visit",
+  "Your own idea",
+];
 const defaults = (season: string): Text => ({
-  kicker: "Anyone keen?",
+  kicker: `${season} calendar`,
   heading: `Wanna host something this ${season}?`,
-  body: "A potluck at yours, a hike, a movie night, whatever you're into. Give us a shout in the chat and we'll help sort the rest :)",
-  ideas: IDEAS.join(", "),
+  // No call to action here: that goes in the message posted with it (Kai).
+  body: "Whatever you're into, we'd love to help make it happen.",
+  ideas: (season === "summer" ? SUMMER_IDEAS : IDEAS).join(", "),
 });
 
 type Text = { kicker: string; heading: string; body: string; ideas: string };
+
+function drawSummer(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  horizon: number,
+  r: number,
+) {
+  // Sky: navy at the top, glowing pink to orange at the horizon.
+  const sky = ctx.createLinearGradient(0, 0, 0, horizon);
+  sky.addColorStop(0, NAVY);
+  sky.addColorStop(0.45, "#1d1450");
+  sky.addColorStop(0.8, "#b8327f");
+  sky.addColorStop(1, "#ff8a3d");
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, w, horizon);
+  // Sun: yellow to orange, with retro bands cut across its lower half.
+  const cx = w / 2;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, w, horizon);
+  ctx.clip();
+  const sun = ctx.createLinearGradient(0, horizon - r, 0, horizon);
+  sun.addColorStop(0, YELLOW);
+  sun.addColorStop(1, "#ff7a2f");
+  ctx.fillStyle = sun;
+  ctx.beginPath();
+  ctx.arc(cx, horizon, r, Math.PI, 0);
+  ctx.fill();
+  ctx.globalCompositeOperation = "destination-out";
+  for (let i = 0; i < 4; i++) {
+    const band = 6 + i * 4;
+    const by = horizon - r * 0.55 + i * (r * 0.14);
+    ctx.fillRect(cx - r, by, 2 * r, band);
+  }
+  ctx.restore();
+  // Re-paint the sky behind the cut bands.
+  ctx.save();
+  ctx.globalCompositeOperation = "destination-over";
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, w, horizon);
+  ctx.restore();
+  // Sea: deep blue with a few wave lines and the sun's reflection.
+  const sea = ctx.createLinearGradient(0, horizon, 0, h);
+  sea.addColorStop(0, "#1b2a6b");
+  sea.addColorStop(1, NAVY);
+  ctx.fillStyle = sea;
+  ctx.fillRect(0, horizon, w, h - horizon);
+  ctx.lineCap = "round";
+  const lines = h > 1500 ? 5 : 3;
+  const gap = h > 1500 ? 22 : 14;
+  for (let i = 0; i < lines; i++) {
+    const ry = horizon + gap + i * gap;
+    const half = r * (0.9 - i * 0.16);
+    ctx.strokeStyle = `rgba(255, 190, 80, ${0.7 - i * 0.12})`;
+    ctx.lineWidth = 6 - i;
+    ctx.beginPath();
+    ctx.moveTo(cx - half, ry);
+    ctx.lineTo(cx + half, ry);
+    ctx.stroke();
+  }
+}
 
 function draw(
   ctx: CanvasRenderingContext2D,
@@ -54,16 +126,24 @@ function draw(
   range: string,
   community: string,
   mark: HTMLImageElement | null,
+  season = "",
 ) {
-  ctx.fillStyle = NAVY;
-  ctx.fillRect(0, 0, w, h);
+  const story = h > 1500;
+  const summer = season.toLowerCase() === "summer";
+  // Summer: sunset sky, a retro sun setting over the sea (Kai, 5 Nov).
+  const horizon = h - (story ? 250 : 150) - (story ? 330 : 230);
+  const sunR = story ? 230 : 150;
+  if (summer) drawSummer(ctx, w, h, horizon, sunR);
+  else {
+    ctx.fillStyle = NAVY;
+    ctx.fillRect(0, 0, w, h);
+  }
   grain(ctx, w, h);
   if (mark) {
     const mh = 72;
     const mw = (mark.naturalWidth / mark.naturalHeight) * mh;
     ctx.drawImage(mark, w - 48 - mw, 48, mw, mh);
   }
-  const story = h > 1500;
   const x = 72;
   const width = w - 2 * x;
   const font = bodyFont();
@@ -149,7 +229,10 @@ function draw(
     px += pw + 16;
   }
   const block = placed.length ? (row + 1) * ph + row * gap : 0;
-  const top = y + (bodyTop - bodySize - y - block) / 2;
+  // Summer: pills sit under the heading, clear of the sun.
+  const top = summer
+    ? Math.min(y + (story ? 100 : 70), horizon - sunR - 30 - block)
+    : y + (bodyTop - bodySize - y - block) / 2;
   for (const [i, p] of placed.entries()) {
     const py = top + p.row * (ph + gap);
     ctx.fillStyle = colours[i % colours.length];
@@ -254,8 +337,8 @@ function HostsSheet({
     const c = canvas.current;
     const ctx = c?.getContext("2d");
     if (!c || !ctx) return;
-    draw(ctx, w, h, text, range, community, mark);
-  }, [w, h, text, range, community, mark, fonts]);
+    draw(ctx, w, h, text, range, community, mark, name);
+  }, [w, h, text, range, community, mark, fonts, name]);
 
   const blob = () =>
     new Promise<Blob | null>((r) => canvas.current?.toBlob(r, "image/png"));
