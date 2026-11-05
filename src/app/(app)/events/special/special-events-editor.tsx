@@ -69,17 +69,21 @@ export function SpecialEventsEditor({
                 {e.name}
               </p>
               <p className="text-sm text-stone-500">
-                {e.easter_offset != null
-                  ? `${EASTER_DAYS.find((d) => d.offset === e.easter_offset)?.label ?? "Around Easter"} every year (${e.on_date ? shortDate(e.on_date) : "date moves"})`
-                  : e.month && e.week_of_month && e.weekday != null
-                    ? `${WEEKS[e.week_of_month - 1]} ${WEEKDAYS[e.weekday]} of ${MONTHS[e.month - 1]} every year${e.on_date ? ` (${shortDate(e.on_date)})` : ""}`
-                    : e.month && e.day
-                      ? `${e.day} ${MONTHS[e.month - 1]} every year`
-                      : e.next_date
-                        ? shortDate(e.next_date)
-                        : "No date set"}{" "}
+                {e.anniversary
+                  ? "Each community's start date"
+                  : e.easter_offset != null
+                    ? `${EASTER_DAYS.find((d) => d.offset === e.easter_offset)?.label ?? "Around Easter"} every year (${e.on_date ? shortDate(e.on_date) : "date moves"})`
+                    : e.month && e.week_of_month && e.weekday != null
+                      ? `${WEEKS[e.week_of_month - 1]} ${WEEKDAYS[e.weekday]} of ${MONTHS[e.month - 1]} every year${e.on_date ? ` (${shortDate(e.on_date)})` : ""}`
+                      : e.month && e.day
+                        ? `${e.day} ${MONTHS[e.month - 1]} every year`
+                        : e.next_date
+                          ? shortDate(e.next_date)
+                          : "No date set"}{" "}
                 · suggested {leadLabel(e.lead_days)} before ·{" "}
-                {regionName(e.region_ids)}
+                {e.countries?.length
+                  ? e.countries.join(", ")
+                  : regionName(e.region_ids)}
               </p>
             </div>
             {canEdit(e) ? (
@@ -178,20 +182,22 @@ function EditSheet({
   const save = () => {
     setError("");
     if (!name.trim()) return setError("Give it a name.");
-    if (mode === "once" && !date) return setError("Pick the date.");
+    if (!e?.anniversary && mode === "once" && !date)
+      return setError("Pick the date.");
     if (where && where.length === 0)
       return setError("Pick at least one region, or Worldwide.");
+    const fixedDate = !e?.anniversary;
     const row = {
       name: name.trim(),
       emoji: emoji.trim() || null,
       blurb: blurb.trim() || null,
       link: link.trim() || null,
-      month: yearly || mode === "weekday" ? month : null,
-      day: yearly ? day : null,
-      week_of_month: mode === "weekday" ? week : null,
-      weekday: mode === "weekday" ? weekday : null,
-      next_date: mode === "once" ? date : null,
-      easter_offset: mode === "easter" ? easter : null,
+      month: fixedDate && (yearly || mode === "weekday") ? month : null,
+      day: fixedDate && yearly ? day : null,
+      week_of_month: fixedDate && mode === "weekday" ? week : null,
+      weekday: fixedDate && mode === "weekday" ? weekday : null,
+      next_date: fixedDate && mode === "once" ? date : null,
+      easter_offset: fixedDate && mode === "easter" ? easter : null,
       lead_days: lead,
       region_ids: where,
     };
@@ -243,107 +249,117 @@ function EditSheet({
             />
           </label>
         </div>
-        <div className="text-sm">
-          <span className="font-medium">Date</span>
-          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
-            {(
-              [
-                { v: "fixed", label: "Same date every year" },
-                { v: "weekday", label: "Same weekday every year" },
-                { v: "easter", label: "Moves with Easter" },
-                { v: "once", label: "Set each year" },
-              ] as const
-            ).map((o) => (
-              <label key={o.label} className="flex items-center gap-1.5">
-                <input
-                  type="radio"
-                  checked={mode === o.v}
-                  onChange={() => setMode(o.v)}
-                />
-                {o.label}
-              </label>
-            ))}
-          </div>
-          {mode === "easter" ? (
-            <select
-              value={easter}
-              onChange={(v) => setEaster(Number(v.target.value))}
-              className={`mt-2 ${input}`}
-            >
-              {EASTER_DAYS.map((d) => (
-                <option key={d.offset} value={d.offset}>
-                  {d.label}
-                </option>
+        {e?.anniversary ? (
+          <p className="text-sm">
+            <span className="font-medium">Date</span>
+            <span className="mt-1 block text-stone-600">
+              Each community&apos;s own start date (they add it on the
+              suggestion card).
+            </span>
+          </p>
+        ) : (
+          <div className="text-sm">
+            <span className="font-medium">Date</span>
+            <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+              {(
+                [
+                  { v: "fixed", label: "Same date every year" },
+                  { v: "weekday", label: "Same weekday every year" },
+                  { v: "easter", label: "Moves with Easter" },
+                  { v: "once", label: "Set each year" },
+                ] as const
+              ).map((o) => (
+                <label key={o.label} className="flex items-center gap-1.5">
+                  <input
+                    type="radio"
+                    checked={mode === o.v}
+                    onChange={() => setMode(o.v)}
+                  />
+                  {o.label}
+                </label>
               ))}
-            </select>
-          ) : mode === "weekday" ? (
-            <div className="mt-2 flex gap-2">
-              <select
-                value={week}
-                onChange={(v) => setWeek(Number(v.target.value))}
-                className={`${input.replace("w-full", "")} w-24`}
-              >
-                {WEEKS.map((w, i) => (
-                  <option key={w} value={i + 1}>
-                    {w}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={weekday}
-                onChange={(v) => setWeekday(Number(v.target.value))}
-                className={input}
-              >
-                {WEEKDAYS.map((w, i) => (
-                  <option key={w} value={i}>
-                    {w}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={month}
-                onChange={(v) => setMonth(Number(v.target.value))}
-                className={input}
-              >
-                {MONTHS.map((m, i) => (
-                  <option key={m} value={i + 1}>
-                    of {m}
-                  </option>
-                ))}
-              </select>
             </div>
-          ) : yearly ? (
-            <div className="mt-2 flex gap-2">
+            {mode === "easter" ? (
               <select
-                value={day}
-                onChange={(v) => setDay(Number(v.target.value))}
-                className={`${input.replace("w-full", "")} w-20`}
+                value={easter}
+                onChange={(v) => setEaster(Number(v.target.value))}
+                className={`mt-2 ${input}`}
               >
-                {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                  <option key={d}>{d}</option>
-                ))}
-              </select>
-              <select
-                value={month}
-                onChange={(v) => setMonth(Number(v.target.value))}
-                className={input}
-              >
-                {MONTHS.map((m, i) => (
-                  <option key={m} value={i + 1}>
-                    {m}
+                {EASTER_DAYS.map((d) => (
+                  <option key={d.offset} value={d.offset}>
+                    {d.label}
                   </option>
                 ))}
               </select>
-            </div>
-          ) : (
-            <input
-              type="date"
-              value={date}
-              onChange={(v) => setDate(v.target.value)}
-              className={`mt-2 ${input}`}
-            />
-          )}
-        </div>
+            ) : mode === "weekday" ? (
+              <div className="mt-2 flex gap-2">
+                <select
+                  value={week}
+                  onChange={(v) => setWeek(Number(v.target.value))}
+                  className={`${input.replace("w-full", "")} w-24`}
+                >
+                  {WEEKS.map((w, i) => (
+                    <option key={w} value={i + 1}>
+                      {w}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={weekday}
+                  onChange={(v) => setWeekday(Number(v.target.value))}
+                  className={input}
+                >
+                  {WEEKDAYS.map((w, i) => (
+                    <option key={w} value={i}>
+                      {w}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={month}
+                  onChange={(v) => setMonth(Number(v.target.value))}
+                  className={input}
+                >
+                  {MONTHS.map((m, i) => (
+                    <option key={m} value={i + 1}>
+                      of {m}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : yearly ? (
+              <div className="mt-2 flex gap-2">
+                <select
+                  value={day}
+                  onChange={(v) => setDay(Number(v.target.value))}
+                  className={`${input.replace("w-full", "")} w-20`}
+                >
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                    <option key={d}>{d}</option>
+                  ))}
+                </select>
+                <select
+                  value={month}
+                  onChange={(v) => setMonth(Number(v.target.value))}
+                  className={input}
+                >
+                  {MONTHS.map((m, i) => (
+                    <option key={m} value={i + 1}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <input
+                type="date"
+                value={date}
+                onChange={(v) => setDate(v.target.value)}
+                className={`mt-2 ${input}`}
+              />
+            )}
+          </div>
+        )}
         <label className="block text-sm">
           <span className="font-medium">Suggest it</span>
           <select

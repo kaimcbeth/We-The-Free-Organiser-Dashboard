@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "More suggested special events: 🌱 World Vegan Day Social (1 Nov), 🐁 World Day for Laboratory Animals (24 Apr), 🎂 your Community Anniversary (add your start date on its card), and for Australian communities 🐎 Melbourne Cup and 🍩 the 12/12 Krispy Kreme Movie Challenge.",
+      },
+      {
+        level: "organiser",
         text: "New suggested special event: 💐 Mother's Day (2nd Sunday in May), outreach for every mother, with a focus on dairy cows and their calves. It shows up on your Events page about two months before.",
       },
       {
@@ -76,6 +80,10 @@ export const CHANGELOG: Release[] = [
       {
         level: "god",
         text: "0186: special_events.week_of_month (5 = last) + weekday (0 = Sun), private.nth_weekday; special_event_date handles it. Seeded Mother's Day (May, 2nd Sunday, lead 61).",
+      },
+      {
+        level: "god",
+        text: "0187: teams.founded_on + set_team_founded_on; special_events.anniversary + countries (matched to the country in the team name); private.team_special_date used by suggested_events, guess_special_event, plan_special_event_later; more generic words never auto-tag (world, vegan, animals, community, outreach, melbourne…).",
       },
       {
         level: "organiser",

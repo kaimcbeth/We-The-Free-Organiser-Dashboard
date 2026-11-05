@@ -73,9 +73,13 @@ export function SuggestedEvents({
         </button>
       </div>
       {enabled &&
-        suggestions.map((s) => (
-          <SuggestionCard key={`${s.id}-${s.year}`} teamId={teamId} s={s} />
-        ))}
+        suggestions.map((s) =>
+          s.needs_date ? (
+            <StartDateCard key={`${s.id}-${s.year}`} teamId={teamId} s={s} />
+          ) : (
+            <SuggestionCard key={`${s.id}-${s.year}`} teamId={teamId} s={s} />
+          ),
+        )}
     </div>
   );
 }
@@ -148,6 +152,11 @@ function SuggestionCard({ teamId, s }: { teamId: string; s: Suggestion }) {
       <p className="mt-1.5 font-semibold text-navy/80">
         {s.emoji && <span className="mr-1.5">{s.emoji}</span>}
         {s.name}
+        {s.years_old ? (
+          <span className="ml-1.5 font-normal text-stone-500">
+            · {s.years_old} {s.years_old === 1 ? "year" : "years"}
+          </span>
+        ) : null}
       </p>
       {s.blurb && <p className="mt-0.5 text-sm text-stone-500">{s.blurb}</p>}
       <p className="mt-2 text-xs text-stone-500">{onBoardLine(shown)}</p>
@@ -258,6 +267,90 @@ function SuggestionCard({ teamId, s }: { teamId: string; s: Suggestion }) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// Community anniversary before the community's start date is known: ask
+// for it (or hide it until next year).
+function StartDateCard({ teamId, s }: { teamId: string; s: Suggestion }) {
+  const router = useRouter();
+  const [date, setDate] = useState("");
+  const [error, setError] = useState("");
+  const [gone, setGone] = useState(false);
+  const [pending, start] = useTransition();
+  if (gone) return null;
+  const save = () => {
+    if (!date) return setError("Pick the date first.");
+    setError("");
+    start(async () => {
+      const { error } = await createClient().rpc("set_team_founded_on", {
+        p_team_id: teamId,
+        p_date: date,
+      });
+      if (error) return setError("Couldn't save that. Is the date right?");
+      router.refresh();
+    });
+  };
+  const hide = () =>
+    start(async () => {
+      setGone(true);
+      await createClient().rpc("respond_special_event", {
+        p_team_id: teamId,
+        p_event_id: s.id,
+        p_year: s.year,
+        p_status: "hidden",
+      });
+      router.refresh();
+    });
+
+  return (
+    <div className="relative rounded-2xl border border-dashed border-stone-300 bg-white/50 p-4">
+      <button
+        type="button"
+        aria-label={`Hide ${s.name}`}
+        title="Hide this suggestion"
+        onClick={hide}
+        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full text-lg leading-none text-stone-400 hover:bg-stone-100 hover:text-navy"
+      >
+        ×
+      </button>
+      <p className="pr-8 text-xs font-medium text-stone-500">
+        <span className="mr-1.5 rounded-full bg-yellow/60 px-2 py-0.5 font-semibold text-navy">
+          Suggested
+        </span>
+        Your community&apos;s birthday
+      </p>
+      <p className="mt-1.5 font-semibold text-navy/80">
+        {s.emoji && <span className="mr-1.5">{s.emoji}</span>}
+        {s.name}
+      </p>
+      {s.blurb && <p className="mt-0.5 text-sm text-stone-500">{s.blurb}</p>}
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+        <label htmlFor={`founded-${s.id}`} className="text-stone-600">
+          When did your community start?
+        </label>
+        <input
+          id={`founded-${s.id}`}
+          type="date"
+          value={date}
+          onChange={(v) => setDate(v.target.value)}
+          className="rounded-lg bg-white px-2.5 py-1 ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
+        />
+        <button
+          type="button"
+          onClick={save}
+          disabled={pending}
+          className="rounded-lg px-3 py-1 font-semibold text-pink-ink ring-1 ring-pink/50 hover:bg-pink/10 disabled:opacity-60"
+        >
+          Save
+        </button>
+      </div>
+      <p className="mt-1.5 text-xs text-stone-400">
+        A rough date is fine, like the day of your first event. We&apos;ll
+        suggest the celebration six weeks before.
+      </p>
+      {error && <p className="mt-1 text-sm text-red-700">{error}</p>}
     </div>
   );
 }

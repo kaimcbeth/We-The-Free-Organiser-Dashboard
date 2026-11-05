@@ -11,8 +11,10 @@ export type Suggestion = {
   emoji: string | null;
   blurb: string | null;
   link: string | null;
-  date: string; // yyyy-mm-dd
+  date: string; // yyyy-mm-dd ("" when needs_date)
   days: number;
+  needs_date?: boolean; // anniversary, community start date not set yet
+  years_old?: number | null; // anniversaries: how many years
   year: number;
   planning: boolean | null;
   region: string | null;
@@ -32,6 +34,8 @@ export type SpecialEvent = {
   easter_offset?: number | null; // days from Easter Sunday (0182)
   week_of_month?: number | null; // 1-4, 5 = last (0186), with month + weekday
   weekday?: number | null; // 0 = Sunday ... 6 = Saturday
+  anniversary?: boolean; // each community's own start date (0187)
+  countries?: string[] | null; // only teams in these countries (0187)
   lead_days: number;
   region_ids: string[] | null;
 };

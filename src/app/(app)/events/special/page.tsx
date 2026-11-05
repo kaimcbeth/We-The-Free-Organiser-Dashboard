@@ -11,6 +11,7 @@ import { SpecialEventsEditor } from "./special-events-editor";
 
 // Next date an event falls on (yyyy-mm-dd), on or after today.
 function nextDate(e: SpecialEvent, today: string): string | null {
+  if (e.anniversary) return null; // each community's own date
   if (e.easter_offset != null) {
     const y = Number(today.slice(0, 4));
     const d = easterDate(y, e.easter_offset);
@@ -42,7 +43,7 @@ export default async function SpecialEventsPage() {
     supabase
       .from("special_events")
       .select(
-        "id, name, emoji, blurb, link, month, day, next_date, easter_offset, week_of_month, weekday, lead_days, region_ids",
+        "id, name, emoji, blurb, link, month, day, next_date, easter_offset, week_of_month, weekday, anniversary, countries, lead_days, region_ids",
       )
       .order("month", { nullsFirst: false })
       .order("day")
