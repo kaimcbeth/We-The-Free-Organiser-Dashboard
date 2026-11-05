@@ -8,7 +8,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const APP_URL = Deno.env.get("APP_URL") ?? "https://wtf-organiser.vercel.app";
+const APP_URL = Deno.env.get("APP_URL") ?? "https://wtf-movement-hub.vercel.app";
 
 type DuePrompt = {
   id: string;

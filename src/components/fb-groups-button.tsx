@@ -124,7 +124,7 @@ const BROWSERS: { id: Browser; label: string; steps: string[] }[] = [
     label: "Chrome",
     steps: [
       "Right after a tab is blocked, click the small pop-up icon at the right end of the address bar.",
-      "Choose “Always allow pop-ups and redirects from wtf-organiser.vercel.app”, then Done.",
+      "Choose “Always allow pop-ups and redirects from wtf-movement-hub.vercel.app”, then Done.",
       "No icon? Go to Chrome’s menu (⋮) → Settings → Privacy and security → Site settings → Pop-ups and redirects, and add this site under “Allowed”.",
     ],
   },
@@ -143,7 +143,7 @@ const BROWSERS: { id: Browser; label: string; steps: string[] }[] = [
     label: "Edge",
     steps: [
       "Right after a tab is blocked, click the pop-up icon at the right end of the address bar.",
-      "Choose “Always allow pop-ups and redirects from wtf-organiser.vercel.app”, then Done.",
+      "Choose “Always allow pop-ups and redirects from wtf-movement-hub.vercel.app”, then Done.",
       "No icon? Menu (…) → Settings → Cookies and site permissions → Pop-ups and redirects → Allow → Add this site.",
     ],
   },
@@ -153,14 +153,14 @@ const BROWSERS: { id: Browser; label: string; steps: string[] }[] = [
     steps: [
       "A yellow bar appears under the address bar saying Firefox prevented pop-ups.",
       "Click Options (or Preferences) on that bar.",
-      "Choose “Allow pop-ups for wtf-organiser.vercel.app”.",
+      "Choose “Allow pop-ups for wtf-movement-hub.vercel.app”.",
     ],
   },
   {
     id: "safari",
     label: "Safari (Mac)",
     steps: [
-      "In the menu bar, click Safari → Settings for wtf-organiser.vercel.app…",
+      "In the menu bar, click Safari → Settings for wtf-movement-hub.vercel.app…",
       "Set “Pop-up Windows” to Allow.",
       "Reload this page and tap Open again.",
     ],

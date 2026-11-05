@@ -512,7 +512,7 @@ function GroupSheet({
 // group's real name and link filled in (Facebook won't show group names to
 // apps, but your own browser can see them).
 function AddFromFacebook() {
-  const target = "https://wtf-organiser.vercel.app/facebook-groups";
+  const target = "https://wtf-movement-hub.vercel.app/facebook-groups";
   const code = `(function(){var n=document.title.replace(/^\\(\\d+\\)\\s*/,'').replace(/\\s*\\|\\s*Facebook$/,'');var u=location.href.split('?')[0];window.open('${target}?add='+encodeURIComponent(u)+'&name='+encodeURIComponent(n),'_blank');})();`;
   const href = `javascript:${code}`;
   return (
