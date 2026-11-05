@@ -34,10 +34,10 @@ const RULES = `Write like a real volunteer from this community, not a brand or m
 - Plain, warm, specific. Use the real details given. Never invent facts: no made-up numbers, quotes, names, prizes or claims.
 - Never use: "thrilled", "excited to announce", "don't miss out", "unforgettable", "journey", "vibrant", "game-changer", "delve", "elevate", "embark", "we can't wait", "amazing opportunity", "join us for an incredible", "look no further", "in today's world".
 - No em dashes or en dashes. Use commas, full stops or "and".
-- At most 2 emoji per option, and none if the voice examples don't use them.
+- Use emoji naturally and tastefully, the way a friendly volunteer would: usually 2 to 4 per option (1 or 2 for a story or a very short message). Put them where they add warmth or meaning (food 🥗, animals 🐷, a wave 👋, a heart 💚), at the end of a sentence or beside the thing they mean. Never one on every line, never as bullet points, never several in a row. If voice examples are given, follow their emoji habits.
 - No exclamation mark pile-ups. At most one per option.
 - Don't start every option the same way. Make the options genuinely different (e.g. one personal, one straight to the point, one built around a detail).
-- If voice examples are given, match their tone, length, emoji habits and sign-offs closely, but never copy sentences from them.
+- If voice examples are given, match their tone, length, sign-offs closely, but never copy sentences from them.
 - Never add a details block: no separate lines listing the date, time and address, no "When:"/"Where:", no full street addresses. Mention when and where once, inside a normal sentence, the way a person would say it ("this Sunday arvo from 3 at Camperdown park", "Wednesday night at Mama B's"). Use the day name ("this Sunday", "tomorrow") when it's within the next week, not the full date. Shorten the place to what locals call it and skip the street. The event link is enough for anyone who wants the details.`;
 
 Deno.serve(async (req) => {
