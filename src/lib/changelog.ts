@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: '"Event hosts asked for next season" now shows up on the 1st of the month before each season (1 November for summer), due about three weeks before the season starts.',
+      },
+      {
+        level: "organiser",
         text: '"Event hosts asked for next season" has a Get graphic button: a "Host an event this summer" post or story with idea pills, every word editable.',
       },
       {
