@@ -67,6 +67,18 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "New suggested special event: 💐 Mother's Day (2nd Sunday in May), outreach for every mother, with a focus on dairy cows and their calves. It shows up on your Events page about two months before.",
+      },
+      {
+        level: "regional_lead",
+        text: "Special events can now fall on the same weekday every year (like the 2nd Sunday of May), as well as a fixed date or moving with Easter.",
+      },
+      {
+        level: "god",
+        text: "0186: special_events.week_of_month (5 = last) + weekday (0 = Sun), private.nth_weekday; special_event_date handles it. Seeded Mother's Day (May, 2nd Sunday, lead 61).",
+      },
+      {
+        level: "organiser",
         text: "Write post now uses a few more emoji, placed naturally (beside the food, a wave, a heart), never one on every line.",
       },
       {

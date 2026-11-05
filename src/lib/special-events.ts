@@ -30,6 +30,8 @@ export type SpecialEvent = {
   day: number | null;
   next_date: string | null;
   easter_offset?: number | null; // days from Easter Sunday (0182)
+  week_of_month?: number | null; // 1-4, 5 = last (0186), with month + weekday
+  weekday?: number | null; // 0 = Sunday ... 6 = Saturday
   lead_days: number;
   region_ids: string[] | null;
 };
@@ -113,4 +115,29 @@ export const EASTER_DAYS = [
   { offset: -1, label: "Easter Saturday" },
   { offset: 0, label: "Easter Sunday" },
   { offset: 1, label: "Easter Monday" },
+];
+
+// The nth weekday of a month as yyyy-mm-dd (n = 5 means the last one);
+// matches private.nth_weekday in the database (0186).
+export function nthWeekday(y: number, m: number, n: number, wd: number) {
+  let d: Date;
+  if (n === 5) {
+    d = new Date(Date.UTC(y, m, 0));
+    d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() - wd + 7) % 7));
+  } else {
+    d = new Date(Date.UTC(y, m - 1, 1));
+    d.setUTCDate(1 + ((wd - d.getUTCDay() + 7) % 7) + (n - 1) * 7);
+  }
+  return d.toISOString().slice(0, 10);
+}
+
+export const WEEKS = ["1st", "2nd", "3rd", "4th", "Last"];
+export const WEEKDAYS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
 ];

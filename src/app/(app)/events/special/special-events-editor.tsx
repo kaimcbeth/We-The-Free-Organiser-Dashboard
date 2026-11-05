@@ -7,6 +7,8 @@ import { Sheet } from "@/components/sheet";
 import {
   EASTER_DAYS,
   MONTHS,
+  WEEKDAYS,
+  WEEKS,
   shortDate,
   type SpecialEvent,
 } from "@/lib/special-events";
@@ -69,11 +71,13 @@ export function SpecialEventsEditor({
               <p className="text-sm text-stone-500">
                 {e.easter_offset != null
                   ? `${EASTER_DAYS.find((d) => d.offset === e.easter_offset)?.label ?? "Around Easter"} every year (${e.on_date ? shortDate(e.on_date) : "date moves"})`
-                  : e.month && e.day
-                    ? `${e.day} ${MONTHS[e.month - 1]} every year`
-                    : e.next_date
-                      ? shortDate(e.next_date)
-                      : "No date set"}{" "}
+                  : e.month && e.week_of_month && e.weekday != null
+                    ? `${WEEKS[e.week_of_month - 1]} ${WEEKDAYS[e.weekday]} of ${MONTHS[e.month - 1]} every year${e.on_date ? ` (${shortDate(e.on_date)})` : ""}`
+                    : e.month && e.day
+                      ? `${e.day} ${MONTHS[e.month - 1]} every year`
+                      : e.next_date
+                        ? shortDate(e.next_date)
+                        : "No date set"}{" "}
                 · suggested {leadLabel(e.lead_days)} before ·{" "}
                 {regionName(e.region_ids)}
               </p>
@@ -148,11 +152,20 @@ function EditSheet({
   const [emoji, setEmoji] = useState(e?.emoji ?? "");
   const [blurb, setBlurb] = useState(e?.blurb ?? "");
   const [link, setLink] = useState(e?.link ?? "");
-  // "fixed" = same date every year, "once" = set each year, "easter" = moves with Easter.
-  const [mode, setMode] = useState<"fixed" | "once" | "easter">(
-    e?.easter_offset != null ? "easter" : e && !e.month ? "once" : "fixed",
+  // "fixed" = same date every year, "weekday" = e.g. 2nd Sunday of May,
+  // "once" = set each year, "easter" = moves with Easter.
+  const [mode, setMode] = useState<"fixed" | "weekday" | "once" | "easter">(
+    e?.easter_offset != null
+      ? "easter"
+      : e?.week_of_month
+        ? "weekday"
+        : e && !e.month
+          ? "once"
+          : "fixed",
   );
   const yearly = mode === "fixed";
+  const [week, setWeek] = useState(e?.week_of_month ?? 2);
+  const [weekday, setWeekday] = useState(e?.weekday ?? 0);
   const [easter, setEaster] = useState(e?.easter_offset ?? -1);
   const [month, setMonth] = useState(e?.month ?? 1);
   const [day, setDay] = useState(e?.day ?? 1);
@@ -173,8 +186,10 @@ function EditSheet({
       emoji: emoji.trim() || null,
       blurb: blurb.trim() || null,
       link: link.trim() || null,
-      month: yearly ? month : null,
+      month: yearly || mode === "weekday" ? month : null,
       day: yearly ? day : null,
+      week_of_month: mode === "weekday" ? week : null,
+      weekday: mode === "weekday" ? weekday : null,
       next_date: mode === "once" ? date : null,
       easter_offset: mode === "easter" ? easter : null,
       lead_days: lead,
@@ -234,6 +249,7 @@ function EditSheet({
             {(
               [
                 { v: "fixed", label: "Same date every year" },
+                { v: "weekday", label: "Same weekday every year" },
                 { v: "easter", label: "Moves with Easter" },
                 { v: "once", label: "Set each year" },
               ] as const
@@ -260,6 +276,42 @@ function EditSheet({
                 </option>
               ))}
             </select>
+          ) : mode === "weekday" ? (
+            <div className="mt-2 flex gap-2">
+              <select
+                value={week}
+                onChange={(v) => setWeek(Number(v.target.value))}
+                className={`${input.replace("w-full", "")} w-24`}
+              >
+                {WEEKS.map((w, i) => (
+                  <option key={w} value={i + 1}>
+                    {w}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={weekday}
+                onChange={(v) => setWeekday(Number(v.target.value))}
+                className={input}
+              >
+                {WEEKDAYS.map((w, i) => (
+                  <option key={w} value={i}>
+                    {w}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={month}
+                onChange={(v) => setMonth(Number(v.target.value))}
+                className={input}
+              >
+                {MONTHS.map((m, i) => (
+                  <option key={m} value={i + 1}>
+                    of {m}
+                  </option>
+                ))}
+              </select>
+            </div>
           ) : yearly ? (
             <div className="mt-2 flex gap-2">
               <select
