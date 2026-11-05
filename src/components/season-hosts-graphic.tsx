@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Sheet } from "@/components/sheet";
 import { SaveToPlanner } from "@/components/save-to-planner";
-import { createClient } from "@/lib/supabase/client";
 import { grain, loadPosterFonts } from "@/components/graphic-poster";
 import {
   DISPLAY,
@@ -11,10 +10,7 @@ import {
   PINK,
   YELLOW,
   bodyFont,
-  communityLabel,
-  fit,
   loadImage,
-  wrap,
 } from "@/components/recap-maker";
 import { seasonForDue } from "@/components/season-calendar";
 
@@ -40,21 +36,20 @@ const IDEAS = [
 const SUMMER_IDEAS = [
   "Beach day",
   "Picnic",
-  "Swim",
+  "Karaoke",
   "Sunset walk",
-  "Outdoor movie",
+  "Movie night",
   "Sanctuary visit",
   "Your own idea",
 ];
 const defaults = (season: string): Text => ({
   kicker: `${season} calendar`,
   heading: `Wanna host something this ${season}?`,
-  // No call to action here: that goes in the message posted with it (Kai).
-  body: "Whatever you're into, we'd love to help make it happen.",
   ideas: (season === "summer" ? SUMMER_IDEAS : IDEAS).join(", "),
 });
 
-type Text = { kicker: string; heading: string; body: string; ideas: string };
+// No message or footer on it: the call to action goes in the WhatsApp text (Kai).
+type Text = { kicker: string; heading: string; ideas: string };
 
 function drawSummer(
   ctx: CanvasRenderingContext2D,
@@ -124,15 +119,15 @@ function draw(
   h: number,
   t: Text,
   range: string,
-  community: string,
   mark: HTMLImageElement | null,
   season = "",
 ) {
   const story = h > 1500;
   const summer = season.toLowerCase() === "summer";
   // Summer: sunset sky, a retro sun setting over the sea (Kai, 5 Nov).
-  const horizon = h - (story ? 250 : 150) - (story ? 330 : 230);
-  const sunR = story ? 230 : 150;
+  // Nothing goes under the sun any more (Kai: WhatsApp chat, keep it casual).
+  const horizon = h - (story ? 400 : 230);
+  const sunR = story ? 240 : 170;
   if (summer) drawSummer(ctx, w, h, horizon, sunR);
   else {
     ctx.fillStyle = NAVY;
@@ -196,16 +191,6 @@ function draw(
     ctx.letterSpacing = "0px";
     y += 64;
   }
-  const fy = h - (story ? 250 : 150);
-
-  // Message: sits just above the footer.
-  const bodySize = story ? 46 : 40;
-  ctx.font = `500 ${bodySize}px ${font}`;
-  const body = wrap(ctx, t.body, width, 5);
-  const bodyTop = fy - 70 - (body.length - 1) * bodySize * 1.35;
-  ctx.fillStyle = "rgba(255,255,255,0.9)";
-  body.forEach((l, i) => ctx.fillText(l, x, bodyTop + i * bodySize * 1.35));
-
   // Idea pills: centred in the space between.
   const ideas = t.ideas
     .split(",")
@@ -232,7 +217,7 @@ function draw(
   // Summer: pills sit under the heading, clear of the sun.
   const top = summer
     ? Math.min(y + (story ? 100 : 70), horizon - sunR - 30 - block)
-    : y + (bodyTop - bodySize - y - block) / 2;
+    : y + (h - 120 - y - block) / 2;
   for (const [i, p] of placed.entries()) {
     const py = top + p.row * (ph + gap);
     ctx.fillStyle = colours[i % colours.length];
@@ -242,25 +227,6 @@ function draw(
     ctx.fillStyle = NAVY;
     ctx.fillText(p.label, p.x + 26, py + ph * 0.68);
   }
-  ctx.letterSpacing = "0px";
-
-  // Footer.
-  ctx.strokeStyle = "rgba(255,255,255,0.25)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(x, fy);
-  ctx.lineTo(w - x, fy);
-  ctx.stroke();
-  ctx.font = `700 34px ${font}`;
-  ctx.fillStyle = "#ffffff";
-  ctx.fillText("www.activism.wtf", x, fy + 64);
-  ctx.font = `600 26px ${font}`;
-  ctx.letterSpacing = "3px";
-  ctx.fillStyle = "rgba(255,255,255,0.6)";
-  const size2 = fit(ctx, community, (s) => `600 ${s}px ${font}`, 420, 26, 16);
-  ctx.font = `600 ${size2}px ${font}`;
-  const cw = ctx.measureText(community).width;
-  ctx.fillText(community, w - x - cw, fy + 62);
   ctx.letterSpacing = "0px";
 }
 
@@ -307,7 +273,6 @@ function HostsSheet({
   const { name, range } = seasonForDue(dueAt, tz, 21);
   const [size, setSize] = useState<Size>("post");
   const [text, setText] = useState<Text>(() => defaults(name.toLowerCase()));
-  const [community, setCommunity] = useState("");
   const [mark, setMark] = useState<HTMLImageElement | null>(null);
   const [fonts, setFonts] = useState(0);
   const [msg, setMsg] = useState("");
@@ -319,26 +284,18 @@ function HostsSheet({
     loadImage("/brand/wtf-mark.png")
       .then((img) => live && setMark(img))
       .catch(() => {});
-    createClient()
-      .from("teams")
-      .select("name")
-      .eq("id", teamId)
-      .maybeSingle()
-      .then(
-        ({ data }) => live && setCommunity(communityLabel(data?.name ?? "")),
-      );
     return () => {
       live = false;
     };
-  }, [teamId]);
+  }, []);
 
   const { w, h } = SIZES[size];
   useEffect(() => {
     const c = canvas.current;
     const ctx = c?.getContext("2d");
     if (!c || !ctx) return;
-    draw(ctx, w, h, text, range, community, mark, name);
-  }, [w, h, text, range, community, mark, fonts, name]);
+    draw(ctx, w, h, text, range, mark, name);
+  }, [w, h, text, range, mark, fonts, name]);
 
   const blob = () =>
     new Promise<Blob | null>((r) => canvas.current?.toBlob(r, "image/png"));
@@ -443,7 +400,6 @@ function HostsSheet({
         {field("kicker", "Small line")}
         {field("heading", "Heading")}
         {field("ideas", "Ideas (separate with commas)")}
-        {field("body", "Message", 3)}
         <button
           type="button"
           onClick={() => setText(defaults(name.toLowerCase()))}
