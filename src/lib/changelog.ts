@@ -67,7 +67,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: 'New in the Social Media Hub: "We belong here, not here" (calves and their mothers in the dairy industry), with your @username on it.',
+        text: "New in the Social Media Hub: \"We belong here, not here\" (calves and their mothers in the dairy industry) and \"If the 'why' is powerful, the 'how' becomes easy\", each with your @username on it.",
       },
       {
         level: "organiser",
