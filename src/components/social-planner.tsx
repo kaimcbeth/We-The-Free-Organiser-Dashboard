@@ -55,6 +55,19 @@ export function SocialPlanner({ teamId, tz }: { teamId: string; tz: string }) {
   const [open, setOpen] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [reload, setReload] = useState(0);
+  const [dragOver, setDragOver] = useState<string | null>(null);
+
+  // Move a note or post to another day (drag and drop on the calendar).
+  async function moveItem(id: string, day: string) {
+    const item = items.find((p) => p.id === id);
+    if (!item || item.day === day) return;
+    setItems((list) => list.map((p) => (p.id === id ? { ...p, day } : p)));
+    const { error } = await createClient()
+      .from("social_plan")
+      .update({ day, updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) setReload((n) => n + 1);
+  }
 
   // Grid: Monday on or before the 1st, to Sunday on or after the last day.
   const days = useMemo(() => {
@@ -193,11 +206,28 @@ export function SocialPlanner({ teamId, tz }: { teamId: string; tz: string }) {
           const { ev, posts } = byDay(d);
           const inMonth = d.startsWith(month);
           return (
-            <button
+            <div
               key={d}
-              type="button"
+              role="button"
+              tabIndex={0}
               onClick={() => setOpen(d)}
-              className={`flex min-h-16 flex-col items-stretch gap-0.5 p-1 text-left align-top hover:bg-cyan/5 sm:min-h-24 ${inMonth ? "bg-white" : "bg-stone-50 text-stone-400"}`}
+              onKeyDown={(e) =>
+                (e.key === "Enter" || e.key === " ") && setOpen(d)
+              }
+              // Drop a dragged note or post here to move it to this day.
+              onDragOver={(e) => {
+                if (!e.dataTransfer.types.includes("text/x-plan")) return;
+                e.preventDefault();
+                if (dragOver !== d) setDragOver(d);
+              }}
+              onDragLeave={() => dragOver === d && setDragOver(null)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOver(null);
+                const id = e.dataTransfer.getData("text/x-plan");
+                if (id) moveItem(id, d);
+              }}
+              className={`flex min-h-16 cursor-pointer flex-col items-stretch gap-0.5 p-1 text-left align-top hover:bg-cyan/5 sm:min-h-24 ${dragOver === d ? "!bg-cyan/15 ring-2 ring-inset ring-cyan" : inMonth ? "bg-white" : "bg-stone-50 text-stone-400"}`}
             >
               <span
                 className={`self-start text-xs ${d === today ? "rounded-full bg-navy px-1.5 font-semibold text-white" : "px-0.5"}`}
@@ -228,20 +258,27 @@ export function SocialPlanner({ teamId, tz }: { teamId: string; tz: string }) {
                 {posts.map((p) => (
                   <span
                     key={p.id}
-                    className={`truncate rounded px-1 text-[11px] ${p.posted_at ? "bg-stone-100 text-stone-400 line-through" : isPlaceholder(p) ? "border border-dashed border-stone-400 text-stone-600" : "bg-pink/25 text-navy"}`}
+                    draggable
+                    title="Drag to another day to move it"
+                    onDragStart={(e) => {
+                      e.stopPropagation();
+                      e.dataTransfer.setData("text/x-plan", p.id);
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    className={`cursor-grab truncate rounded px-1 text-[11px] active:cursor-grabbing ${p.posted_at ? "bg-stone-100 text-stone-400 line-through" : isPlaceholder(p) ? "border border-dashed border-stone-400 text-stone-600" : "bg-pink/25 text-navy"}`}
                   >
                     {p.note || p.caption || "Image post"}
                   </span>
                 ))}
               </span>
-            </button>
+            </div>
           );
         })}
       </div>
       <p className="mt-2 text-xs text-stone-500">
-        Tap a day to jot an idea, plan a post or see what&apos;s on. You can
-        also save posts and graphics here from Write post and Get graphic in
-        Actions.
+        Tap a day to jot an idea, plan a post or see what&apos;s on. Drag an
+        idea or post to another day to move it. You can also save posts and
+        graphics here from Write post and Get graphic in Actions.
       </p>
 
       <h3 className="mt-6 text-sm font-semibold">
@@ -476,6 +513,7 @@ function PostEditor({
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [moving, setMoving] = useState(false);
   const placeholder = item ? isPlaceholder(item) : true;
 
   async function save() {
@@ -517,6 +555,16 @@ function PostEditor({
       .from("social_plan")
       .update({ posted_at: on ? new Date().toISOString() : null })
       .eq("id", item.id);
+    onChanged();
+  }
+
+  async function move() {
+    if (!item || !when) return;
+    await createClient()
+      .from("social_plan")
+      .update({ day: when, updated_at: new Date().toISOString() })
+      .eq("id", item.id);
+    setMoving(false);
     onChanged();
   }
 
@@ -629,7 +677,75 @@ function PostEditor({
           >
             {item.posted_at ? "Not posted yet" : "Mark as posted"}
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMoving(!moving);
+              setConfirmDelete(false);
+            }}
+            className="text-stone-500 hover:text-navy"
+          >
+            Move
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setConfirmDelete(!confirmDelete);
+              setMoving(false);
+            }}
+            className="text-stone-400 hover:text-red-700"
+          >
+            Delete
+          </button>
         </div>
+        {moving && (
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+            <span className="text-stone-600">Move to</span>
+            <input
+              type="date"
+              value={when}
+              onChange={(e) => setWhen(e.target.value)}
+              className="rounded-lg bg-white px-2 py-1 text-sm ring-1 ring-black/10"
+            />
+            <button
+              type="button"
+              onClick={move}
+              disabled={!when || when === item.day}
+              className="rounded-lg bg-navy px-2.5 py-1 font-semibold text-white disabled:opacity-50"
+            >
+              Move
+            </button>
+            {[1, 7].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setWhen(addDays(item.day, n))}
+                className="text-stone-500 hover:text-navy hover:underline"
+              >
+                {n === 1 ? "Next day" : "Next week"}
+              </button>
+            ))}
+          </div>
+        )}
+        {confirmDelete && (
+          <div className="mt-2 flex items-center gap-2 text-xs">
+            <span className="text-stone-600">Delete this?</span>
+            <button
+              type="button"
+              onClick={remove}
+              className="font-semibold text-red-700 hover:underline"
+            >
+              Delete
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(false)}
+              className="text-stone-500 hover:underline"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </li>
     );
 

@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Planner: drag an idea or post to another day to move it (on a computer), or use Move and Delete on it in the day's pop-up.",
+      },
+      {
+        level: "organiser",
         text: "Social media planner: the Social Media Hub now opens on a calendar with your upcoming events and planned posts. Tap a day to jot a quick idea, then fill in the caption, platforms and images later. Write post and Get graphic in Actions have a new Save to planner button, and you can copy, share or mark each post as posted.",
       },
       {
