@@ -8,6 +8,7 @@
 
 import { cover, grain } from "@/components/graphic-poster";
 import { fitLines, spaced, wrap } from "@/components/graphic-teaser";
+import { PALETTES, type Colours } from "@/components/graphic-colours";
 
 const SERIF = '"WTF Serif", Georgia, serif';
 const THIN = '"WTF Thin", "Helvetica Neue", Arial, sans-serif';
@@ -97,6 +98,15 @@ export function shortTitle(title: string, community: string | null) {
   return t || noEmoji(title);
 }
 
+// A text on a graphic that the organiser can change.
+export type TextField = {
+  key: string;
+  label: string;
+  value: string; // what it says unless they change it
+  wide?: boolean; // gets a full-width input
+};
+export type Texts = Record<string, string>;
+
 export function photoStyleDefaults(e: PhotoStyleEvent, recap: boolean) {
   const movie = e.typeName?.toLowerCase() === "movie challenge";
   const heading = movie
@@ -111,37 +121,102 @@ export function photoStyleDefaults(e: PhotoStyleEvent, recap: boolean) {
   return { heading, words: p && !recap ? `${lead} ${p}.` : lead };
 }
 
-export type PhotoColours = "warm" | "wtf";
+const handleText = (handle: string | null) =>
+  handle ? `@${handle}` : "www.activism.wtf";
+
+export function bigPhotoFields(
+  e: PhotoStyleEvent,
+  tz: string,
+  recap: boolean,
+  handle: string | null,
+): TextField[] {
+  const d = photoStyleDefaults(e, recap);
+  const date =
+    `${fmt(e.startsAt, tz, { weekday: "long", day: "numeric", month: "short" })}, ${time(e.startsAt, tz)}`.replace(
+      /\./g,
+      "",
+    );
+  return [
+    { key: "heading", label: "Heading", value: d.heading, wide: true },
+    { key: "words", label: "Words at the top right", value: d.words },
+    { key: "date", label: "Date and time", value: date },
+    { key: "follow", label: "Bottom line 1", value: "Follow us for more!" },
+    { key: "handle", label: "Bottom line 2", value: handleText(handle) },
+  ];
+}
+
+export function detailsFields(
+  e: PhotoStyleEvent,
+  tz: string,
+  recap: boolean,
+  handle: string | null,
+): TextField[] {
+  const d = photoStyleDefaults(e, recap);
+  return [
+    { key: "heading", label: "Heading", value: d.heading, wide: true },
+    {
+      key: "year",
+      label: "Year",
+      value: fmt(e.startsAt, tz, { year: "numeric" }),
+    },
+    {
+      key: "month",
+      label: "Month",
+      value: fmt(e.startsAt, tz, { month: "short" }).replace(".", ""),
+    },
+    {
+      key: "day",
+      label: "Day",
+      value: fmt(e.startsAt, tz, { day: "numeric" }),
+    },
+    { key: "place", label: "Place", value: place(e) },
+    { key: "suburb", label: "Address", value: where(e) },
+    {
+      key: "label",
+      label: "Small heading",
+      value: recap ? "Thank you" : "Come along",
+    },
+    {
+      key: "when1",
+      label: "Line 1",
+      value: fmt(e.startsAt, tz, { weekday: "long" }),
+    },
+    {
+      key: "when2",
+      label: "Line 2",
+      value: fmt(e.startsAt, tz, { day: "numeric", month: "long" }),
+    },
+    { key: "when3", label: "Line 3", value: timeRange(e, tz) },
+    { key: "handle", label: "Bottom left", value: handle ? `@${handle}` : "" },
+    { key: "site", label: "Bottom right", value: "www.activism.wtf" },
+  ];
+}
 
 type Common = {
   w: number;
   h: number;
-  e: PhotoStyleEvent;
-  tz: string;
-  recap: boolean;
-  heading: string;
-  words: string; // Big photo only: the few words top-right
-  handle: string | null; // Instagram username, without the @
+  t: Texts;
   photo: HTMLImageElement | null;
   mark: HTMLImageElement | null;
-  colours: PhotoColours;
+  colours: Colours;
 };
+
+const up = (s: string | undefined) => (s ?? "").trim().toUpperCase();
 
 // ---------------------------------------------------------------- Big photo
 
 export function drawBigPhoto(canvas: HTMLCanvasElement, o: Common) {
-  const { w, h } = o;
+  const { w, h, t } = o;
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d")!;
   const wide = w > h;
   const u = Math.min(w, h * 0.8) / 1080;
   const pad = Math.round(26 * u);
-  const d = photoStyleDefaults(o.e, o.recap);
 
   if (o.photo) cover(ctx, o.photo, 0, 0, w, h);
   else {
-    ctx.fillStyle = o.colours === "wtf" ? "#071130" : "#1d211d";
+    ctx.fillStyle = o.colours === "warm" ? "#1d211d" : PALETTES[o.colours].bg;
     ctx.fillRect(0, 0, w, h);
     grain(ctx, w, h);
   }
@@ -161,16 +236,17 @@ export function drawBigPhoto(canvas: HTMLCanvasElement, o: Common) {
   ctx.textBaseline = "alphabetic";
 
   // Top-right words and date.
-  const boxW = w * (wide ? 0.26 : 0.38);
+  const words = up(t.words);
+  const dateText = up(t.date);
+  const boxW = words || dateText ? w * (wide ? 0.26 : 0.38) : 0;
   const thin = (s: number) => `${s}px ${THIN}`;
-  const wordsText = (o.words.trim() || d.words).toUpperCase();
   const wordsFit = fitLines(
     ctx,
-    wordsText,
+    words || dateText || "X",
     thin,
     Math.round(38 * u),
     Math.round(24 * u),
-    boxW,
+    Math.max(boxW, 1),
     4,
     1,
   );
@@ -178,27 +254,28 @@ export function drawBigPhoto(canvas: HTMLCanvasElement, o: Common) {
   ctx.textAlign = "right";
   const wcap = ctx.measureText("H").actualBoundingBoxAscent;
   let y = pad + wcap + 4 * u;
-  for (const l of wordsFit.lines) {
-    spaced(ctx, l, w - pad, y, -0.8 * u);
-    y += wordsFit.size * 1.02;
+  if (words) {
+    for (const l of wordsFit.lines) {
+      spaced(ctx, l, w - pad, y, -0.8 * u);
+      y += wordsFit.size * 1.02;
+    }
+    y += wordsFit.size * 0.75;
   }
-  y += wordsFit.size * 0.75;
-  const dateText =
-    `${fmt(o.e.startsAt, o.tz, { weekday: "long", day: "numeric", month: "short" })}, ${time(o.e.startsAt, o.tz)}`
-      .replace(/\./g, "")
-      .toUpperCase();
-  for (const l of wrap(ctx, dateText, boxW)) {
-    spaced(ctx, l, w - pad, y, -0.8 * u);
-    y += wordsFit.size * 1.02;
-  }
-  const boxBottom = y - wordsFit.size * 1.02 + 30 * u; // below the last line
+  if (dateText)
+    for (const l of wrap(ctx, dateText, boxW)) {
+      spaced(ctx, l, w - pad, y, -0.8 * u);
+      y += wordsFit.size * 1.02;
+    }
+  const boxBottom = boxW
+    ? y - wordsFit.size * 1.02 + 30 * u // below the last line
+    : pad;
 
   // Heading: either the first line shares the top with the words box and
   // the rest run full width underneath, or every line runs full width below
   // the box. Whichever lets the heading be bigger.
-  const heading = (o.heading.trim() || d.heading).toUpperCase();
+  const heading = up(t.heading);
   const full = w - pad * 2;
-  const first = full - boxW - 30 * u;
+  const first = full - boxW - (boxW ? 30 * u : 0);
   const serif = (s: number) => `${s}px ${SERIF}`;
   const maxH = h * (wide ? 0.62 : 0.4);
   const layout = (shared: boolean) => {
@@ -231,33 +308,36 @@ export function drawBigPhoto(canvas: HTMLCanvasElement, o: Common) {
     }
     return null;
   };
-  const a = layout(true);
-  const b = layout(false);
-  const best = !a ? b : !b ? a : b.size > a.size * 1.15 ? b : a;
-  if (best) {
-    ctx.font = serif(best.size);
-    ctx.textAlign = "left";
-    best.lines.forEach((l, i) =>
-      ctx.fillText(
-        l,
-        pad - 4 * u,
-        i === 0 ? best.firstBase : best.rest + (i - 1) * best.cap * 1.12,
-      ),
-    );
+  if (heading) {
+    const a = layout(true);
+    const b = layout(false);
+    const best = !a ? b : !b ? a : b.size > a.size * 1.15 ? b : a;
+    if (best) {
+      ctx.fillStyle = PALETTES[o.colours].head;
+      ctx.font = serif(best.size);
+      ctx.textAlign = "left";
+      best.lines.forEach((l, i) =>
+        ctx.fillText(
+          l,
+          pad - 4 * u,
+          i === 0 ? best.firstBase : best.rest + (i - 1) * best.cap * 1.12,
+        ),
+      );
+    }
   }
 
-  // Bottom-left: follow us + handle; logo bottom-right.
+  // Bottom-left: two lines (follow us + handle); logo bottom-right.
+  ctx.fillStyle = "#ffffff";
   const fs = Math.round(36 * u);
   ctx.font = thin(fs);
-  const handle = o.handle ? `@${o.handle}` : "WWW.ACTIVISM.WTF";
-  spaced(ctx, handle.toUpperCase(), pad, h - pad - 4 * u, -0.8 * u);
-  spaced(
-    ctx,
-    "FOLLOW US FOR MORE!",
-    pad,
-    h - pad - 4 * u - fs * 1.05,
-    -0.8 * u,
-  );
+  ctx.textAlign = "left";
+  const bottomLines = [up(t.follow), up(t.handle)].filter(Boolean);
+  bottomLines
+    .slice()
+    .reverse()
+    .forEach((l, i) =>
+      spaced(ctx, l, pad, h - pad - 4 * u - i * fs * 1.05, -0.8 * u),
+    );
   if (o.mark) {
     const m = Math.round(78 * u);
     ctx.drawImage(o.mark, w - pad - m, h - pad - m, m, m);
@@ -267,16 +347,16 @@ export function drawBigPhoto(canvas: HTMLCanvasElement, o: Common) {
 // ---------------------------------------------------------- Photo + details
 
 export function drawPhotoDetails(canvas: HTMLCanvasElement, o: Common) {
-  const { w, h } = o;
+  const { w, h, t } = o;
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d")!;
   const wide = w > h;
   const u = Math.min(w, h * 0.8) / 1080;
   const pad = Math.round(88 * u);
-  const d = photoStyleDefaults(o.e, o.recap);
-  const bg = o.colours === "wtf" ? "#071130" : "#1c1c1c";
-  const accent = o.colours === "wtf" ? "#ff47b9" : "#f2853a";
+  const pal = PALETTES[o.colours];
+  const bg = o.colours === "warm" ? "#1c1c1c" : pal.bg;
+  const accent = pal.accent;
 
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, w, h);
@@ -315,45 +395,53 @@ export function drawPhotoDetails(canvas: HTMLCanvasElement, o: Common) {
   const bold = (s: number) => `${s}px ${BOLD}`;
   ctx.font = bold(ds);
   ctx.textAlign = "right";
-  const date = [
-    fmt(o.e.startsAt, o.tz, { year: "numeric" }),
-    fmt(o.e.startsAt, o.tz, { month: "short" }).replace(".", "").toUpperCase(),
-    fmt(o.e.startsAt, o.tz, { day: "numeric" }),
-  ];
-  const dateW = Math.max(...date.map((t) => ctx.measureText(t).width));
+  const date = [up(t.year), up(t.month), up(t.day)];
+  const shown = date.filter(Boolean);
+  const dateW = shown.length
+    ? Math.max(...shown.map((d) => ctx.measureText(d).width))
+    : 0;
   const headBase = wide ? h * 0.42 : h * 0.69;
-  ctx.fillStyle = "#ffffff";
-  date.forEach((t, i) =>
-    spaced(ctx, t, right, headBase - (2 - i) * ds * 0.98, -1 * u),
+  ctx.fillStyle = pal.text;
+  shown.forEach((d, i) =>
+    spaced(
+      ctx,
+      d,
+      right,
+      headBase - (shown.length - 1 - i) * ds * 0.98,
+      -1 * u,
+    ),
   );
 
   // Heading beside it, as big as fits (two lines at most).
-  const heading = (o.heading.trim() || d.heading).toUpperCase();
-  const headMax = colW - dateW - 50 * u;
+  const heading = up(t.heading);
+  const headMax = colW - dateW - (dateW ? 50 * u : 0);
   const body = (s: number) => `${s}px ${BODY}`;
-  const head = fitLines(
-    ctx,
-    heading,
-    body,
-    Math.round(150 * u),
-    Math.round(56 * u),
-    headMax,
-    2,
-    0.95,
-  );
-  ctx.font = body(head.size);
-  ctx.textAlign = "left";
-  head.lines
-    .slice()
-    .reverse()
-    .forEach((l, i) =>
-      spaced(ctx, l, left - 4 * u, headBase - i * head.size * 0.95, -3 * u),
+  if (heading) {
+    const head = fitLines(
+      ctx,
+      heading,
+      body,
+      Math.round(150 * u),
+      Math.round(56 * u),
+      headMax,
+      2,
+      0.95,
     );
+    ctx.font = body(head.size);
+    ctx.textAlign = "left";
+    head.lines
+      .slice()
+      .reverse()
+      .forEach((l, i) =>
+        spaced(ctx, l, left - 4 * u, headBase - i * head.size * 0.95, -3 * u),
+      );
+  }
 
-  // Under it: the place (white) and suburb (accent) on the left, the time on
-  // the right; on wide covers they stack.
+  // Under it: the place (white) and address (accent) on the left, the time
+  // on the right; on wide covers they stack.
+  ctx.textAlign = "left";
   let y = headBase + 112 * u;
-  const p = place(o.e).toUpperCase();
+  const p = up(t.place);
   const half = wide ? colW : colW * 0.55;
   if (p) {
     const pf = fitLines(
@@ -367,13 +455,13 @@ export function drawPhotoDetails(canvas: HTMLCanvasElement, o: Common) {
       1.05,
     );
     ctx.font = body(pf.size);
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = pal.text;
     pf.lines.forEach((l, i) =>
       spaced(ctx, l, left, y + i * pf.size * 1.05, -1.5 * u),
     );
     y += (pf.lines.length - 1) * pf.size * 1.05 + 62 * u;
   }
-  const suburb = where(o.e).toUpperCase();
+  const suburb = up(t.suburb);
   if (suburb) {
     ctx.font = body(Math.round(32 * u));
     ctx.fillStyle = accent;
@@ -384,18 +472,16 @@ export function drawPhotoDetails(canvas: HTMLCanvasElement, o: Common) {
   let ty = wide ? y + 80 * u : headBase + 100 * u;
   ctx.textAlign = wide ? "left" : "right";
   const tx = wide ? left : right;
-  ctx.font = body(Math.round(34 * u));
-  ctx.fillStyle = accent;
-  spaced(ctx, o.recap ? "THANK YOU" : "COME ALONG", tx, ty, 1 * u);
-  ty += 52 * u;
+  const label = up(t.label);
+  if (label) {
+    ctx.font = body(Math.round(34 * u));
+    ctx.fillStyle = accent;
+    spaced(ctx, label, tx, ty, 1 * u);
+    ty += 52 * u;
+  }
   ctx.font = bold(Math.round(22 * u));
-  ctx.fillStyle = "#ffffff";
-  const rows = [
-    fmt(o.e.startsAt, o.tz, { weekday: "long" }).toUpperCase(),
-    fmt(o.e.startsAt, o.tz, { day: "numeric", month: "long" }).toUpperCase(),
-    timeRange(o.e, o.tz),
-  ];
-  for (const r of rows) {
+  ctx.fillStyle = pal.text;
+  for (const r of [up(t.when1), up(t.when2), up(t.when3)].filter(Boolean)) {
     spaced(ctx, r, tx, ty, 2 * u);
     ty += 30 * u;
   }
@@ -405,8 +491,8 @@ export function drawPhotoDetails(canvas: HTMLCanvasElement, o: Common) {
   ctx.font = body(Math.round(19 * u));
   ctx.fillStyle = accent;
   ctx.textAlign = "left";
-  const foot = o.handle ? `@${o.handle}` : "";
-  if (foot) spaced(ctx, foot, wide ? left : pad, fy, 1.5 * u);
+  if (t.handle?.trim())
+    spaced(ctx, t.handle.trim(), wide ? left : pad, fy, 1.5 * u);
   ctx.textAlign = "right";
-  spaced(ctx, "www.activism.wtf", right, fy, 1.5 * u);
+  if (t.site?.trim()) spaced(ctx, t.site.trim(), right, fy, 1.5 * u);
 }

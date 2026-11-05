@@ -5,7 +5,12 @@
 // Rebuilt from a template Kai sent (5 Nov 2026).
 
 import { grain } from "@/components/graphic-poster";
-import { shortTitle } from "@/components/graphic-photo-styles";
+import {
+  shortTitle,
+  type TextField,
+  type Texts,
+} from "@/components/graphic-photo-styles";
+import { PALETTES, type Colours } from "@/components/graphic-colours";
 
 const TALL = '"WTF Tall", Impact, "Arial Narrow", sans-serif';
 const BODY = '"WTF Body", "Helvetica Neue", Arial, sans-serif';
@@ -24,41 +29,6 @@ export function loadTeaserFonts() {
   return fontsReady;
 }
 
-export type TeaserColours = "warm" | "wtf";
-export const TEASER_COLOURS: Record<TeaserColours, string> = {
-  warm: "Warm",
-  wtf: "WTF colours",
-};
-
-const PALETTES: Record<
-  TeaserColours,
-  { bg: string; ink: string; glows: [number, number, number, string][] }
-> = {
-  // [x, y, radius (all as a share of the width/height), colour]
-  warm: {
-    bg: "#29292b",
-    ink: "#ffe1cc",
-    glows: [
-      [0, 0.12, 0.5, "rgba(176,128,24,0.95)"],
-      [0, 0.55, 0.62, "rgba(178,62,28,0.9)"],
-      [0.12, 1, 0.55, "rgba(150,44,26,0.85)"],
-      [1, 1, 0.42, "rgba(196,92,24,0.9)"],
-      [1, 0.66, 0.32, "rgba(160,48,30,0.75)"],
-    ],
-  },
-  wtf: {
-    bg: "#071130",
-    ink: "#fff3fa",
-    glows: [
-      [0, 0.12, 0.5, "rgba(255,217,15,0.55)"],
-      [0, 0.55, 0.62, "rgba(255,71,185,0.7)"],
-      [0.12, 1, 0.55, "rgba(255,71,185,0.55)"],
-      [1, 1, 0.42, "rgba(255,217,15,0.5)"],
-      [1, 0.66, 0.32, "rgba(255,71,185,0.45)"],
-    ],
-  },
-};
-
 export type TeaserEvent = {
   title: string;
   startsAt: string;
@@ -66,32 +36,12 @@ export type TeaserEvent = {
   community: string | null;
 };
 
-export type TeaserText = {
-  heading: string;
-  name: string;
-  small: string;
-  date: string;
-  site: string;
-};
-
-export function teaserDefaults(e: TeaserEvent, recap: boolean) {
-  const movie = e.typeName?.toLowerCase() === "movie challenge";
-  return {
-    heading: recap ? "Thank you" : "Coming soon",
-    name: movie ? "3 Minute Movie Challenge" : shortTitle(e.title, e.community),
-    small: recap ? "For coming on" : "Save the date",
-  };
-}
-
-export function teaserText(
+export function teaserFields(
   e: TeaserEvent,
   tz: string,
   recap: boolean,
-  heading: string,
-  name: string,
-  small: string,
-): TeaserText {
-  const d = teaserDefaults(e, recap);
+): TextField[] {
+  const movie = e.typeName?.toLowerCase() === "movie challenge";
   const parts = new Intl.DateTimeFormat("en-AU", {
     timeZone: tz,
     day: "2-digit",
@@ -99,13 +49,31 @@ export function teaserText(
     year: "numeric",
   }).formatToParts(new Date(e.startsAt));
   const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
-  return {
-    heading: (heading.trim() || d.heading).toUpperCase(),
-    name: name.trim() || d.name,
-    small: (small.trim() || d.small).toUpperCase(),
-    date: `${get("day")}.${get("month")}.${get("year")}`,
-    site: "WWW.ACTIVISM.WTF",
-  };
+  return [
+    {
+      key: "heading",
+      label: "Heading",
+      value: recap ? "Thank you" : "Coming soon",
+    },
+    {
+      key: "name",
+      label: "Event name",
+      value: movie
+        ? "3 Minute Movie Challenge"
+        : shortTitle(e.title, e.community),
+    },
+    {
+      key: "small",
+      label: "Small line above the date",
+      value: recap ? "For coming on" : "Save the date",
+    },
+    {
+      key: "date",
+      label: "Date",
+      value: `${get("day")}.${get("month")}.${get("year")}`,
+    },
+    { key: "site", label: "Down the side", value: "www.activism.wtf" },
+  ];
 }
 
 export function wrap(ctx: CanvasRenderingContext2D, text: string, max: number) {
@@ -169,12 +137,13 @@ export function drawTeaser(
   o: {
     w: number;
     h: number;
-    text: TeaserText;
-    colours: TeaserColours;
+    t: Texts;
+    colours: Colours;
     mark: HTMLImageElement | null;
   },
 ) {
-  const { w, h, text } = o;
+  const { w, h, t } = o;
+  const up = (k: string) => (t[k] ?? "").trim().toUpperCase();
   const pal = PALETTES[o.colours];
   canvas.width = w;
   canvas.height = h;
@@ -216,7 +185,7 @@ export function drawTeaser(
   ctx.rotate(Math.PI / 2);
   ctx.font = `${siteSize}px ${BODY}`;
   ctx.textAlign = "left";
-  spaced(ctx, text.site, 0, 0, siteSize * 0.22);
+  spaced(ctx, up("site"), 0, 0, siteSize * 0.22);
   ctx.restore();
 
   // Heading: as big as fits, top-left.
@@ -224,7 +193,7 @@ export function drawTeaser(
   const headMax = w * (wide ? 0.55 : 0.68);
   const head = fitLines(
     ctx,
-    text.heading,
+    up("heading"),
     tall,
     Math.round(300 * u),
     Math.round(90 * u),
@@ -240,24 +209,31 @@ export function drawTeaser(
   ctx.shadowColor = "rgba(0,0,0,0.28)";
   ctx.shadowBlur = 14 * u;
   ctx.shadowOffsetY = 4 * u;
-  head.lines.forEach((l, i) =>
-    ctx.fillText(l, pad, pad + cap + i * cap * 1.05),
-  );
+  if (up("heading"))
+    head.lines.forEach((l, i) =>
+      ctx.fillText(l, pad, pad + cap + i * cap * 1.05),
+    );
   ctx.restore();
 
   // Bottom-right block, built upwards from the date.
   const right = w - pad;
   ctx.textAlign = "right";
-  const dateY = h - pad;
-  ctx.font = `${Math.round(50 * u)}px ${BODY}`;
-  spaced(ctx, text.date, right, dateY, 2 * u);
-  const smallY = dateY - 66 * u;
-  ctx.font = `${Math.round(26 * u)}px ${BODY}`;
-  spaced(ctx, text.small, right, smallY, 26 * u * 0.16);
+  let base = h - pad; // baseline of the lowest line still to place
+  if (up("date")) {
+    ctx.font = `${Math.round(50 * u)}px ${BODY}`;
+    spaced(ctx, up("date"), right, base, 2 * u);
+    base -= 66 * u;
+  }
+  if (up("small")) {
+    ctx.font = `${Math.round(26 * u)}px ${BODY}`;
+    spaced(ctx, up("small"), right, base, 26 * u * 0.16);
+    base -= 58 * u;
+  }
+  const nameText = (t.name ?? "").trim();
 
   const name = fitLines(
     ctx,
-    text.name,
+    nameText || "X",
     tall,
     Math.round(104 * u),
     Math.round(60 * u),
@@ -270,12 +246,13 @@ export function drawTeaser(
   ctx.shadowColor = "rgba(0,0,0,0.25)";
   ctx.shadowBlur = 10 * u;
   ctx.shadowOffsetY = 3 * u;
-  const nameBase = smallY - 58 * u;
+  const nameBase = base;
   const pitch = name.size * 1.02;
-  name.lines
-    .slice()
-    .reverse()
-    .forEach((l, i) => ctx.fillText(l, right, nameBase - i * pitch));
+  if (nameText)
+    name.lines
+      .slice()
+      .reverse()
+      .forEach((l, i) => ctx.fillText(l, right, nameBase - i * pitch));
   ctx.restore();
 
   // Three loose rings, bottom-left.

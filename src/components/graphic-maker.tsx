@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PhotoUploader } from "@/components/photo-uploader";
 import { CarouselMaker } from "@/components/carousel-maker";
 import { Sheet } from "@/components/sheet";
@@ -23,19 +23,20 @@ import {
   posterText,
 } from "@/components/graphic-poster";
 import {
-  TEASER_COLOURS,
   drawTeaser,
   loadTeaserFonts,
-  teaserDefaults,
-  teaserText,
-  type TeaserColours,
+  teaserFields,
 } from "@/components/graphic-teaser";
 import {
+  bigPhotoFields,
+  detailsFields,
   drawBigPhoto,
   drawPhotoDetails,
   loadPhotoStyleFonts,
-  photoStyleDefaults,
+  type TextField,
+  type Texts,
 } from "@/components/graphic-photo-styles";
+import { PALETTES, type Colours } from "@/components/graphic-colours";
 
 // Event graphics, drawn in the browser on a canvas from the event's details
 // and the community's own photos, in We The Free colours, downloaded as PNG.
@@ -68,7 +69,7 @@ const STYLES: Record<Style, string> = {
   details: "Photo + details",
 };
 // Styles with a Warm / WTF colours choice.
-const COLOURED: Style[] = ["teaser", "details"];
+const COLOURED: Style[] = ["teaser", "bigphoto", "details"];
 
 const NAVY = "#071130";
 const PINK = "#ff47b9";
@@ -150,6 +151,7 @@ function draw(
   template: Template,
   imgs: HTMLImageElement[],
   logo: HTMLImageElement | null,
+  t: Texts,
 ) {
   const { w, h } = SIZES[size];
   canvas.width = w;
@@ -231,14 +233,15 @@ function draw(
     ctx.font = `800 ${34 * u}px ${font}`;
     ctx.fillText("WE THE FREE", pad, pad);
   }
-  if (e.community) {
+  const community = t.community?.trim();
+  if (community) {
     ctx.fillStyle = "rgba(255,255,255,0.9)";
     ctx.font = `600 ${30 * u}px ${font}`;
     if (logo) {
       ctx.textBaseline = "middle";
-      ctx.fillText(e.community, nameX, pad + logoH / 2);
+      ctx.fillText(community, nameX, pad + logoH / 2);
       ctx.textBaseline = "top";
-    } else ctx.fillText(e.community, pad, pad + 44 * u);
+    } else ctx.fillText(community, pad, pad + 44 * u);
   }
 
   // Where the text starts.
@@ -251,17 +254,8 @@ function draw(
   ctx.fillRect(pad, y, 120 * u, 14 * u);
   y += 50 * u;
 
-  // Movie Challenge promos: "3 Minute Movie Challenge" above "Vegan Outreach",
-  // rather than the event type and the calendar title.
-  const movie =
-    template === "promo" && e.typeName?.toLowerCase() === "movie challenge";
-  const kicker =
-    template === "recap"
-      ? "THANKS FOR COMING!"
-      : movie
-        ? "3 MINUTE MOVIE CHALLENGE"
-        : e.typeName?.toUpperCase();
-  const title = movie ? "Vegan Outreach" : e.title;
+  const kicker = t.kicker?.trim().toUpperCase();
+  const title = t.title?.trim() ?? "";
   if (kicker) {
     ctx.fillStyle = CYAN;
     ctx.font = `700 ${36 * u}px ${font}`;
@@ -278,38 +272,100 @@ function draw(
   }
 
   y += 24 * u;
-  ctx.fillStyle = YELLOW;
-  ctx.font = `700 ${50 * u}px ${font}`;
-  ctx.fillText(fmtDate(e.startsAt, tz), pad, y);
-  y += 64 * u;
-  if (template === "promo") {
-    ctx.fillStyle = "#ffffff";
-    ctx.font = `500 ${44 * u}px ${font}`;
-    ctx.fillText(
-      e.endsAt
-        ? `${fmtTime(e.startsAt, tz)} – ${fmtTime(e.endsAt, tz)}`
-        : fmtTime(e.startsAt, tz),
-      pad,
-      y,
-    );
-    y += 58 * u;
-    const place = e.venue ?? e.address;
-    if (place)
-      for (const l of lines(ctx, place, textW).slice(0, 2)) {
-        ctx.fillText(l, pad, y);
-        y += 56 * u;
-      }
+  if (t.date?.trim()) {
+    ctx.fillStyle = YELLOW;
+    ctx.font = `700 ${50 * u}px ${font}`;
+    ctx.fillText(t.date.trim(), pad, y);
+    y += 64 * u;
   }
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `500 ${44 * u}px ${font}`;
+  if (t.time?.trim()) {
+    ctx.fillText(t.time.trim(), pad, y);
+    y += 58 * u;
+  }
+  if (t.place?.trim())
+    for (const l of lines(ctx, t.place.trim(), textW).slice(0, 2)) {
+      ctx.fillText(l, pad, y);
+      y += 56 * u;
+    }
 
   ctx.fillStyle = "rgba(255,255,255,0.7)";
   ctx.font = `600 ${34 * u}px ${font}`;
   ctx.textBaseline = "bottom";
-  const foot = "activism.wtf";
-  ctx.fillText(
-    foot,
-    wide ? pad : w - pad - ctx.measureText(foot).width,
-    h - pad,
-  );
+  const foot = t.footer?.trim() ?? "";
+  if (foot)
+    ctx.fillText(
+      foot,
+      wide ? pad : w - pad - ctx.measureText(foot).width,
+      h - pad,
+    );
+}
+
+// What the Classic style says, unless the organiser changes it.
+function classicFields(
+  e: GraphicEvent,
+  tz: string,
+  template: Template,
+): TextField[] {
+  // Movie Challenge promos: "3 Minute Movie Challenge" above "Vegan Outreach",
+  // rather than the event type and the calendar title.
+  const movie =
+    template === "promo" && e.typeName?.toLowerCase() === "movie challenge";
+  const promo = template === "promo";
+  return [
+    { key: "community", label: "Beside the logo", value: e.community ?? "" },
+    {
+      key: "kicker",
+      label: "Small heading",
+      value: !promo
+        ? "Thanks for coming!"
+        : movie
+          ? "3 Minute Movie Challenge"
+          : (e.typeName ?? ""),
+    },
+    {
+      key: "title",
+      label: "Title",
+      value: movie ? "Vegan Outreach" : e.title,
+      wide: true,
+    },
+    { key: "date", label: "Date", value: fmtDate(e.startsAt, tz) },
+    {
+      key: "time",
+      label: "Time",
+      value: !promo
+        ? ""
+        : e.endsAt
+          ? `${fmtTime(e.startsAt, tz)} – ${fmtTime(e.endsAt, tz)}`
+          : fmtTime(e.startsAt, tz),
+    },
+    {
+      key: "place",
+      label: "Place",
+      value: promo ? (e.venue ?? e.address ?? "") : "",
+    },
+    { key: "footer", label: "Bottom corner", value: "activism.wtf" },
+  ];
+}
+
+// What the Poster style says, unless the organiser changes it.
+function posterFields(
+  e: GraphicEvent,
+  tz: string,
+  template: Template,
+): TextField[] {
+  const p = posterText(e, tz, template === "recap", "", "");
+  const d = posterDefaults(e, template === "recap");
+  return [
+    { key: "heading", label: "Heading", value: d.heading, wide: true },
+    { key: "tagline", label: "Tagline", value: p.tagline },
+    { key: "badge1", label: "In the ring, top", value: p.badge[0] },
+    { key: "badge2", label: "In the ring, bottom", value: p.badge[1] },
+    { key: "left", label: "Time", value: p.left ?? "" },
+    { key: "right", label: "Place", value: p.right ?? "" },
+    { key: "footer", label: "Bottom line", value: p.footer ?? "", wide: true },
+  ];
 }
 
 export function GraphicMaker({
@@ -356,14 +412,9 @@ export function GraphicMaker({
   const [mark, setMark] = useState<HTMLImageElement | null>(null);
   const [style, setStyle] = useState<Style>("classic");
   const [fonts, setFonts] = useState(0); // bumped when a style's fonts load
-  const [heading, setHeading] = useState("");
-  const [tagline, setTagline] = useState("");
-  const [footer, setFooter] = useState("");
-  const [noFooter, setNoFooter] = useState(false);
-  const [teaserName, setTeaserName] = useState("");
-  const [small, setSmall] = useState("");
-  const [words, setWords] = useState("");
-  const [colours, setColours] = useState<TeaserColours>("warm");
+  // Words the organiser has changed, keyed "style.field" ("" = left off).
+  const [edits, setEdits] = useState<Record<string, string>>({});
+  const [colours, setColours] = useState<Colours>("warm");
   const [handle, setHandle] = useState<string | null>(null);
   const [reload, setReload] = useState(0); // bumped after an upload
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -470,53 +521,63 @@ export function GraphicMaker({
     };
   }, [open, event.teamId]);
 
+  const recap = template === "recap";
+  const fields = useMemo(
+    () =>
+      style === "classic"
+        ? classicFields(event, tz, template)
+        : style === "poster"
+          ? posterFields(event, tz, template)
+          : style === "teaser"
+            ? teaserFields(event, tz, recap)
+            : style === "bigphoto"
+              ? bigPhotoFields(event, tz, recap, handle)
+              : detailsFields(event, tz, recap, handle),
+    [style, event, tz, template, recap, handle],
+  );
+  const texts = useMemo(
+    () =>
+      Object.fromEntries(
+        fields.map((f) => [f.key, edits[`${style}.${f.key}`] ?? f.value]),
+      ) as Texts,
+    [fields, edits, style],
+  );
+  const edited = fields.some((f) => `${style}.${f.key}` in edits);
+
   useEffect(() => {
     if (!open || !canvas.current) return;
-    const { w: cw, h: ch } = SIZES[size];
-    const recap = template === "recap";
+    const { w, h } = SIZES[size];
     if (style === "teaser") {
-      drawTeaser(canvas.current, {
-        w: cw,
-        h: ch,
-        text: teaserText(event, tz, recap, heading, teaserName, small),
-        colours,
-        mark,
-      });
+      drawTeaser(canvas.current, { w, h, t: texts, colours, mark });
     } else if (style === "bigphoto" || style === "details") {
       (style === "bigphoto" ? drawBigPhoto : drawPhotoDetails)(canvas.current, {
-        w: cw,
-        h: ch,
-        e: event,
-        tz,
-        recap,
-        heading,
-        words,
-        handle,
+        w,
+        h,
+        t: texts,
         photo: imgs[0] ?? null,
         mark,
         colours,
       });
     } else if (style === "poster") {
-      const { w, h } = SIZES[size];
+      const o = (k: string) => texts[k]?.trim() ?? "";
       drawPoster(canvas.current, {
         w,
         h,
-        text: posterText(
-          event,
-          tz,
-          template === "recap",
-          heading,
-          tagline,
-          footer,
-          noFooter,
-        ),
+        text: {
+          heading: o("heading").toUpperCase(),
+          tagline: o("tagline"),
+          badge: [o("badge1").toUpperCase(), o("badge2").toUpperCase()],
+          left: o("left") || null,
+          right: o("right").toUpperCase() || null,
+          footer: o("footer").toUpperCase() || null,
+        },
         imgs,
         logo,
         mark,
         font:
           getComputedStyle(document.body).fontFamily || "system-ui, sans-serif",
       });
-    } else draw(canvas.current, event, size, tz, template, imgs, logo);
+    } else draw(canvas.current, event, size, tz, template, imgs, logo, texts);
   }, [
     open,
     size,
@@ -528,23 +589,11 @@ export function GraphicMaker({
     style,
     fonts,
     mark,
-    heading,
-    tagline,
-    footer,
-    noFooter,
-    teaserName,
-    small,
-    words,
+    texts,
     colours,
-    handle,
   ]);
-  const defaults = posterDefaults(event, template === "recap");
-  const tDefaults = teaserDefaults(event, template === "recap");
-  const pDefaults = photoStyleDefaults(event, template === "recap");
   const input =
     "mt-1 block w-full rounded-lg bg-white px-2.5 py-1.5 text-sm text-navy ring-1 ring-stone-300 placeholder:text-stone-400";
-  const defaultFooter =
-    posterText(event, tz, template === "recap", heading, tagline).footer ?? "";
 
   const [copied, setCopied] = useState<"" | "done" | "failed">("");
   // Copy the picture, to paste straight into WhatsApp, Instagram or Facebook.
@@ -648,133 +697,83 @@ export function GraphicMaker({
                 />
               </div>
 
-              {style === "poster" && (
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  <label className="text-xs font-medium text-stone-500">
-                    Heading
-                    <input
-                      value={heading}
-                      onChange={(e) => setHeading(e.target.value)}
-                      placeholder={defaults.heading}
-                      maxLength={60}
-                      className="mt-1 block w-full rounded-lg bg-white px-2.5 py-1.5 text-sm text-navy ring-1 ring-stone-300 placeholder:text-stone-400"
-                    />
-                  </label>
-                  <label className="text-xs font-medium text-stone-500">
-                    Tagline
-                    <input
-                      value={tagline}
-                      onChange={(e) => setTagline(e.target.value)}
-                      placeholder={defaults.tagline}
-                      maxLength={40}
-                      className="mt-1 block w-full rounded-lg bg-white px-2.5 py-1.5 text-sm text-navy ring-1 ring-stone-300 placeholder:text-stone-400"
-                    />
-                  </label>
-                  <div className="text-xs font-medium text-stone-500 sm:col-span-2">
-                    <div className="flex items-center justify-between">
-                      <span>Bottom line</span>
-                      <label className="flex items-center gap-1.5 font-normal">
-                        <input
-                          type="checkbox"
-                          checked={noFooter}
-                          onChange={(e) => setNoFooter(e.target.checked)}
-                        />
-                        Remove it
-                      </label>
-                    </div>
-                    <input
-                      value={footer}
-                      onChange={(e) => setFooter(e.target.value)}
-                      placeholder={defaultFooter}
-                      maxLength={80}
-                      disabled={noFooter}
-                      aria-label="Bottom line"
-                      className="mt-1 block w-full rounded-lg bg-white px-2.5 py-1.5 text-sm text-navy ring-1 ring-stone-300 placeholder:text-stone-400 disabled:opacity-40"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {style !== "classic" && style !== "poster" && (
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  <label className="text-xs font-medium text-stone-500">
-                    Heading
-                    <input
-                      value={heading}
-                      onChange={(e) => setHeading(e.target.value)}
-                      placeholder={
-                        style === "teaser"
-                          ? tDefaults.heading.toUpperCase()
-                          : pDefaults.heading.toUpperCase()
+              <div className="mt-3">
+                <div className="mb-1 flex items-center justify-between">
+                  <p className="text-xs font-medium text-stone-500">
+                    Words (empty a box to leave it off)
+                  </p>
+                  {edited && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEdits((all) =>
+                          Object.fromEntries(
+                            Object.entries(all).filter(
+                              ([k]) => !k.startsWith(`${style}.`),
+                            ),
+                          ),
+                        )
                       }
-                      maxLength={60}
-                      className={input}
-                    />
-                  </label>
-                  {style === "teaser" && (
-                    <>
-                      <label className="text-xs font-medium text-stone-500">
-                        Event name
-                        <input
-                          value={teaserName}
-                          onChange={(e) => setTeaserName(e.target.value)}
-                          placeholder={tDefaults.name}
-                          maxLength={50}
-                          className={input}
-                        />
-                      </label>
-                      <label className="text-xs font-medium text-stone-500">
-                        Small line above the date
-                        <input
-                          value={small}
-                          onChange={(e) => setSmall(e.target.value)}
-                          placeholder={tDefaults.small.toUpperCase()}
-                          maxLength={30}
-                          className={input}
-                        />
-                      </label>
-                    </>
+                      className="text-xs text-stone-500 hover:underline"
+                    >
+                      Put the original words back
+                    </button>
                   )}
-                  {style === "bigphoto" && (
-                    <label className="text-xs font-medium text-stone-500">
-                      Words at the top right
+                </div>
+                <div className="grid gap-2 grid-cols-2">
+                  {fields.map((f) => (
+                    <label
+                      key={f.key}
+                      className={`text-xs font-medium text-stone-500 ${f.wide ? "col-span-2" : ""}`}
+                    >
+                      {f.label}
                       <input
-                        value={words}
-                        onChange={(e) => setWords(e.target.value)}
-                        placeholder={pDefaults.words}
-                        maxLength={70}
+                        value={texts[f.key] ?? ""}
+                        onChange={(e) =>
+                          setEdits((all) => ({
+                            ...all,
+                            [`${style}.${f.key}`]: e.target.value,
+                          }))
+                        }
+                        placeholder="Left off"
+                        maxLength={90}
                         className={input}
                       />
                     </label>
-                  )}
-                  {COLOURED.includes(style) && (
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-stone-500 sm:col-span-2">
-                      Colours
-                      {(Object.keys(TEASER_COLOURS) as TeaserColours[]).map(
-                        (c) => (
-                          <button
-                            key={c}
-                            type="button"
-                            onClick={() => setColours(c)}
-                            className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${
-                              colours === c
-                                ? "bg-navy text-white ring-navy"
-                                : "bg-white text-stone-500 ring-stone-300"
-                            }`}
-                          >
-                            {TEASER_COLOURS[c]}
-                          </button>
-                        ),
-                      )}
-                    </div>
-                  )}
-                  {style !== "teaser" && !handle && (
-                    <p className="text-xs text-stone-500 sm:col-span-2">
-                      Add your community&apos;s Instagram username in the Social
-                      Media Hub and it goes on these.
-                    </p>
-                  )}
+                  ))}
                 </div>
+              </div>
+
+              {COLOURED.includes(style) && (
+                <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs font-medium text-stone-500">
+                  Colours
+                  {(Object.keys(PALETTES) as Colours[]).map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setColours(c)}
+                      className={`flex items-center gap-1.5 rounded-full py-0.5 pl-1 pr-2.5 text-xs font-medium ring-1 ${
+                        colours === c
+                          ? "bg-navy text-white ring-navy"
+                          : "bg-white text-stone-500 ring-stone-300"
+                      }`}
+                    >
+                      <span
+                        className="h-3.5 w-3.5 rounded-full ring-1 ring-black/10"
+                        style={{
+                          background: `linear-gradient(135deg, ${PALETTES[c].swatch[0]} 50%, ${PALETTES[c].swatch[1]} 50%)`,
+                        }}
+                      />
+                      {PALETTES[c].label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {(style === "bigphoto" || style === "details") && !handle && (
+                <p className="mt-2 text-xs text-stone-500">
+                  Add your community&apos;s Instagram username in the Social
+                  Media Hub and it goes on these by itself.
+                </p>
               )}
 
               {all.length > 0 && style !== "teaser" && (
