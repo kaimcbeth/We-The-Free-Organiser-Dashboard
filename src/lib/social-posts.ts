@@ -20,6 +20,29 @@ const CORNER = { x: 51, baseline: 1307, size: 28 };
 
 export const SOCIAL_POSTS: SocialPost[] = [
   {
+    slug: "sunshine",
+    title: "The first and probably the last time I feel the sunshine",
+    added: "2026-11-05",
+    slides: 1,
+    // The main page's bottom-left "www.activism.wtf" (Poppins 27px).
+    watermark: { x: 104, baseline: 1297, size: 27 },
+    caption: `Slaughterhouses are undoubtedly horrific and literally 'places of doom' but are the lives of innocent animals any different before reaching there?
+
+Most individuals bred for human consumption live in dingy, unhygienic, and cramped places with little to no sunlight. This is besides the violation of their fundamental right to bodily autonomy and free life.
+
+The only time they ever get to experience sunlight is when they are shoved into trucks and transported to the slaughterhouse after long periods of suffering.
+
+What crime did they commit to be suffering like this?
+
+Question, reflect and go vegan!
+
+🌱 Want to do something about it? Come along to one of our events in {community}. Everyone's welcome and no experience is needed. Find what's coming up at the link in our bio.
+
+.
+
+#wtfactivism #wethefree #bacon #slaughterhouse #slaughter #farmedanimals #pig #cutepig #animals #pulledpork #baconburger #baconcheeseburger #ham #baconsandwich #animallovers #veganpost #vegansofinstagram #meatlover #animals #animalrights #vegan #veganism #hotdog #pizza #bbq #foodshare #foodie #food #tasty #oppression`,
+  },
+  {
     slug: "listen",
     title: "Lots of people talk to animals… not very many listen",
     added: "2026-11-05",
