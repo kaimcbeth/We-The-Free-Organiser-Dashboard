@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Social Media Hub has a new Make a post tab: pick one of your events (or Something else) and make a graphic and write the words for it, then save them to the planner.",
+      },
+      {
+        level: "organiser",
         text: 'Fewer actions: "Facebook event created" and "invites sent" are now one action, Facebook event set up. The three promo actions (WhatsApp, Facebook groups, Instagram) are now Event promoted, and the three photo ones are now Photos shared. Each has tick boxes inside for every place, and ticking them all finishes the action.',
       },
       {

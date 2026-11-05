@@ -384,8 +384,10 @@ export function GraphicMaker({
   startOpen = false,
   onClose,
   planDay,
+  initialEdits,
 }: {
   planDay?: string; // suggested planner day (an action's due date)
+  initialEdits?: Record<string, string>; // "style.key" → words ("" = left off)
   event: GraphicEvent;
   tz: string;
   initialSize?: GraphicSize;
@@ -419,7 +421,9 @@ export function GraphicMaker({
   const [style, setStyle] = useState<Style>("classic");
   const [fonts, setFonts] = useState(0); // bumped when a style's fonts load
   // Words the organiser has changed, keyed "style.field" ("" = left off).
-  const [edits, setEdits] = useState<Record<string, string>>({});
+  const [edits, setEdits] = useState<Record<string, string>>(
+    () => initialEdits ?? {},
+  );
   const [colours, setColours] = useState<Colours>("warm");
   const [handle, setHandle] = useState<string | null>(null);
   const [reload, setReload] = useState(0); // bumped after an upload

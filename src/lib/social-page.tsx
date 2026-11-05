@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { SocialHub } from "@/components/social-hub";
 import { SocialHubTabs } from "@/components/social-hub-tabs";
 import { SocialPlanner } from "@/components/social-planner";
+import { PostMaker } from "@/components/post-maker";
 
 // The Social Media Hub page, shared by organisers and the Core Team.
 export async function SocialHubPage({
@@ -39,8 +40,9 @@ export async function SocialHubPage({
         Social Media Hub
       </h1>
       <p className="mt-1 text-stone-600">
-        Plan your community&apos;s posts around your events, and grab ready-made
-        posts from the We The Free main page with your username on them.
+        Plan your community&apos;s posts around your events, make graphics and
+        words for any post, and grab ready-made posts from the We The Free main
+        page with your username on them.
       </p>
       <div className="mt-5">
         {(() => {
@@ -56,6 +58,12 @@ export async function SocialHubPage({
             <SocialHubTabs
               planner={
                 <SocialPlanner
+                  teamId={teamId}
+                  tz={team?.timezone ?? "Australia/Sydney"}
+                />
+              }
+              make={
+                <PostMaker
                   teamId={teamId}
                   tz={team?.timezone ?? "Australia/Sydney"}
                 />

@@ -191,7 +191,7 @@ export function CopyMaker({
 }: {
   initialNote?: string; // what this post is for (special event promo steps)
   planDay?: string; // suggested planner day (an action's due date)
-  eventId: string;
+  eventId?: string | null; // none: a general post (Social Media Hub "Make a post")
   teamId: string;
   past: boolean; // after the event: share how it went + invite to the next one
   initial?: CopyPlatform[];
@@ -211,7 +211,7 @@ export function CopyMaker({
 
   // Upcoming outreach: WhatsApp posts get a sign-up list of who's coming.
   useEffect(() => {
-    if (!open || past) return;
+    if (!open || past || !eventId) return;
     createClient()
       .from("events")
       .select("event_type:event_types(counts_as_outreach)")
@@ -227,7 +227,8 @@ export function CopyMaker({
         setOutreach(!!one?.counts_as_outreach);
       });
   }, [open, past, eventId]);
-  const signUp = outreach && !past && places.has("whatsapp");
+  const general = !eventId;
+  const signUp = !general && outreach && !past && places.has("whatsapp");
 
   async function write() {
     setError("");
@@ -235,12 +236,14 @@ export function CopyMaker({
     const { data, error: e } = await createClient().functions.invoke(
       "write-copy",
       {
-        body: {
-          eventId,
-          platforms: [...places],
-          note,
-          target: signUp ? Number(target) || 20 : undefined,
-        },
+        body: general
+          ? { purpose: "general", teamId, platforms: [...places], note }
+          : {
+              eventId,
+              platforms: [...places],
+              note,
+              target: signUp ? Number(target) || 20 : undefined,
+            },
       },
     );
     setBusy(false);
@@ -263,13 +266,21 @@ export function CopyMaker({
       </button>
       {open && (
         <Sheet
-          title={past ? "Post about how it went" : "Post about this event"}
+          title={
+            general
+              ? "Write a post"
+              : past
+                ? "Post about how it went"
+                : "Post about this event"
+          }
           onClose={() => setOpen(false)}
         >
           <p className="text-sm text-stone-600">
-            {past
-              ? "Shares how it went and invites people to your next event."
-              : "Invites people to come along."}{" "}
+            {general
+              ? "Say what it's about and get a few options to pick from."
+              : past
+                ? "Shares how it went and invites people to your next event."
+                : "Invites people to come along."}{" "}
             You pick, tweak and post it yourself.
           </p>
           <div className="mt-3 flex flex-wrap gap-1.5">
@@ -293,16 +304,24 @@ export function CopyMaker({
             })}
           </div>
           <label className="mt-3 block text-sm font-medium text-stone-700">
-            {past ? "Best moment from the day?" : "Anything special this time?"}{" "}
-            <span className="font-normal text-stone-400">(optional)</span>
+            {general
+              ? "What's the post about?"
+              : past
+                ? "Best moment from the day?"
+                : "Anything special this time?"}{" "}
+            {!general && (
+              <span className="font-normal text-stone-400">(optional)</span>
+            )}
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              rows={2}
+              rows={general ? 3 : 2}
               placeholder={
-                past
-                  ? "e.g. a guy who'd never thought about it said he'd try a week vegan"
-                  : "e.g. new spot this time, or bring a friend"
+                general
+                  ? "e.g. thank you to everyone who came out this month, or a reminder our WhatsApp chat is open to everyone"
+                  : past
+                    ? "e.g. a guy who'd never thought about it said he'd try a week vegan"
+                    : "e.g. new spot this time, or bring a friend"
               }
               className="mt-1 w-full rounded-xl bg-white p-2 text-sm font-normal ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
             />
@@ -329,7 +348,7 @@ export function CopyMaker({
           )}
           <button
             type="button"
-            disabled={busy || places.size === 0}
+            disabled={busy || places.size === 0 || (general && !note.trim())}
             onClick={write}
             className="mt-3 w-full rounded-xl bg-pink px-4 py-2.5 font-semibold text-navy hover:bg-pink-strong disabled:opacity-60"
           >
@@ -348,7 +367,7 @@ export function CopyMaker({
                       text={t}
                       plan={{
                         teamId,
-                        eventId,
+                        eventId: eventId ?? undefined,
                         platform: p.id,
                         day: planDay,
                       }}

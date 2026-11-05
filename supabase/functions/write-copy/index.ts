@@ -61,6 +61,7 @@ Deno.serve(async (req) => {
     if (body?.purpose === "mental_health") return await feedbackCopy(asUser, user.id, key, body, "mental_health");
     if (body?.purpose === "prompt") return await feedbackCopy(asUser, user.id, key, body, "prompt");
     if (body?.purpose === "carousel") return await carouselCopy(asUser, user.id, key, body);
+    if (body?.purpose === "general") return await carouselCopy(asUser, user.id, key, body, "general");
     const { eventId, platforms, note } = body;
     const target = Math.min(100, Math.max(1, Math.round(Number(body?.target) || 20)));
     const wanted = ((platforms as string[]) ?? []).filter((p) => p in PLATFORMS);
@@ -324,10 +325,14 @@ Reply with JSON only, no other text, shaped like {"whatsapp": ["...", "...", "..
 // monthly recap). The app sends what the photos show (event types, tags,
 // notes, dates); we add the community's voice and its next events.
 // deno-lint-ignore no-explicit-any
-async function carouselCopy(asUser: any, userId: string, key: string, body: any) {
+// Also any post at all from the Social Media Hub's "Make a post" ({ purpose:
+// "general" }, Kai 6 Nov 2026): the organiser's note is what it's about.
+async function carouselCopy(asUser: any, userId: string, key: string, body: any, mode: "carousel" | "general" = "carousel") {
   const { teamId, platforms, note, context, eventId } = body ?? {};
   const wanted = ((platforms as string[]) ?? []).filter((p) => p in PLATFORMS);
   if (!teamId || wanted.length === 0) return json({ error: "Pick at least one place to post." }, 400);
+  if (mode === "general" && !(note && String(note).trim()))
+    return json({ error: "Say what the post is about first." }, 400);
   const url = Deno.env.get("SUPABASE_URL")!;
   const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { data: me } = await admin.from("organisers").select("access, team_id").eq("id", userId).maybeSingle();
@@ -363,7 +368,7 @@ async function carouselCopy(asUser: any, userId: string, key: string, body: any)
     .limit(2);
   if (next?.length)
     facts.push(
-      `Upcoming events to invite people to (end with a clear, friendly call to action for these):\n${next
+      `${mode === "general" ? "Upcoming events (only if they fit what the post is about)" : "Upcoming events to invite people to (end with a clear, friendly call to action for these)"}:\n${next
         .map((n) => `- ${n.title}, ${when(n)}${n.venue ? `, ${n.venue}` : ""}${n.source_url ? ` (${n.source_url})` : ""}`)
         .join("\n")}`,
     );
@@ -376,7 +381,9 @@ async function carouselCopy(asUser: any, userId: string, key: string, body: any)
     .order("created_at", { ascending: false })
     .limit(10);
 
-  const prompt = `Write a post to go with a carousel of photos from our community (the photos go with it, so don't describe each one). Share the feeling of what we've been up to and invite people along.
+  const prompt = `${mode === "general"
+    ? "Write a social media post for our community about what the organiser describes below. Mention upcoming events only if it fits naturally."
+    : "Write a post to go with a carousel of photos from our community (the photos go with it, so don't describe each one). Share the feeling of what we've been up to and invite people along."}
 
 FACTS
 ${facts.join("\n")}
