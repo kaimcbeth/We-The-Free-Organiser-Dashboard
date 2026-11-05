@@ -67,11 +67,11 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: 'Make graphic: every word on the graphic can now be changed (empty a box to leave that line off; "Put the original words back" undoes it), in every style. Coming soon, Big photo and Photo + details have more colours: Warm, Pink + yellow, Pink, Cyan, Yellow and Pink background.',
+        text: 'Make graphic: every word on the graphic can now be changed (empty a box to leave that line off; "Put the original words back" undoes it), in every style. Styles 3, 4 and 5 have more colours: Warm, Pink + yellow, Pink, Cyan, Yellow and Pink background.',
       },
       {
         level: "organiser",
-        text: "Three new styles in Make graphic: Coming soon (a big save-the-date teaser), Big photo (your photo full page with a huge heading) and Photo + details (photo on top, place and time below). Coming soon and Photo + details come in Warm or WTF colours, and your community's @username goes on the photo ones.",
+        text: "Three new styles in Make graphic (styles are now numbered 1 to 5): 3 is a big save-the-date teaser, 4 puts your photo full page with a huge heading, 5 has the photo on top with the place and time below. Your community's @username goes on 4 and 5.",
       },
       {
         level: "organiser",

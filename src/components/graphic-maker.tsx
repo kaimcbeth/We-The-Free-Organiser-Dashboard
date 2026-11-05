@@ -61,12 +61,15 @@ const SIZES: Record<GraphicSize, { label: string; w: number; h: number }> = {
 };
 type Template = "promo" | "recap";
 type Style = "classic" | "poster" | "teaser" | "bigphoto" | "details";
+// Shown as plain numbers (Kai, 5 Nov 2026: the names were janky). In code:
+// classic, poster, teaser = "Coming soon", bigphoto = "Big photo",
+// details = "Photo + details".
 const STYLES: Record<Style, string> = {
-  classic: "Classic",
-  poster: "Poster",
-  teaser: "Coming soon",
-  bigphoto: "Big photo",
-  details: "Photo + details",
+  classic: "1",
+  poster: "2",
+  teaser: "3",
+  bigphoto: "4",
+  details: "5",
 };
 // Styles with a Warm / WTF colours choice.
 const COLOURED: Style[] = ["teaser", "bigphoto", "details"];
@@ -663,7 +666,7 @@ export function GraphicMaker({
                     key={s}
                     type="button"
                     onClick={() => setStyle(s)}
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${
+                    className={`min-w-8 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${
                       style === s
                         ? "bg-navy text-white ring-navy"
                         : "bg-white text-stone-500 ring-stone-300"
