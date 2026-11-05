@@ -196,7 +196,7 @@ function draw(
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
-  const colours = [PINK, CYAN, YELLOW, "#ffffff"];
+  const colours = [PINK, CYAN, YELLOW]; // no white (Kai)
   ctx.font = `700 ${story ? 38 : 34}px ${font}`;
   const ph = story ? 74 : 66;
   const gap = 18;
