@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: '"Throwback photo posted" now comes every 2 weeks (on Thursdays) instead of every week. The next one shows up on 19 November.',
+      },
+      {
+        level: "organiser",
         text: '"Event hosts asked for next season" now shows up on the 1st of the month before each season (1 November for summer), due about three weeks before the season starts.',
       },
       {

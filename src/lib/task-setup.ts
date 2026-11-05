@@ -73,7 +73,7 @@ export async function loadTaskSetup(
       ? `${k.estimate_minutes}–${k.estimate_max_minutes}`
       : String(k.estimate_minutes),
     when:
-      k.schedule === "weekly"
+      k.schedule === "weekly" || k.schedule === "fortnightly"
         ? "weekly"
         : k.schedule === "monthly"
           ? "monthly"
@@ -91,15 +91,17 @@ export async function loadTaskSetup(
     timesPerWeek:
       k.schedule === "weekly"
         ? 1
-        : k.schedule === "monthly"
-          ? 0.25
-          : k.schedule === "quarterly" || k.schedule === "season"
-            ? 1 / 13
-            : k.schedule === "month_end" || k.schedule === "birthday"
-              ? 0.25
-              : k.schedule === "newcomer"
-                ? 0.5
-                : null,
+        : k.schedule === "fortnightly"
+          ? 0.5
+          : k.schedule === "monthly"
+            ? 0.25
+            : k.schedule === "quarterly" || k.schedule === "season"
+              ? 1 / 13
+              : k.schedule === "month_end" || k.schedule === "birthday"
+                ? 0.25
+                : k.schedule === "newcomer"
+                  ? 0.5
+                  : null,
     custom: !!k.team_id,
     defaultOn: k.default_enabled !== false,
     appliesTo:

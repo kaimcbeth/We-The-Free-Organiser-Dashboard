@@ -27,6 +27,7 @@ type Setup = {
 
 function when(t: { schedule: string; anchor: string; appear_hours: number }) {
   if (t.schedule === "weekly") return "Every week";
+  if (t.schedule === "fortnightly") return "Every 2 weeks";
   if (t.schedule === "monthly") return "Every month";
   if (t.schedule === "quarterly") return "Every 3 months";
   if (t.schedule === "season") return "A week before each season";

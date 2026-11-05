@@ -104,6 +104,7 @@ function toRow(t: Raw): TaskRow {
       (
         {
           weekly: "Every week",
+          fortnightly: "Every 2 weeks",
           monthly: "Every month",
           month_end: "End of each month",
           quarterly: "Every 3 months",
