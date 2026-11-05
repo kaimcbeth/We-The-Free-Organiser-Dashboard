@@ -1,5 +1,6 @@
 "use client";
 
+import { SaveToPlanner } from "@/components/save-to-planner";
 import { useEffect, useRef, useState } from "react";
 import { zipSync } from "fflate";
 import { Sheet } from "@/components/sheet";
@@ -611,6 +612,20 @@ export function MeetMembersMaker({
                 Download
               </button>
             </div>
+            {shown.length > 0 && (
+              <SaveToPlanner
+                teamId={teamId}
+                note={`Meet the Members: ${first || "new member"}`}
+                caption={allCaption}
+                platforms={["instagram"]}
+                getImages={async () => {
+                  const files = made ?? (await build());
+                  setBusy("");
+                  return files;
+                }}
+                className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10"
+              />
+            )}
             {busy && <p className="text-sm text-stone-500">{busy}</p>}
             {made && !busy && (
               <p className="text-sm text-stone-500">

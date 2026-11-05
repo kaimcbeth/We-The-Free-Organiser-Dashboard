@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 // Planner | Ready-made posts on the Social Media Hub. "#planner" or
 // "#posts" in the address opens that one (Save to planner links to #planner).
@@ -16,6 +16,13 @@ export function SocialHubTabs({
       ? "posts"
       : "planner",
   );
+  // "Planner" links (Save to planner) switch tabs on this page too.
+  useEffect(() => {
+    const on = () =>
+      setTab(window.location.hash === "#posts" ? "posts" : "planner");
+    window.addEventListener("hashchange", on);
+    return () => window.removeEventListener("hashchange", on);
+  }, []);
   const pick = (t: "planner" | "posts") => {
     setTab(t);
     history.replaceState(null, "", `#${t}`);

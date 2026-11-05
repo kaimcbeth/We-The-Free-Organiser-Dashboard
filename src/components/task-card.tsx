@@ -1,5 +1,6 @@
 "use client";
 
+import { SeasonHostsGraphic } from "@/components/season-hosts-graphic";
 import { useState, useTransition } from "react";
 import {
   assignTask,
@@ -474,6 +475,14 @@ export function TaskCard({
                   dueAt={task.dueAt}
                   tz={tz}
                   className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
+              )}
+              {task.kind === "com_season_hosts" && task.teamId && (
+                <SeasonHostsGraphic
+                  teamId={task.teamId}
+                  dueAt={task.dueAt}
+                  tz={tz}
+                  className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10"
                 />
               )}
               {task.kind === "com_engagement_pod" && task.teamId && (

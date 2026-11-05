@@ -1,5 +1,6 @@
 "use client";
 
+import { SaveToPlanner } from "@/components/save-to-planner";
 import { useEffect, useState } from "react";
 import { zipSync } from "fflate";
 import { createClient } from "@/lib/supabase/client";
@@ -165,6 +166,7 @@ export function SocialHub({
         {SOCIAL_POSTS.map((p) => (
           <PostTile
             key={p.slug}
+            teamId={teamId}
             post={p}
             handle={handle}
             community={community}
@@ -177,10 +179,12 @@ export function SocialHub({
 
 // A cover in the grid; tap to open the post (slides, caption, buttons).
 function PostTile({
+  teamId,
   post,
   handle,
   community,
 }: {
+  teamId: string | null;
   post: SocialPost;
   handle: string | null;
   community: string;
@@ -213,7 +217,12 @@ function PostTile({
       </button>
       {open && (
         <Sheet title={post.title} onClose={() => setOpen(false)}>
-          <PostCard post={post} handle={handle} community={community} />
+          <PostCard
+            teamId={teamId}
+            post={post}
+            handle={handle}
+            community={community}
+          />
         </Sheet>
       )}
     </li>
@@ -221,10 +230,12 @@ function PostTile({
 }
 
 export function PostCard({
+  teamId,
   post,
   handle,
   community,
 }: {
+  teamId?: string | null; // offers Save to planner
   post: SocialPost;
   handle: string | null;
   community: string;
@@ -390,6 +401,24 @@ export function PostCard({
               : "Download"}
         </button>
       </div>
+      {teamId && (
+        <div className="mt-2">
+          <SaveToPlanner
+            teamId={teamId}
+            note={post.title}
+            caption={caption}
+            platforms={["instagram"]}
+            getImages={() =>
+              Promise.all(
+                Array.from({ length: post.slides }, (_, i) =>
+                  renderSlide(post, i + 1, name),
+                ),
+              )
+            }
+            className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10"
+          />
+        </div>
+      )}
       {note && <p className="mt-2 text-sm text-stone-600">{note}</p>}
     </div>
   );

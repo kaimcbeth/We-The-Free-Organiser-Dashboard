@@ -67,6 +67,18 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: '"Event hosts asked for next season" has a Get graphic button: a "Host an event this summer" post or story with idea pills, every word editable.',
+      },
+      {
+        level: "organiser",
+        text: "Meet the Members posts can be saved to the planner too (slides and caption together).",
+      },
+      {
+        level: "organiser",
+        text: "Ready-made posts in the Social Media Hub have Save to planner too: all the slides (with your @username) and the caption go onto the day you pick.",
+      },
+      {
+        level: "organiser",
         text: "Planner: drag an idea or post to another day to move it (on a computer), or use Move and Delete on it in the day's pop-up.",
       },
       {

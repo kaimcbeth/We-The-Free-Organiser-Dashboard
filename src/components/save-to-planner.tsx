@@ -13,6 +13,8 @@ export function SaveToPlanner({
   tz,
   caption,
   getImage,
+  getImages,
+  note,
   platforms = [],
   eventId,
   className = "rounded-lg px-2.5 py-1 text-xs font-medium text-stone-500 hover:text-stone-800",
@@ -22,6 +24,8 @@ export function SaveToPlanner({
   tz?: string;
   caption?: string;
   getImage?: () => Promise<Blob | null>;
+  getImages?: () => Promise<Blob[]>; // several (carousel slides)
+  note?: string; // idea line shown on the calendar
   platforms?: string[];
   eventId?: string | null;
   className?: string;
@@ -46,12 +50,14 @@ export function SaveToPlanner({
     setBusy(true);
     try {
       const img = getImage ? await getImage() : null;
+      const many = getImages ? await getImages() : [];
       await savePlanItem({
         teamId,
         day: when,
+        note: note ?? null,
         caption: caption ?? null,
         platforms,
-        images: img ? [img] : [],
+        images: [...(img ? [img] : []), ...many],
         eventId,
       });
       setSaved(when);
@@ -66,9 +72,16 @@ export function SaveToPlanner({
     return (
       <span className="text-xs text-stone-500">
         Saved for {planDayLabel(saved)} ·{" "}
-        <Link href={hub} className="font-medium text-navy hover:underline">
-          Planner
-        </Link>
+        {hub.startsWith(path + "#") ? (
+          // Same page: a plain link so the Hub's tabs see the hash change.
+          <a href="#planner" className="font-medium text-navy hover:underline">
+            Planner
+          </a>
+        ) : (
+          <Link href={hub} className="font-medium text-navy hover:underline">
+            Planner
+          </Link>
+        )}
       </span>
     );
   if (!open)
