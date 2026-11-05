@@ -7,6 +7,7 @@ import { CommunityPhotos } from "@/components/community-photos";
 import { GuideShare } from "@/components/guide-share";
 import { FeedbackCards } from "@/components/feedback-cards";
 import { PodShareButton } from "@/components/engagement-pod";
+import { SOCIAL_POSTS, slideUrl } from "@/lib/social-posts";
 import { DISCUSSION_PROMPTS } from "@/lib/discussion-prompts";
 
 const has = (q: string, ...text: (string | undefined)[]) =>
@@ -56,9 +57,49 @@ export function ResourcesList({
       />
       {has(
         q,
+        "social media hub instagram posts carousel caption repost share main page",
+        ...SOCIAL_POSTS.map((p) => p.title),
+      ) && (
+        <a
+          href={`${path.replace(/\/$/, "")}/social`}
+          className="mt-6 flex items-center gap-4 rounded-2xl bg-navy p-4 text-white shadow-sm hover:ring-2 hover:ring-pink"
+        >
+          {SOCIAL_POSTS[0] && (
+            // eslint-disable-next-line @next/next/no-img-element -- small static preview
+            <img
+              src={slideUrl(SOCIAL_POSTS[0], 1)}
+              alt=""
+              className="h-20 w-16 shrink-0 rounded-lg object-cover"
+            />
+          )}
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold">
+              <span aria-hidden className="mr-1.5">
+                📲
+              </span>
+              Social Media Hub
+            </span>
+            <span className="block text-sm text-white/75">
+              Posts from the We The Free main page with captions, ready to post
+              on your Instagram with your username on them.
+              {SOCIAL_POSTS[0] && (
+                <>
+                  {" "}
+                  Newest: <b className="text-white">{SOCIAL_POSTS[0].title}</b>
+                </>
+              )}
+            </span>
+          </span>
+          <span aria-hidden className="text-xl">
+            →
+          </span>
+        </a>
+      )}
+      {has(
+        q,
         "outreach guide conversation questions objections ibc qr newcomer",
       ) && (
-        <div className="relative mt-6 rounded-2xl bg-white text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink">
+        <div className="relative mt-3 rounded-2xl bg-white text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink">
           <a
             href="/guide"
             className="flex items-center justify-between px-4 pb-8 pt-3"

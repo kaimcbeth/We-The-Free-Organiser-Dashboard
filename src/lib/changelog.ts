@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "📲 Social Media Hub in Resources: posts from the We The Free main page with ready captions, to post on your own Instagram. Your community's @username goes on every slide automatically (add it once on the Hub page). Share to Instagram, Copy caption or Download all. First up: 5 animals you didn't know were exploited.",
+      },
+      {
+        level: "organiser",
         text: '🗓️ Two new seasonal actions. "Event hosts asked for next season" (4 weeks before a season starts) has ready-made messages asking who\'d like to host an event. "Seasonal calendar posted" (a week before) has Make the calendar: one graphic with up to 8 of the season\'s events, special events first, then trainings, collabs and new events, with weekly regulars as one "Every Wednesday" line. Tick to swap events, then share or copy as text.',
       },
       {
