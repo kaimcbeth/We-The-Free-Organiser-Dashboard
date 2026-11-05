@@ -20,6 +20,27 @@ const CORNER = { x: 51, baseline: 1307, size: 28 };
 
 export const SOCIAL_POSTS: SocialPost[] = [
   {
+    slug: "calves",
+    title: "We belong here, not here",
+    added: "2026-11-05",
+    slides: 1,
+    // The main page's bottom-left "www.activism.wtf" (Poppins 27px).
+    watermark: { x: 59, baseline: 1286, size: 27 },
+    caption: `Calves are taken away from their mothers in the dairy industry so that humans can selfishly drink the milk that should rightfully belong to the mother and baby.
+
+Dairy cows will often cry out for weeks for their missing calves who have been snatched from them and will experience this routine of forced impregnations, kidnappings, and other abuses until it is their time to be executed.
+
+Please stop funding this monstrous industry, and all industries that abuse, exploit, and murder animals for human greed. Go vegan.
+
+🌱 Want to help animals like these? Come along to one of our events in {community}. Everyone's welcome and no experience is needed. Find what's coming up at the link in our bio.
+
+PC: Karoliina Kase
+
+.
+
+#wethefree #wtfactivism #govegan #dairyfree #dairyisscary #cowsarefriends #animalrights #veganforthecows`,
+  },
+  {
     slug: "5-animals",
     title: "5 animals you didn't know were exploited",
     added: "2026-11-05",

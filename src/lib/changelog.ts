@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'New in the Social Media Hub: "We belong here, not here" (calves and their mothers in the dairy industry), with your @username on it.',
+      },
+      {
+        level: "organiser",
         text: "📲 Social Media Hub in Resources: posts from the We The Free main page with ready captions, to post on your own Instagram. Your community's @username goes on every slide automatically (add it once on the Hub page). Share to Instagram, Copy caption or Download all. First up: 5 animals you didn't know were exploited.",
       },
       {

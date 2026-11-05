@@ -225,9 +225,7 @@ export function PostCard({
       if (navigator.canShare?.({ files: f })) {
         await navigator.clipboard.writeText(caption).catch(() => {});
         await navigator.share({ files: f });
-        setNote(
-          "Caption copied too: paste it in Instagram after you pick the slides' order.",
-        );
+        setNote("Caption copied too: paste it in when Instagram asks for one.");
       } else {
         await download(f);
         setNote(
@@ -243,6 +241,14 @@ export function PostCard({
   async function download(given?: File[]) {
     setBusy("download");
     const f = given ?? (await files());
+    if (f.length === 1) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(f[0]);
+      a.download = f[0].name;
+      a.click();
+      setBusy("");
+      return;
+    }
     const entries: Record<string, Uint8Array> = {};
     for (const x of f) entries[x.name] = new Uint8Array(await x.arrayBuffer());
     const zip = zipSync(entries, { level: 0 });
@@ -260,7 +266,9 @@ export function PostCard({
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="font-semibold text-navy">{post.title}</h3>
         <span className="text-xs text-stone-500">
-          Carousel · {post.slides} slides
+          {post.slides > 1
+            ? `Carousel · ${post.slides} slides`
+            : "Single image"}
         </span>
       </div>
       <div className="-mx-4 mt-3 flex snap-x gap-2 overflow-x-auto px-4 pb-2">
@@ -270,7 +278,7 @@ export function PostCard({
             key={i}
             src={urls[i] ?? slideUrl(post, i + 1)}
             alt={`Slide ${i + 1}`}
-            className="h-56 w-auto shrink-0 snap-start rounded-lg ring-1 ring-black/5"
+            className={`${post.slides > 1 ? "h-56" : "h-80"} w-auto shrink-0 snap-start rounded-lg ring-1 ring-black/5`}
           />
         ))}
       </div>
@@ -328,7 +336,11 @@ export function PostCard({
           onClick={() => download()}
           className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10 disabled:opacity-60"
         >
-          {busy === "download" ? "Zipping…" : "Download all"}
+          {busy === "download"
+            ? "Getting it ready…"
+            : post.slides > 1
+              ? "Download all"
+              : "Download"}
         </button>
       </div>
       {note && <p className="mt-2 text-sm text-stone-600">{note}</p>}
