@@ -20,6 +20,29 @@ const CORNER = { x: 51, baseline: 1307, size: 28 };
 
 export const SOCIAL_POSTS: SocialPost[] = [
   {
+    slug: "why-how",
+    title: "If the 'why' is powerful, the 'how' becomes easy",
+    added: "2026-11-05",
+    slides: 1,
+    // The main page's bottom-left "www.3movies.wtf" (Poppins 28px).
+    watermark: { x: 72, baseline: 1285, size: 28 },
+    caption: `Adopting a vegan lifestyle is not hard when you see the victim's perspective.
+
+🧥 Is a jacket worth their screams?
+
+💄 Is lipstick worth their torment?
+
+🎫 Is a show worth their captivity?
+
+🍔 Is a burger worth their life?
+
+🌱 Ready to take the next step? Come along to one of our events in {community}. Everyone's welcome and no experience is needed. Find what's coming up at the link in our bio.
+
+.
+
+#argument #antivegan #veganargument #logical #fallacy #speciecism #pigslaughter #govegan #veganism #vegansofig #endspeciesism #veganlife #veganaf`,
+  },
+  {
     slug: "calves",
     title: "We belong here, not here",
     added: "2026-11-05",
