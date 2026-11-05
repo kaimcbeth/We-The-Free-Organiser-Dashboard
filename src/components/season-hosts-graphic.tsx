@@ -29,13 +29,20 @@ const SIZES = {
 type Size = keyof typeof SIZES;
 const IDEAS = [
   "Potluck",
-  "Hike",
   "Picnic",
-  "Workshop",
+  "Hike",
   "Movie night",
+  "Games night",
+  "Beach day",
   "Sanctuary visit",
-  "Collab",
 ];
+// Casual on purpose (Kai: "just reaching out to the community if anyone's keen").
+const defaults = (season: string): Text => ({
+  kicker: "Anyone keen?",
+  heading: `Wanna host something this ${season}?`,
+  body: "A potluck at yours, a hike, a movie night, whatever you're into. Give us a shout in the chat and we'll help sort the rest :)",
+  ideas: IDEAS.join(", "),
+});
 
 type Text = { kicker: string; heading: string; body: string; ideas: string };
 
@@ -125,15 +132,14 @@ function draw(
     .map((s) => s.trim())
     .filter(Boolean);
   const colours = [PINK, CYAN, YELLOW, "#ffffff"];
-  ctx.font = `800 ${story ? 38 : 34}px ${font}`;
-  ctx.letterSpacing = "1px";
+  ctx.font = `700 ${story ? 38 : 34}px ${font}`;
   const ph = story ? 74 : 66;
   const gap = 18;
   const placed: { label: string; x: number; row: number; w: number }[] = [];
   let px = x;
   let row = 0;
   for (const idea of ideas) {
-    const label = idea.toUpperCase();
+    const label = idea;
     const pw = ctx.measureText(label).width + 52;
     if (px + pw > w - x && px > x) {
       px = x;
@@ -217,12 +223,7 @@ function HostsSheet({
 }) {
   const { name, range } = seasonForDue(dueAt, tz, 21);
   const [size, setSize] = useState<Size>("post");
-  const [text, setText] = useState<Text>({
-    kicker: "Calling all hosts",
-    heading: `Host an event this ${name.toLowerCase()}`,
-    body: "Got an idea for an event? We'll help with the rest. Reply in the WhatsApp chat or message an organiser to get it on the calendar.",
-    ideas: IDEAS.join(", "),
-  });
+  const [text, setText] = useState<Text>(() => defaults(name.toLowerCase()));
   const [community, setCommunity] = useState("");
   const [mark, setMark] = useState<HTMLImageElement | null>(null);
   const [fonts, setFonts] = useState(0);
@@ -362,14 +363,7 @@ function HostsSheet({
         {field("body", "Message", 3)}
         <button
           type="button"
-          onClick={() =>
-            setText({
-              kicker: "Calling all hosts",
-              heading: `Host an event this ${name.toLowerCase()}`,
-              body: "Got an idea for an event? We'll help with the rest. Reply in the WhatsApp chat or message an organiser to get it on the calendar.",
-              ideas: IDEAS.join(", "),
-            })
-          }
+          onClick={() => setText(defaults(name.toLowerCase()))}
           className="text-xs text-stone-500 hover:text-navy hover:underline"
         >
           Put the original words back
