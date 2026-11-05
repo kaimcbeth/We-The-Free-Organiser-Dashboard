@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 // Bottom sheet on phones, centred dialog on bigger screens.
 export function Sheet({
@@ -18,10 +18,20 @@ export function Sheet({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  // Only close when the press both starts and ends on the dark backdrop:
+  // dragging to select text inside and letting go outside used to close it.
+  const downOnBackdrop = useRef(false);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-navy/60 sm:items-center"
-      onClick={onClose}
+      onPointerDown={(e) => {
+        downOnBackdrop.current = e.target === e.currentTarget;
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && downOnBackdrop.current) onClose();
+        downOnBackdrop.current = false;
+      }}
     >
       <div
         role="dialog"

@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Fixed: selecting text in a pop-up and letting go outside it no longer closes the pop-up.",
+      },
+      {
+        level: "organiser",
         text: 'Make graphic: every word on the graphic can now be changed (empty a box to leave that line off; "Put the original words back" undoes it), in every style. Styles 3, 4 and 5 have more colours: Warm, Pink + yellow, Pink, Cyan, Yellow and Pink background.',
       },
       {
