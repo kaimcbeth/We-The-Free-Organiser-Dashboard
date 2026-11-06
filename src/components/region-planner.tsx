@@ -54,15 +54,20 @@ function toRslKind(r: KindRow & { region_id?: string | null }): RslKind {
   const base = toSetupKind(r);
   return {
     ...base,
-    perCommunity: !["special", "region_weekly", "region_monthly"].includes(
-      r.schedule,
-    ),
+    perCommunity: ![
+      "special",
+      "region_weekly",
+      "region_monthly",
+      "region_quarterly",
+    ].includes(r.schedule),
     timesPerWeek:
       r.schedule === "region_weekly"
         ? 1
         : r.schedule === "region_monthly"
           ? 0.25
-          : base.timesPerWeek,
+          : r.schedule === "region_quarterly"
+            ? 1 / 13
+            : base.timesPerWeek,
     own: !!r.region_id,
   };
 }
@@ -347,7 +352,7 @@ function PlannerSheet({
                             ? `${k.label} min ${k.when === "quarterly" ? "every 3 months" : "a month"} for each of your ${communities} communities`
                             : k.kind === "promote_hangout"
                               ? `${k.label} min, about 3 times for each hangout`
-                              : `${k.label} min ${k.timesPerWeek === 1 ? "every week" : "every month"}`}
+                              : `${k.label} min ${k.timesPerWeek === 1 ? "every week" : k.timesPerWeek === 0.25 ? "every month" : "every 3 months"}`}
                           {k.blurb ? ` · ${k.blurb}` : ""}
                         </span>
                       </span>

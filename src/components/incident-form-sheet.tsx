@@ -245,3 +245,68 @@ export function OrganiserQuestionsSheet({ className }: { className?: string }) {
     />
   );
 }
+
+// RSL versions for the organiser group chat (Kai, 6 Nov 2026: "same incident
+// report, mental health and feedback reminder as organisers have … at 3
+// month intervals", plus a monthly shout-out).
+const HUB_RESOURCES = "https://wtf-movement-hub.vercel.app/resources";
+const ORGANISER_CHAT: Record<
+  "incident" | "mental_health" | "feedback" | "shout_out",
+  { title: string; presets: string[] }
+> = {
+  incident: {
+    title: "Incident report form",
+    presets: [
+      `Hey organisers 👋 Quick reminder that if anything ever goes wrong at one of your events (harassment, someone getting hurt, trouble with the public or police), you can report it here and we'll follow it up with you:\n${INCIDENT_FORM_URL}\n\nAnd you can always message me directly, any time.`,
+      `Friendly heads-up, nothing's happened! Just making sure everyone knows where the incident report form is, for anything at an event that doesn't feel right:\n${INCIDENT_FORM_URL}\n\nIt's also worth sharing in your own community chats every so often.`,
+      `Something I like to share every few months: if you or anyone in your community has a bad experience at an event, please tell us. Use the form or just reach out to me.\n${INCIDENT_FORM_URL}`,
+    ],
+  },
+  mental_health: {
+    title: "Mental health resources",
+    presets: [
+      `Hey organisers 💛 Organising takes a lot out of you, and burnout is really common in our movement. We The Free has a mental health kit for activists: a free 24/7 support line run by counsellors who are animal advocates themselves, a free burnout course (code WTF), support groups and more:\n${MENTAL_HEALTH_URL}\n\nIt's okay to take a step back when you need to. I'm always here to chat.`,
+      `A gentle reminder to look after yourselves 🌱 You can't pour from an empty cup. If things are feeling heavy, these free resources are made for people like us:\n${MENTAL_HEALTH_URL}\n\nAnd if you need to hand things over for a while, just tell me and we'll work it out together.`,
+      `Quick check-in: how's everyone really going? Here's We The Free's mental health first aid kit for activists, with support lines, support groups, therapists who get it, and more:\n${MENTAL_HEALTH_URL}\n\nIf you're in crisis, please contact your local emergency services or a crisis line.`,
+    ],
+  },
+  feedback: {
+    title: "Ask for feedback",
+    presets: [
+      `Hey organisers 👋 How are things going? We'd love to hear what's working, what's hard, and what would make organising easier. You can tell Global Support straight from the Movement Hub (Resources → Feedback for We The Free Global Support), and you can leave your name off:\n${HUB_RESOURCES}`,
+      `Every few months we ask: what could we do better for you? Big or small, it all helps. Share it in the Movement Hub under Resources (you can stay anonymous):\n${HUB_RESOURCES}\n\nOr just message me.`,
+      `Your feedback shapes what we build next 🙌 If there's anything you'd like more help with (training, gear, funding, the Hub itself), let us know here:\n${HUB_RESOURCES}`,
+    ],
+  },
+  shout_out: {
+    title: "Shout-out",
+    presets: [
+      `Big shout-out to [name] from [community] 🙌 [what they did, e.g. ran their first Movie Challenge with 20 people watching]. Thank you for everything you do 💛`,
+      `This month's shout-out goes to the [community] crew 🎉 [the milestone, e.g. 100 people at events this month]. Amazing work, everyone!`,
+      `Can we all take a moment to appreciate [name] 👏 [what they did and why it mattered]. This is exactly what makes our movement work 💛`,
+    ],
+  },
+};
+
+export function OrganiserChatSheet({
+  topic,
+  className,
+}: {
+  topic: keyof typeof ORGANISER_CHAT;
+  className?: string;
+}) {
+  const t = ORGANISER_CHAT[topic];
+  return (
+    <ChatMessageSheet
+      teamId={null}
+      className={className}
+      purpose={`rsl_${topic}`}
+      title={t.title}
+      presets={t.presets}
+      placeholder=""
+      canWrite={false}
+      label="Ready-made messages"
+      intro="Pick one, tweak it, copy it and post it in the organiser group chat."
+    />
+  );
+}

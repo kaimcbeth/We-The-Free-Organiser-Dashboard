@@ -16,6 +16,7 @@ import {
   AfterPartySheet,
   IncidentFormSheet,
   MentalHealthSheet,
+  OrganiserChatSheet,
   OrganiserQuestionsSheet,
 } from "@/components/incident-form-sheet";
 import { ThrowbackSheet } from "@/components/throwback-sheet";
@@ -615,6 +616,23 @@ export function TaskCard({
                     className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
                   />
                 </>
+              )}
+              {(
+                [
+                  ["rsl_incident_form", "incident"],
+                  ["rsl_mental_health", "mental_health"],
+                  ["rsl_feedback_ask", "feedback"],
+                  ["rsl_shout_out", "shout_out"],
+                ] as const
+              ).map(
+                ([kind, topic]) =>
+                  task.kind === kind && (
+                    <OrganiserChatSheet
+                      key={kind}
+                      topic={topic}
+                      className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                    />
+                  ),
               )}
               {task.kind === "rsl_weekly_post" && (
                 <OrganiserQuestionsSheet className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong" />

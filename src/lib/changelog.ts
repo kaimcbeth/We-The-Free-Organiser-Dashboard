@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "regional_lead",
+        text: "New RSL actions for the organiser group chat: share the incident report form, share the mental health resources and ask for feedback (each every 3 months), plus a monthly shout-out. Each has ready-made messages.",
+      },
+      {
+        level: "regional_lead",
         text: "New monthly RSL action: a Meet the Organisers post. Send an organiser the questions, then make the carousel with the same maker as Meet the Members.",
       },
       {
