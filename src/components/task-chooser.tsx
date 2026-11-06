@@ -90,7 +90,7 @@ export function TaskChooser({
         role="dialog"
         data-tour="task-chooser"
         aria-modal="true"
-        aria-label="Choose your actions"
+        aria-label="Plan your actions"
         className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-background p-6 pb-8 sm:max-w-md sm:rounded-3xl"
       >
         <div className="flex items-center justify-between">

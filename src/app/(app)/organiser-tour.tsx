@@ -418,7 +418,7 @@ export function OrganiserTour({
   const step = steps[i];
   const last = i === steps.length - 1;
   const nextLabel = step.choose
-    ? "Choose my actions"
+    ? "Plan my actions"
     : last
       ? "Finish"
       : steps[i + 1].section !== step.section

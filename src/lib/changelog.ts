@@ -67,11 +67,15 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: '"Choose actions" is now called "Plan actions".',
+      },
+      {
+        level: "organiser",
         text: "We say members now, not volunteers, everywhere in the Hub and in written posts.",
       },
       {
         level: "organiser",
-        text: "Choose actions recommends 2 community events for every outreach event, and works out your weekly time with that mix.",
+        text: "Plan actions recommends 2 community events for every outreach event, and works out your weekly time with that mix.",
       },
       {
         level: "organiser",
@@ -79,7 +83,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Choose actions now counts your events in your weekly time (about 3 hours each) with a slider from 2 hours a week up to everything. Essential actions are always suggested. Actions you do during an event don't add extra time.",
+        text: "Plan actions now counts your events in your weekly time (about 3 hours each) with a slider from 2 hours a week up to everything. Essential actions are always suggested. Actions you do during an event don't add extra time.",
       },
       {
         level: "god",

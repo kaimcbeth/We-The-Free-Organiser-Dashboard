@@ -34,7 +34,7 @@ export function ChooseTasks({
             data-tour="choose-open"
             className="rounded-xl bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-2"
           >
-            Choose actions
+            Plan actions
           </button>
         </div>
       ) : (
@@ -44,7 +44,7 @@ export function ChooseTasks({
             data-tour="choose-open"
             className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-navy ring-1 ring-stone-300 hover:bg-stone-50"
           >
-            Choose actions ({onCount} on)
+            Plan actions ({onCount} on)
           </button>
         </span>
       )}

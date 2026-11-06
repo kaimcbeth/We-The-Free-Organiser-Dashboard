@@ -196,7 +196,7 @@ export function SetupChecklist({
               text="Choose which regular actions the Hub reminds you about, based on how much time you have."
             >
               <Link href="/tasks" className={link}>
-                Choose actions
+                Plan actions
               </Link>
             </Row>
             <Row
