@@ -66,6 +66,14 @@ export const CHANGELOG: Release[] = [
     title: "Birthdays",
     changes: [
       {
+        level: "regional_lead",
+        text: "Plan RSL actions: a slider from 2 to 50 hours a week suggests which Regional Support Lead actions to take on, and you can switch each one on or off for your region.",
+      },
+      {
+        level: "regional_lead",
+        text: "If you're an RSL and also a community's organiser, Actions has a Both / RSL / organiser switch to show one side at a time. It's remembered on your device.",
+      },
+      {
         level: "organiser",
         text: "Graphic maker: style 6, a bold poster with the event name running up the side, rough diagonal stripes and your photo. Works with tall and wide photos, and has a new Black + white colour choice.",
       },

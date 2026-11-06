@@ -11,6 +11,7 @@ import { WaitingList } from "./waiting-list";
 import { formatEventDate } from "@/lib/time";
 import type { TaskRow } from "@/components/task-card";
 import { RegionActions } from "./region-actions";
+import { RegionPlanner } from "@/components/region-planner";
 
 const short = (name: string) =>
   name.replace(/, (Australia|New Zealand|Canada)$/, "");
@@ -23,11 +24,13 @@ export async function RegionTasks({
   teams,
   showCommunities,
   regionTasks = [],
+  planRegionId,
 }: {
   supabase: SupabaseClient;
   teams: Team[];
   showCommunities: boolean; // God Mode: also how each community's own tasks are going
   regionTasks?: TaskRow[]; // region-wide actions (e.g. promoting a hangout)
+  planRegionId?: string; // their region, for Plan RSL actions
 }) {
   const ids = teams.map((t) => t.id);
   const [tasks, connect, { data: waitRows }] = await Promise.all([
@@ -83,6 +86,11 @@ export async function RegionTasks({
                 .filter(Boolean)
                 .join(" · ")}
         </p>
+        {planRegionId && (
+          <div className="mt-3">
+            <RegionPlanner regionId={planRegionId} />
+          </div>
+        )}
       </div>
 
       <RegionActions

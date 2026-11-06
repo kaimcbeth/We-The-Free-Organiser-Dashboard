@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { ShowToggle } from "./show-toggle";
+import { SHOW_COOKIE, type ShowActions } from "@/lib/actions-show";
 import { requireOrganiser } from "@/lib/organiser";
 import { LoadError } from "@/components/load-error";
 import { LaterRow } from "@/components/later-row";
@@ -10,6 +13,7 @@ import { loadUpcomingActions } from "@/lib/upcoming-actions";
 import { ComingUp } from "./coming-up";
 import { ShowMoreEvents } from "./show-more";
 import { ChooseTasks } from "./choose-tasks";
+import { RegionPlanner } from "@/components/region-planner";
 import { RemoveEventTasks } from "./remove-event-tasks";
 import {
   dayBoundsUtc,
@@ -61,6 +65,9 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         teams={organiser.allCommunities ? organiser.teams : [organiser.team]}
         showCommunities={organiser.role === "god"}
         regionTasks={regionTasks.open}
+        planRegionId={
+          organiser.viewingAs ? undefined : organiser.leadRegionIds[0]
+        }
       />
     );
   const [tasks, { data: people }, setup, connect, { data: leadRows }] =
@@ -145,6 +152,22 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
     .reduce((n, t) => n + t.estimateMinutes, 0);
   // Regional Support Lead check-ins sit on their own, above the community's tasks.
   const checkIns = tasks.open.filter((t) => t.regional);
+
+  // An RSL who's also this community's organiser can show just one side.
+  const hasRsl =
+    regionTasks.open.length > 0 ||
+    checkIns.length > 0 ||
+    (!organiser.viewingAs && organiser.leadRegionIds.length > 0);
+  const saved = (await cookies()).get(SHOW_COOKIE)?.value;
+  const show: ShowActions =
+    hasRsl && (saved === "rsl" || saved === "local") ? saved : "both";
+  const showRsl = show !== "local";
+  const showLocal = show !== "rsl";
+  const shortName = organiser.team.name
+    .replace(/, .*$/, "")
+    .replace(/^(we the free|wtf)\s+/i, "");
+  const sideOk = (t: { regional: boolean }) =>
+    t.regional ? showRsl : showLocal;
 
   // Open tasks grouped by event: the event due soonest first, then the
   // tasks in their usual order (WhatsApp, Facebook, Instagram…).
@@ -335,12 +358,25 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
     <div className="space-y-8">
       <div data-tour="tasks-head">
         <h1 className="text-2xl font-semibold tracking-tight">Actions</h1>
-        <p className="mt-1 text-sm text-stone-500">
-          {groups.reduce((n, g) => n + g.tasks.length, 0) === 0
-            ? "Nothing left for the organisers. New actions appear here after each event."
-            : `${groups.reduce((n, g) => n + g.tasks.length, 0)} for the organisers · about ${hoursMinutes(minutes)} in total`}
-        </p>
-        {weekTotal > 0 && (
+        {hasRsl && (
+          <div className="mt-2">
+            <ShowToggle value={show} community={shortName} />
+          </div>
+        )}
+        {showLocal ? (
+          <p className="mt-1 text-sm text-stone-500">
+            {groups.reduce((n, g) => n + g.tasks.length, 0) === 0
+              ? "Nothing left for the organisers. New actions appear here after each event."
+              : `${groups.reduce((n, g) => n + g.tasks.length, 0)} for the organisers · about ${hoursMinutes(minutes)} in total`}
+          </p>
+        ) : (
+          <p className="mt-1 text-sm text-stone-500">
+            {regionTasks.open.length + checkIns.length === 0
+              ? "All your Regional Support Lead actions are done."
+              : `${regionTasks.open.length + checkIns.length} Regional Support Lead action${regionTasks.open.length + checkIns.length === 1 ? "" : "s"} to do`}
+          </p>
+        )}
+        {showLocal && weekTotal > 0 && (
           <div className="mt-4" data-tour="week-progress">
             <div className="flex items-baseline justify-between text-sm">
               <span className="font-medium text-navy">
@@ -368,24 +404,31 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
           </div>
         )}
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <ChooseTasks
-            setup={setup}
-            communityName={organiser.team.name.replace(
-              /, (Australia|New Zealand)$/,
-              "",
-            )}
-          />
+          {showRsl && !organiser.viewingAs && organiser.leadRegionIds[0] && (
+            <RegionPlanner regionId={organiser.leadRegionIds[0]} />
+          )}
+          {showLocal && (
+            <ChooseTasks
+              setup={setup}
+              communityName={organiser.team.name.replace(
+                /, (Australia|New Zealand)$/,
+                "",
+              )}
+            />
+          )}
         </div>
       </div>
 
-      <RegionActions
-        tasks={regionTasks.open}
-        tz={common.tz}
-        now={now}
-        title="For you as Regional Support Lead"
-      />
+      {showRsl && (
+        <RegionActions
+          tasks={regionTasks.open}
+          tz={common.tz}
+          now={now}
+          title="For you as Regional Support Lead"
+        />
+      )}
 
-      {checkIns.length > 0 && (
+      {showRsl && checkIns.length > 0 && (
         <section>
           <h2 className="mb-3 font-semibold">
             {regionTasks.open.length
@@ -413,14 +456,14 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         </section>
       )}
 
-      {groups.length > 0 && (
+      {showLocal && groups.length > 0 && (
         <div className="space-y-3 border-t border-black/10 pt-6">
           <h2 className="text-lg font-semibold tracking-tight">Your actions</h2>
           <ActionSearch />
         </div>
       )}
 
-      {focus && (
+      {showLocal && focus && (
         <p className="flex items-center justify-between gap-3 rounded-xl bg-cyan/15 px-3 py-2 text-sm text-navy">
           <span>
             Showing the actions for <b>{focus.title}</b>
@@ -430,23 +473,27 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
           </Link>
         </p>
       )}
-      {shownGroups.map((g, n) => renderGroup(g, n))}
-      <ShowMoreEvents
-        items={laterGroups.map((g, n) =>
-          renderGroup(g, shownGroups.length + n),
-        )}
-      />
+      {showLocal && (
+        <>
+          {shownGroups.map((g, n) => renderGroup(g, n))}
+          <ShowMoreEvents
+            items={laterGroups.map((g, n) =>
+              renderGroup(g, shownGroups.length + n),
+            )}
+          />
 
-      {/* What the Core Team and helpers have on: kept apart from your own. */}
-      <CoreTeamTasks crew={crew} now={now} tz={common.tz} />
+          {/* What the Core Team and helpers have on: kept apart from your own. */}
+          <CoreTeamTasks crew={crew} now={now} tz={common.tz} />
+        </>
+      )}
 
-      {tasks.later.length > 0 && (
+      {tasks.later.filter(sideOk).length > 0 && (
         <section>
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
             Moved for later
           </h2>
           <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white text-sm shadow-sm ring-1 ring-black/5">
-            {tasks.later.map((t) => (
+            {tasks.later.filter(sideOk).map((t) => (
               <LaterRow
                 key={t.id}
                 label={`${t.title}${t.eventTitle ? ` · ${t.eventTitle}` : ""}`}
@@ -458,13 +505,13 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         </section>
       )}
 
-      {tasks.done.length > 0 && (
+      {tasks.done.filter(sideOk).length > 0 && (
         <section>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
             Done recently
           </h2>
           <ul className="space-y-3">
-            {tasks.done.map((t) => (
+            {tasks.done.filter(sideOk).map((t) => (
               <TaskCard key={t.id} task={t} {...common} />
             ))}
           </ul>
