@@ -22,6 +22,7 @@ import {
   todayInTz,
 } from "@/lib/time";
 import { loadConnectContext } from "@/lib/connect";
+import { loadRslTeams } from "@/lib/rsl-teams";
 import { ConnectIdeas } from "@/components/connect-ideas";
 import { RegionTasks } from "./region-tasks";
 import { GodOverview } from "./god-overview";
@@ -98,6 +99,43 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
     ]);
   if (!tasks) return <LoadError what="tasks" />;
 
+  // An RSL who's also a community's organiser (Kai, 6 Nov 2026): a check-in
+  // for every community they look after (Oceania + Japan), not just this one.
+  const rslTeams =
+    !organiser.viewingAs && organiser.leadRegionIds.length
+      ? await loadRslTeams(supabase, organiser.leadRegionIds)
+      : [];
+  const [rslTasks, rslConnect] = rslTeams.length
+    ? await Promise.all([
+        loadTeamTasks(
+          supabase,
+          rslTeams.map((t) => t.id),
+          { regional: true },
+        ),
+        loadConnectContext(supabase, rslTeams),
+      ])
+    : [null, null];
+  const rslTeamById = Object.fromEntries(rslTeams.map((t) => [t.id, t]));
+  const withTeam = <T extends { title: string; teamId: string }>(t: T): T =>
+    rslTeamById[t.teamId]
+      ? {
+          ...t,
+          title: `${t.title}: ${rslTeamById[t.teamId].name.replace(/, .*$/, "")}`,
+        }
+      : t;
+  const allConnect = { ...(connect ?? {}), ...(rslConnect ?? {}) };
+  // This community's own RSL actions are in rslTasks too, so take them from
+  // there when it's loaded.
+  const rslOpen = rslTasks
+    ? rslTasks.open.filter((t) => t.regional)
+    : tasks.open.filter((t) => t.regional);
+  const rslLater = rslTasks
+    ? rslTasks.later.filter((t) => t.regional)
+    : tasks.later.filter((t) => t.regional);
+  const rslDone = rslTasks
+    ? rslTasks.done.filter((t) => t.regional)
+    : tasks.done.filter((t) => t.regional);
+
   // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
   const now = Date.now();
   const assignable = (people ?? []).map((p) => ({
@@ -151,7 +189,12 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
     .filter((t) => !t.regional && !t.assignedTo)
     .reduce((n, t) => n + t.estimateMinutes, 0);
   // Regional Support Lead check-ins sit on their own, above the community's tasks.
-  const checkIns = tasks.open.filter((t) => t.regional);
+  const checkIns = rslOpen
+    .map(withTeam)
+    .sort(
+      (a, b) =>
+        a.dueAt.localeCompare(b.dueAt) || a.title.localeCompare(b.title),
+    );
 
   // An RSL who's also this community's organiser can show just one side.
   const hasRsl =
@@ -166,8 +209,15 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
   const shortName = organiser.team.name
     .replace(/, .*$/, "")
     .replace(/^(we the free|wtf)\s+/i, "");
-  const sideOk = (t: { regional: boolean }) =>
-    t.regional ? showRsl : showLocal;
+  // Moved for later / done: this community's own, plus the RSL ones.
+  const laterShown = [
+    ...(showLocal ? tasks.later.filter((t) => !t.regional) : []),
+    ...(showRsl ? rslLater.map(withTeam) : []),
+  ];
+  const doneShown = [
+    ...(showLocal ? tasks.done.filter((t) => !t.regional) : []),
+    ...(showRsl ? rslDone.map(withTeam) : []),
+  ];
 
   // Open tasks grouped by event: the event due soonest first, then the
   // tasks in their usual order (WhatsApp, Facebook, Instagram…).
@@ -430,24 +480,20 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
 
       {showRsl && checkIns.length > 0 && (
         <section>
-          <h2 className="mb-3 font-semibold">
-            {regionTasks.open.length
-              ? "Check-ins"
-              : "For you as Regional Support Lead"}
-          </h2>
+          <h2 className="mb-3 font-semibold">Check in with organisers</h2>
           <ul className="space-y-3">
             {checkIns.map((t) => (
               <TaskCard
                 key={t.id}
                 task={t}
-                tz={common.tz}
+                tz={rslTeamById[t.teamId]?.timezone ?? common.tz}
                 now={now}
                 whatsappUrl={null}
                 removable
-                moveEvents={connect?.[t.teamId]?.upcoming}
+                moveEvents={allConnect[t.teamId]?.upcoming}
                 extra={
-                  connect?.[t.teamId] && (
-                    <ConnectIdeas ctx={connect[t.teamId]} />
+                  allConnect[t.teamId] && (
+                    <ConnectIdeas ctx={allConnect[t.teamId]} />
                   )
                 }
               />
@@ -487,13 +533,13 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         </>
       )}
 
-      {tasks.later.filter(sideOk).length > 0 && (
+      {laterShown.length > 0 && (
         <section>
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
             Moved for later
           </h2>
           <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white text-sm shadow-sm ring-1 ring-black/5">
-            {tasks.later.filter(sideOk).map((t) => (
+            {laterShown.map((t) => (
               <LaterRow
                 key={t.id}
                 label={`${t.title}${t.eventTitle ? ` · ${t.eventTitle}` : ""}`}
@@ -505,13 +551,13 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         </section>
       )}
 
-      {tasks.done.filter(sideOk).length > 0 && (
+      {doneShown.length > 0 && (
         <section>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
             Done recently
           </h2>
           <ul className="space-y-3">
-            {tasks.done.filter(sideOk).map((t) => (
+            {doneShown.map((t) => (
               <TaskCard key={t.id} task={t} {...common} />
             ))}
           </ul>

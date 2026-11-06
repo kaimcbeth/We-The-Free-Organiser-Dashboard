@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "regional_lead",
+        text: "Your RSL actions now include a check-in with the organisers of every community you look after (Oceania now covers Japan too), named by community, soonest due first. One per community each month.",
+      },
+      {
+        level: "regional_lead",
         text: "Plan RSL actions: a slider from 2 to 50 hours a week suggests which Regional Support Lead actions to take on, and you can switch each one on or off for your region.",
       },
       {
