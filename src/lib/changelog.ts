@@ -67,7 +67,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "We say members now, not volunteers, everywhere in the Hub and in written posts. Prizes purchased is now for every outreach event.",
+        text: "We say members now, not volunteers, everywhere in the Hub and in written posts.",
       },
       {
         level: "organiser",

@@ -1,16 +1,11 @@
 -- Kai, 6 Nov 2026:
--- * "Prizes purchased only for outreach events": outreach_only instead of
---   Movie Challenge only (Police approval and Equipment set up already were).
 -- * "Any time you want to reference volunteers, it should say members
 --   instead": every live action's title, blurb and description, and the
 --   Christmas social suggestion.
 
-update task_kinds set
-  outreach_only = true,
-  event_type_id = null,
-  blurb = 'Outreach events only, before it starts',
-  description = 'Prizes for the outreach event are bought and ready before it starts.'
-where kind = 'prizes_purchased';
+-- (Prizes purchased stays Movie Challenge only: Kai first said outreach, then
+-- clarified it's only for Movie Challenges. Movie Challenge counts as outreach,
+-- so the 2:1 mix still applies it to 1 in 3 events in Choose actions.)
 
 create or replace function pg_temp.members(t text) returns text language sql immutable as $$
   select replace(replace(replace(replace(t,
