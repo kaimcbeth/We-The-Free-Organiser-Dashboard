@@ -3,18 +3,14 @@
 import { useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
+  EVENT_MINUTES,
+  eventMinutes,
+  eventsLabel,
   suggestForBudget,
+  TIME_BUDGETS,
   weeklyMinutes,
   type SetupKind,
 } from "@/lib/task-setup";
-
-// Same choices as "How much time do you have?" in Choose actions.
-const BUDGETS = [
-  { minutes: 15, label: "15 min" },
-  { minutes: 30, label: "30 min" },
-  { minutes: 60, label: "1 hour" },
-  { minutes: 120, label: "2+ hours" },
-];
 
 const WHEN: Record<SetupKind["when"], string> = {
   before: "each event",
@@ -64,7 +60,7 @@ export function ActionRanking({ initial }: { initial: SetupKind[] }) {
     key(grouped(initial.map((k) => ({ ...k, tier: (k.tier ?? 3) as Tier })))),
   );
   const [savedList, setSavedList] = useState<Row[]>(list);
-  const [budget, setBudget] = useState<number | null>(30);
+  const [budget, setBudget] = useState<number | null>(300);
   const [events, setEvents] = useState(1);
   const [dragging, setDragging] = useState<number | null>(null);
   const [over, setOver] = useState<string | null>(null);
@@ -154,7 +150,7 @@ export function ActionRanking({ initial }: { initial: SetupKind[] }) {
           Preview what an organiser gets
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-1.5 text-sm">
-          {BUDGETS.map((b) => (
+          {TIME_BUDGETS.map((b) => (
             <button
               key={b.minutes}
               onClick={() => setBudget(budget === b.minutes ? null : b.minutes)}
@@ -163,7 +159,9 @@ export function ActionRanking({ initial }: { initial: SetupKind[] }) {
               {b.label}
             </button>
           ))}
-          <span className="ml-1 text-stone-500">a week, with</span>
+          <span className="ml-1 text-stone-500">
+            a week (events included), with
+          </span>
           <select
             value={events}
             onChange={(e) => setEvents(Number(e.target.value))}
@@ -171,17 +169,17 @@ export function ActionRanking({ initial }: { initial: SetupKind[] }) {
           >
             {[0.5, 1, 2, 3].map((n) => (
               <option key={n} value={n}>
-                {n === 0.5
-                  ? "1 event a fortnight"
-                  : `${n} event${n > 1 ? "s" : ""} a week`}
+                {eventsLabel(n)}
               </option>
             ))}
           </select>
         </div>
         {picked && (
           <p className="mt-2 text-xs text-stone-500">
-            {picked.size} actions suggested, about {fmt(used)} a week.
-            They&apos;re marked below.
+            {fmt(eventMinutes(events))} at events ({EVENT_MINUTES / 60} hours
+            each) + {fmt(used)} of actions: {picked.size} actions suggested,
+            marked below. Actions during an event count as part of the event
+            time.
           </p>
         )}
       </div>
@@ -219,7 +217,7 @@ export function ActionRanking({ initial }: { initial: SetupKind[] }) {
               </span>
               {mins > 0 && (
                 <span className="ml-auto text-xs text-stone-400">
-                  on by default: ~{fmt(mins)} a week
+                  on by default: ~{fmt(mins)} a week on top of events
                 </span>
               )}
             </div>
@@ -275,6 +273,7 @@ export function ActionRanking({ initial }: { initial: SetupKind[] }) {
                       </p>
                       <p className="truncate text-xs text-stone-500">
                         ~{k.label} min {WHEN[k.when]}
+                        {k.when === "during" ? " (part of the event time)" : ""}
                         {k.appliesTo && k.appliesTo !== "All events"
                           ? ` · ${k.appliesTo}`
                           : ""}

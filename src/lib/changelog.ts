@@ -66,6 +66,10 @@ export const CHANGELOG: Release[] = [
     title: "Birthdays",
     changes: [
       {
+        level: "organiser",
+        text: "Choose actions now counts your events in your weekly time (about 3 hours each) and pick from 3, 5, 8 or 12+ hours a week. Actions you do during an event don't add extra time.",
+      },
+      {
         level: "god",
         text: "Action ranking is split into Essential, Good to do and Above and beyond. Drag or use the arrows to move actions between them.",
       },

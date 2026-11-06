@@ -73,7 +73,7 @@ export async function loadTaskSetup(
       .filter((k) => saved.get(k.kind) ?? k.defaultOn)
       .map((k) => k.kind),
     configured: rows.length > 0,
-    eventsPerWeek: Math.max(1, Math.round(((events.count ?? 0) / 8) * 2) / 2),
+    eventsPerWeek: Math.max(0.5, Math.round(((events.count ?? 0) / 8) * 2) / 2),
     delegates: Object.fromEntries(
       (delegates.data ?? [])
         .filter((d) => d.person_id)
@@ -107,9 +107,28 @@ export type KindRow = {
   event_type: unknown;
 };
 
-// Minutes a week an action takes (per-event ones × events a week).
+// Time at the events themselves counts towards an organiser's week (Kai,
+// 6 Nov 2026: "the average event is 3 hours … that should count"), and
+// actions done during an event don't add anything on top of it.
+export const EVENT_MINUTES = 180;
+export const eventMinutes = (eventsPerWeek: number) =>
+  EVENT_MINUTES * eventsPerWeek;
+
+// "How much time do you have each week?" choices, events included.
+export const TIME_BUDGETS = [
+  { minutes: 180, label: "3 hours" },
+  { minutes: 300, label: "5 hours" },
+  { minutes: 480, label: "8 hours" },
+  { minutes: 720, label: "12+ hours" },
+];
+
+// Extra minutes a week an action takes on top of the events (per-event ones
+// × events a week; during-event ones are part of the event, so 0).
 export const weeklyMinutes = (k: SetupKind, eventsPerWeek: number) =>
-  k.estimate * (k.timesPerWeek ?? eventsPerWeek);
+  k.when === "during" ? 0 : k.estimate * (k.timesPerWeek ?? eventsPerWeek);
+
+export const eventsLabel = (n: number) =>
+  n === 0.5 ? "1 event a fortnight" : `${n} event${n === 1 ? "" : "s"} a week`;
 
 // Most important first: the community's own actions, then God's ranking
 // (0196), then unranked ones.
@@ -117,18 +136,19 @@ export const byImportance = (a: SetupKind, b: SetupKind) =>
   Number(b.custom) - Number(a.custom) ||
   (a.importance ?? 1e6) - (b.importance ?? 1e6);
 
-// What "How much time do you have?" suggests: going down the ranking, every
-// action that still fits the weekly time (always at least one).
+// What "How much time do you have?" suggests: the events' own hours come
+// off first, then going down the ranking, every action that still fits
+// (always at least one; during-event actions cost nothing extra).
 export function suggestForBudget(
   kinds: SetupKind[],
   minutes: number,
   eventsPerWeek: number,
 ) {
   const next = new Set<string>();
-  let used = 0;
+  let used = eventMinutes(eventsPerWeek);
   for (const k of [...kinds].sort(byImportance)) {
     const cost = weeklyMinutes(k, eventsPerWeek);
-    if (next.size === 0 || used + cost <= minutes) {
+    if (next.size === 0 || cost === 0 || used + cost <= minutes) {
       next.add(k.kind);
       used += cost;
     }

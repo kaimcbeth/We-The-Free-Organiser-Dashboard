@@ -2,19 +2,21 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { addCustomTask, removeCustomTask, saveTeamTasks } from "@/app/actions";
-import { suggestForBudget } from "@/lib/task-setup";
+import {
+  EVENT_MINUTES,
+  eventMinutes,
+  eventsLabel,
+  suggestForBudget,
+  TIME_BUDGETS,
+  weeklyMinutes,
+} from "@/lib/task-setup";
 import type { SetupKind, TaskSetup } from "@/lib/task-setup";
 import { inputClass } from "@/components/form";
 
-const BUDGETS = [
-  { minutes: 15, label: "15 min" },
-  { minutes: 30, label: "30 min" },
-  { minutes: 60, label: "1 hour" },
-  { minutes: 120, label: "2+ hours" },
-];
-
 const fmt = (min: number) =>
-  min < 60 ? `${min} min` : `${Math.round((min / 60) * 10) / 10} hr`;
+  min < 60
+    ? `${Math.round(min)} min`
+    : `${Math.round((min / 60) * 10) / 10} hr`;
 
 // "How much time do you have each week?" -> suggested tasks -> tweak -> save.
 export function TaskChooser({
@@ -47,9 +49,12 @@ export function TaskChooser({
   const [pending, start] = useTransition();
   const perWeek = (kind: string) => {
     const k = kinds.find((x) => x.kind === kind);
-    return (k?.estimate ?? 0) * (k?.timesPerWeek ?? setup.eventsPerWeek);
+    return k ? weeklyMinutes(k, setup.eventsPerWeek) : 0;
   };
-  const total = [...on].reduce((n, k) => n + perWeek(k), 0);
+  // Events count towards the week; during-event actions add nothing.
+  const atEvents = eventMinutes(setup.eventsPerWeek);
+  const actionsTime = [...on].reduce((n, k) => n + perWeek(k), 0);
+  const total = atEvents + actionsTime;
 
   function pickBudget(minutes: number) {
     setBudget(minutes);
@@ -103,14 +108,13 @@ export function TaskChooser({
               Around each event, a few quick actions can appear for you.{" "}
               {communityName} runs about{" "}
               <span className="font-semibold text-navy">
-                {setup.eventsPerWeek} event
-                {setup.eventsPerWeek === 1 ? "" : "s"} a week
+                {eventsLabel(setup.eventsPerWeek)}
               </span>
-              . Roughly how much time can you give these actions each week, not
-              counting the events themselves?
+              , and each event takes about {EVENT_MINUTES / 60} hours. Roughly
+              how much time can you give each week, events included?
             </p>
             <div className="mt-5 grid grid-cols-2 gap-2">
-              {BUDGETS.map((b) => (
+              {TIME_BUDGETS.map((b) => (
                 <button
                   key={b.minutes}
                   onClick={() => pickBudget(b.minutes)}
@@ -442,6 +446,10 @@ export function TaskChooser({
                   </span>
                 </p>
               </div>
+              <p className="text-xs text-white/60">
+                {fmt(atEvents)} at events + {fmt(actionsTime)} of actions
+                (actions during events are part of the event time)
+              </p>
               {budget && total > budget && (
                 <p className="mt-1 text-sm text-yellow">
                   That&apos;s a bit more than the {fmt(budget)} you said.
