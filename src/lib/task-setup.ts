@@ -116,7 +116,7 @@ export const eventMinutes = (eventsPerWeek: number) =>
 
 // "How much time do you have each week?" choices, events included.
 export const TIME_BUDGETS = [
-  { minutes: 180, label: "3 hours" },
+  { minutes: 120, label: "2 hours" },
   { minutes: 300, label: "5 hours" },
   { minutes: 480, label: "8 hours" },
   { minutes: 720, label: "12+ hours" },

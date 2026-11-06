@@ -67,7 +67,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "Choose actions now counts your events in your weekly time (about 3 hours each) and pick from 3, 5, 8 or 12+ hours a week. Actions you do during an event don't add extra time.",
+        text: "Choose actions now counts your events in your weekly time (about 3 hours each) and pick from 2, 5, 8 or 12+ hours a week. Actions you do during an event don't add extra time.",
       },
       {
         level: "god",
