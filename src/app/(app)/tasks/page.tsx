@@ -59,18 +59,38 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         regionTasks={regionTasks.open}
       />
     );
-  if (organiser.role === "regional_lead" || organiser.allCommunities)
+  if (organiser.role === "regional_lead" || organiser.allCommunities) {
+    // An RSL sees every community they look after (their region plus its
+    // extra countries, e.g. Oceania + Japan), not just the one picked at the
+    // top (Kai, 6 Nov 2026). God previewing as an RSL gets the picked
+    // community's region.
+    const regionIds =
+      organiser.viewingAs === "regional_lead"
+        ? organiser.team.region_id
+          ? [organiser.team.region_id]
+          : []
+        : organiser.role === "regional_lead"
+          ? organiser.region_id
+            ? [organiser.region_id]
+            : organiser.leadRegionIds
+          : organiser.leadRegionIds;
+    const rslTeams = organiser.allCommunities
+      ? organiser.teams
+      : await loadRslTeams(supabase, regionIds);
+    const previewRegion =
+      organiser.viewingAs === "regional_lead"
+        ? (await loadRegionTasks(supabase, regionIds)).open
+        : null;
     return (
       <RegionTasks
         supabase={supabase}
-        teams={organiser.allCommunities ? organiser.teams : [organiser.team]}
+        teams={rslTeams.length ? rslTeams : [organiser.team]}
         showCommunities={organiser.role === "god"}
-        regionTasks={regionTasks.open}
-        planRegionId={
-          organiser.viewingAs ? undefined : organiser.leadRegionIds[0]
-        }
+        regionTasks={previewRegion ?? regionTasks.open}
+        planRegionId={regionIds[0]}
       />
     );
+  }
   const [tasks, { data: people }, setup, connect, { data: leadRows }] =
     await Promise.all([
       loadTeamTasks(supabase, organiser.team_id, { regional: regionalStaff }),
