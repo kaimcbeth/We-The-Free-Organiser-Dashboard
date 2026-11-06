@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "regional_lead",
+        text: "Social media: three new RSL actions. \"What's on across the region\" every two weeks (Make the post has every community's events as an image and text), a monthly community spotlight (Pick a community suggests one and writes the caption), and regional milestones that pop up when something's worth celebrating.",
+      },
+      {
+        level: "regional_lead",
         text: 'People: "Invite a new organiser" makes a one-use link. Whoever opens it makes an account, adds their name and becomes an organiser for that community.',
       },
       {

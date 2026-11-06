@@ -167,6 +167,15 @@ export async function getStaff() {
     jar.get(ALL_COOKIE)?.value === "1" &&
     teams.length > 1 &&
     (role === "god" || role === "regional_lead");
+  // With "All communities", pages that still need one community use their
+  // own (Kai's Sydney), not whichever one was last picked or previewed
+  // (Kai, 6 Nov 2026: "still on Bedford").
+  if (allCommunities && viewingAs !== "regional_lead") {
+    const home = teams.find(
+      (t) => t.id === (row.organiser_team_id ?? row.team_id),
+    );
+    if (home) team = home;
+  }
   if (!teams.includes(team)) team = teams[0];
   if (practice) {
     team = practice;

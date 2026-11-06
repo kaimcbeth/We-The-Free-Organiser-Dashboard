@@ -1,5 +1,7 @@
 "use client";
 
+import { RegionWhatsOnButton } from "@/components/region-whats-on";
+import { RegionSpotlightButton } from "@/components/region-spotlight";
 import { useFold } from "@/lib/use-fold";
 import { TaskChecklist } from "@/components/task-checklist";
 import { SeasonHostsGraphic } from "@/components/season-hosts-graphic";
@@ -645,6 +647,18 @@ export function TaskCard({
                       className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
                     />
                   ),
+              )}
+              {task.kind === "rsl_social_whats_on" && task.regionId && (
+                <RegionWhatsOnButton
+                  regionId={task.regionId}
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
+              )}
+              {task.kind === "rsl_social_spotlight" && task.regionId && (
+                <RegionSpotlightButton
+                  regionId={task.regionId}
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
               )}
               {task.kind === "rsl_region_recap" && task.regionId && (
                 <RegionRecapButton

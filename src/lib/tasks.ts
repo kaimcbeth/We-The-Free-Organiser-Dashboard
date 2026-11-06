@@ -8,6 +8,7 @@ type Raw = {
   id: string;
   team_id: string | null; // null: a region-wide action (region_id)
   region_id?: string | null;
+  note?: string | null;
   hangout?: { title: string; starts_at: string; source_url: string } | null;
   due_at: string;
   show_from: string | null;
@@ -95,7 +96,9 @@ function toRow(t: Raw): TaskRow {
     description:
       t.kind?.kind === "rain_backup" && t.event?.rain_chance != null
         ? `Latest forecast: ${weatherLine(t.event)}. ${t.kind.description ?? ""}`.trim()
-        : (t.kind?.description ?? null),
+        : t.note // this one action's own line (e.g. a regional milestone, 0214)
+          ? `${t.note} ${t.kind?.description ?? ""}`.trim()
+          : (t.kind?.description ?? null),
     // Ranges ("5–10 min") count as their middle for totals.
     estimateMinutes: Math.ceil(
       ((t.kind?.estimate_minutes ?? 5) +
@@ -123,6 +126,10 @@ function toRow(t: Raw): TaskRow {
           season: "Every season",
           newcomer: "Each newcomer",
           birthday: "On their birthday",
+          region_weekly: "Every week",
+          region_fortnightly: "Every 2 weeks",
+          region_monthly: "Every month",
+          region_quarterly: "Every 3 months",
         } as Record<string, string>
       )[t.kind?.schedule ?? ""] ?? null,
     eventFacebookUrl: t.event?.facebook_url ?? null,
@@ -334,7 +341,7 @@ export async function loadRegionTasks(
 ) {
   if (!regionIds.length) return { open: [], later: [], done: [] };
   const since = new Date(Date.now() - 14 * 864e5).toISOString();
-  const select = `${SELECT}, region_id, hangout:hangouts(title, starts_at, source_url)`;
+  const select = `${SELECT}, region_id, note, hangout:hangouts(title, starts_at, source_url)`;
   const [open, done] = await Promise.all([
     supabase
       .from("tasks")
