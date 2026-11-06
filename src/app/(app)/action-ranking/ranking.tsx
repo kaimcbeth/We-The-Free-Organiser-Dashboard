@@ -183,6 +183,14 @@ export function ActionRanking({ initial }: { initial: SetupKind[] }) {
             outreach-only actions count for 1 in 3 events.
           </p>
         )}
+        {eventMinutes(events) + used > hours && (
+          <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            That&apos;s about {fmt(eventMinutes(events) + used)} a week, more
+            than the {fmt(hours)} picked: the events and the Essential actions
+            alone need that much, and Essential actions are always suggested.
+            Nothing else fits.
+          </p>
+        )}
       </div>
 
       {TIERS.map((t) => {
