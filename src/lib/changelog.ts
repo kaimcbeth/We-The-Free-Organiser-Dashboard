@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "regional_lead",
+        text: "New RSL action every week: a post in the organiser group chat, with ideas for what to share. Switch it off in Plan RSL actions if you don't want it.",
+      },
+      {
+        level: "regional_lead",
         text: "Plan RSL actions: add your own actions, for each community every month, or once a week or once a month for your whole region. Remove them any time.",
       },
       {
