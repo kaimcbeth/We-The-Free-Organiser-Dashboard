@@ -1,5 +1,6 @@
 "use client";
 
+import { useFold } from "@/lib/use-fold";
 import { TaskChecklist } from "@/components/task-checklist";
 import { SeasonHostsGraphic } from "@/components/season-hosts-graphic";
 import { useState, useTransition } from "react";
@@ -198,7 +199,9 @@ export function TaskCard({
   extra,
   removable = false,
   moveEvents,
+  collapsible = true,
 }: {
+  collapsible?: boolean; // ▼ in the header folds the card down to its title row
   task: TaskRow;
   tz: string;
   now: number;
@@ -221,6 +224,8 @@ export function TaskCard({
   const [search, setSearch] = useState("");
   const [always, setAlways] = useState(standing[standingKey] ?? "");
   const [everyTime, setEveryTime] = useState(!!standing[standingKey]);
+  const [foldedRaw, toggleFold] = useFold(`task:${task.id}`);
+  const folded = collapsible && foldedRaw;
 
   function delegate(personId: string, clearStanding = false) {
     setDelegating(false);
@@ -355,9 +360,15 @@ export function TaskCard({
             </svg>
           )}
         </button>
-        <div className="min-w-0 flex-1">
+        <div
+          className={`min-w-0 flex-1 ${folded ? "[&>*:not(:first-child)]:hidden" : ""}`}
+        >
           <div className="flex flex-wrap items-center gap-2">
-            <p className={`font-semibold ${done ? "line-through" : ""}`}>
+            {collapsible && <FoldButton folded={folded} onClick={toggleFold} />}
+            <p
+              className={`font-semibold ${done ? "line-through" : ""} ${collapsible ? "cursor-pointer" : ""}`}
+              onDoubleClick={collapsible ? toggleFold : undefined}
+            >
               {task.title}
             </p>
             <span className="rounded-full bg-navy/5 px-2 py-0.5 text-xs font-semibold text-navy">
@@ -862,7 +873,7 @@ export function TaskCard({
           {error && <p className="mt-1 text-sm text-red-700">{error}</p>}
         </div>
       </div>
-      {delegating && people && (
+      {delegating && people && !folded && (
         <Sheet
           title="Delegate this action"
           onClose={() => setDelegating(false)}
@@ -955,5 +966,34 @@ export function TaskCard({
         </Sheet>
       )}
     </li>
+  );
+}
+
+// Small ▼/▶ that folds a card (TaskCard, GroupedCheckIns).
+export function FoldButton({
+  folded,
+  onClick,
+}: {
+  folded: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={!folded}
+      aria-label={folded ? "Show more" : "Fold"}
+      title={folded ? "Show more" : "Fold"}
+      className="-ml-1 flex h-6 w-5 shrink-0 items-center justify-center rounded text-stone-400 hover:bg-stone-100 hover:text-navy"
+    >
+      <svg
+        viewBox="0 0 20 20"
+        className={`h-3 w-3 transition-transform ${folded ? "-rotate-90" : ""}`}
+        fill="currentColor"
+        aria-hidden
+      >
+        <path d="M4 7l6 7 6-7z" />
+      </svg>
+    </button>
   );
 }

@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   KIND_COLUMNS,
   MIN_WEEK_MINUTES,
+  SLIDER_STEP,
   byImportance,
   toSetupKind,
   type KindRow,
@@ -15,11 +16,11 @@ import {
 } from "@/lib/task-setup";
 
 // Plan RSL actions (Kai, 6 Nov 2026): like Plan actions for organisers, for
-// a Regional Support Lead's own actions. A slider from 2 to 50 hours a week
-// suggests which ones to take on; each can be switched on or off. Saved per
+// a Regional Support Lead's own actions. A slider from 2 hours up to the time
+// every action would take (Kai, 6 Nov 2026: "like it is for organisers";
+// was 2–50 hours) suggests which ones to take on; each can be switched on or off. Saved per
 // region (0201: region_task_kinds, regions.rsl_week_minutes).
 
-export const RSL_MAX_MINUTES = 50 * 60;
 const DEFAULT_MINUTES = 10 * 60;
 
 type Plan = {
@@ -253,6 +254,14 @@ function PlannerSheet({
   }, [regionId]);
 
   const cost = (k: RslKind) => rslWeeklyMinutes(k, communities);
+  // Top of the slider: every RSL action, rounded up to the slider's step.
+  const maxMinutes = Math.max(
+    MIN_WEEK_MINUTES + SLIDER_STEP,
+    Math.ceil(
+      (kinds ?? []).reduce((n, k) => n + rslWeeklyMinutes(k, communities), 0) /
+        SLIDER_STEP,
+    ) * SLIDER_STEP,
+  );
   const total = useMemo(
     () =>
       (kinds ?? [])
@@ -294,12 +303,10 @@ function PlannerSheet({
             <div className="mt-3">
               <HoursSlider
                 value={minutes}
-                max={RSL_MAX_MINUTES}
+                max={maxMinutes}
                 onChange={setMinutes}
                 min={MIN_WEEK_MINUTES}
-                maxLabel={fmtHours(RSL_MAX_MINUTES)}
                 label="Hours a week for RSL work"
-                everything={false}
               />
             </div>
             <button

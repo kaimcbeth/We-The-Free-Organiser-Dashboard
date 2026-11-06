@@ -66,6 +66,14 @@ export const CHANGELOG: Release[] = [
     title: "Birthdays",
     changes: [
       {
+        level: "regional_lead",
+        text: "Plan RSL actions: the hours slider now goes from 2 hours up to the time every RSL action would take, like Plan actions for organisers.",
+      },
+      {
+        level: "organiser",
+        text: "Action cards fold up: tap the small arrow by the title (or double-click the title) to shrink a card to one line. The check-in cards fold their list of communities too. Your phone or computer remembers what you folded.",
+      },
+      {
         level: "god",
         text: "Previewing as a Regional Support Lead now has a Region menu instead of Community: pick Oceania + Japan, Asia, Europe, North America or the UK and see that RSL's whole view.",
       },

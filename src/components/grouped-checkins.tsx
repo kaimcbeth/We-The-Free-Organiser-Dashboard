@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { TaskCard, type TaskRow } from "@/components/task-card";
+import { FoldButton, TaskCard, type TaskRow } from "@/components/task-card";
+import { useFold } from "@/lib/use-fold";
 import { TaskDoneBox } from "@/components/task-done-box";
 import { ConnectIdeas } from "@/components/connect-ideas";
 import type { ConnectContext } from "@/lib/connect";
@@ -73,6 +74,7 @@ function Group({ list, now }: { list: CheckInItem[]; now: number }) {
   const [done, setDone] = useState<Record<string, boolean>>({});
   const [open, setOpen] = useState<string | null>(null);
   const first = list[0].task;
+  const [folded, toggleFold] = useFold(`group:${first.kind}`);
   const title = first.title.replace(/: [^:]+$/, "");
   const doneCount = list.filter((i) => done[i.task.id]).length;
   const due = list.map((i) => i.task.dueAt).sort()[0];
@@ -86,7 +88,13 @@ function Group({ list, now }: { list: CheckInItem[]; now: number }) {
   return (
     <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="font-semibold text-navy">{title}</h3>
+        <FoldButton folded={folded} onClick={toggleFold} />
+        <h3
+          className="cursor-pointer font-semibold text-navy"
+          onDoubleClick={toggleFold}
+        >
+          {title}
+        </h3>
         <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-600">
           ~{first.estimateLabel} min each
         </span>
@@ -105,10 +113,10 @@ function Group({ list, now }: { list: CheckInItem[]; now: number }) {
           style={{ width: `${(doneCount / list.length) * 100}%` }}
         />
       </div>
-      {first.description && (
+      {!folded && first.description && (
         <p className="mt-2 text-sm text-stone-600">{first.description}</p>
       )}
-      <ul className="mt-3 divide-y divide-black/5">
+      <ul className={`mt-3 divide-y divide-black/5 ${folded ? "hidden" : ""}`}>
         {sorted.map((it) => {
           const s = status(it.ctx);
           const isOpen = open === it.task.id;
@@ -160,6 +168,7 @@ function Group({ list, now }: { list: CheckInItem[]; now: number }) {
                     now={now}
                     whatsappUrl={null}
                     removable
+                    collapsible={false}
                     moveEvents={it.ctx?.upcoming}
                     extra={it.ctx && <ConnectIdeas ctx={it.ctx} />}
                   />
