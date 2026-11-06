@@ -8,6 +8,7 @@ const PUBLIC_PATHS = [
   "/auth",
   "/join",
   "/invite",
+  "/start", // one-use link that makes someone an organiser (0213)
   "/checkin",
   "/drop", // temporary photo upload links (Photo Hub QR code)
   "/feedback", // volunteer feedback form (secret link per community)

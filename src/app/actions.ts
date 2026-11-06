@@ -626,6 +626,9 @@ export async function setViewAs(
   // Every change of view starts the Practice Community afresh.
   jar.delete(PRACTICE_COOKIE);
   await supabase.rpc("reset_practice_team");
+  // Leaving a region preview: back to their own community (the preview
+  // picked one in that region, e.g. Bedford for the UK).
+  if (jar.get(PREVIEW_REGION_COOKIE)) jar.delete(TEAM_COOKIE);
   jar.delete(PREVIEW_REGION_COOKIE);
   // An RSL looks after a whole region, so their preview starts region-wide.
   if (role === "regional_lead")

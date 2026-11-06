@@ -94,7 +94,9 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
                 </span>
               </span>
               <span className="block truncate text-sm font-medium text-white">
-                {organiser.team?.name ?? "Your community"}
+                {organiser.allCommunities
+                  ? "All communities"
+                  : (organiser.team?.name ?? "Your community")}
               </span>
             </span>
           </Link>

@@ -7,6 +7,7 @@ import {
   recentEvents,
 } from "@/lib/engagement";
 import { requireOrganiser } from "@/lib/organiser";
+import { OrganiserInviteLink } from "@/components/organiser-invite-link";
 import { GIVES, type Access, type CoreRole } from "@/lib/roles";
 import type { RegionRole } from "./people-list";
 
@@ -229,6 +230,16 @@ export default async function PeoplePage({
         {people.length} {people.length === 1 ? "person" : "people"} in{" "}
         {organiser.team?.name ?? "your community"} · {connected} with an account
       </p>
+      {(organiser.role === "god" || organiser.role === "regional_lead") &&
+        !organiser.allCommunities &&
+        organiser.team && (
+          <div className="mt-2">
+            <OrganiserInviteLink
+              teamId={organiser.team.id}
+              community={organiser.team.name.replace(/, .*$/, "")}
+            />
+          </div>
+        )}
       {deleted && (
         <p className="mt-4 rounded-2xl bg-cyan/20 px-4 py-3 text-sm font-medium text-navy">
           Person deleted.

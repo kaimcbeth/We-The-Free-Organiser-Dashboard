@@ -67,6 +67,14 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "regional_lead",
+        text: 'People: "Invite a new organiser" makes a one-use link. Whoever opens it makes an account, adds their name and becomes an organiser for that community.',
+      },
+      {
+        level: "god",
+        text: 'The header says "All communities" when that\'s picked, and leaving a region preview takes you back to your own community.',
+      },
+      {
+        level: "regional_lead",
         text: "RSL Actions: a new Social media section for your regional Instagram and Facebook pages, with a new weekly action to repost the best post from the main We The Free page. The monthly regional recap and Meet the Organisers sit there too.",
       },
       {
