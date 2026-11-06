@@ -67,6 +67,14 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "regional_lead",
+        text: "RSL Actions: check-ins and 1:1 calls are now one card each, with a row per community showing its last and next event. Tick a row off, or tap it for the details.",
+      },
+      {
+        level: "regional_lead",
+        text: 'New monthly RSL action: a recap for the regional socials. "Make the recap" shows last month\'s events, people and films across your communities, as text and a ready-to-post image.',
+      },
+      {
+        level: "regional_lead",
         text: 'RSL Actions page: "+ Add an action" for a one-off with a due date, or one that repeats every week, month or 3 months, or for each community every month.',
       },
       {

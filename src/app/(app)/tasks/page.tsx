@@ -24,7 +24,7 @@ import {
 } from "@/lib/time";
 import { loadConnectContext } from "@/lib/connect";
 import { loadRslTeams } from "@/lib/rsl-teams";
-import { ConnectIdeas } from "@/components/connect-ideas";
+import { GroupedCheckIns } from "@/components/grouped-checkins";
 import { RegionTasks } from "./region-tasks";
 import { GodOverview } from "./god-overview";
 import { CoreTeamTasks } from "./core-team-tasks";
@@ -508,25 +508,16 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
 
       {showRsl && checkIns.length > 0 && (
         <section>
-          <h2 className="mb-3 font-semibold">Check in with organisers</h2>
-          <ul className="space-y-3">
-            {checkIns.map((t) => (
-              <TaskCard
-                key={t.id}
-                task={t}
-                tz={rslTeamById[t.teamId]?.timezone ?? common.tz}
-                now={now}
-                whatsappUrl={null}
-                removable
-                moveEvents={allConnect[t.teamId]?.upcoming}
-                extra={
-                  allConnect[t.teamId] && (
-                    <ConnectIdeas ctx={allConnect[t.teamId]} />
-                  )
-                }
-              />
-            ))}
-          </ul>
+          <h2 className="mb-3 font-semibold">Your communities</h2>
+          <GroupedCheckIns
+            now={now}
+            items={checkIns.map((t) => ({
+              task: t,
+              community: rslTeamById[t.teamId]?.name.replace(/, .*$/, "") ?? "",
+              tz: rslTeamById[t.teamId]?.timezone ?? common.tz,
+              ctx: allConnect[t.teamId] ?? null,
+            }))}
+          />
         </section>
       )}
 

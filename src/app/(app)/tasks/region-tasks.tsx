@@ -6,7 +6,7 @@ import { TaskCard } from "@/components/task-card";
 import { LaterRow } from "@/components/later-row";
 import { loadTeamTasks } from "@/lib/tasks";
 import { loadConnectContext } from "@/lib/connect";
-import { ConnectIdeas } from "@/components/connect-ideas";
+import { GroupedCheckIns } from "@/components/grouped-checkins";
 import { WaitingList } from "./waiting-list";
 import { formatEventDate } from "@/lib/time";
 import type { TaskRow } from "@/components/task-card";
@@ -102,31 +102,19 @@ export async function RegionTasks({
 
       {checkIns.length > 0 && (
         <section>
-          <h2 className="mb-3 font-semibold">Check in with organisers</h2>
-          <ul className="space-y-3">
-            {checkIns.map((t) => {
-              const team = byId[t.teamId];
-              return (
-                <TaskCard
-                  key={t.id}
-                  task={{
-                    ...t,
-                    title: `${t.title}: ${short(team?.name ?? "")}`,
-                  }}
-                  tz={team?.timezone ?? "Australia/Sydney"}
-                  now={now}
-                  whatsappUrl={null}
-                  removable
-                  moveEvents={connect[t.teamId]?.upcoming}
-                  extra={
-                    connect[t.teamId] && (
-                      <ConnectIdeas ctx={connect[t.teamId]} />
-                    )
-                  }
-                />
-              );
-            })}
-          </ul>
+          <h2 className="mb-3 font-semibold">Your communities</h2>
+          <GroupedCheckIns
+            now={now}
+            items={checkIns.map((t) => ({
+              task: {
+                ...t,
+                title: `${t.title}: ${short(byId[t.teamId]?.name ?? "")}`,
+              },
+              community: short(byId[t.teamId]?.name ?? "").replace(/, .*$/, ""),
+              tz: byId[t.teamId]?.timezone ?? "Australia/Sydney",
+              ctx: connect[t.teamId] ?? null,
+            }))}
+          />
         </section>
       )}
 
