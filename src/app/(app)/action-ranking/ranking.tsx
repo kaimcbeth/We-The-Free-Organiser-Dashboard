@@ -7,10 +7,11 @@ import {
   eventMinutes,
   eventsLabel,
   suggestForBudget,
-  TIME_BUDGETS,
+  maxWeekMinutes,
   weeklyMinutes,
   type SetupKind,
 } from "@/lib/task-setup";
+import { HoursSlider } from "@/components/hours-slider";
 
 const WHEN: Record<SetupKind["when"], string> = {
   before: "each event",
@@ -60,7 +61,7 @@ export function ActionRanking({ initial }: { initial: SetupKind[] }) {
     key(grouped(initial.map((k) => ({ ...k, tier: (k.tier ?? 3) as Tier })))),
   );
   const [savedList, setSavedList] = useState<Row[]>(list);
-  const [budget, setBudget] = useState<number | null>(300);
+  const [budget, setBudget] = useState(300);
   const [events, setEvents] = useState(1);
   const [dragging, setDragging] = useState<number | null>(null);
   const [over, setOver] = useState<string | null>(null);
@@ -70,7 +71,9 @@ export function ActionRanking({ initial }: { initial: SetupKind[] }) {
   const dirty = key(list) !== saved;
   // Ranked by position here, so the preview follows unsaved moves too.
   const ranked = list.map((k, i) => ({ ...k, importance: i + 1 }));
-  const picked = budget ? suggestForBudget(ranked, budget, events) : null;
+  const maxMinutes = maxWeekMinutes(ranked, events);
+  const hours = Math.min(budget, maxMinutes);
+  const picked = suggestForBudget(ranked, hours, events);
   const used = picked
     ? ranked
         .filter((k) => picked.has(k.kind))
@@ -149,19 +152,16 @@ export function ActionRanking({ initial }: { initial: SetupKind[] }) {
         <p className="text-sm font-semibold text-navy">
           Preview what an organiser gets
         </p>
-        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-sm">
-          {TIME_BUDGETS.map((b) => (
-            <button
-              key={b.minutes}
-              onClick={() => setBudget(budget === b.minutes ? null : b.minutes)}
-              className={`rounded-full px-3 py-1 font-medium ${budget === b.minutes ? "bg-cyan text-navy" : "bg-stone-100 text-stone-600 hover:bg-stone-200"}`}
-            >
-              {b.label}
-            </button>
-          ))}
-          <span className="ml-1 text-stone-500">
-            a week (events included), with
-          </span>
+        <div className="mt-3">
+          <HoursSlider
+            value={hours}
+            max={maxMinutes}
+            onChange={setBudget}
+            note={`${picked.size} actions`}
+          />
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-1.5 text-sm">
+          <span className="text-stone-500">Events included, with</span>
           <select
             value={events}
             onChange={(e) => setEvents(Number(e.target.value))}

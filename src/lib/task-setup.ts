@@ -114,13 +114,19 @@ export const EVENT_MINUTES = 180;
 export const eventMinutes = (eventsPerWeek: number) =>
   EVENT_MINUTES * eventsPerWeek;
 
-// "How much time do you have each week?" choices, events included.
-export const TIME_BUDGETS = [
-  { minutes: 120, label: "2 hours" },
-  { minutes: 300, label: "5 hours" },
-  { minutes: 480, label: "8 hours" },
-  { minutes: 720, label: "12+ hours" },
-];
+// "How much time do you have each week?" is a slider (Kai, 6 Nov 2026):
+// from 2 hours a week up to the time every action would take, events included.
+export const MIN_WEEK_MINUTES = 120;
+export const SLIDER_STEP = 30;
+export function maxWeekMinutes(kinds: SetupKind[], eventsPerWeek: number) {
+  const all =
+    eventMinutes(eventsPerWeek) +
+    kinds.reduce((n, k) => n + weeklyMinutes(k, eventsPerWeek), 0);
+  return Math.max(
+    MIN_WEEK_MINUTES + SLIDER_STEP,
+    Math.ceil(all / SLIDER_STEP) * SLIDER_STEP,
+  );
+}
 
 // Extra minutes a week an action takes on top of the events (per-event ones
 // × events a week; during-event ones are part of the event, so 0).
@@ -134,11 +140,13 @@ export const eventsLabel = (n: number) =>
 // (0196), then unranked ones.
 export const byImportance = (a: SetupKind, b: SetupKind) =>
   Number(b.custom) - Number(a.custom) ||
+  (a.tier ?? 4) - (b.tier ?? 4) ||
   (a.importance ?? 1e6) - (b.importance ?? 1e6);
 
-// What "How much time do you have?" suggests: the events' own hours come
-// off first, then going down the ranking, every action that still fits
-// (always at least one; during-event actions cost nothing extra).
+// What "How much time do you have?" suggests: every Essential action, always;
+// then, with the events' own hours counted first, going down the ranking,
+// every action that still fits (during-event actions cost nothing extra, so
+// they fit whenever there's any time left).
 export function suggestForBudget(
   kinds: SetupKind[],
   minutes: number,
@@ -148,7 +156,8 @@ export function suggestForBudget(
   let used = eventMinutes(eventsPerWeek);
   for (const k of [...kinds].sort(byImportance)) {
     const cost = weeklyMinutes(k, eventsPerWeek);
-    if (next.size === 0 || cost === 0 || used + cost <= minutes) {
+    // Essential (tier 1) actions are always suggested (Kai, 6 Nov 2026).
+    if (k.tier === 1 || next.size === 0 || used + cost <= minutes) {
       next.add(k.kind);
       used += cost;
     }

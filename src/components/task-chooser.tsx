@@ -7,9 +7,10 @@ import {
   eventMinutes,
   eventsLabel,
   suggestForBudget,
-  TIME_BUDGETS,
+  maxWeekMinutes,
   weeklyMinutes,
 } from "@/lib/task-setup";
+import { HoursSlider } from "@/components/hours-slider";
 import type { SetupKind, TaskSetup } from "@/lib/task-setup";
 import { inputClass } from "@/components/form";
 
@@ -34,6 +35,8 @@ export function TaskChooser({
     startWithTime ? "time" : "pick",
   );
   const [budget, setBudget] = useState<number | null>(null);
+  const maxMinutes = maxWeekMinutes(setup.kinds, setup.eventsPerWeek);
+  const [hours, setHours] = useState(() => Math.min(300, maxMinutes));
   const [on, setOn] = useState<Set<string>>(new Set(setup.enabled));
   const [kinds, setKinds] = useState<SetupKind[]>(setup.kinds);
   // The tasks shown up front (the suggestion); everything else sits under "More tasks".
@@ -113,20 +116,20 @@ export function TaskChooser({
               , and each event takes about {EVENT_MINUTES / 60} hours. Roughly
               how much time can you give each week, events included?
             </p>
-            <div className="mt-5 grid grid-cols-2 gap-2">
-              {TIME_BUDGETS.map((b) => (
-                <button
-                  key={b.minutes}
-                  onClick={() => pickBudget(b.minutes)}
-                  className="rounded-2xl bg-white px-4 py-4 text-lg font-semibold text-navy ring-1 ring-stone-300 hover:ring-2 hover:ring-pink"
-                >
-                  {b.label}
-                  <span className="block text-xs font-normal text-stone-500">
-                    a week
-                  </span>
-                </button>
-              ))}
+            <div className="mt-5 rounded-2xl bg-white p-4 ring-1 ring-stone-200">
+              <HoursSlider
+                value={hours}
+                max={maxMinutes}
+                onChange={setHours}
+                note={`${suggestForBudget(kinds, hours, setup.eventsPerWeek).size} actions`}
+              />
             </div>
+            <button
+              onClick={() => pickBudget(hours)}
+              className="mt-3 w-full rounded-xl bg-pink px-4 py-3 font-semibold text-navy hover:bg-pink-strong"
+            >
+              Suggest my actions
+            </button>
             <button
               onClick={() => {
                 setFeatured(new Set(on));
