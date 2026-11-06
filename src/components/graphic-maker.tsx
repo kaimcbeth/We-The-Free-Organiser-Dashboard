@@ -37,6 +37,11 @@ import {
   type TextField,
   type Texts,
 } from "@/components/graphic-photo-styles";
+import {
+  drawStripes,
+  loadStripesFonts,
+  stripesFields,
+} from "@/components/graphic-stripes";
 import { PALETTES, type Colours } from "@/components/graphic-colours";
 
 // Event graphics, drawn in the browser on a canvas from the event's details
@@ -61,7 +66,8 @@ const SIZES: Record<GraphicSize, { label: string; w: number; h: number }> = {
   cover: { label: "Facebook event cover", w: 1920, h: 1005 },
 };
 type Template = "promo" | "recap";
-type Style = "classic" | "poster" | "teaser" | "bigphoto" | "details";
+type Style =
+  "classic" | "poster" | "teaser" | "bigphoto" | "details" | "stripes";
 // Shown as plain numbers (Kai, 5 Nov 2026: the names were janky). In code:
 // classic, poster, teaser = "Coming soon", bigphoto = "Big photo",
 // details = "Photo + details".
@@ -71,9 +77,10 @@ const STYLES: Record<Style, string> = {
   teaser: "3",
   bigphoto: "4",
   details: "5",
+  stripes: "6", // Kai's Kittl poster: heading up the side, stripes, photo
 };
 // Styles with a Warm / WTF colours choice.
-const COLOURED: Style[] = ["teaser", "bigphoto", "details"];
+const COLOURED: Style[] = ["teaser", "bigphoto", "details", "stripes"];
 
 const NAVY = "#071130";
 const PINK = "#ff47b9";
@@ -505,7 +512,9 @@ export function GraphicMaker({
         ? loadPosterFonts()
         : style === "teaser"
           ? loadTeaserFonts()
-          : loadPhotoStyleFonts();
+          : style === "stripes"
+            ? loadStripesFonts()
+            : loadPhotoStyleFonts();
     load.then(() => live && setFonts((n) => n + 1));
     if (!mark)
       loadImage("/brand/wtf-mark.png")
@@ -542,7 +551,9 @@ export function GraphicMaker({
             ? teaserFields(event, tz, recap)
             : style === "bigphoto"
               ? bigPhotoFields(event, tz, recap, handle)
-              : detailsFields(event, tz, recap, handle),
+              : style === "stripes"
+                ? stripesFields(event, tz, recap, handle)
+                : detailsFields(event, tz, recap, handle),
     [style, event, tz, template, recap, handle],
   );
   const texts = useMemo(
@@ -559,6 +570,15 @@ export function GraphicMaker({
     const { w, h } = SIZES[size];
     if (style === "teaser") {
       drawTeaser(canvas.current, { w, h, t: texts, colours, mark });
+    } else if (style === "stripes") {
+      drawStripes(canvas.current, {
+        w,
+        h,
+        t: texts,
+        photo: imgs[0] ?? null,
+        mark,
+        colours,
+      });
     } else if (style === "bigphoto" || style === "details") {
       (style === "bigphoto" ? drawBigPhoto : drawPhotoDetails)(canvas.current, {
         w,
@@ -672,7 +692,12 @@ export function GraphicMaker({
                   <button
                     key={s}
                     type="button"
-                    onClick={() => setStyle(s)}
+                    onClick={() => {
+                      setStyle(s);
+                      // Style 6 is a black-and-white poster at heart.
+                      if (s === "stripes" && colours === "warm")
+                        setColours("mono");
+                    }}
                     className={`min-w-8 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${
                       style === s
                         ? "bg-navy text-white ring-navy"
@@ -779,12 +804,15 @@ export function GraphicMaker({
                   ))}
                 </div>
               )}
-              {(style === "bigphoto" || style === "details") && !handle && (
-                <p className="mt-2 text-xs text-stone-500">
-                  Add your community&apos;s Instagram username in the Social
-                  Media Hub and it goes on these by itself.
-                </p>
-              )}
+              {(style === "bigphoto" ||
+                style === "details" ||
+                style === "stripes") &&
+                !handle && (
+                  <p className="mt-2 text-xs text-stone-500">
+                    Add your community&apos;s Instagram username in the Social
+                    Media Hub and it goes on these by itself.
+                  </p>
+                )}
 
               {all.length > 0 && style !== "teaser" && (
                 <div className="mt-3">

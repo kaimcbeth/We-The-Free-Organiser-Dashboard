@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Graphic maker: style 6, a bold poster with the event name running up the side, rough diagonal stripes and your photo. Works with tall and wide photos, and has a new Black + white colour choice.",
+      },
+      {
+        level: "organiser",
         text: 'Meet the Members: the first question slide now says "Answers in the caption" with an arrow pointing down.',
       },
       {

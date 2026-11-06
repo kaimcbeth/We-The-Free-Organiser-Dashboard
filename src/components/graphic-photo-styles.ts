@@ -46,7 +46,7 @@ export const noEmoji = (s: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
-const fmt = (iso: string, tz: string, o: Intl.DateTimeFormatOptions) =>
+export const fmt = (iso: string, tz: string, o: Intl.DateTimeFormatOptions) =>
   new Intl.DateTimeFormat("en-AU", { timeZone: tz, ...o }).format(
     new Date(iso),
   );
@@ -55,19 +55,19 @@ const time = (iso: string, tz: string) =>
     .replace(/\s/g, "")
     .replace(":00", "")
     .toUpperCase();
-const timeRange = (e: PhotoStyleEvent, tz: string) =>
+export const timeRange = (e: PhotoStyleEvent, tz: string) =>
   e.endsAt
     ? `${time(e.startsAt, tz)} – ${time(e.endsAt, tz)}`
     : time(e.startsAt, tz);
 
 // The place: the venue, else the first part of the address.
-function place(e: PhotoStyleEvent) {
+export function place(e: PhotoStyleEvent) {
   const venue = e.venue?.trim();
   const first = e.address?.split(",")[0]?.trim();
   return venue || first || "";
 }
 // The rest of the address (suburb and so on), without the venue's name.
-function where(e: PhotoStyleEvent) {
+export function where(e: PhotoStyleEvent) {
   const venue = e.venue?.trim().toLowerCase();
   const parts = (e.address ?? "")
     .split(",")

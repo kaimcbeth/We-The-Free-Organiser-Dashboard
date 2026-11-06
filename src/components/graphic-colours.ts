@@ -7,7 +7,8 @@ const PINK = "#ff47b9";
 const CYAN = "#2fd9df";
 const YELLOW = "#ffd90f";
 
-export type Colours = "warm" | "mix" | "pink" | "cyan" | "yellow" | "pinkbg";
+export type Colours =
+  "warm" | "mono" | "mix" | "pink" | "cyan" | "yellow" | "pinkbg";
 
 export type Palette = {
   label: string;
@@ -36,6 +37,24 @@ export const PALETTES: Record<Colours, Palette> = {
       [0.12, 1, 0.55, "rgba(150,44,26,0.85)"],
       [1, 1, 0.42, "rgba(196,92,24,0.9)"],
       [1, 0.66, 0.32, "rgba(160,48,30,0.75)"],
+    ],
+  },
+  // Greys, like Kai's Kittl poster (style 6, 6 Nov 2026). Style 6 also
+  // turns the photo black and white with this one.
+  mono: {
+    label: "Black + white",
+    swatch: ["#262626", "#d4d4d4"],
+    bg: "#262626",
+    ink: "#e6e6e6",
+    text: "#e6e6e6",
+    accent: "#bdbdbd",
+    head: "#d4d4d4",
+    glows: [
+      [0, 0.12, 0.5, "rgba(120,120,120,0.45)"],
+      [0, 0.55, 0.62, "rgba(90,90,90,0.5)"],
+      [0.12, 1, 0.55, "rgba(80,80,80,0.45)"],
+      [1, 1, 0.42, "rgba(110,110,110,0.4)"],
+      [1, 0.66, 0.32, "rgba(90,90,90,0.35)"],
     ],
   },
   mix: {
