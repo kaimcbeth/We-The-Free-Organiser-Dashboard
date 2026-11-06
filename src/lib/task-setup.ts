@@ -19,6 +19,7 @@ export type SetupKind = {
   defaultOn: boolean; // on until an organiser says otherwise (the newer role actions start off)
   appliesTo: string | null; // which events it's made for ("All events", "Outreach events", a type)
   importance: number | null; // God's ranking (0196): 1 = most important, null = unranked
+  tier: 1 | 2 | 3 | null; // 0197: Essential / Good to do / Above and beyond
 };
 
 export type TaskSetup = {
@@ -85,7 +86,7 @@ export async function loadTaskSetup(
 }
 
 export const KIND_COLUMNS =
-  "kind, title, blurb, estimate_minutes, estimate_max_minutes, anchor, due_after_hours, team_id, schedule, default_enabled, outreach_only, needs_team_newcomers, needs_newcomers, importance, event_type:event_types(name)";
+  "kind, title, blurb, estimate_minutes, estimate_max_minutes, anchor, due_after_hours, team_id, schedule, default_enabled, outreach_only, needs_team_newcomers, needs_newcomers, importance, tier, event_type:event_types(name)";
 
 export type KindRow = {
   kind: string;
@@ -102,6 +103,7 @@ export type KindRow = {
   needs_team_newcomers: boolean | null;
   needs_newcomers: boolean | null;
   importance: number | null;
+  tier: number | null;
   event_type: unknown;
 };
 
@@ -190,5 +192,6 @@ export function toSetupKind(k: KindRow): SetupKind {
                 : "All events",
     blurb: k.blurb ?? null,
     importance: k.importance ?? null,
+    tier: (k.tier as 1 | 2 | 3 | null) ?? null,
   };
 }

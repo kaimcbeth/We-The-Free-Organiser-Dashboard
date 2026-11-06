@@ -16,6 +16,7 @@ export default async function ActionRankingPage() {
     .is("team_id", null)
     .eq("audience", "community")
     .not("schedule", "in", "(follow_up,special,pod)")
+    .order("tier", { ascending: true, nullsFirst: false })
     .order("importance", { ascending: true, nullsFirst: false })
     .order("sort_order");
   const kinds = ((data ?? []) as unknown as KindRow[]).map(toSetupKind);
@@ -26,8 +27,8 @@ export default async function ActionRankingPage() {
       <p className="mt-1 text-sm text-stone-600">
         Every action a community can choose, most important first. When an
         organiser says how much time they have, Choose actions suggests from the
-        top down until their time runs out. Drag to reorder, or use the arrows.
-        Only you see this page.
+        top down until their time runs out. Drag to reorder or to move an action
+        to another section, or use the arrows. Only you see this page.
       </p>
       <ActionRanking initial={kinds} />
     </div>

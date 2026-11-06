@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "god",
+        text: "Action ranking is split into Essential, Good to do and Above and beyond. Drag or use the arrows to move actions between them.",
+      },
+      {
+        level: "god",
         text: "Action ranking (God Mode bar): every action in order of importance, with a preview of what an organiser gets for 15 min, 30 min, 1 hour or 2+ hours a week. Choose actions now suggests from the top of this list.",
       },
       {

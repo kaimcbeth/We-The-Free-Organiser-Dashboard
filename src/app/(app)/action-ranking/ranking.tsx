@@ -37,22 +37,41 @@ const TAG: Record<SetupKind["when"], { label: string; cls: string }> = {
   newcomer: { label: "Per newcomer", cls: "bg-stone-100 text-stone-600" },
 };
 
+// Sections (Kai, 6 Nov: priority 1, 2, 3).
+const TIERS = [
+  { tier: 1, label: "Essential", hint: "Priority 1", cls: "text-navy" },
+  { tier: 2, label: "Good to do", hint: "Priority 2", cls: "text-navy" },
+  { tier: 3, label: "Above and beyond", hint: "Priority 3", cls: "text-navy" },
+] as const;
+type Tier = 1 | 2 | 3;
+type Row = SetupKind & { tier: Tier };
+
+const key = (l: Row[]) => l.map((k) => `${k.kind}:${k.tier}`).join();
+// Keep the flat list grouped by section, order kept within each.
+const grouped = (l: Row[]) =>
+  [1, 2, 3].flatMap((t) => l.filter((k) => k.tier === t));
+
 const fmt = (min: number) =>
   min < 60
     ? `${Math.round(min)} min`
     : `${Math.round((min / 60) * 10) / 10} hr`;
 
 export function ActionRanking({ initial }: { initial: SetupKind[] }) {
-  const [list, setList] = useState(initial);
-  const [saved, setSaved] = useState(initial.map((k) => k.kind).join());
+  const [list, setList] = useState<Row[]>(() =>
+    grouped(initial.map((k) => ({ ...k, tier: (k.tier ?? 3) as Tier }))),
+  );
+  const [saved, setSaved] = useState(() =>
+    key(grouped(initial.map((k) => ({ ...k, tier: (k.tier ?? 3) as Tier })))),
+  );
+  const [savedList, setSavedList] = useState<Row[]>(list);
   const [budget, setBudget] = useState<number | null>(30);
   const [events, setEvents] = useState(1);
   const [dragging, setDragging] = useState<number | null>(null);
-  const [over, setOver] = useState<number | null>(null);
+  const [over, setOver] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
 
-  const dirty = list.map((k) => k.kind).join() !== saved;
+  const dirty = key(list) !== saved;
   // Ranked by position here, so the preview follows unsaved moves too.
   const ranked = list.map((k, i) => ({ ...k, importance: i + 1 }));
   const picked = budget ? suggestForBudget(ranked, budget, events) : null;
@@ -62,25 +81,71 @@ export function ActionRanking({ initial }: { initial: SetupKind[] }) {
         .reduce((n, k) => n + weeklyMinutes(k, events), 0)
     : 0;
 
-  function move(from: number, to: number) {
-    if (to < 0 || to >= list.length || from === to) return;
+  // Put the action at flat position `to` in section `tier`.
+  function place(from: number, to: number, tier: Tier) {
     const next = [...list];
     const [k] = next.splice(from, 1);
-    next.splice(to, 0, k);
-    setList(next);
+    next.splice(to > from ? to - 1 : to, 0, { ...k, tier });
+    setList(grouped(next));
+  }
+  function up(i: number) {
+    const k = list[i];
+    if (i > 0 && list[i - 1].tier === k.tier) {
+      const next = [...list];
+      [next[i - 1], next[i]] = [next[i], next[i - 1]];
+      setList(next);
+    } else if (k.tier > 1) {
+      // Top of its section: becomes the last of the section above.
+      setList(
+        grouped(
+          list.map((x, j) =>
+            j === i ? { ...x, tier: (k.tier - 1) as Tier } : x,
+          ),
+        ),
+      );
+    }
+  }
+  function down(i: number) {
+    const k = list[i];
+    if (i < list.length - 1 && list[i + 1].tier === k.tier) {
+      const next = [...list];
+      [next[i], next[i + 1]] = [next[i + 1], next[i]];
+      setList(next);
+    } else if (k.tier < 3) {
+      // Bottom of its section: becomes the first of the section below.
+      const t = (k.tier + 1) as Tier;
+      const rest = list.filter((_, j) => j !== i);
+      const at = rest.findIndex((x) => x.tier === t);
+      rest.splice(at < 0 ? rest.length : at, 0, { ...k, tier: t });
+      setList(grouped(rest));
+    }
+  }
+  function toTop(i: number) {
+    const k = list[i];
+    const first = list.findIndex((x) => x.tier === k.tier);
+    if (first !== i) place(i, first, k.tier);
   }
 
   function save() {
     setError("");
-    const kinds = list.map((k) => k.kind);
+    const snapshot = list;
     start(async () => {
       const { error } = await createClient().rpc("set_action_ranking", {
-        p_kinds: kinds,
+        p_kinds: snapshot.map((k) => k.kind),
+        p_tiers: snapshot.map((k) => k.tier),
       });
       if (error) setError("Couldn't save the order. Try again?");
-      else setSaved(kinds.join());
+      else {
+        setSaved(key(snapshot));
+        setSavedList(snapshot);
+      }
     });
   }
+
+  const endDrag = () => {
+    setDragging(null);
+    setOver(null);
+  };
 
   return (
     <div className="mt-5">
@@ -121,95 +186,150 @@ export function ActionRanking({ initial }: { initial: SetupKind[] }) {
         )}
       </div>
 
-      <ol className="mt-4 flex flex-col gap-1.5">
-        {list.map((k, i) => {
-          const on = picked?.has(k.kind);
-          return (
-            <li
-              key={k.kind}
-              draggable
-              onDragStart={(e) => {
-                setDragging(i);
-                e.dataTransfer.effectAllowed = "move";
-              }}
+      {TIERS.map((t) => {
+        const rows = list
+          .map((k, i) => ({ k, i }))
+          .filter(({ k }) => k.tier === t.tier);
+        const mins = rows
+          .filter(({ k }) => k.defaultOn)
+          .reduce((n, { k }) => n + weeklyMinutes(k, events), 0);
+        return (
+          <section key={t.tier} className="mt-6">
+            <div
               onDragOver={(e) => {
                 e.preventDefault();
-                setOver(i);
+                setOver(`t${t.tier}`);
               }}
-              onDragLeave={() => setOver((o) => (o === i ? null : o))}
+              onDragLeave={() =>
+                setOver((o) => (o === `t${t.tier}` ? null : o))
+              }
               onDrop={(e) => {
                 e.preventDefault();
-                if (dragging != null) move(dragging, i);
-                setDragging(null);
-                setOver(null);
+                if (dragging != null) {
+                  const first = list.findIndex((x) => x.tier === t.tier);
+                  place(dragging, first < 0 ? list.length : first, t.tier);
+                }
+                endDrag();
               }}
-              onDragEnd={() => {
-                setDragging(null);
-                setOver(null);
-              }}
-              className={`flex cursor-grab items-center gap-3 rounded-xl border bg-white px-3 py-2 active:cursor-grabbing ${over === i && dragging !== i ? "border-pink" : "border-transparent"} ${dragging === i ? "opacity-40" : ""} ${on ? "shadow-[inset_4px_0_0_var(--color-cyan)]" : ""}`}
+              className={`flex items-baseline gap-2 rounded-xl px-1 py-1 ${over === `t${t.tier}` ? "bg-pink/10" : ""}`}
             >
-              <span className="w-6 shrink-0 text-right text-sm font-bold tabular-nums text-stone-400">
-                {i + 1}
+              <h2 className={`text-lg font-bold ${t.cls}`}>{t.label}</h2>
+              <span className="text-xs font-medium uppercase tracking-wide text-stone-400">
+                {t.hint} · {rows.length}
               </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold leading-snug text-navy">
-                  {k.title}
-                  <span
-                    className={`ml-2 rounded-full px-2 py-0.5 text-[11px] font-medium ${TAG[k.when].cls}`}
+              {mins > 0 && (
+                <span className="ml-auto text-xs text-stone-400">
+                  on by default: ~{fmt(mins)} a week
+                </span>
+              )}
+            </div>
+            {rows.length === 0 && (
+              <p className="mt-1 rounded-xl border border-dashed border-stone-300 px-3 py-3 text-center text-xs text-stone-400">
+                Drag an action here
+              </p>
+            )}
+            <ol className="mt-1.5 flex flex-col gap-1.5">
+              {rows.map(({ k, i }) => {
+                const on = picked?.has(k.kind);
+                return (
+                  <li
+                    key={k.kind}
+                    draggable
+                    onDragStart={(e) => {
+                      setDragging(i);
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setOver(`r${i}`);
+                    }}
+                    onDragLeave={() =>
+                      setOver((o) => (o === `r${i}` ? null : o))
+                    }
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      // Dropped on a row: takes its place (and its section).
+                      if (dragging != null && dragging !== i)
+                        place(dragging, dragging < i ? i + 1 : i, k.tier);
+                      endDrag();
+                    }}
+                    onDragEnd={endDrag}
+                    className={`flex cursor-grab items-center gap-3 rounded-xl border bg-white px-3 py-2 active:cursor-grabbing ${over === `r${i}` && dragging !== i ? "border-pink" : "border-transparent"} ${dragging === i ? "opacity-40" : ""} ${on ? "shadow-[inset_4px_0_0_var(--color-cyan)]" : ""}`}
                   >
-                    {TAG[k.when].label}
-                  </span>
-                  {!k.defaultOn && (
-                    <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-stone-500">
-                      Off by default
+                    <span className="w-6 shrink-0 text-right text-sm font-bold tabular-nums text-stone-400">
+                      {i + 1}
                     </span>
-                  )}
-                  {on && (
-                    <span className="ml-2 rounded-full bg-cyan/20 px-2 py-0.5 text-[11px] font-medium text-navy">
-                      Suggested
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold leading-snug text-navy">
+                        {k.title}
+                        <span
+                          className={`ml-2 rounded-full px-2 py-0.5 text-[11px] font-medium ${TAG[k.when].cls}`}
+                        >
+                          {TAG[k.when].label}
+                        </span>
+                        {!k.defaultOn && (
+                          <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-stone-500">
+                            Off by default
+                          </span>
+                        )}
+                        {on && (
+                          <span className="ml-2 rounded-full bg-cyan/20 px-2 py-0.5 text-[11px] font-medium text-navy">
+                            Suggested
+                          </span>
+                        )}
+                      </p>
+                      <p className="truncate text-xs text-stone-500">
+                        ~{k.label} min {WHEN[k.when]}
+                        {k.appliesTo && k.appliesTo !== "All events"
+                          ? ` · ${k.appliesTo}`
+                          : ""}
+                        {k.blurb ? ` · ${k.blurb}` : ""}
+                      </p>
+                    </div>
+                    <span className="flex shrink-0 gap-0.5">
+                      <button
+                        onClick={() => toTop(i)}
+                        disabled={list[i - 1]?.tier !== k.tier}
+                        aria-label={`Move ${k.title} to the top of ${TIERS[k.tier - 1].label}`}
+                        title="Move to the top of this section"
+                        className="h-7 w-7 rounded-md text-stone-400 hover:bg-stone-100 hover:text-navy disabled:opacity-30"
+                      >
+                        ⤒
+                      </button>
+                      <button
+                        onClick={() => up(i)}
+                        disabled={i === 0}
+                        title={
+                          list[i - 1]?.tier !== k.tier && k.tier > 1
+                            ? `Move up to ${TIERS[k.tier - 2].label}`
+                            : undefined
+                        }
+                        aria-label={`Move ${k.title} up`}
+                        className="h-7 w-7 rounded-md text-stone-400 hover:bg-stone-100 hover:text-navy disabled:opacity-30"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onClick={() => down(i)}
+                        disabled={i === list.length - 1 && k.tier === 3}
+                        title={
+                          list[i + 1]?.tier !== k.tier && k.tier < 3
+                            ? `Move down to ${TIERS[k.tier as 1 | 2].label}`
+                            : undefined
+                        }
+                        aria-label={`Move ${k.title} down`}
+                        className="h-7 w-7 rounded-md text-stone-400 hover:bg-stone-100 hover:text-navy disabled:opacity-30"
+                      >
+                        ↓
+                      </button>
                     </span>
-                  )}
-                </p>
-                <p className="truncate text-xs text-stone-500">
-                  ~{k.label} min {WHEN[k.when]}
-                  {k.appliesTo && k.appliesTo !== "All events"
-                    ? ` · ${k.appliesTo}`
-                    : ""}
-                  {k.blurb ? ` · ${k.blurb}` : ""}
-                </p>
-              </div>
-              <span className="flex shrink-0 gap-0.5">
-                <button
-                  onClick={() => move(i, 0)}
-                  disabled={i === 0}
-                  aria-label={`Move ${k.title} to the top`}
-                  title="Move to the top"
-                  className="h-7 w-7 rounded-md text-stone-400 hover:bg-stone-100 hover:text-navy disabled:opacity-30"
-                >
-                  ⤒
-                </button>
-                <button
-                  onClick={() => move(i, i - 1)}
-                  disabled={i === 0}
-                  aria-label={`Move ${k.title} up`}
-                  className="h-7 w-7 rounded-md text-stone-400 hover:bg-stone-100 hover:text-navy disabled:opacity-30"
-                >
-                  ↑
-                </button>
-                <button
-                  onClick={() => move(i, i + 1)}
-                  disabled={i === list.length - 1}
-                  aria-label={`Move ${k.title} down`}
-                  className="h-7 w-7 rounded-md text-stone-400 hover:bg-stone-100 hover:text-navy disabled:opacity-30"
-                >
-                  ↓
-                </button>
-              </span>
-            </li>
-          );
-        })}
-      </ol>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+        );
+      })}
 
       {(dirty || error) && (
         <div className="sticky bottom-4 mt-4 flex items-center justify-end gap-3 rounded-2xl bg-navy px-4 py-3 text-sm text-white shadow-lg">
@@ -217,12 +337,7 @@ export function ActionRanking({ initial }: { initial: SetupKind[] }) {
           {!error && <span className="mr-auto opacity-80">Order changed</span>}
           <button
             onClick={() => {
-              setList(
-                saved
-                  .split(",")
-                  .map((kind) => list.find((k) => k.kind === kind)!)
-                  .filter(Boolean),
-              );
+              setList(savedList);
               setError("");
             }}
             className="opacity-75 hover:opacity-100"

@@ -332,6 +332,7 @@ export function TaskChooser({
                           custom: true,
                           defaultOn: true,
                           importance: null,
+                          tier: null,
                           appliesTo: "All events",
                         },
                       ]);
