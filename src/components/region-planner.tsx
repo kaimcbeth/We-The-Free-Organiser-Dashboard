@@ -39,7 +39,9 @@ const HOW: [How, string][] = [
 // (like organiser check-ins) count once per community; hangout promotion is
 // about three reminders per monthly hangout.
 export function rslWeeklyMinutes(k: RslKind, communities: number) {
-  if (k.perCommunity) return k.estimate * communities * 0.25;
+  // Monthly unless the kind says otherwise (quarterly = 1/13 a week).
+  if (k.perCommunity)
+    return k.estimate * communities * (k.timesPerWeek ?? 0.25);
   return k.estimate * (k.timesPerWeek ?? 0.75);
 }
 
@@ -342,7 +344,7 @@ function PlannerSheet({
                         </span>
                         <span className="block text-xs text-stone-500">
                           {k.perCommunity
-                            ? `${k.label} min a month for each of your ${communities} communities`
+                            ? `${k.label} min ${k.when === "quarterly" ? "every 3 months" : "a month"} for each of your ${communities} communities`
                             : k.kind === "promote_hangout"
                               ? `${k.label} min, about 3 times for each hangout`
                               : `${k.label} min ${k.timesPerWeek === 1 ? "every week" : "every month"}`}
