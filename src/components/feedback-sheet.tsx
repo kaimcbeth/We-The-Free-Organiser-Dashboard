@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 
 // Ready-made messages (work without the writing assistant).
 const PRESETS = (link: string) => [
-  `Hey everyone, we'd love to hear how volunteering with us has been for you. It's 3 quick questions and you can leave your name off if you like. Every answer gets read and helps us make things better:\n${link}\n\nThanks heaps!`,
+  `Hey everyone, we'd love to hear how being part of the community has been for you. It's 3 quick questions and you can leave your name off if you like. Every answer gets read and helps us make things better:\n${link}\n\nThanks heaps!`,
   `Quick one: how are you finding things? We're always trying to make our events better, and the best people to ask are you lot. 2 minutes, name optional:\n${link}`,
   `Got a spare couple of minutes? Tell us what's working and what we could do better. Honest answers welcome, and you don't have to put your name on it.\n${link}`,
 ];
@@ -101,7 +101,7 @@ export function FeedbackSheet({
         </>
       )}
       {open && (
-        <Sheet title="Volunteer feedback" onClose={() => setOpen(false)}>
+        <Sheet title="Member feedback" onClose={() => setOpen(false)}>
           <div className="flex gap-1.5">
             {(["ask", "responses"] as const).map((t) => (
               <button

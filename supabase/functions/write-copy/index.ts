@@ -1,7 +1,7 @@
 // Writes social media copy for an event: a few options per platform, in the
 // community's own voice (voice_examples) when it has some. Never posts
 // anything: it only returns text for a person to pick, edit and copy.
-// Also writes the quarterly volunteer feedback message ({ purpose: "feedback" }),
+// Also writes the quarterly member feedback message ({ purpose: "feedback" }),
 // the incident report form reminder ({ purpose: "incident" }), the mental health
 // resources reminder ({ purpose: "mental_health" }) and posts for
 // group chat discussion questions ({ purpose: "prompt", question }).
@@ -29,12 +29,13 @@ const PLATFORMS: Record<string, string> = {
   story: "Instagram/Facebook story text overlay: under 15 words, punchy, no hashtags.",
 };
 
-const RULES = `Write like a real volunteer from this community, not a brand or marketer.
+const RULES = `Write like a real member of this community, not a brand or marketer.
+- Call the people in the community members, never volunteers (Kai, 6 Nov 2026).
 - Australian English spelling (organise, colour, favourite).
 - Plain, warm, specific. Use the real details given. Never invent facts: no made-up numbers, quotes, names, prizes or claims.
 - Never use: "thrilled", "excited to announce", "don't miss out", "unforgettable", "journey", "vibrant", "game-changer", "delve", "elevate", "embark", "we can't wait", "amazing opportunity", "join us for an incredible", "look no further", "in today's world".
 - No em dashes or en dashes. Use commas, full stops or "and".
-- Use emoji naturally and tastefully, the way a friendly volunteer would: usually 2 to 4 per option (1 or 2 for a story or a very short message). Put them where they add warmth or meaning (food 🥗, animals 🐷, a wave 👋, a heart 💚), at the end of a sentence or beside the thing they mean. Never one on every line, never as bullet points, never several in a row. If voice examples are given, follow their emoji habits.
+- Use emoji naturally and tastefully, the way a friendly member would: usually 2 to 4 per option (1 or 2 for a story or a very short message). Put them where they add warmth or meaning (food 🥗, animals 🐷, a wave 👋, a heart 💚), at the end of a sentence or beside the thing they mean. Never one on every line, never as bullet points, never several in a row. If voice examples are given, follow their emoji habits.
 - No exclamation mark pile-ups. At most one per option.
 - Don't start every option the same way. Make the options genuinely different (e.g. one personal, one straight to the point, one built around a detail).
 - If voice examples are given, match their tone, length, sign-offs closely, but never copy sentences from them.
@@ -132,7 +133,7 @@ Deno.serve(async (req) => {
         const { data: ppl } = await admin.from("people").select("id, attended_before_app").in("id", ids);
         firsts = (ppl ?? []).filter((p) => !before.has(p.id) && !p.attended_before_app).length;
       }
-      if (ids.length) facts.push(`Volunteers who came: ${ids.length}${firsts ? ` (${firsts} for the first time)` : ""}`);
+      if (ids.length) facts.push(`Members who came: ${ids.length}${firsts ? ` (${firsts} for the first time)` : ""}`);
       // The call to action: the next event or two.
       const { data: next } = await admin
         .from("events")
@@ -234,7 +235,7 @@ Reply with JSON only, no other text, shaped like {${wanted.map((p) => `"${p}": [
 });
 
 // The quarterly "how's it going?" message to the community chat, with the
-// link to the volunteer feedback form. Also "incident" (the quarterly reminder
+// link to the member feedback form. Also "incident" (the quarterly reminder
 // that the incident report form exists, link fixed to WTF's form) and
 // "prompt" (a post for a group chat discussion question, no link).
 // deno-lint-ignore no-explicit-any
@@ -271,18 +272,18 @@ async function feedbackCopy(asUser: any, userId: string, key: string, body: any,
     .limit(10);
   const community = String(team.name).replace(/, (Australia|New Zealand)$/, "");
   const ask = question
-    ? `Write a WhatsApp message to the We The Free ${community} volunteer group chat posting this discussion question to get people chatting between events: "${question}". Keep the question itself clear (you can phrase it naturally), invite everyone to share, and keep it light and welcoming so newer people feel they can answer too.`
+    ? `Write a WhatsApp message to the We The Free ${community} member group chat posting this discussion question to get people chatting between events: "${question}". Keep the question itself clear (you can phrase it naturally), invite everyone to share, and keep it light and welcoming so newer people feel they can answer too.`
     : mental
-    ? `Write a WhatsApp message to the We The Free ${community} volunteer group chat gently sharing We The Free's mental health resources for activists. Warm and caring, not preachy or alarming: burnout, grief and compassion fatigue are common for people who care about animals, and it's okay to look after yourself. Mention one or two of what's there: a free 24/7 support line run by counsellors who are animal advocates themselves, a free online course on sustainable advocacy and avoiding burnout (code WTF), support groups, therapists who understand animal advocacy, and meditation apps. Invite people to reach out to an organiser or each other too. Include this exact link on its own line: ${link}`
+    ? `Write a WhatsApp message to the We The Free ${community} member group chat gently sharing We The Free's mental health resources for activists. Warm and caring, not preachy or alarming: burnout, grief and compassion fatigue are common for people who care about animals, and it's okay to look after yourself. Mention one or two of what's there: a free 24/7 support line run by counsellors who are animal advocates themselves, a free online course on sustainable advocacy and avoiding burnout (code WTF), support groups, therapists who understand animal advocacy, and meditation apps. Invite people to reach out to an organiser or each other too. Include this exact link on its own line: ${link}`
     : incident
-    ? `Write a WhatsApp message to the We The Free ${community} volunteer group chat letting everyone know about our incident report form. It's a calm, low-key heads-up (nothing has happened): if anything ever goes wrong at an event, like harassment, someone getting hurt, or trouble with the public or police, they can report it with this form so it gets followed up properly. Make clear it's there to look after everyone and they can also talk to an organiser. Include this exact link on its own line: ${link}`
+    ? `Write a WhatsApp message to the We The Free ${community} member group chat letting everyone know about our incident report form. It's a calm, low-key heads-up (nothing has happened): if anything ever goes wrong at an event, like harassment, someone getting hurt, or trouble with the public or police, they can report it with this form so it gets followed up properly. Make clear it's there to look after everyone and they can also talk to an organiser. Include this exact link on its own line: ${link}`
     : null;
   const prompt = ask ? `${ask}
 ${note && String(note).trim() ? `\nFrom the organiser (work this in): ${String(note).slice(0, 600)}\n` : ""}
 ${voice?.length ? `VOICE EXAMPLES (past posts by this community; match this voice)\n${voice.map((v: { body: string }, i: number) => `--- Example ${i + 1}\n${v.body}`).join("\n")}` : "No voice examples: use a friendly, down-to-earth grassroots voice."}
 
 WRITE 3 different options, each 25-70 words, casual, like a friend messaging the group, no hashtags.
-Reply with JSON only, no other text, shaped like {"whatsapp": ["...", "...", "..."]}.` : `Write a WhatsApp message to the We The Free ${community} volunteer group chat asking volunteers to fill in a short feedback form about how volunteering with us is going. The form is 3 quick questions (how they're finding it, what's working, what would make it better) and their name is optional. Make clear every answer gets read and it helps make things better. Include this exact link on its own line: ${link}
+Reply with JSON only, no other text, shaped like {"whatsapp": ["...", "...", "..."]}.` : `Write a WhatsApp message to the We The Free ${community} member group chat asking members to fill in a short feedback form about how being part of the community is going. The form is 3 quick questions (how they're finding it, what's working, what would make it better) and their name is optional. Make clear every answer gets read and it helps make things better. Include this exact link on its own line: ${link}
 ${note && String(note).trim() ? `\nFrom the organiser (work this in): ${String(note).slice(0, 600)}\n` : ""}
 ${voice?.length ? `VOICE EXAMPLES (past posts by this community; match this voice)\n${voice.map((v: { body: string }, i: number) => `--- Example ${i + 1}\n${v.body}`).join("\n")}` : "No voice examples: use a friendly, down-to-earth grassroots voice."}
 

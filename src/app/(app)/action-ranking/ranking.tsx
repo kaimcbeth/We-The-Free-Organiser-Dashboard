@@ -179,7 +179,8 @@ export function ActionRanking({ initial }: { initial: SetupKind[] }) {
             {fmt(eventMinutes(events))} at events ({EVENT_MINUTES / 60} hours
             each) + {fmt(used)} of actions: {picked.size} actions suggested,
             marked below. Actions during an event count as part of the event
-            time.
+            time. Assumes 2 community events for every outreach event, so
+            outreach-only actions count for 1 in 3 events.
           </p>
         )}
       </div>

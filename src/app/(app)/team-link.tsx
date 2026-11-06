@@ -41,7 +41,7 @@ export function TeamLinkButton({
           {!link ? (
             <div className="space-y-4">
               <p className="text-sm text-stone-600">
-                Give a trusted volunteer one QR code. Whenever they scan it, it
+                Give a trusted member one QR code. Whenever they scan it, it
                 opens straight to that day&apos;s event so they can take
                 attendance. No login, no picking an event.
               </p>

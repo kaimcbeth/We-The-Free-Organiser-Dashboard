@@ -110,7 +110,7 @@ export const SCRIPTS: Record<string, Script> = {
     ],
   },
   ev_briefing: {
-    title: "Volunteer briefing",
+    title: "Member briefing",
     minutes: "About 5 minutes, before you start",
     steps: [
       {
@@ -162,7 +162,7 @@ export const SCRIPTS: Record<string, Script> = {
     ],
   },
   ev_debrief: {
-    title: "Volunteer debrief",
+    title: "Member debrief",
     minutes: "5 to 10 minutes, after pack-down",
     steps: [
       {

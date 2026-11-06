@@ -20,6 +20,7 @@ export type SetupKind = {
   appliesTo: string | null; // which events it's made for ("All events", "Outreach events", a type)
   importance: number | null; // God's ranking (0196): 1 = most important, null = unranked
   tier: 1 | 2 | 3 | null; // 0197: Essential / Good to do / Above and beyond
+  outreachOnly: boolean; // only made for outreach events (or an outreach event type)
 };
 
 export type TaskSetup = {
@@ -86,7 +87,7 @@ export async function loadTaskSetup(
 }
 
 export const KIND_COLUMNS =
-  "kind, title, blurb, estimate_minutes, estimate_max_minutes, anchor, due_after_hours, team_id, schedule, default_enabled, outreach_only, needs_team_newcomers, needs_newcomers, importance, tier, event_type:event_types(name)";
+  "kind, title, blurb, estimate_minutes, estimate_max_minutes, anchor, due_after_hours, team_id, schedule, default_enabled, outreach_only, needs_team_newcomers, needs_newcomers, importance, tier, event_type:event_types(name, counts_as_outreach)";
 
 export type KindRow = {
   kind: string;
@@ -130,8 +131,14 @@ export function maxWeekMinutes(kinds: SetupKind[], eventsPerWeek: number) {
 
 // Extra minutes a week an action takes on top of the events (per-event ones
 // × events a week; during-event ones are part of the event, so 0).
+// The recommended mix (Kai, 6 Nov 2026): 2 community events for every
+// outreach event, so outreach-only actions happen at 1 in 3 events.
+export const OUTREACH_SHARE = 1 / 3;
 export const weeklyMinutes = (k: SetupKind, eventsPerWeek: number) =>
-  k.when === "during" ? 0 : k.estimate * (k.timesPerWeek ?? eventsPerWeek);
+  k.when === "during"
+    ? 0
+    : k.estimate *
+      (k.timesPerWeek ?? eventsPerWeek * (k.outreachOnly ? OUTREACH_SHARE : 1));
 
 export const eventsLabel = (n: number) =>
   n === 0.5 ? "1 event a fortnight" : `${n} event${n === 1 ? "" : "s"} a week`;
@@ -222,5 +229,9 @@ export function toSetupKind(k: KindRow): SetupKind {
     blurb: k.blurb ?? null,
     importance: k.importance ?? null,
     tier: (k.tier as 1 | 2 | 3 | null) ?? null,
+    outreachOnly:
+      !!k.outreach_only ||
+      !!(k.event_type as { counts_as_outreach?: boolean } | null)
+        ?.counts_as_outreach,
   };
 }

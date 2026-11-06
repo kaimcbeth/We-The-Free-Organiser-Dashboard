@@ -67,6 +67,14 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "We say members now, not volunteers, everywhere in the Hub and in written posts. Prizes purchased is now for every outreach event.",
+      },
+      {
+        level: "organiser",
+        text: "Choose actions recommends 2 community events for every outreach event, and works out your weekly time with that mix.",
+      },
+      {
+        level: "organiser",
         text: "The Rain backup plan is now a Weather backup plan: it also comes up when it'll be over 30°C during an outdoor event. The separate Weather checked action is gone.",
       },
       {

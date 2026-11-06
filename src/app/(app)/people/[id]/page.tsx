@@ -455,7 +455,7 @@ export default async function PersonPage({
           className={`mt-5 scroll-mt-24 rounded-2xl bg-white p-4 shadow-sm ${pair ? "ring-2 ring-pink" : "ring-1 ring-black/5"}`}
         >
           <h2 className="font-semibold text-navy">
-            Connect a regular volunteer to help {person.first_name} feel welcome
+            Connect a regular member to help {person.first_name} feel welcome
           </h2>
           <p className="mb-3 mt-0.5 text-sm text-stone-500">
             They&apos;ll check in and invite {person.first_name} back. Anyone on

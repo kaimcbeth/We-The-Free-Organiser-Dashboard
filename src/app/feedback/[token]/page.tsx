@@ -19,7 +19,7 @@ export default async function FeedbackPage({
         How&apos;s it going?
       </h1>
       <p className="mt-2 text-stone-600">
-        A few quick questions for We The Free {community} volunteers. Your
+        A few quick questions for We The Free {community} members. Your
         organisers read every answer, and it helps us make things better.
       </p>
       <FeedbackForm token={token} />

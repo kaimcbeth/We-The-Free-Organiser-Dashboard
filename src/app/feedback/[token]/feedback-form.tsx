@@ -52,7 +52,7 @@ export function FeedbackForm({ token }: { token: string }) {
     >
       <fieldset>
         <legend className="font-medium">
-          How are you finding volunteering with us?
+          How are you finding being part of We The Free?
         </legend>
         <div className="mt-2 grid grid-cols-5 gap-1.5">
           {SCALE.map((label, i) => (

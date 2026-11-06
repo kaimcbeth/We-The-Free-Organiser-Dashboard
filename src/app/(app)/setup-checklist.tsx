@@ -119,7 +119,7 @@ export function SetupChecklist({
             <Row
               done={waDone}
               title="Add your community chat"
-              text="Paste the invite link to your WhatsApp community or group, so the Hub can open it for you and share it with volunteers."
+              text="Paste the invite link to your WhatsApp community or group, so the Hub can open it for you and share it with members."
             >
               {waOpen ? (
                 <form

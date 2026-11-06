@@ -17,7 +17,7 @@ export const WELCOME_CARDS: WelcomeCard[] = [
     image: "https://activism.wtf/images/hero.jpg",
     imageAlt: "We The Free activists at a street outreach event",
     body: [
-      "You've joined a global community of volunteers in over 170 teams across nearly 40 countries.",
+      "You've joined a global community of members in over 170 teams across nearly 40 countries.",
       "We're working toward one thing: a world where all animals are free.",
     ],
   },
@@ -35,7 +35,7 @@ export const WELCOME_CARDS: WelcomeCard[] = [
       },
       {
         title: "Building a movement",
-        text: "Research on nonviolent movements suggests about 3.5% of people actively taking part can be enough to bring change. Every volunteer counts.",
+        text: "Research on nonviolent movements suggests about 3.5% of people actively taking part can be enough to bring change. Every member counts.",
       },
     ],
   },
@@ -71,7 +71,7 @@ export const WELCOME_CARDS: WelcomeCard[] = [
   {
     title: "How we show up",
     image: "https://activism.wtf/images/hero.jpg",
-    imageAlt: "A volunteer talking with a member of the public",
+    imageAlt: "A We The Free member talking with someone on the street",
     body: [],
     list: [
       {
@@ -95,7 +95,7 @@ export const WELCOME_CARDS: WelcomeCard[] = [
   {
     title: "Your first event",
     image: "https://activism.wtf/images/organizers.jpg",
-    imageAlt: "Volunteers at a We The Free event",
+    imageAlt: "Members at a We The Free event",
     body: ["No experience needed. Here's all you need to know."],
     list: [
       {

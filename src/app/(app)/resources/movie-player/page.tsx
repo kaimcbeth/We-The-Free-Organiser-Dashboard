@@ -76,8 +76,8 @@ export default async function MoviePlayerPage() {
             D) when you open it. Change it any time from the corner of the menu.
             With the laptops online (your phone hotspot is fine),{" "}
             <b>Live at the event</b> below shows how far along each film is, and
-            alerts you 10 seconds before one ends so a volunteer can be there.
-            Tap <b>Turn on alerts</b> and keep this page open.
+            alerts you 10 seconds before one ends so a member can be there. Tap{" "}
+            <b>Turn on alerts</b> and keep this page open.
           </li>
           <li>
             Language versions: name them like <i>Standard - Mandarin.mp4</i>.

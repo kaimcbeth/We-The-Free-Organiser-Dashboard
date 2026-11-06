@@ -75,7 +75,7 @@ export function RegularsSheet({
               : newcomers
                 ? "Newcomers"
                 : quietTeamId
-                  ? "Quiet volunteers"
+                  ? "Quiet members"
                   : thanks
                     ? "Thank everyone who came"
                     : "Set-up team"

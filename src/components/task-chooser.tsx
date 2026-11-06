@@ -116,6 +116,14 @@ export function TaskChooser({
               , and each event takes about {EVENT_MINUTES / 60} hours. Roughly
               how much time can you give each week, events included?
             </p>
+            <p className="mt-3 rounded-xl bg-cyan/10 px-3 py-2 text-sm text-navy">
+              We recommend{" "}
+              <span className="font-semibold">
+                2 community events for every outreach event
+              </span>
+              . The time below assumes that mix, so outreach-only actions count
+              for 1 in every 3 events.
+            </p>
             <div className="mt-5 rounded-2xl bg-white p-4 ring-1 ring-stone-200">
               <HoursSlider
                 value={hours}
@@ -340,6 +348,7 @@ export function TaskChooser({
                           defaultOn: true,
                           importance: null,
                           tier: null,
+                          outreachOnly: false,
                           appliesTo: "All events",
                         },
                       ]);
@@ -365,7 +374,7 @@ export function TaskChooser({
                   onChange={(e) =>
                     setDraft({ ...draft, title: e.target.value })
                   }
-                  placeholder="e.g. Thank-you message sent to volunteers"
+                  placeholder="e.g. Thank-you message sent to members"
                   aria-label="Action name"
                   maxLength={80}
                   className={inputClass}

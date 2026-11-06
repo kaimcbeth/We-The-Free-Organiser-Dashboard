@@ -66,7 +66,7 @@ export const RESOURCES_COMING_SOON: {
   },
   {
     title: "Outreach training framework",
-    about: "A step-by-step training path for new outreach volunteers.",
+    about: "A step-by-step training path for new outreach members.",
   },
   {
     title: "Equipment set-up and pack-down",
@@ -79,7 +79,7 @@ export const RESOURCES_COMING_SOON: {
   {
     title: "Brief and debrief guides",
     about:
-      "Full guides for running the volunteer briefing before outreach and the debrief after.",
+      "Full guides for running the member briefing before outreach and the debrief after.",
   },
 ];
 

@@ -81,7 +81,7 @@ export default async function FeedbackInboxPage({
       />
       {responses.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-stone-300 px-4 py-6 text-center text-sm text-stone-500">
-          Nothing yet. Volunteers can send feedback any time from their Feedback
+          Nothing yet. Members can send feedback any time from their Feedback
           tab.
         </p>
       ) : (
@@ -141,7 +141,7 @@ function Header({
       <h1 className="text-2xl font-semibold tracking-tight">Feedback</h1>
       <p className="mt-1 text-sm text-stone-500">
         {from === "members"
-          ? `What volunteers in ${community} have sent, newest first.`
+          ? `What members in ${community} have sent, newest first.`
           : "What organisers in your region have sent you, newest first."}
       </p>
       {lead && (

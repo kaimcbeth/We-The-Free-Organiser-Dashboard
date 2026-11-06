@@ -99,7 +99,7 @@ export function MeetMembersQuestions() {
           ) : (
             <>
               <p className="mb-2 text-sm text-stone-600">
-                Send these to the volunteer you&apos;re featuring this month.
+                Send these to the member you&apos;re featuring this month.
               </p>
               <pre className="whitespace-pre-wrap rounded-xl bg-white p-3 font-sans text-sm text-stone-800 ring-1 ring-black/10">
                 {saved || "Loading…"}

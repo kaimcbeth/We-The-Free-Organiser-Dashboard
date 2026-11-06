@@ -113,7 +113,7 @@ export function ResourcesList({
               </span>
               <span className="block text-sm text-stone-600">
                 The conversation questions, for a quick look between
-                conversations. Volunteers have it on their page too.
+                conversations. Members have it on their page too.
               </span>
             </span>
             <span aria-hidden className="text-xl">

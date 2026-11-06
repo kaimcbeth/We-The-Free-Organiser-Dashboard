@@ -120,7 +120,7 @@ export function OrganiserTour({
       title: "Hand it off",
       href: "/",
       target: "helper-qr",
-      body: "Busy running the event? A volunteer can scan the Helper QR and check people in from their own phone.",
+      body: "Busy running the event? A member can scan the Helper QR and check people in from their own phone.",
     },
     {
       section: 0,

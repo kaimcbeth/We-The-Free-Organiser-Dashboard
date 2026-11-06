@@ -140,7 +140,7 @@ export const CORE_ROLE_DUTIES: Record<CoreRole, string[]> = {
   events_lead: [
     "Storing event equipment",
     "Transporting event equipment",
-    "Volunteer check-ins during events (water, breaks, sunscreen)",
+    "Member check-ins during events (water, breaks, sunscreen)",
     "Helping resolve conflict with members of the public",
   ],
   promo_lead: [

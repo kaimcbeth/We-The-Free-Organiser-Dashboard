@@ -26,8 +26,8 @@ export function HelperLinkSheet({
     return (
       <div className="space-y-4">
         <p className="text-sm text-stone-600">
-          Let someone else do check-in, like a volunteer at the door. They scan
-          a QR code and can tick people in straight away, with no login.
+          Let someone else do check-in, like a member at the door. They scan a
+          QR code and can tick people in straight away, with no login.
         </p>
         <ul className="space-y-1.5 text-sm text-stone-600">
           <li>
