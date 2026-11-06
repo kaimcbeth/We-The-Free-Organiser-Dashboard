@@ -355,11 +355,36 @@ export async function loadRegionTasks(
   ]);
   const nowIso = new Date().toISOString();
   const all = (open.data ?? []).map(toRow);
+  await attachFeedbackCount(supabase, all);
   return {
     open: all.filter((t) => !t.showFrom || t.showFrom <= nowIso),
     later: all.filter((t) => t.showFrom && t.showFrom > nowIso),
     done: (done.data ?? []).map(toRow),
   };
+}
+
+// "Organiser feedback read and replied to" (0206, Kai: "have time depend on
+// if there is feedback"): 10 minutes for each piece from the last month,
+// 2 minutes to check when there's none, and the card says how many.
+const MIN_PER_FEEDBACK = 10;
+async function attachFeedbackCount(supabase: SupabaseClient, rows: TaskRow[]) {
+  const since = new Date(Date.now() - 31 * 864e5).toISOString();
+  for (const t of rows) {
+    if (t.kind !== "rsl_feedback_review" || !t.regionId) continue;
+    const { data } = await supabase.rpc("region_feedback_count", {
+      p_region: t.regionId,
+      p_since: since,
+    });
+    if (typeof data !== "number") continue;
+    const mins = data === 0 ? 2 : Math.min(60, data * MIN_PER_FEEDBACK);
+    t.estimateMinutes = mins;
+    t.estimateLabel = String(mins);
+    t.description = `${
+      data === 0
+        ? "No new feedback in the last month: just a quick check."
+        : `${data} new piece${data === 1 ? "" : "s"} of feedback in the last month.`
+    } ${t.description ?? ""}`.trim();
+  }
 }
 
 // "77% chance of rain, about 5 mm while it's on, up to 33°C" (only the parts

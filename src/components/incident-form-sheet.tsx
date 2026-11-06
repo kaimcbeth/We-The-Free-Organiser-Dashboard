@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ORGANISER_QUESTIONS } from "@/lib/organiser-questions";
 import { Sheet } from "@/components/sheet";
 import { Option, VoiceExamples } from "@/components/copy-maker";
 import { createClient } from "@/lib/supabase/client";
@@ -46,6 +47,7 @@ export function ChatMessageSheet({
   label = "Write message",
   placeholder,
   canWrite = true,
+  intro = "Pick one, tweak it, copy it and post it in your community chat.",
 }: {
   teamId: string | null;
   className?: string;
@@ -56,6 +58,7 @@ export function ChatMessageSheet({
   label?: string;
   placeholder: string;
   canWrite?: boolean; // false: ready-made options only (no write-copy purpose)
+  intro?: string; // the line at the top of the sheet
 }) {
   const [open, setOpen] = useState(false);
   const [options, setOptions] = useState<string[]>(presets);
@@ -106,9 +109,7 @@ export function ChatMessageSheet({
       {open && (
         <Sheet title={title} onClose={() => setOpen(false)}>
           <div className="space-y-3">
-            <p className="text-sm text-stone-600">
-              Pick one, tweak it, copy it and post it in your community chat.
-            </p>
+            <p className="text-sm text-stone-600">{intro}</p>
             {chat && (
               <a
                 href={chat}
@@ -223,6 +224,24 @@ export function AfterPartySheet({
         `Calling all hosts! 🏡 We're looking for someone who'd be up for hosting a relaxed after party following ${name} on ${when}. We'll help with food, setting up and cleaning up. Backyard, balcony or living room, it all works. Let us know if you can!`,
         `A little ask for ${name} (${when}) 🙌 Would anyone like to open up their place for an after party? Think bring-a-plate and good company. If you can, just reply here and we'll sort the details together.`,
       ]}
+    />
+  );
+}
+
+// Discussion questions for the weekly organiser group chat post (RSL action
+// rsl_weekly_post; Kai, 6 Nov 2026).
+export function OrganiserQuestionsSheet({ className }: { className?: string }) {
+  return (
+    <ChatMessageSheet
+      teamId={null}
+      className={className}
+      purpose="organiser_questions"
+      title="Discussion questions"
+      label="Discussion questions"
+      presets={ORGANISER_QUESTIONS}
+      placeholder=""
+      canWrite={false}
+      intro="Pick a question, tweak it, copy it and post it in the organiser group chat."
     />
   );
 }

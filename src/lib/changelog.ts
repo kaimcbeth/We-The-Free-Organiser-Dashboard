@@ -67,6 +67,14 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "regional_lead",
+        text: "New monthly RSL action: read and reply to organiser feedback. Its time goes up with how much feedback came in (a 2-minute check when there's none), with a button straight to the feedback.",
+      },
+      {
+        level: "regional_lead",
+        text: "The weekly organiser group chat post has a Discussion questions button: pick one, tweak it and copy it.",
+      },
+      {
+        level: "regional_lead",
         text: "New RSL action every 3 months: a 1:1 call with each community's organisers, with ideas for what to talk about.",
       },
       {

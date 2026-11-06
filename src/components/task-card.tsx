@@ -16,6 +16,7 @@ import {
   AfterPartySheet,
   IncidentFormSheet,
   MentalHealthSheet,
+  OrganiserQuestionsSheet,
 } from "@/components/incident-form-sheet";
 import { ThrowbackSheet } from "@/components/throwback-sheet";
 import { Sheet } from "@/components/sheet";
@@ -601,6 +602,17 @@ export function TaskCard({
                   teamId={task.teamId}
                   className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
                 />
+              )}
+              {task.kind === "rsl_weekly_post" && (
+                <OrganiserQuestionsSheet className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong" />
+              )}
+              {task.kind === "rsl_feedback_review" && (
+                <a
+                  href="/feedback-inbox?from=organisers"
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                >
+                  Read the feedback
+                </a>
               )}
               {task.kind === "com_mental_health" && (
                 <MentalHealthSheet
