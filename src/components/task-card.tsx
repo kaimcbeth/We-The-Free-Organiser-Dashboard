@@ -135,6 +135,7 @@ export type TaskRow = {
   doneAt: string | null;
   checklist?: { key: string; label: string }[] | null; // merged actions (0191)
   checked?: string[];
+  skipped?: string[];
   eventTitle: string | null;
   repeats?: string | null; // "Every month": how often it comes round (not per event)
   eventFacebookUrl?: string | null; // pasted once, used by every Facebook action
@@ -424,6 +425,7 @@ export function TaskCard({
               taskId={task.id}
               items={task.checklist}
               initial={task.checked ?? []}
+              initialSkipped={task.skipped ?? []}
               onDone={(d) => d && setDone(true)}
             />
           )}

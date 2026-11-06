@@ -67,6 +67,14 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Tick boxes inside an action (like Instagram on Photos shared) have a small × to take that one off this action. Put it back from the Removed line underneath.",
+      },
+      {
+        level: "organiser",
+        text: "Co-working events no longer get a Rain backup plan action, since they're indoors.",
+      },
+      {
+        level: "organiser",
         text: "Social Media Hub has a new Make a post tab: pick one of your events (or Something else) and make a graphic and write the words for it, then save them to the planner.",
       },
       {
