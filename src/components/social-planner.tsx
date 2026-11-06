@@ -1,5 +1,7 @@
 "use client";
 
+import { strToU8, zipSync } from "fflate";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Sheet } from "@/components/sheet";
@@ -577,8 +579,14 @@ function PostEditor({
     onChanged();
   }
 
-  async function share() {
+  async function getFiles() {
     const files: File[] = [];
+    const base =
+      (item?.note || "post")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+        .slice(0, 40) || "post";
     for (const [n, i] of imgs.entries()) {
       if (i.file) files.push(i.file);
       else if (i.url) {
@@ -586,18 +594,55 @@ function PostEditor({
         files.push(
           new File(
             [b],
-            `post-${n + 1}.${b.type === "image/jpeg" ? "jpg" : "png"}`,
-            {
-              type: b.type,
-            },
+            `${base}-${n + 1}.${b.type === "image/jpeg" ? "jpg" : "png"}`,
+            { type: b.type },
           ),
         );
       }
     }
+    return { files, base };
+  }
+
+  async function share() {
+    const { files } = await getFiles();
     if (caption) await navigator.clipboard.writeText(caption).catch(() => {});
     const data: ShareData = { text: caption || undefined };
     if (files.length && navigator.canShare?.({ files })) data.files = files;
     await navigator.share(data).catch(() => {});
+  }
+
+  // Download (Kai, 6 Nov): one image as itself (caption copied); several as
+  // a zip with the caption in a text file.
+  async function download() {
+    setBusy(true);
+    try {
+      const { files, base } = await getFiles();
+      let blob: Blob;
+      let name: string;
+      if (files.length === 1) {
+        // One image: download it and copy the caption, ready to paste.
+        blob = files[0];
+        name = files[0].name;
+        if (caption)
+          await navigator.clipboard.writeText(caption).catch(() => {});
+      } else {
+        const entries: Record<string, Uint8Array> = {};
+        for (const f of files)
+          entries[f.name] = new Uint8Array(await f.arrayBuffer());
+        if (caption) entries["caption.txt"] = strToU8(caption);
+        blob = new Blob([zipSync(entries, { level: 0 }) as BlobPart], {
+          type: "application/zip",
+        });
+        name = `${base}.zip`;
+      }
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (!editing && item)
@@ -670,6 +715,16 @@ function PostEditor({
                 Share
               </button>
             )}
+          {imgs.length > 0 && (
+            <button
+              type="button"
+              onClick={download}
+              disabled={busy}
+              className="text-stone-500 hover:text-navy disabled:opacity-50"
+            >
+              {busy ? "Getting it ready…" : "Download"}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setPosted(!item.posted_at)}
