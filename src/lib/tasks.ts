@@ -37,6 +37,7 @@ type Raw = {
     source_url: string | null;
     facebook_url: string | null;
     rain_chance?: number | null;
+    rain_mm?: number | null;
     event_type_id: string | null;
     event_type: { name: string } | null;
     team: { name: string } | null;
@@ -52,7 +53,7 @@ type Raw = {
 };
 
 const SELECT =
-  "id, team_id, due_at, show_from, done_at, assigned_to, checked, skipped, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes, audience, schedule, checklist), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, facebook_url, rain_chance, event_type_id, event_type:event_types(name), team:teams(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name), person:people!tasks_person_id_fkey(id, first_name, last_name), pod_post:pod_posts(url, note, shared_by_name, team:teams(pod_whatsapp_url))";
+  "id, team_id, due_at, show_from, done_at, assigned_to, checked, skipped, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes, audience, schedule, checklist), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, facebook_url, rain_chance, rain_mm, event_type_id, event_type:event_types(name), team:teams(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name), person:people!tasks_person_id_fkey(id, first_name, last_name), pod_post:pod_posts(url, note, shared_by_name, team:teams(pod_whatsapp_url))";
 
 // Promo actions that get a "Get graphic" button, and the size they need.
 const GRAPHIC_SIZE: Record<string, GraphicSize | undefined> = {
@@ -91,7 +92,7 @@ function toRow(t: Raw): TaskRow {
     // Rain backup plans lead with the latest forecast (rain-check, 0158).
     description:
       t.kind?.kind === "rain_backup" && t.event?.rain_chance != null
-        ? `Latest forecast: ${t.event.rain_chance}% chance of rain while it's on. ${t.kind.description ?? ""}`.trim()
+        ? `Latest forecast: ${t.event.rain_chance}% chance of rain${t.event.rain_mm != null ? `, about ${Math.round(Number(t.event.rain_mm))} mm` : ""} while it's on. ${t.kind.description ?? ""}`.trim()
         : (t.kind?.description ?? null),
     // Ranges ("5–10 min") count as their middle for totals.
     estimateMinutes: Math.ceil(

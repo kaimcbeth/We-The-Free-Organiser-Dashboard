@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { addCustomTask, removeCustomTask, saveTeamTasks } from "@/app/actions";
+import { suggestForBudget } from "@/lib/task-setup";
 import type { SetupKind, TaskSetup } from "@/lib/task-setup";
 import { inputClass } from "@/components/form";
 
@@ -52,31 +53,8 @@ export function TaskChooser({
 
   function pickBudget(minutes: number) {
     setBudget(minutes);
-    // Suggest tasks in their usual order until the time runs out (always at least one).
-    const next = new Set<string>();
-    let used = 0;
-    // Suggest the most useful tasks first.
-    const PRIORITY = [
-      "take_attendance",
-      "take_photos",
-      "promote_event",
-      "photos_shared",
-      "fb_event_setup",
-      "promote_fb_groups_weekly",
-      "instagram_stories",
-    ];
-    const rank = (kind: string) =>
-      PRIORITY.includes(kind) ? PRIORITY.indexOf(kind) : PRIORITY.length;
-    // Only the standard set: the newer role actions are there to switch on by hand.
-    for (const k of [...kinds]
-      .filter((x) => x.defaultOn || x.custom)
-      .sort((a, b) => rank(a.kind) - rank(b.kind))) {
-      const cost = k.estimate * (k.timesPerWeek ?? setup.eventsPerWeek);
-      if (next.size === 0 || used + cost <= minutes) {
-        next.add(k.kind);
-        used += cost;
-      }
-    }
+    // Most important first (God ranks them at /action-ranking), as many as fit.
+    const next = suggestForBudget(kinds, minutes, setup.eventsPerWeek);
     setOn(next);
     setFeatured(new Set(next));
     setStep("pick");
@@ -353,6 +331,7 @@ export function TaskChooser({
                           timesPerWeek: null,
                           custom: true,
                           defaultOn: true,
+                          importance: null,
                           appliesTo: "All events",
                         },
                       ]);

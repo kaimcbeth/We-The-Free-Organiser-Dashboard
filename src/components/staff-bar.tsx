@@ -141,6 +141,12 @@ export function StaffBar({
               Usage
             </Link>
             <Link
+              href="/action-ranking"
+              className="rounded-md px-1.5 py-0.5 font-medium opacity-75 hover:bg-white/10 hover:opacity-100"
+            >
+              Action ranking
+            </Link>
+            <Link
               href="/test-accounts"
               className="rounded-md px-1.5 py-0.5 font-medium opacity-75 hover:bg-white/10 hover:opacity-100"
             >

@@ -29,7 +29,8 @@ const SECTIONS: [RegExp, string][] = [
 ];
 
 export function sectionOf(path: string): string | null {
-  if (/^\/(login|auth|usage|test-accounts)/.test(path)) return null;
+  if (/^\/(login|auth|usage|test-accounts|action-ranking)/.test(path))
+    return null;
   if (path.startsWith("/checkin/zz")) return null;
   for (const [re, name] of SECTIONS) if (re.test(path)) return name;
   return null;

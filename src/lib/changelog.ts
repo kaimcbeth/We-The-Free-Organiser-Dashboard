@@ -66,6 +66,18 @@ export const CHANGELOG: Release[] = [
     title: "Birthdays",
     changes: [
       {
+        level: "god",
+        text: "Action ranking (God Mode bar): every action in order of importance, with a preview of what an organiser gets for 15 min, 30 min, 1 hour or 2+ hours a week. Choose actions now suggests from the top of this list.",
+      },
+      {
+        level: "organiser",
+        text: "New monthly action: Facebook invite list updated. It shows up on the 1st of each month so the list you invite to Facebook events stays current.",
+      },
+      {
+        level: "organiser",
+        text: "Rain backup plans now only come up when real rain is forecast (at least 1 mm while the event is on), not for light drizzle. The card shows how much rain, and the plan goes away if the forecast clears.",
+      },
+      {
         level: "organiser",
         text: "Tick boxes inside an action (like Instagram on Photos shared) have a small × to take that one off this action. Put it back from the Removed line underneath.",
       },

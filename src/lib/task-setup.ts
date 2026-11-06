@@ -18,6 +18,7 @@ export type SetupKind = {
   custom: boolean; // made by this community's organisers
   defaultOn: boolean; // on until an organiser says otherwise (the newer role actions start off)
   appliesTo: string | null; // which events it's made for ("All events", "Outreach events", a type)
+  importance: number | null; // God's ranking (0196): 1 = most important, null = unranked
 };
 
 export type TaskSetup = {
@@ -37,9 +38,7 @@ export async function loadTaskSetup(
   const [kinds, settings, delegates, events] = await Promise.all([
     supabase
       .from("task_kinds")
-      .select(
-        "kind, title, blurb, estimate_minutes, estimate_max_minutes, anchor, due_after_hours, team_id, schedule, default_enabled, outreach_only, needs_team_newcomers, needs_newcomers, event_type:event_types(name)",
-      )
+      .select(KIND_COLUMNS)
       .is("archived_at", null)
       .eq("audience", "community")
       // Follow-ups come from another action, and special-event ones from
@@ -63,7 +62,80 @@ export async function loadTaskSetup(
       .lt("starts_at", new Date(now + 28 * 864e5).toISOString()),
   ]);
   const rows = settings.data ?? [];
-  const all: SetupKind[] = (kinds.data ?? []).map((k) => ({
+  const all: SetupKind[] = ((kinds.data ?? []) as unknown as KindRow[]).map(
+    toSetupKind,
+  );
+  const saved = new Map(rows.map((r) => [r.kind, r.enabled]));
+  return {
+    kinds: all,
+    enabled: all
+      .filter((k) => saved.get(k.kind) ?? k.defaultOn)
+      .map((k) => k.kind),
+    configured: rows.length > 0,
+    eventsPerWeek: Math.max(1, Math.round(((events.count ?? 0) / 8) * 2) / 2),
+    delegates: Object.fromEntries(
+      (delegates.data ?? [])
+        .filter((d) => d.person_id)
+        .map((d) => [
+          `${d.kind}|${d.event_type_id ?? ""}`,
+          d.person_id as string,
+        ]),
+    ),
+  };
+}
+
+export const KIND_COLUMNS =
+  "kind, title, blurb, estimate_minutes, estimate_max_minutes, anchor, due_after_hours, team_id, schedule, default_enabled, outreach_only, needs_team_newcomers, needs_newcomers, importance, event_type:event_types(name)";
+
+export type KindRow = {
+  kind: string;
+  title: string;
+  blurb: string | null;
+  estimate_minutes: number;
+  estimate_max_minutes: number | null;
+  anchor: string | null;
+  due_after_hours: number;
+  team_id: string | null;
+  schedule: string;
+  default_enabled: boolean | null;
+  outreach_only: boolean | null;
+  needs_team_newcomers: boolean | null;
+  needs_newcomers: boolean | null;
+  importance: number | null;
+  event_type: unknown;
+};
+
+// Minutes a week an action takes (per-event ones × events a week).
+export const weeklyMinutes = (k: SetupKind, eventsPerWeek: number) =>
+  k.estimate * (k.timesPerWeek ?? eventsPerWeek);
+
+// Most important first: the community's own actions, then God's ranking
+// (0196), then unranked ones.
+export const byImportance = (a: SetupKind, b: SetupKind) =>
+  Number(b.custom) - Number(a.custom) ||
+  (a.importance ?? 1e6) - (b.importance ?? 1e6);
+
+// What "How much time do you have?" suggests: going down the ranking, every
+// action that still fits the weekly time (always at least one).
+export function suggestForBudget(
+  kinds: SetupKind[],
+  minutes: number,
+  eventsPerWeek: number,
+) {
+  const next = new Set<string>();
+  let used = 0;
+  for (const k of [...kinds].sort(byImportance)) {
+    const cost = weeklyMinutes(k, eventsPerWeek);
+    if (next.size === 0 || used + cost <= minutes) {
+      next.add(k.kind);
+      used += cost;
+    }
+  }
+  return next;
+}
+
+export function toSetupKind(k: KindRow): SetupKind {
+  return {
     kind: k.kind,
     title: k.title,
     estimate: Math.ceil(
@@ -117,22 +189,6 @@ export async function loadTaskSetup(
                 ? "Events, when you have newcomers"
                 : "All events",
     blurb: k.blurb ?? null,
-  }));
-  const saved = new Map(rows.map((r) => [r.kind, r.enabled]));
-  return {
-    kinds: all,
-    enabled: all
-      .filter((k) => saved.get(k.kind) ?? k.defaultOn)
-      .map((k) => k.kind),
-    configured: rows.length > 0,
-    eventsPerWeek: Math.max(1, Math.round(((events.count ?? 0) / 8) * 2) / 2),
-    delegates: Object.fromEntries(
-      (delegates.data ?? [])
-        .filter((d) => d.person_id)
-        .map((d) => [
-          `${d.kind}|${d.event_type_id ?? ""}`,
-          d.person_id as string,
-        ]),
-    ),
+    importance: k.importance ?? null,
   };
 }
