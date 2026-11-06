@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "regional_lead",
+        text: 'RSL Actions page: "+ Add an action" for a one-off with a due date, or one that repeats every week, month or 3 months, or for each community every month.',
+      },
+      {
+        level: "regional_lead",
         text: "New RSL actions for the organiser group chat: share the incident report form, share the mental health resources and ask for feedback (each every 3 months), plus a monthly shout-out. Each has ready-made messages.",
       },
       {

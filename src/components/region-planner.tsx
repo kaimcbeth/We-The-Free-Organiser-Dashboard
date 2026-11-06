@@ -231,7 +231,10 @@ function PlannerSheet({
       const rows = (k.data ?? []) as unknown as (KindRow & {
         region_id: string | null;
       })[];
-      const list: RslKind[] = rows.map(toRslKind);
+      // One-offs added from Actions (0209) aren't planned here.
+      const list: RslKind[] = rows
+        .filter((r) => !(r.region_id && r.schedule === "special"))
+        .map(toRslKind);
       const plan = p.data as Plan;
       setKinds(list);
       setCommunities(plan.communities);

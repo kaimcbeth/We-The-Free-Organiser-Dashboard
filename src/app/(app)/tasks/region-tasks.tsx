@@ -12,6 +12,7 @@ import { formatEventDate } from "@/lib/time";
 import type { TaskRow } from "@/components/task-card";
 import { RegionActions } from "./region-actions";
 import { RegionPlanner } from "@/components/region-planner";
+import { AddRegionAction } from "@/components/add-region-action";
 
 const short = (name: string) =>
   name.replace(/, (Australia|New Zealand|Canada)$/, "");
@@ -80,14 +81,14 @@ export async function RegionTasks({
             ? "All your Regional Support Lead actions are done."
             : [
                 regionTasks.length && `${regionTasks.length} for your region`,
-                checkIns.length &&
-                  `${checkIns.length} check-in${checkIns.length === 1 ? "" : "s"} to do this month`,
+                checkIns.length && `${checkIns.length} for your communities`,
               ]
                 .filter(Boolean)
                 .join(" · ")}
         </p>
         {planRegionId && (
-          <div className="mt-3">
+          <div className="mt-3 flex flex-wrap gap-2">
+            <AddRegionAction regionId={planRegionId} />
             <RegionPlanner regionId={planRegionId} />
           </div>
         )}

@@ -14,6 +14,7 @@ import { ComingUp } from "./coming-up";
 import { ShowMoreEvents } from "./show-more";
 import { ChooseTasks } from "./choose-tasks";
 import { RegionPlanner } from "@/components/region-planner";
+import { AddRegionAction } from "@/components/add-region-action";
 import { RemoveEventTasks } from "./remove-event-tasks";
 import {
   dayBoundsUtc,
@@ -74,9 +75,13 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
             ? [organiser.region_id]
             : organiser.leadRegionIds
           : organiser.leadRegionIds;
-    const rslTeams = organiser.allCommunities
-      ? organiser.teams
-      : await loadRslTeams(supabase, regionIds);
+    // Their region's communities plus its extra countries (Oceania + Japan),
+    // with "All communities" too; God's overview is handled above.
+    const rslTeams = regionIds.length
+      ? await loadRslTeams(supabase, regionIds)
+      : organiser.allCommunities
+        ? organiser.teams
+        : [];
     const previewRegion =
       organiser.viewingAs === "regional_lead"
         ? (await loadRegionTasks(supabase, regionIds)).open
@@ -475,7 +480,10 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         )}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {showRsl && !organiser.viewingAs && organiser.leadRegionIds[0] && (
-            <RegionPlanner regionId={organiser.leadRegionIds[0]} />
+            <>
+              <AddRegionAction regionId={organiser.leadRegionIds[0]} />
+              <RegionPlanner regionId={organiser.leadRegionIds[0]} />
+            </>
           )}
           {showLocal && (
             <ChooseTasks
