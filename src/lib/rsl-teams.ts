@@ -33,3 +33,32 @@ export async function loadRslTeams(
     .order("name");
   return (data ?? []) as Team[];
 }
+
+// Every region for God's "Previewing as Regional Support Lead" Region menu,
+// labelled with its extra countries ("Oceania + Japan") and how many
+// communities it looks after.
+export async function loadRegionChoices(
+  supabase: SupabaseClient,
+): Promise<{ id: string; label: string; communities: number }[]> {
+  const [{ data: regions }, { data: teams }] = await Promise.all([
+    supabase.from("regions").select("id, name, extra_countries").order("name"),
+    supabase
+      .from("teams")
+      .select("name, region_id")
+      .eq("is_example", false)
+      .eq("is_practice", false),
+  ]);
+  return (regions ?? []).map((r) => {
+    const extra = (r.extra_countries as string[] | null) ?? [];
+    const communities = (teams ?? []).filter(
+      (t) =>
+        t.region_id === r.id ||
+        extra.some((c) => (t.name as string).endsWith(`, ${c}`)),
+    ).length;
+    return {
+      id: r.id as string,
+      label: [r.name as string, ...extra].join(" + "),
+      communities,
+    };
+  });
+}

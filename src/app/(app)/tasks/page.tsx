@@ -67,9 +67,11 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
     // community's region.
     const regionIds =
       organiser.viewingAs === "regional_lead"
-        ? organiser.team.region_id
-          ? [organiser.team.region_id]
-          : []
+        ? organiser.previewRegionId
+          ? [organiser.previewRegionId]
+          : organiser.team.region_id
+            ? [organiser.team.region_id]
+            : []
         : organiser.role === "regional_lead"
           ? organiser.region_id
             ? [organiser.region_id]

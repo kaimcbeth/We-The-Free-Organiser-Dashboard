@@ -66,6 +66,10 @@ export const CHANGELOG: Release[] = [
     title: "Birthdays",
     changes: [
       {
+        level: "god",
+        text: "Previewing as a Regional Support Lead now has a Region menu instead of Community: pick Oceania + Japan, Asia, Europe, North America or the UK and see that RSL's whole view.",
+      },
+      {
         level: "regional_lead",
         text: "RSL Actions: check-ins and 1:1 calls are now one card each, with a row per community showing its last and next event. Tick a row off, or tap it for the details.",
       },

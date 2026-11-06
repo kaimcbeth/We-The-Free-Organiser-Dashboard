@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { setActiveTeam, setViewAs } from "@/app/actions";
+import { setActiveTeam, setPreviewRegion, setViewAs } from "@/app/actions";
 import type { ViewRole } from "@/lib/roles";
 import { signInAsTestPerson } from "@/lib/test-login";
 
@@ -34,7 +34,13 @@ export function StaffBar({
   viewValue,
   allowAll = false,
   allCommunities = false,
+  regions,
+  regionId,
 }: {
+  // God previewing as a Regional Support Lead: a Region menu instead of
+  // Community (Kai, 6 Nov 2026).
+  regions?: { id: string; label: string; communities: number }[];
+  regionId?: string | null;
   teams: { id: string; name: string }[];
   teamId: string;
   allowAll?: boolean; // offer "All communities" (Regional Support Lead / God)
@@ -53,7 +59,32 @@ export function StaffBar({
       className={`border-t border-white/10 ${viewingAs ? "bg-yellow text-navy" : "bg-navy-2 text-white"}`}
     >
       <div className="mx-auto flex max-w-2xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-1.5 text-xs">
-        {teams.length > 1 && (
+        {regions && regions.length > 0 && (
+          <label className="flex items-center gap-1.5">
+            <span className="opacity-75">Region</span>
+            <select
+              value={regionId ?? ""}
+              disabled={pending}
+              onChange={(e) => start(() => setPreviewRegion(e.target.value))}
+              className="rounded-md bg-navy/10 px-1.5 py-0.5 font-medium"
+            >
+              {regions.map((r) => (
+                <option
+                  key={r.id}
+                  value={r.id}
+                  disabled={r.communities === 0}
+                  className="text-navy"
+                >
+                  {r.label}
+                  {r.communities === 0
+                    ? " (no communities yet)"
+                    : ` · ${r.communities}`}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        {!(regions && regions.length > 0) && teams.length > 1 && (
           <label className="flex items-center gap-1.5">
             <span className="opacity-75">Community</span>
             <select

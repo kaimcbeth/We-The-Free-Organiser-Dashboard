@@ -13,6 +13,7 @@ import {
   ALL_COOKIE,
   VIEW_AS_COOKIE,
   PRACTICE_COOKIE,
+  PREVIEW_REGION_COOKIE,
   type ViewRole,
 } from "@/lib/organiser";
 import { GIVES, type Access } from "@/lib/roles";
@@ -582,7 +583,35 @@ export async function setActiveTeam(teamId: string): Promise<void> {
     if (!organiser.teams.some((t) => t.id === teamId)) return;
     jar.set(TEAM_COOKIE, teamId, opts);
     jar.delete(ALL_COOKIE);
+    jar.delete(PREVIEW_REGION_COOKIE);
   }
+  revalidatePath("/", "layout");
+}
+
+// God previewing as a Regional Support Lead: pick the region to preview
+// (Kai, 6 Nov 2026: "regions for the RSL"). Shows all its communities.
+export async function setPreviewRegion(regionId: string): Promise<void> {
+  const { supabase, organiser } = await getStaff();
+  if (organiser?.access !== "god") return;
+  const { data: team } = await supabase
+    .from("teams")
+    .select("id")
+    .eq("region_id", regionId)
+    .eq("is_example", false)
+    .eq("is_practice", false)
+    .order("name")
+    .limit(1)
+    .maybeSingle();
+  if (!team) return;
+  const jar = await cookies();
+  const opts = {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax" as const,
+  };
+  jar.set(PREVIEW_REGION_COOKIE, regionId, opts);
+  jar.set(TEAM_COOKIE, team.id, opts);
+  jar.set(ALL_COOKIE, "1", opts);
   revalidatePath("/", "layout");
 }
 
@@ -597,6 +626,14 @@ export async function setViewAs(
   // Every change of view starts the Practice Community afresh.
   jar.delete(PRACTICE_COOKIE);
   await supabase.rpc("reset_practice_team");
+  jar.delete(PREVIEW_REGION_COOKIE);
+  // An RSL looks after a whole region, so their preview starts region-wide.
+  if (role === "regional_lead")
+    jar.set(ALL_COOKIE, "1", {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+    });
   if (!role || role === "god") jar.delete(VIEW_AS_COOKIE);
   else
     jar.set(VIEW_AS_COOKIE, role, {

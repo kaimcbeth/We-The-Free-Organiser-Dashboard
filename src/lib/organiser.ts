@@ -37,6 +37,7 @@ export type Organiser = {
   team: Team;
   teams: Team[]; // every team they can switch between
   allCommunities: boolean; // "All communities" picked (Regional Support Lead / God)
+  previewRegionId: string | null; // God previewing as an RSL: that region
 };
 
 // Set when "All communities" is picked; the team cookie keeps the last single
@@ -45,6 +46,8 @@ export const ALL_COOKIE = "all_communities";
 
 export const TEAM_COOKIE = "active_team";
 export const VIEW_AS_COOKIE = "view_as";
+// God previewing as a Regional Support Lead: the region being previewed.
+export const PREVIEW_REGION_COOKIE = "preview_region";
 // God Mode "New organiser", after the tour: set up the Practice Community.
 export const PRACTICE_COOKIE = "practice";
 
@@ -87,8 +90,20 @@ export async function getStaff() {
   let teams = allTeams ?? [];
   if (row.access === "organiser" || row.access === "core_team")
     teams = teams.filter((t) => t.id === row.team_id);
-  else if (row.access === "regional_lead")
-    teams = teams.filter((t) => t.region_id === row.region_id);
+  // Extra countries a region looks after (Oceania + Japan), by region.
+  const { data: regionRows } = await supabase
+    .from("regions")
+    .select("id, extra_countries")
+    .returns<{ id: string; extra_countries: string[] | null }[]>();
+  const inRegion = (t: Team, regionId: string | null) => {
+    if (!regionId) return false;
+    if (t.region_id === regionId) return true;
+    const extra =
+      regionRows?.find((r) => r.id === regionId)?.extra_countries ?? [];
+    return extra.some((c) => t.name.endsWith(`, ${c}`));
+  };
+  if (row.access === "regional_lead")
+    teams = teams.filter((t) => inRegion(t, row.region_id));
   if (teams.length === 0) return { supabase, user, organiser: null };
 
   const jar = await cookies();
@@ -130,8 +145,21 @@ export async function getStaff() {
     teams.find((t) => t.id === (row.organiser_team_id ?? row.team_id)) ??
     teams[0];
   // Previewing as a Regional Support Lead: just that region's communities.
-  if (viewingAs === "regional_lead")
-    teams = teams.filter((t) => t.region_id === team.region_id);
+  // Picked by the Region menu in the preview bar (Kai, 6 Nov 2026), else the
+  // picked community's region.
+  const previewRegion =
+    viewingAs === "regional_lead" && row.access === "god"
+      ? (regionRows?.find((r) => r.id === jar.get(PREVIEW_REGION_COOKIE)?.value)
+          ?.id ?? team.region_id)
+      : null;
+  if (viewingAs === "regional_lead") {
+    const inIt = teams.filter((t) => inRegion(t, previewRegion));
+    if (inIt.length) {
+      teams = inIt;
+      if (!teams.includes(team))
+        team = teams.find((t) => t.region_id === previewRegion) ?? teams[0];
+    }
+  }
   // "All communities" is for people who look after more than one.
   const allCommunities =
     !practice &&
@@ -197,6 +225,7 @@ export async function getStaff() {
     team,
     teams,
     allCommunities,
+    previewRegionId: previewRegion,
   };
   return { supabase, user, organiser };
 }

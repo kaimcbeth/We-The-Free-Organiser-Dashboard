@@ -10,6 +10,7 @@ import {
 } from "@/lib/changelog";
 import { requireOrganiser, ROLE_LABEL } from "@/lib/organiser";
 import { StaffBar } from "@/components/staff-bar";
+import { loadRegionChoices } from "@/lib/rsl-teams";
 import { signPhotos } from "@/lib/photos";
 import { Avatar } from "@/components/avatar";
 import { NavLinks } from "./nav-links";
@@ -29,6 +30,10 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     .eq("user_id", user.id)
     .maybeSingle();
   const photos = me ? await signPhotos(supabase, [me]) : {};
+  // God previewing as an RSL picks a region, not a community.
+  const previewRegions = organiser.previewRegionId
+    ? await loadRegionChoices(supabase)
+    : undefined;
   const tourSetup = organiser.showTour
     ? await loadTaskSetup(supabase, organiser.homeTeamId)
     : null;
@@ -158,6 +163,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         <NavLinks openTasks={openTasks ?? 0} isGod={organiser.role === "god"} />
       </header>
       <StaffBar
+        regions={previewRegions}
+        regionId={organiser.previewRegionId}
         teams={organiser.teams.map((t) => ({ id: t.id, name: t.name }))}
         teamId={organiser.team_id}
         isGod={organiser.access === "god"}
