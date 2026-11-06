@@ -59,6 +59,8 @@ export function SocialPlanner({ teamId, tz }: { teamId: string; tz: string }) {
   const [loaded, setLoaded] = useState(false);
   const [reload, setReload] = useState(0);
   const [dragOver, setDragOver] = useState<string | null>(null);
+  // Calendar, or a preview of the Instagram profile grid (Kai, 6 Nov).
+  const [view, setView] = useState<"calendar" | "feed">("calendar");
 
   // Move a note or post to another day (drag and drop on the calendar).
   async function moveItem(id: string, day: string) {
@@ -145,8 +147,59 @@ export function SocialPlanner({ teamId, tz }: { teamId: string; tz: string }) {
     if (b.ev.length || b.posts.length) agenda.push(d);
   }
 
+  const viewToggle = (
+    <div className="mb-3 inline-flex rounded-xl bg-stone-100 p-0.5 text-sm">
+      {(
+        [
+          ["calendar", "Calendar"],
+          ["feed", "Instagram feed"],
+        ] as const
+      ).map(([id, label]) => (
+        <button
+          key={id}
+          type="button"
+          onClick={() => setView(id)}
+          className={`rounded-lg px-3 py-1 font-medium ${view === id ? "bg-white text-navy shadow-sm" : "text-stone-500 hover:text-navy"}`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (view === "feed")
+    return (
+      <div>
+        {viewToggle}
+        <FeedView
+          teamId={teamId}
+          today={today}
+          reload={reload}
+          onOpen={(d) => {
+            setMonth(d.slice(0, 7));
+            setOpen(d);
+          }}
+          onChanged={() => setReload((n) => n + 1)}
+        />
+        {open && (
+          <DaySheet
+            key={open}
+            day={open}
+            teamId={teamId}
+            tz={tz}
+            events={byDay(open).ev}
+            posts={byDay(open).posts}
+            urls={urls}
+            onChanged={() => setReload((n) => n + 1)}
+            onClose={() => setOpen(null)}
+          />
+        )}
+      </div>
+    );
+
   return (
     <div>
+      {viewToggle}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1">
           <button
@@ -353,6 +406,180 @@ export function SocialPlanner({ teamId, tz }: { teamId: string; tz: string }) {
           onClose={() => setOpen(null)}
         />
       )}
+    </div>
+  );
+}
+
+// Instagram feed preview (Kai, 6 Nov: "an Instagram feed planner"): the
+// planned and posted Instagram posts with images as the profile grid shows
+// them, newest top left, cropped to the grid's 3:4. Drag one onto another
+// to swap their days; tap one to open its day. We can't read the real
+// account, so only posts in the planner show.
+const FEED_BACK_DAYS = 90;
+
+function FeedView({
+  teamId,
+  today,
+  reload,
+  onOpen,
+  onChanged,
+}: {
+  teamId: string;
+  today: string;
+  reload: number;
+  onOpen: (day: string) => void;
+  onChanged: () => void;
+}) {
+  const [items, setItems] = useState<PlanItem[] | null>(null);
+  const [urls, setUrls] = useState<Record<string, string>>({});
+  const [over, setOver] = useState<string | null>(null);
+  const [showPosted, setShowPosted] = useState(true);
+
+  const load = useCallback(async () => {
+    const { data } = await createClient()
+      .from("social_plan")
+      .select(PLAN_COLUMNS)
+      .eq("team_id", teamId)
+      .gte("day", addDays(today, -FEED_BACK_DAYS))
+      .order("day", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(120);
+    const list = ((data as PlanItem[]) ?? []).filter(
+      (p) =>
+        p.image_paths.length > 0 &&
+        (p.platforms.length === 0 || p.platforms.includes("instagram")),
+    );
+    setItems(list);
+    setUrls(await planImageUrls(list.map((p) => p.image_paths[0])));
+  }, [teamId, today]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loads data
+    load();
+  }, [load, reload]);
+
+  // Swap two posts' days.
+  async function swap(a: string, b: string) {
+    if (!items || a === b) return;
+    const pa = items.find((p) => p.id === a);
+    const pb = items.find((p) => p.id === b);
+    if (!pa || !pb || pa.day === pb.day) return;
+    setItems((list) =>
+      (list ?? [])
+        .map((p) =>
+          p.id === a
+            ? { ...p, day: pb.day }
+            : p.id === b
+              ? { ...p, day: pa.day }
+              : p,
+        )
+        .sort((x, y) => (x.day < y.day ? 1 : x.day > y.day ? -1 : 0)),
+    );
+    const supabase = createClient();
+    const at = new Date().toISOString();
+    const [r1, r2] = await Promise.all([
+      supabase
+        .from("social_plan")
+        .update({ day: pb.day, updated_at: at })
+        .eq("id", a),
+      supabase
+        .from("social_plan")
+        .update({ day: pa.day, updated_at: at })
+        .eq("id", b),
+    ]);
+    if (r1.error || r2.error) load();
+    onChanged();
+  }
+
+  if (!items) return <p className="text-sm text-stone-500">Loading…</p>;
+  const shown = showPosted ? items : items.filter((p) => !p.posted_at);
+  const planned = items.filter((p) => !p.posted_at).length;
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-stone-600">
+          {planned === 0
+            ? "No Instagram posts planned yet."
+            : `${planned} planned post${planned === 1 ? "" : "s"}, newest first, the way your profile grid will show them.`}
+        </p>
+        <label className="flex items-center gap-1.5 text-xs text-stone-500">
+          <input
+            type="checkbox"
+            checked={showPosted}
+            onChange={(e) => setShowPosted(e.target.checked)}
+          />
+          Show posted
+        </label>
+      </div>
+
+      <div className="mx-auto mt-3 max-w-md overflow-hidden rounded-2xl bg-white ring-1 ring-black/10">
+        <div className="grid grid-cols-3 gap-0.5 bg-white">
+          {shown.map((p) => {
+            const url = urls[p.image_paths[0]];
+            return (
+              <button
+                key={p.id}
+                type="button"
+                draggable
+                title="Tap to open. Drag onto another post to swap their days."
+                onClick={() => onOpen(p.day)}
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("text/x-feed", p.id);
+                  e.dataTransfer.effectAllowed = "move";
+                }}
+                onDragOver={(e) => {
+                  if (!e.dataTransfer.types.includes("text/x-feed")) return;
+                  e.preventDefault();
+                  if (over !== p.id) setOver(p.id);
+                }}
+                onDragLeave={() => over === p.id && setOver(null)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setOver(null);
+                  swap(e.dataTransfer.getData("text/x-feed"), p.id);
+                }}
+                className={`group relative aspect-[3/4] cursor-grab overflow-hidden bg-stone-100 active:cursor-grabbing ${over === p.id ? "ring-4 ring-inset ring-cyan" : ""}`}
+              >
+                {url && (
+                  // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
+                  <img
+                    src={url}
+                    alt={p.note ?? ""}
+                    draggable={false}
+                    className={`h-full w-full object-cover ${p.posted_at ? "opacity-60" : ""}`}
+                  />
+                )}
+                {p.image_paths.length > 1 && (
+                  <span
+                    aria-label="Carousel"
+                    className="absolute right-1 top-1 rounded bg-black/50 px-1 text-[10px] font-semibold text-white"
+                  >
+                    1/{p.image_paths.length}
+                  </span>
+                )}
+                <span
+                  className={`absolute bottom-1 left-1 rounded px-1 text-[10px] font-semibold ${p.posted_at ? "bg-white/80 text-stone-500" : p.day < today ? "bg-red-600 text-white" : "bg-navy/80 text-white"}`}
+                >
+                  {p.posted_at ? "Posted" : planDayLabel(p.day)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        {shown.length === 0 && (
+          <p className="p-6 text-center text-sm text-stone-500">
+            Save a graphic or post to the planner with Instagram ticked and it
+            shows up here.
+          </p>
+        )}
+      </div>
+      <p className="mx-auto mt-2 max-w-md text-xs text-stone-500">
+        Shows posts in the planner with an image and Instagram (or no platform)
+        ticked, from the last {FEED_BACK_DAYS} days on. Drag a post onto another
+        to swap their days. Red dates are past and not marked as posted. Your
+        posts already on Instagram can&apos;t be shown here.
+      </p>
     </div>
   );
 }
