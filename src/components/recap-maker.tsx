@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { zipSync } from "fflate";
+import { SaveToPlanner } from "@/components/save-to-planner";
 import { Sheet } from "@/components/sheet";
 import { CaptionWriter, PhotoPicker } from "@/components/carousel-maker";
 import { grain, loadPosterFonts } from "@/components/graphic-poster";
@@ -923,6 +924,19 @@ export function RecapMaker({
                 >
                   Download
                 </button>
+              </div>
+              <div className="mt-2">
+                <SaveToPlanner
+                  teamId={teamId}
+                  note={`${name} recap`}
+                  platforms={["instagram", "facebook"]}
+                  getImages={async () => {
+                    const files = made ?? (await build());
+                    setBusy("");
+                    return files;
+                  }}
+                  className="rounded-xl px-3 py-2 text-sm font-semibold text-navy ring-1 ring-black/10 hover:bg-white"
+                />
               </div>
               <p className="mt-1.5 text-xs text-stone-500">
                 On your phone, Share opens Instagram or Facebook with every

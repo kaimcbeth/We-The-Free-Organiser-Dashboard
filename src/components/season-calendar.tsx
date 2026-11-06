@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { SaveToPlanner } from "@/components/save-to-planner";
 import { Sheet } from "@/components/sheet";
 import { ChatMessageSheet } from "@/components/incident-form-sheet";
 import { createClient } from "@/lib/supabase/client";
@@ -526,7 +527,7 @@ export function SeasonCalendar({
     a.download = file.name;
     a.click();
   }
-  async function copyText() {
+  function listText() {
     const day = new Intl.DateTimeFormat("en-AU", {
       timeZone: tz,
       weekday: "short",
@@ -539,15 +540,16 @@ export function SeasonCalendar({
         (r) =>
           `• ${r.weekday ? `Every ${r.weekday}` : day.format(new Date(r.first))}: ${r.title}${r.place ? ` (${r.place})` : ""}`,
       );
+    return [
+      `What's on this ${season.name.toLowerCase()} 🗓️`,
+      "",
+      ...lines,
+      ...(more ? ["", `+ ${more} more at ${URL_TEXT}`] : []),
+    ].join("\n");
+  }
+  async function copyText() {
     await navigator.clipboard
-      .writeText(
-        [
-          `What's on this ${season.name.toLowerCase()} 🗓️`,
-          "",
-          ...lines,
-          ...(more ? ["", `+ ${more} more at ${URL_TEXT}`] : []),
-        ].join("\n"),
-      )
+      .writeText(listText())
       .then(() => setMsg("Copied the list."))
       .catch(() => setMsg("Couldn't copy. Try again?"));
   }
@@ -596,6 +598,15 @@ export function SeasonCalendar({
             >
               Copy as text
             </button>
+            <SaveToPlanner
+              teamId={teamId}
+              tz={tz}
+              note={`${season.name} calendar`}
+              caption={listText()}
+              platforms={["instagram", "facebook"]}
+              getImage={blob}
+              className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10"
+            />
           </div>
           {msg && <p className="text-sm text-stone-600">{msg}</p>}
           <ul className="divide-y divide-black/5 rounded-xl ring-1 ring-black/5">
