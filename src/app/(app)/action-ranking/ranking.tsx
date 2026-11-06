@@ -26,6 +26,17 @@ const WHEN: Record<SetupKind["when"], string> = {
   newcomer: "each newcomer",
 };
 
+// Timing tag on each row (Kai, 6 Nov: pre-event / during / post-event).
+const TAG: Record<SetupKind["when"], { label: string; cls: string }> = {
+  before: { label: "Pre-event", cls: "bg-amber-100 text-amber-800" },
+  during: { label: "During event", cls: "bg-pink/15 text-pink-ink" },
+  after: { label: "Post-event", cls: "bg-violet-100 text-violet-800" },
+  weekly: { label: "Weekly", cls: "bg-stone-100 text-stone-600" },
+  monthly: { label: "Monthly", cls: "bg-stone-100 text-stone-600" },
+  quarterly: { label: "Seasonal", cls: "bg-stone-100 text-stone-600" },
+  newcomer: { label: "Per newcomer", cls: "bg-stone-100 text-stone-600" },
+};
+
 const fmt = (min: number) =>
   min < 60
     ? `${Math.round(min)} min`
@@ -144,6 +155,11 @@ export function ActionRanking({ initial }: { initial: SetupKind[] }) {
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold leading-snug text-navy">
                   {k.title}
+                  <span
+                    className={`ml-2 rounded-full px-2 py-0.5 text-[11px] font-medium ${TAG[k.when].cls}`}
+                  >
+                    {TAG[k.when].label}
+                  </span>
                   {!k.defaultOn && (
                     <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-stone-500">
                       Off by default
