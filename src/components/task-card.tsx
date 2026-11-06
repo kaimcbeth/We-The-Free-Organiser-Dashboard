@@ -34,6 +34,7 @@ import { FbEventLink } from "@/components/fb-event-link";
 import { ScriptButton } from "@/components/script-button";
 import { CopyMaker, type CopyPlatform } from "@/components/copy-maker";
 import { RecapButton } from "@/components/recap-maker";
+import { RegionRecapButton } from "@/components/region-recap";
 import { MeetMembersButton } from "@/components/meet-members-maker";
 import { ScheduleChanger } from "@/components/schedule-changer";
 import {
@@ -633,6 +634,12 @@ export function TaskCard({
                       className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
                     />
                   ),
+              )}
+              {task.kind === "rsl_region_recap" && task.regionId && (
+                <RegionRecapButton
+                  regionId={task.regionId}
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
               )}
               {task.kind === "rsl_weekly_post" && (
                 <OrganiserQuestionsSheet className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong" />
