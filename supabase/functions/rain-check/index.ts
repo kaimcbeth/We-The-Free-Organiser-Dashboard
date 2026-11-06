@@ -1,9 +1,10 @@
-// Rain check (every 3 hours): for each upcoming event in the next 8 days,
-// the highest hourly chance of rain while it's on and the total expected
-// rain (mm), from Open-Meteo (free, no key) at the community's location.
-// record_rain_forecast stores both on the event and makes a "Rain backup plan
-// made" action when the chance is over 30% AND at least 1 mm is expected
-// (Kai, 6 Nov 2026: 77% for 0.8 mm of drizzle wasn't worth a plan).
+// Weather check (every 3 hours): for each upcoming event in the next 8 days,
+// the highest hourly chance of rain while it's on, the total expected rain
+// (mm) and the hottest hour (°C), from Open-Meteo (free, no key) at the
+// community's location. record_rain_forecast stores them on the event and
+// makes a "Weather backup plan made" action when rain is over 30% AND at
+// least 1 mm (Kai, 6 Nov 2026: 77% for 0.8 mm of drizzle wasn't worth a
+// plan), or when it'll be over 30°C (Kai, same day; 0198).
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -15,12 +16,15 @@ type Ev = {
   team: { lat: number | null; lng: number | null; is_example: boolean; is_practice: boolean } | null;
 };
 type Forecast = {
-  hourly?: { time: string[]; precipitation_probability: (number | null)[]; precipitation?: (number | null)[] };
+  hourly?: { time: string[]; precipitation_probability: (number | null)[]; precipitation?: (number | null)[];
+    temperature_2m?: (number | null)[];
+  };
 };
 
 const HOUR = 3600_000;
 
-// Highest chance of rain and total rain (mm) in the hours the event covers.
+// Highest chance of rain, total rain (mm) and hottest temperature in the
+// hours the event covers.
 export function rainDuring(f: Forecast, start: string, end: string | null) {
   const h = f.hourly;
   if (!h) return null;
@@ -28,6 +32,7 @@ export function rainDuring(f: Forecast, start: string, end: string | null) {
   const to = end ? Date.parse(end) : Date.parse(start) + 3 * HOUR;
   let max: number | null = null;
   let mm: number | null = null;
+  let temp: number | null = null;
   for (let i = 0; i < h.time.length; i++) {
     const at = Date.parse(h.time[i] + "Z"); // timezone=GMT gives "2026-11-01T03:00"
     if (at < from || at >= to) continue;
@@ -35,8 +40,12 @@ export function rainDuring(f: Forecast, start: string, end: string | null) {
     if (p != null) max = Math.max(max ?? 0, p);
     const r = h.precipitation?.[i];
     if (r != null) mm = (mm ?? 0) + r;
+    const t = h.temperature_2m?.[i];
+    if (t != null) temp = Math.max(temp ?? -99, t);
   }
-  return max == null ? null : { chance: max, mm: mm == null ? null : Math.round(mm * 10) / 10 };
+  return max == null
+    ? null
+    : { chance: max, mm: mm == null ? null : Math.round(mm * 10) / 10, temp: temp == null ? null : Math.round(temp * 10) / 10 };
 }
 
 Deno.serve(async () => {
@@ -64,7 +73,7 @@ Deno.serve(async () => {
   for (let i = 0; i < places.length; i += 50) {
     const chunk = places.slice(i, i + 50);
     const url =
-      "https://api.open-meteo.com/v1/forecast?hourly=precipitation_probability,precipitation&timezone=GMT&forecast_days=9" +
+      "https://api.open-meteo.com/v1/forecast?hourly=precipitation_probability,precipitation,temperature_2m&timezone=GMT&forecast_days=9" +
       `&latitude=${chunk.map((p) => p.split(",")[0]).join(",")}` +
       `&longitude=${chunk.map((p) => p.split(",")[1]).join(",")}`;
     const res = await fetch(url);
@@ -80,7 +89,7 @@ Deno.serve(async () => {
   const rows = events.flatMap((e) => {
     const f = forecasts.get(`${e.team!.lat!.toFixed(3)},${e.team!.lng!.toFixed(3)}`);
     const r = f ? rainDuring(f, e.starts_at, e.ends_at) : null;
-    return r == null ? [] : [{ event_id: e.id, chance: r.chance, mm: r.mm }];
+    return r == null ? [] : [{ event_id: e.id, chance: r.chance, mm: r.mm, temp: r.temp }];
   });
 
   const { data: made, error: rpcError } = await supabase.rpc("record_rain_forecast", { p_rows: rows });

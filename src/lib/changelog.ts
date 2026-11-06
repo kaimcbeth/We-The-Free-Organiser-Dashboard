@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "The Rain backup plan is now a Weather backup plan: it also comes up when it'll be over 30°C during an outdoor event. The separate Weather checked action is gone.",
+      },
+      {
+        level: "organiser",
         text: "Choose actions now counts your events in your weekly time (about 3 hours each) and pick from 2, 5, 8 or 12+ hours a week. Actions you do during an event don't add extra time.",
       },
       {
