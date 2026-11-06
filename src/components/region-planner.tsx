@@ -28,6 +28,13 @@ type Plan = {
   enabled: Record<string, boolean>;
 };
 
+type How = "community" | "weekly" | "monthly";
+const HOW: [How, string][] = [
+  ["community", "Each community, every month"],
+  ["weekly", "Every week"],
+  ["monthly", "Every month"],
+];
+
 // Minutes a week an RSL action takes. Monthly ones made for each community
 // (like organiser check-ins) count once per community; hangout promotion is
 // about three reminders per monthly hangout.
@@ -36,7 +43,27 @@ export function rslWeeklyMinutes(k: RslKind, communities: number) {
   return k.estimate * (k.timesPerWeek ?? 0.75);
 }
 
-type RslKind = SetupKind & { perCommunity: boolean };
+type RslKind = SetupKind & {
+  perCommunity: boolean;
+  own: boolean; // added by this region's RSL (0203), can be removed
+};
+
+function toRslKind(r: KindRow & { region_id?: string | null }): RslKind {
+  const base = toSetupKind(r);
+  return {
+    ...base,
+    perCommunity: !["special", "region_weekly", "region_monthly"].includes(
+      r.schedule,
+    ),
+    timesPerWeek:
+      r.schedule === "region_weekly"
+        ? 1
+        : r.schedule === "region_monthly"
+          ? 0.25
+          : base.timesPerWeek,
+    own: !!r.region_id,
+  };
+}
 
 function suggest(kinds: RslKind[], minutes: number, communities: number) {
   const on = new Set<string>();
@@ -95,6 +122,84 @@ function PlannerSheet({
   const [on, setOn] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState<{
+    title: string;
+    minutes: number;
+    how: How;
+  }>({ title: "", minutes: 15, how: "community" });
+  const [busy, setBusy] = useState(false);
+
+  async function addOwn() {
+    if (!draft.title.trim()) {
+      setError("Give the action a name.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    const { data, error } = await createClient().rpc("add_region_task", {
+      p_region: regionId,
+      p_title: draft.title.trim(),
+      p_minutes: draft.minutes,
+      p_how: draft.how,
+    });
+    setBusy(false);
+    if (error || !data) {
+      setError("Couldn't add the action. Try again in a moment.");
+      return;
+    }
+    const kind = data as string;
+    const schedule =
+      draft.how === "community"
+        ? "monthly"
+        : draft.how === "weekly"
+          ? "region_weekly"
+          : "region_monthly";
+    setKinds((all) => [
+      ...(all ?? []),
+      toRslKind({
+        kind,
+        title: draft.title.trim(),
+        blurb: null,
+        estimate_minutes: draft.minutes,
+        estimate_max_minutes: null,
+        anchor: "start",
+        due_after_hours: 0,
+        team_id: null,
+        schedule,
+        default_enabled: true,
+        outreach_only: false,
+        needs_team_newcomers: false,
+        needs_newcomers: false,
+        importance: null,
+        tier: null,
+        event_type: null,
+        region_id: regionId,
+      }),
+    ]);
+    setOn((o) => new Set(o).add(kind));
+    setDraft({ title: "", minutes: 15, how: "community" });
+    setAdding(false);
+    router.refresh();
+  }
+
+  async function removeOwn(k: RslKind) {
+    if (!confirm(`Remove "${k.title}"? Any still open are closed too.`)) return;
+    const { data, error } = await createClient().rpc("remove_region_task", {
+      p_kind: k.kind,
+    });
+    if (error || !data) {
+      setError("Couldn't remove it. Try again in a moment.");
+      return;
+    }
+    setKinds((all) => (all ?? []).filter((x) => x.kind !== k.kind));
+    setOn((o) => {
+      const n = new Set(o);
+      n.delete(k.kind);
+      return n;
+    });
+    router.refresh();
+  }
 
   useEffect(() => {
     let live = true;
@@ -102,10 +207,11 @@ function PlannerSheet({
     Promise.all([
       supabase
         .from("task_kinds")
-        .select(KIND_COLUMNS)
+        .select(`${KIND_COLUMNS}, region_id`)
         .is("archived_at", null)
         .is("team_id", null)
         .eq("audience", "regional")
+        .or(`region_id.is.null,region_id.eq.${regionId}`)
         .order("sort_order"),
       supabase.rpc("region_action_plan", { p_region: regionId }),
     ]).then(([k, p]) => {
@@ -115,11 +221,10 @@ function PlannerSheet({
         setKinds([]);
         return;
       }
-      const rows = (k.data ?? []) as unknown as KindRow[];
-      const list: RslKind[] = rows.map((r) => ({
-        ...toSetupKind(r),
-        perCommunity: r.schedule !== "special",
-      }));
+      const rows = (k.data ?? []) as unknown as (KindRow & {
+        region_id: string | null;
+      })[];
+      const list: RslKind[] = rows.map(toRslKind);
       const plan = p.data as Plan;
       setKinds(list);
       setCommunities(plan.communities);
@@ -240,7 +345,7 @@ function PlannerSheet({
                             ? `${k.label} min a month for each of your ${communities} communities`
                             : k.kind === "promote_hangout"
                               ? `${k.label} min, about 3 times for each hangout`
-                              : `${k.label} min each time`}
+                              : `${k.label} min ${k.timesPerWeek === 1 ? "every week" : "every month"}`}
                           {k.blurb ? ` · ${k.blurb}` : ""}
                         </span>
                       </span>
@@ -248,13 +353,105 @@ function PlannerSheet({
                         ~{Math.round(cost(k))} min/wk
                       </span>
                     </button>
+                    {k.own && (
+                      <button
+                        type="button"
+                        onClick={() => removeOwn(k)}
+                        className="-mt-2 mb-2 ml-15 text-xs text-stone-400 hover:text-[#b91c1c] hover:underline"
+                      >
+                        Remove this action
+                      </button>
+                    )}
                   </li>
                 );
               })}
             </ul>
-            <p className="mt-2 text-xs text-stone-400">
-              More RSL actions are on the way.
-            </p>
+            {adding ? (
+              <div className="mt-3 space-y-3 rounded-2xl bg-white p-4 ring-2 ring-pink/60">
+                <p className="text-sm font-semibold text-navy">
+                  Your own action
+                </p>
+                <input
+                  autoFocus
+                  value={draft.title}
+                  onChange={(e) =>
+                    setDraft({ ...draft, title: e.target.value })
+                  }
+                  onKeyDown={(e) => e.key === "Enter" && addOwn()}
+                  placeholder="e.g. Organiser hangout planned"
+                  aria-label="Action name"
+                  maxLength={80}
+                  className="block w-full rounded-lg bg-white px-3 py-2 text-sm text-navy ring-1 ring-stone-300 placeholder:text-stone-400"
+                />
+                <div>
+                  <p className="mb-1.5 text-xs font-medium text-stone-500">
+                    How often
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {HOW.map(([v, label]) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => setDraft({ ...draft, how: v })}
+                        aria-pressed={draft.how === v}
+                        className={`rounded-full px-3 py-1 text-xs font-medium ring-1 ${
+                          draft.how === v
+                            ? "bg-navy text-white ring-navy"
+                            : "bg-white text-stone-500 ring-stone-300"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <label className="flex items-center gap-2 text-xs font-medium text-stone-500">
+                  About
+                  <input
+                    type="number"
+                    min={1}
+                    max={600}
+                    value={draft.minutes}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        minutes: Math.max(1, Number(e.target.value) || 1),
+                      })
+                    }
+                    className="w-20 rounded-lg bg-white px-2 py-1 text-sm text-navy ring-1 ring-stone-300"
+                  />
+                  minutes
+                  {draft.how === "community"
+                    ? " for each community"
+                    : " each time"}
+                </label>
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAdding(false)}
+                    className="rounded-xl px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={addOwn}
+                    disabled={busy}
+                    className="rounded-xl bg-navy px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-60"
+                  >
+                    {busy ? "Adding…" : "Add action"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setAdding(true)}
+                className="mt-3 text-sm font-semibold text-pink-ink hover:underline"
+              >
+                + Add your own action
+              </button>
+            )}
           </div>
 
           {error && <p className="text-sm text-[#b91c1c]">{error}</p>}
