@@ -18,6 +18,7 @@ export type PlanItem = {
   day: string; // yyyy-mm-dd
   note: string | null;
   caption: string | null;
+  captions: string[] | null; // one per slide (Meet the Members)
   platforms: string[];
   image_paths: string[];
   event_id: string | null;
@@ -26,7 +27,7 @@ export type PlanItem = {
 };
 
 export const PLAN_COLUMNS =
-  "id, team_id, day, note, caption, platforms, image_paths, event_id, posted_at, created_at";
+  "id, team_id, day, note, caption, captions, platforms, image_paths, event_id, posted_at, created_at";
 
 // Just a quick note so far, nothing ready to post.
 export const isPlaceholder = (p: PlanItem) =>
@@ -47,6 +48,7 @@ export async function savePlanItem(p: {
   day: string;
   note?: string | null;
   caption?: string | null;
+  captions?: string[] | null;
   platforms?: string[];
   images?: Blob[];
   eventId?: string | null;
@@ -61,6 +63,7 @@ export async function savePlanItem(p: {
       day: p.day,
       note: p.note?.trim() || null,
       caption: p.caption?.trim() || null,
+      captions: p.captions?.length ? p.captions : null,
       platforms: p.platforms ?? [],
       image_paths: paths,
       event_id: p.eventId ?? null,
@@ -104,4 +107,16 @@ export function planDayLabel(ymd: string) {
     month: "short",
     timeZone: "UTC",
   });
+}
+
+// The post's captions one by one: saved per slide, or (older Meet the
+// Members saves) split on blank lines.
+export function slideCaptions(p: PlanItem): string[] {
+  if (p.captions?.length) return p.captions;
+  if (p.caption && /^meet the members/i.test(p.note ?? ""))
+    return p.caption
+      .split(/\n\s*\n/)
+      .map((c) => c.trim())
+      .filter(Boolean);
+  return [];
 }

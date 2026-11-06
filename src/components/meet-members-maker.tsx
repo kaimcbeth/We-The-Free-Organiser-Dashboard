@@ -622,6 +622,7 @@ export function MeetMembersMaker({
               teamId={teamId}
               note={`Meet the Members: ${first || "new member"}`}
               caption={allCaption}
+              captions={[cover, ...(qs ?? []).map((_, i) => captionFor(i + 1))]}
               platforms={["instagram"]}
               getImages={async () => {
                 if (!shown.length) return [];

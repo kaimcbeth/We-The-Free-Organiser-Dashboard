@@ -12,6 +12,7 @@ export function SaveToPlanner({
   day,
   tz,
   caption,
+  captions,
   getImage,
   getImages,
   note,
@@ -23,6 +24,7 @@ export function SaveToPlanner({
   day?: string; // suggested day, yyyy-mm-dd (else today)
   tz?: string;
   caption?: string;
+  captions?: string[]; // one per slide
   getImage?: () => Promise<Blob | null>;
   getImages?: () => Promise<Blob[]>; // several (carousel slides)
   note?: string; // idea line shown on the calendar
@@ -56,6 +58,7 @@ export function SaveToPlanner({
         day: when,
         note: note ?? null,
         caption: caption ?? null,
+        captions: captions ?? null,
         platforms,
         images: [...(img ? [img] : []), ...many],
         eventId,

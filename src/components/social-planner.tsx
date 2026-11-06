@@ -13,6 +13,7 @@ import {
   isPlaceholder,
   planDayLabel,
   planImageUrls,
+  slideCaptions,
   uploadPlanImage,
   type PlanItem,
 } from "@/lib/social-plan";
@@ -516,6 +517,8 @@ function PostEditor({
   const [copied, setCopied] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [moving, setMoving] = useState(false);
+  const [showCaps, setShowCaps] = useState(false);
+  const caps = item ? slideCaptions(item) : [];
   const placeholder = item ? isPlaceholder(item) : true;
 
   async function save() {
@@ -630,6 +633,9 @@ function PostEditor({
         for (const f of files)
           entries[f.name] = new Uint8Array(await f.arrayBuffer());
         if (caption) entries["caption.txt"] = strToU8(caption);
+        caps.forEach((c, n) => {
+          entries[`caption-${String(n + 1).padStart(2, "0")}.txt`] = strToU8(c);
+        });
         blob = new Blob([zipSync(entries, { level: 0 }) as BlobPart], {
           type: "application/zip",
         });
@@ -725,6 +731,15 @@ function PostEditor({
               {busy ? "Getting it ready…" : "Download"}
             </button>
           )}
+          {caps.length > 1 && (
+            <button
+              type="button"
+              onClick={() => setShowCaps(!showCaps)}
+              className="text-stone-500 hover:text-navy"
+            >
+              {showCaps ? "Hide captions" : "Captions one by one"}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setPosted(!item.posted_at)}
@@ -753,6 +768,7 @@ function PostEditor({
             Delete
           </button>
         </div>
+        {showCaps && <CaptionList captions={caps} name={item.note} />}
         {moving && (
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
             <span className="text-stone-600">Move to</span>
@@ -944,5 +960,66 @@ function PostEditor({
         </span>
       </div>
     </li>
+  );
+}
+
+// Meet the Members (Kai, 6 Nov): each slide's caption on its own, to copy
+// or download one at a time.
+function CaptionList({
+  captions,
+  name,
+}: {
+  captions: string[];
+  name: string | null;
+}) {
+  const [copied, setCopied] = useState(-1);
+  const base =
+    (name || "caption")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 40) || "caption";
+  function download(text: string, n: number) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+    a.download = `${base}-caption-${String(n + 1).padStart(2, "0")}.txt`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+  }
+  return (
+    <ol className="mt-2 space-y-1.5">
+      {captions.map((c, n) => (
+        <li key={n} className="rounded-lg bg-stone-50 p-2 ring-1 ring-black/5">
+          <div className="flex items-start gap-2">
+            <span className="w-5 shrink-0 pt-0.5 text-xs font-semibold text-stone-400">
+              {n + 1}
+            </span>
+            <p className="min-w-0 flex-1 whitespace-pre-line text-xs text-stone-700">
+              {c}
+            </p>
+          </div>
+          <div className="mt-1 flex justify-end gap-3 text-xs">
+            <button
+              type="button"
+              onClick={async () => {
+                await navigator.clipboard.writeText(c).catch(() => {});
+                setCopied(n);
+                setTimeout(() => setCopied(-1), 1500);
+              }}
+              className="font-semibold text-pink-ink hover:underline"
+            >
+              {copied === n ? "Copied" : "Copy"}
+            </button>
+            <button
+              type="button"
+              onClick={() => download(c, n)}
+              className="text-stone-500 hover:text-navy"
+            >
+              Download
+            </button>
+          </div>
+        </li>
+      ))}
+    </ol>
   );
 }
