@@ -704,15 +704,17 @@ function SlideCanvas({
 export function MeetMembersButton({
   teamId,
   className,
+  label = "Make the post",
 }: {
   teamId: string;
   className?: string;
+  label?: string;
 }) {
   const [open, setOpen] = useState(false);
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} className={className}>
-        Make the post
+        {label}
       </button>
       {open && (
         <MeetMembersMaker teamId={teamId} onClose={() => setOpen(false)} />

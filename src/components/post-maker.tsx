@@ -4,11 +4,34 @@ import { useEffect, useState } from "react";
 import { GraphicMaker, type GraphicEvent } from "@/components/graphic-maker";
 import { CopyMaker } from "@/components/copy-maker";
 import { createClient } from "@/lib/supabase/client";
+import { MeetMembersButton } from "@/components/meet-members-maker";
+import { SeasonCalendarButton } from "@/components/season-calendar";
+import { SeasonHostsGraphic } from "@/components/season-hosts-graphic";
+import { RecapButton } from "@/components/recap-maker";
 
 // "Make a post" on the Social Media Hub (Kai, 6 Nov 2026: "a universal
 // graphic and copy generator that can attach to listed events"). Pick one of
 // the community's events (coming up, or recent for a thank-you) or
 // "Something else", then make a graphic and/or write the words.
+// Below that, the posts that aren't about one event (Kai, 6 Nov: "Meet the
+// Members and the calendars"), each opening the same maker as its action.
+
+const SEASON_MONTHS = [3, 6, 9, 12];
+
+// The next season's first day (1 Mar/Jun/Sep/Dec) as a UTC midnight, in the
+// community's timezone.
+function nextSeasonStart(tz: string, now: number) {
+  const [y, m] = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+  })
+    .format(new Date(now))
+    .split("-")
+    .map(Number);
+  const nm = SEASON_MONTHS.find((x) => x > m);
+  return nm ? Date.UTC(y, nm - 1, 1) : Date.UTC(y + 1, 2, 1);
+}
 
 type Ev = GraphicEvent & { id: string; past: boolean };
 
@@ -17,6 +40,11 @@ export function PostMaker({ teamId, tz }: { teamId: string; tz: string }) {
   const [community, setCommunity] = useState<string | null>(null);
   const [picked, setPicked] = useState<string>(""); // event id, "none" = no event
   const [showRecent, setShowRecent] = useState(false);
+  const [season] = useState(() => nextSeasonStart(tz, Date.now()));
+  // The makers work the season out from their action's due date: the
+  // calendar is due the day before, the hosts ask 3 weeks before.
+  const calendarDue = new Date(season - 864e5 + 6 * 36e5).toISOString();
+  const hostsDue = new Date(season - 21 * 864e5).toISOString();
 
   useEffect(() => {
     const supabase = createClient();
@@ -118,6 +146,8 @@ export function PostMaker({ teamId, tz }: { teamId: string; tz: string }) {
   const recent = events?.filter((e) => e.past) ?? [];
   const ev = events?.find((e) => e.id === picked) ?? null;
 
+  const go =
+    "shrink-0 rounded-full bg-pink px-3 py-1.5 text-xs font-semibold text-navy hover:bg-pink-strong";
   const row = (id: string, left: string, title: string) => (
     <li key={id}>
       <button
@@ -211,6 +241,80 @@ export function PostMaker({ teamId, tz }: { teamId: string; tz: string }) {
           </p>
         </div>
       )}
+      <p className="mt-5 mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-500">
+        Other posts
+      </p>
+      <ul className="space-y-1">
+        {[
+          {
+            key: "meet",
+            left: "Monthly",
+            title: "Meet the Members",
+            blurb: "A carousel of one member's answers and photos.",
+            button: (
+              <MeetMembersButton
+                teamId={teamId}
+                label="Make it"
+                className={go}
+              />
+            ),
+          },
+          {
+            key: "recap",
+            left: "Monthly",
+            title: "Monthly photo recap",
+            blurb: "The month's photos, plus what's coming up next month.",
+            button: (
+              <RecapButton teamId={teamId} label="Make it" className={go} />
+            ),
+          },
+          {
+            key: "calendar",
+            left: "Seasonal",
+            title: "Seasonal calendar",
+            blurb: "What's on next season, on one graphic.",
+            button: (
+              <SeasonCalendarButton
+                teamId={teamId}
+                dueAt={calendarDue}
+                label="Make it"
+                className={go}
+              />
+            ),
+          },
+          {
+            key: "hosts",
+            left: "Seasonal",
+            title: "Hosts wanted next season",
+            blurb: "Asks if anyone's keen to host something.",
+            button: (
+              <SeasonHostsGraphic
+                teamId={teamId}
+                dueAt={hostsDue}
+                tz={tz}
+                label="Make it"
+                className={go}
+              />
+            ),
+          },
+        ].map((o) => (
+          <li
+            key={o.key}
+            className="flex items-center gap-3 rounded-xl bg-white px-3 py-2 ring-1 ring-black/5"
+          >
+            <span className="w-24 shrink-0 text-xs text-stone-500">
+              {o.left}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-medium text-navy">
+                {o.title}
+              </span>
+              <span className="block text-xs text-stone-500">{o.blurb}</span>
+            </span>
+            {o.button}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

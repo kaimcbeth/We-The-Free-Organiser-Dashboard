@@ -67,6 +67,18 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Actions moved for later open when you double-click them (or tap the small arrow).",
+      },
+      {
+        level: "organiser",
+        text: "Make a post in the Social Media Hub now has Meet the Members, the monthly photo recap, the seasonal calendar and hosts wanted, as well as event posts.",
+      },
+      {
+        level: "organiser",
+        text: "Each ready-made post now ends with its own invitation to your events.",
+      },
+      {
+        level: "organiser",
         text: '"Choose actions" is now called "Plan actions".',
       },
       {

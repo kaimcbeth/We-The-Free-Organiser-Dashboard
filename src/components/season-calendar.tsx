@@ -342,16 +342,18 @@ export function SeasonCalendarButton({
   teamId,
   dueAt,
   className,
+  label = "Make the calendar",
 }: {
   teamId: string;
   dueAt: string; // the day before the season starts
   className?: string;
+  label?: string;
 }) {
   const [open, setOpen] = useState(false);
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} className={className}>
-        Make the calendar
+        {label}
       </button>
       {open && (
         <Sheet title="Seasonal calendar" onClose={() => setOpen(false)}>

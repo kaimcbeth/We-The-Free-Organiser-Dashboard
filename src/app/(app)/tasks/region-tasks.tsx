@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Team } from "@/lib/organiser";
 import { LoadError } from "@/components/load-error";
 import { TaskCard } from "@/components/task-card";
+import { LaterRow } from "@/components/later-row";
 import { loadTeamTasks } from "@/lib/tasks";
 import { loadConnectContext } from "@/lib/connect";
 import { ConnectIdeas } from "@/components/connect-ideas";
@@ -131,18 +132,23 @@ export async function RegionTasks({
             {tasks.later
               .filter((t) => t.regional)
               .map((t) => (
-                <li
+                <LaterRow
                   key={t.id}
-                  className="flex justify-between gap-3 px-4 py-2.5"
-                >
-                  <span className="truncate">
-                    {t.title}
-                    {`: ${short(byId[t.teamId]?.name ?? "")}`}
-                  </span>
-                  <span className="shrink-0 text-stone-500">
-                    {formatEventDate(t.showFrom!, byId[t.teamId]?.timezone)}
-                  </span>
-                </li>
+                  label={`${t.title}: ${short(byId[t.teamId]?.name ?? "")}`}
+                  when={formatEventDate(t.showFrom!, byId[t.teamId]?.timezone)}
+                  card={
+                    <TaskCard
+                      task={{
+                        ...t,
+                        title: `${t.title}: ${short(byId[t.teamId]?.name ?? "")}`,
+                      }}
+                      tz={byId[t.teamId]?.timezone ?? "Australia/Sydney"}
+                      now={now}
+                      whatsappUrl={null}
+                      removable
+                    />
+                  }
+                />
               ))}
           </ul>
         </section>

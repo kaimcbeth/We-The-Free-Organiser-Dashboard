@@ -4,6 +4,7 @@
 // "www.3movies.wtf" corner link painted out); the community's own
 // @username is added in the browser (`watermark` = where it goes).
 // {community} in a caption becomes the community's name.
+// Give each post its own call to action at the end (Kai, 6 Nov: not the same line on every post).
 
 export type SocialPost = {
   slug: string;
@@ -36,7 +37,7 @@ What crime did they commit to be suffering like this?
 
 Question, reflect and go vegan!
 
-🌱 Want to do something about it? Come along to one of our events in {community}. Everyone's welcome and no experience is needed. Find what's coming up at the link in our bio.
+☀️ Feeling this one? Turn it into action with us in {community}. Our events are friendly, relaxed and open to everyone, no experience needed. Dates are at the link in our bio.
 
 .
 
@@ -53,7 +54,7 @@ Question, reflect and go vegan!
 
 As humans, we love to talk to the farmed animals we meet on countryside walks or the companionship-bred animals who reside in our households…now it's time for us to finally LISTEN.
 
-🌱 Ready to listen and act? Come along to one of our events in {community}. Everyone's welcome and no experience is needed. Find what's coming up at the link in our bio.
+👂 Ready to listen, then act? There's a seat for you at our next {community} meet-up. Come on your own or bring a friend; the link in our bio has what's on.
 
 .
 
@@ -76,7 +77,7 @@ As humans, we love to talk to the farmed animals we meet on countryside walks or
 
 🍔 Is a burger worth their life?
 
-🌱 Ready to take the next step? Come along to one of our events in {community}. Everyone's welcome and no experience is needed. Find what's coming up at the link in our bio.
+🚀 Know your why? We'll help with the how. Join We The Free {community} at an upcoming event and learn alongside people who get it. Everything's at the link in our bio.
 
 .
 
@@ -95,7 +96,7 @@ Dairy cows will often cry out for weeks for their missing calves who have been s
 
 Please stop funding this monstrous industry, and all industries that abuse, exploit, and murder animals for human greed. Go vegan.
 
-🌱 Want to help animals like these? Come along to one of our events in {community}. Everyone's welcome and no experience is needed. Find what's coming up at the link in our bio.
+🐮 Want to stand up for calves like these? Spend an afternoon with our {community} crew. New faces are always welcome, and you'll find the next event at the link in our bio.
 
 PC: Karoliina Kase
 
@@ -113,7 +114,7 @@ PC: Karoliina Kase
 
 👉 Scroll right to find out which other animals continue to suffer at the hands of humanity on a planet we're supposed to share.
 
-🌱 Want to do something about it? Come along to one of our events in {community}. Everyone's welcome and no experience is needed. Find what's coming up at the link in our bio.
+💡 Didn't know about these? Now you do, and you can help change it. Come and meet us at an event in {community}: no experience needed, just curiosity. See what's coming up at the link in our bio.
 
 .
 

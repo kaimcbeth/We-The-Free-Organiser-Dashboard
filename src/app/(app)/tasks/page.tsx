@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireOrganiser } from "@/lib/organiser";
 import { LoadError } from "@/components/load-error";
+import { LaterRow } from "@/components/later-row";
 import { TaskCard } from "@/components/task-card";
 import { loadRegionTasks, loadTeamTasks } from "@/lib/tasks";
 import { RegionActions } from "./region-actions";
@@ -446,15 +447,12 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
           </h2>
           <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white text-sm shadow-sm ring-1 ring-black/5">
             {tasks.later.map((t) => (
-              <li key={t.id} className="flex justify-between gap-3 px-4 py-2.5">
-                <span className="truncate">
-                  {t.title}
-                  {t.eventTitle ? ` · ${t.eventTitle}` : ""}
-                </span>
-                <span className="shrink-0 text-stone-500">
-                  {formatEventDate(t.showFrom!, common.tz)}
-                </span>
-              </li>
+              <LaterRow
+                key={t.id}
+                label={`${t.title}${t.eventTitle ? ` · ${t.eventTitle}` : ""}`}
+                when={formatEventDate(t.showFrom!, common.tz)}
+                card={<TaskCard task={t} {...common} />}
+              />
             ))}
           </ul>
         </section>

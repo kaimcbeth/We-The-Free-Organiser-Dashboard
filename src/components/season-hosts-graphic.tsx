@@ -235,17 +235,19 @@ export function SeasonHostsGraphic({
   dueAt,
   tz,
   className,
+  label = "Get graphic",
 }: {
   teamId: string;
   dueAt: string;
   tz: string;
   className?: string;
+  label?: string;
 }) {
   const [open, setOpen] = useState(false);
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} className={className}>
-        Get graphic
+        {label}
       </button>
       {open && (
         <HostsSheet
