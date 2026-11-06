@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "regional_lead",
+        text: "RSL Actions: a new Social media section for your regional Instagram and Facebook pages, with a new weekly action to repost the best post from the main We The Free page. The monthly regional recap and Meet the Organisers sit there too.",
+      },
+      {
+        level: "regional_lead",
         text: "Plan RSL actions: the hours slider now goes from 2 hours up to the time every RSL action would take, like Plan actions for organisers.",
       },
       {
