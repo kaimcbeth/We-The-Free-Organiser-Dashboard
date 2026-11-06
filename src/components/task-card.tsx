@@ -35,7 +35,10 @@ import { CopyMaker, type CopyPlatform } from "@/components/copy-maker";
 import { RecapButton } from "@/components/recap-maker";
 import { MeetMembersButton } from "@/components/meet-members-maker";
 import { ScheduleChanger } from "@/components/schedule-changer";
-import { MeetMembersQuestions } from "@/components/meet-members-questions";
+import {
+  MeetMembersQuestions,
+  MeetOrganisersQuestions,
+} from "@/components/meet-members-questions";
 import { FbGroupsButton } from "@/components/fb-groups-button";
 import { inputClass } from "@/components/form";
 import { PodShareButton } from "@/components/engagement-pod";
@@ -602,6 +605,16 @@ export function TaskCard({
                   teamId={task.teamId}
                   className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
                 />
+              )}
+              {task.kind === "rsl_meet_organisers" && (
+                <>
+                  <MeetOrganisersQuestions />
+                  <MeetMembersButton
+                    teamId={null}
+                    organisers
+                    className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                  />
+                </>
               )}
               {task.kind === "rsl_weekly_post" && (
                 <OrganiserQuestionsSheet className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong" />

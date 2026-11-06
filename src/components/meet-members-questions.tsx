@@ -6,7 +6,10 @@ import {
   getMeetMembersQuestions,
   saveMeetMembersQuestions,
 } from "@/app/actions";
-import { MEET_MEMBERS_DEFAULT } from "@/lib/meet-members";
+import {
+  MEET_MEMBERS_DEFAULT,
+  MEET_ORGANISERS_DEFAULT,
+} from "@/lib/meet-members";
 
 // On "Meet the Members: volunteer asked": copy the questions to send to the
 // volunteer, or change them for future months.
@@ -124,6 +127,53 @@ export function MeetMembersQuestions() {
               </div>
             </>
           )}
+          {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
+        </Sheet>
+      )}
+    </>
+  );
+}
+
+// On "Meet the Organisers posted" (RSL, Kai 6 Nov 2026): the questions to
+// send to the organiser being featured.
+export function MeetOrganisersQuestions() {
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState("");
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(MEET_ORGANISERS_DEFAULT);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError("Couldn't copy: select the text and copy it instead.");
+    }
+  }
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10"
+      >
+        The questions
+      </button>
+      {open && (
+        <Sheet title="Meet the Organisers" onClose={() => setOpen(false)}>
+          <p className="text-sm text-stone-600">
+            Send these to the organiser you&apos;re featuring, with a few photos
+            of them.
+          </p>
+          <pre className="mt-3 whitespace-pre-wrap rounded-xl bg-white p-3 font-sans text-sm text-navy ring-1 ring-black/5">
+            {MEET_ORGANISERS_DEFAULT}
+          </pre>
+          <button
+            type="button"
+            onClick={copy}
+            className="mt-3 rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+          >
+            {copied ? "Copied" : "Copy the questions"}
+          </button>
           {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
         </Sheet>
       )}

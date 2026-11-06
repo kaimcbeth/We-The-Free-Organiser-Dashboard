@@ -98,3 +98,27 @@ export function splitAnswers(qs: MeetQuestion[], reply: string): string[] {
     .filter((b) => b && !/meet the members/i.test(b));
   return qs.map((_, i) => tidy(blocks[i] ?? ""));
 }
+
+// Meet the Organisers (RSL action rsl_meet_organisers, Kai 6 Nov 2026): one
+// organiser from the region each month.
+export const MEET_ORGANISERS_DEFAULT = `👋 MEET THE ORGANISERS 👋
+
+📍 Which community do you organise?
+
+⏳ How long have you been organising?
+
+💡 What made you want to start organising?
+
+🎉 What's your favourite event you've run?
+
+💪 What's the hardest part, and how do you handle it?
+
+🧠 Your best tip for a new organiser?
+
+🌱 How long have you been vegan?
+
+💚 What inspired you to go vegan?
+
+⚽️ What do you do when you're not organising?
+
+🍜 What's your favourite food?`;

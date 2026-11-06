@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "regional_lead",
+        text: "New monthly RSL action: a Meet the Organisers post. Send an organiser the questions, then make the carousel with the same maker as Meet the Members.",
+      },
+      {
+        level: "regional_lead",
         text: "New monthly RSL action: read and reply to organiser feedback. Its time goes up with how much feedback came in (a 2-minute check when there's none), with a button straight to the feedback.",
       },
       {

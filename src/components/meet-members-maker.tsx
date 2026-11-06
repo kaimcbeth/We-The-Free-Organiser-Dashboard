@@ -28,6 +28,7 @@ import { getMeetMembersQuestions } from "@/app/actions";
 import {
   parseQuestions,
   splitAnswers,
+  MEET_ORGANISERS_DEFAULT,
   type MeetQuestion,
 } from "@/lib/meet-members";
 
@@ -38,6 +39,7 @@ import {
 
 type Photo = { id: string; url: string; img: HTMLImageElement };
 type Look = {
+  word: string; // "MEMBERS" or "ORGANISERS"
   name: string;
   community: string;
   mark: HTMLImageElement | null;
@@ -57,7 +59,7 @@ function drawCover(
   const width = W - 2 * x;
   const display = (s: number) => `${s}px ${DISPLAY}`;
   const big = Math.min(
-    fit(ctx, "MEMBERS", display, width, 190, 100),
+    fit(ctx, look.word, display, width, 190, 100),
     fit(ctx, "MEET THE", display, width, 190, 100),
   );
   const name = look.name.trim().toUpperCase() || "THEIR NAME";
@@ -78,7 +80,7 @@ function drawCover(
   y -= Math.round(nameSize * 0.95) + 26;
   ctx.font = display(big);
   ctx.fillStyle = PINK;
-  ctx.fillText("MEMBERS", x - 6, y);
+  ctx.fillText(look.word, x - 6, y);
   y -= Math.round(big * 0.98);
   ctx.fillStyle = "#ffffff";
   ctx.fillText("MEET THE", x - 6, y);
@@ -125,7 +127,7 @@ function drawQuestion(
   y -= 16;
   ctx.shadowBlur = 0;
   // Pink tag: name · n of N.
-  const label = `${(look.name.trim().split(/\s+/)[0] || "MEET THE MEMBERS").toUpperCase()}  ·  ${n} / ${look.total}`;
+  const label = `${(look.name.trim().split(/\s+/)[0] || `MEET THE ${look.word}`).toUpperCase()}  ·  ${n} / ${look.total}`;
   ctx.font = `800 26px ${bodyFont()}`;
   ctx.letterSpacing = "2px";
   const tw = ctx.measureText(label).width;
@@ -164,10 +166,12 @@ export function MeetMembersMaker({
   teamId,
   onClose,
   questions,
+  organisers = false,
 }: {
-  teamId: string;
+  teamId: string | null; // null: Meet the Organisers (no community)
   onClose: () => void;
   questions?: string; // for tests: skip loading the community's list
+  organisers?: boolean; // Meet the Organisers (RSL action, Kai 6 Nov 2026)
 }) {
   const [qs, setQs] = useState<MeetQuestion[] | null>(null);
   const [community, setCommunity] = useState("WE THE FREE");
@@ -194,25 +198,32 @@ export function MeetMembersMaker({
     loadImage("/brand/wtf-mark.png")
       .then((img) => live && setMark(img))
       .catch(() => {});
-    (questions ? Promise.resolve({ questions }) : getMeetMembersQuestions())
+    (questions
+      ? Promise.resolve({ questions })
+      : organisers
+        ? Promise.resolve({ questions: MEET_ORGANISERS_DEFAULT })
+        : getMeetMembersQuestions()
+    )
       .then((r) => live && setQs(parseQuestions(r.questions)))
       .catch(() => live && setQs([]));
-    createClient()
-      .from("teams")
-      .select("name")
-      .eq("id", teamId)
-      .single()
-      .then(({ data }) => {
-        if (live && data?.name) setCommunity(communityLabel(data.name));
-      });
+    if (teamId)
+      createClient()
+        .from("teams")
+        .select("name")
+        .eq("id", teamId)
+        .single()
+        .then(({ data }) => {
+          if (live && data?.name) setCommunity(communityLabel(data.name));
+        });
     return () => {
       live = false;
     };
-  }, [teamId, questions]);
+  }, [teamId, questions, organisers]);
 
   const total = qs?.length ?? 0;
   const need = total + 1;
-  const look: Look = { name, community, mark, total };
+  const word = organisers ? "ORGANISERS" : "MEMBERS";
+  const look: Look = { word, name, community, mark, total };
   const first = name.trim().split(/\s+/)[0];
   const cover = coverCaption || `👋 Meet ${first || "…"}!`;
   const captionFor = (i: number) =>
@@ -278,7 +289,7 @@ export function MeetMembersMaker({
   }
 
   const shown = photos.slice(0, need);
-  const fileBase = `meet-the-members-${(first || "member").toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+  const fileBase = `meet-the-${organisers ? "organisers" : "members"}-${(first || "member").toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 
   async function build(): Promise<File[]> {
     if (!qs) return [];
@@ -361,7 +372,10 @@ export function MeetMembersMaker({
   const h3 = "text-sm font-semibold text-navy";
 
   return (
-    <Sheet title="Meet the Members" onClose={onClose}>
+    <Sheet
+      title={organisers ? "Meet the Organisers" : "Meet the Members"}
+      onClose={onClose}
+    >
       {!qs ? (
         <p className="text-sm text-stone-500">Loading the questions…</p>
       ) : (
@@ -378,6 +392,20 @@ export function MeetMembersMaker({
               className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm"
             />
           </label>
+          {organisers && (
+            <label className="block">
+              <span className={h3}>Their community</span>
+              <input
+                value={community}
+                onChange={(e) => {
+                  setCommunity(e.target.value.toUpperCase());
+                  changed();
+                }}
+                placeholder="e.g. WE THE FREE PERTH"
+                className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm"
+              />
+            </label>
+          )}
 
           <section>
             <h3 className={h3}>Their answers</h3>
@@ -618,20 +646,25 @@ export function MeetMembersMaker({
                 Download
               </button>
             </div>
-            <SaveToPlanner
-              teamId={teamId}
-              note={`Meet the Members: ${first || "new member"}`}
-              caption={allCaption}
-              captions={[cover, ...(qs ?? []).map((_, i) => captionFor(i + 1))]}
-              platforms={["instagram"]}
-              getImages={async () => {
-                if (!shown.length) return [];
-                const files = made ?? (await build());
-                setBusy("");
-                return files;
-              }}
-              className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10"
-            />
+            {teamId && (
+              <SaveToPlanner
+                teamId={teamId}
+                note={`Meet the Members: ${first || "new member"}`}
+                caption={allCaption}
+                captions={[
+                  cover,
+                  ...(qs ?? []).map((_, i) => captionFor(i + 1)),
+                ]}
+                platforms={["instagram"]}
+                getImages={async () => {
+                  if (!shown.length) return [];
+                  const files = made ?? (await build());
+                  setBusy("");
+                  return files;
+                }}
+                className="rounded-xl bg-navy/5 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/10"
+              />
+            )}
             {busy && <p className="text-sm text-stone-500">{busy}</p>}
             {made && !busy && (
               <p className="text-sm text-stone-500">
@@ -665,12 +698,18 @@ function SlideCanvas({
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const drag = useRef<{ x: number; y: number } | null>(null);
-  const { name, community, mark, total } = look;
+  const { word, name, community, mark, total } = look;
 
   useEffect(() => {
     if (ref.current)
-      draw(ref.current, i, photo, pos, qs, { name, community, mark, total });
-  }, [i, photo, pos, qs, name, community, mark, total, ready]);
+      draw(ref.current, i, photo, pos, qs, {
+        word,
+        name,
+        community,
+        mark,
+        total,
+      });
+  }, [i, photo, pos, qs, word, name, community, mark, total, ready]);
 
   return (
     <canvas
@@ -711,10 +750,12 @@ export function MeetMembersButton({
   teamId,
   className,
   label = "Make the post",
+  organisers = false,
 }: {
-  teamId: string;
+  teamId: string | null;
   className?: string;
   label?: string;
+  organisers?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -723,7 +764,11 @@ export function MeetMembersButton({
         {label}
       </button>
       {open && (
-        <MeetMembersMaker teamId={teamId} onClose={() => setOpen(false)} />
+        <MeetMembersMaker
+          teamId={teamId}
+          organisers={organisers}
+          onClose={() => setOpen(false)}
+        />
       )}
     </>
   );
