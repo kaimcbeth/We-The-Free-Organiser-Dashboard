@@ -697,7 +697,7 @@ function PostEditor({
           >
             {placeholder ? "Fill in the post" : "Edit"}
           </button>
-          {item.caption && (
+          {item.caption && caps.length < 2 && (
             <button
               type="button"
               onClick={async () => {
