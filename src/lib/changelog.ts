@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "regional_lead",
+        text: 'People with "All communities" now lists everyone across them, with each person\'s community, so you can search the lot.',
+      },
+      {
+        level: "regional_lead",
         text: "Social media: three new RSL actions. \"What's on across the region\" every two weeks (Make the post has every community's events as an image and text), a monthly community spotlight (Pick a community suggests one and writes the caption), and regional milestones that pop up when something's worth celebrating.",
       },
       {

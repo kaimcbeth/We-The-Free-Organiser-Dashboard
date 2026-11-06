@@ -38,6 +38,7 @@ export type PersonRow = {
   drift: Drift | null; // "Not seen in a while"
   role: Access | null;
   created_at: string; // when they were added
+  community?: string | null; // "All communities": which one they're in
 };
 
 export function PeopleList({
@@ -96,7 +97,7 @@ export function PeopleList({
           : people.filter(f.match);
     if (!q) return shown;
     return shown.filter((p) =>
-      [p.first_name, p.last_name, p.suburb, p.email]
+      [p.first_name, p.last_name, p.suburb, p.email, p.community]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
@@ -278,7 +279,7 @@ export function PeopleList({
                           )}
                       </div>
                       <p className="mt-0.5 truncate text-xs text-stone-500 sm:text-sm">
-                        {[p.suburb, p.email, p.phone]
+                        {[p.community, p.suburb, p.email, p.phone]
                           .filter(Boolean)
                           .join(" · ") ||
                           (p.facebook_url ? "Facebook" : "No details yet")}

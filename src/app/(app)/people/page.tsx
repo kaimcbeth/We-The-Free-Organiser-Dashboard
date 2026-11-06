@@ -31,7 +31,9 @@ type Row = Omit<
   | "status"
   | "recent"
   | "engagement"
+  | "community"
 > & {
+  team_id: string;
   attended_before_app: boolean;
   new_to_activism: boolean;
   user_id: string | null;
@@ -48,18 +50,34 @@ export default async function PeoplePage({
   // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
   const now = Date.now();
   const { supabase, organiser } = await requireOrganiser();
+  const teamName = new Map(
+    organiser.teams.map((t) => [t.id, t.name.replace(/, .*$/, "")]),
+  );
 
-  const { data, error } = await supabase
+  const { data: raw, error } = await supabase
     .from("people")
     .select(
-      "id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, photo_updated_at, attended_before_app, new_to_activism, created_at, attendance(event:events(starts_at))",
+      "id, first_name, last_name, suburb, email, phone, user_id, team_id, pending_role, pending_team_id, facebook_url, photo_updated_at, attended_before_app, new_to_activism, created_at, attendance(event:events(starts_at))",
     )
-    // Also people made Organiser for this community whose profile is elsewhere.
+    // "All communities": everyone across them (Kai, 6 Nov 2026: "I can't see
+    // Georgia"). Else this community, plus people made Organiser for it whose
+    // profile is elsewhere.
+    // (No list of 180 ids in the URL: everyone this login can read, then
+    // kept to the communities on show.)
     .or(
-      `team_id.eq.${organiser.team_id},pending_team_id.eq.${organiser.team_id}`,
+      organiser.allCommunities
+        ? "team_id.not.is.null"
+        : `team_id.eq.${organiser.team_id},pending_team_id.eq.${organiser.team_id}`,
     )
     .order("first_name")
     .returns<Row[]>();
+  const data = organiser.allCommunities
+    ? raw?.filter(
+        (p) =>
+          teamName.has(p.team_id) ||
+          (p.pending_team_id && teamName.has(p.pending_team_id)),
+      )
+    : raw;
 
   if (error) return <LoadError what="people" />;
 
@@ -106,9 +124,13 @@ export default async function PeoplePage({
       pending_role,
       pending_team_id,
       attended_before_app,
+      team_id,
       ...p
     }) => ({
       ...p,
+      community: organiser.allCommunities
+        ? (teamName.get(team_id) ?? null)
+        : null,
       connected: !!user_id,
       role: roles.get(p.id) ?? pending_role ?? null,
       // The tour's Example Community has no real accounts; show its roles as set.
@@ -228,7 +250,10 @@ export default async function PeoplePage({
       <h1 className="text-2xl font-semibold tracking-tight">People</h1>
       <p className="mt-1 text-sm text-stone-500">
         {people.length} {people.length === 1 ? "person" : "people"} in{" "}
-        {organiser.team?.name ?? "your community"} · {connected} with an account
+        {organiser.allCommunities
+          ? `all ${organiser.teams.length} communities`
+          : (organiser.team?.name ?? "your community")}{" "}
+        · {connected} with an account
       </p>
       {(organiser.role === "god" || organiser.role === "regional_lead") &&
         !organiser.allCommunities &&
