@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'Meet the Members: the first question slide now says "Answers in the caption" with an arrow pointing down.',
+      },
+      {
+        level: "organiser",
         text: "Actions moved for later open when you double-click them (or tap the small arrow).",
       },
       {

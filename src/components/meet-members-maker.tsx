@@ -116,6 +116,12 @@ function drawQuestion(
     ctx.fillText(lines[i], x, y);
     y -= step;
   }
+  // First question only: point people to the caption (Kai, 6 Nov).
+  if (n === 1) {
+    ctx.font = `600 28px ${bodyFont()}`;
+    ctx.fillStyle = YELLOW;
+    ctx.fillText("Answers in the caption ↓", x, H - 40);
+  }
   y -= 16;
   ctx.shadowBlur = 0;
   // Pink tag: name · n of N.
