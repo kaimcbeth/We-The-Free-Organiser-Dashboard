@@ -172,7 +172,7 @@ export function FeedbackSheet({
               No responses yet. They show here as people fill in the form.
             </p>
           ) : (
-            <Responses list={data.responses} />
+            <Responses list={data.responses} teamId={teamId} />
           )}
         </Sheet>
       )}
@@ -180,11 +180,71 @@ export function FeedbackSheet({
   );
 }
 
-function Responses({ list }: { list: FeedbackResponse[] }) {
+type Summary = {
+  overall: string;
+  working: string[];
+  better: string[];
+  ideas: string[];
+};
+
+// "Summarise" (Kai, 7 Nov 2026): the writing assistant groups the answers
+// into what's working, what to improve and a few things to try.
+function Responses({
+  list,
+  teamId,
+}: {
+  list: FeedbackResponse[];
+  teamId: string;
+}) {
   const rated = list.filter((r) => r.rating);
   const avg = rated.length
     ? rated.reduce((n, r) => n + r.rating!, 0) / rated.length
     : null;
+  const [summary, setSummary] = useState<Summary | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function summarise() {
+    setBusy(true);
+    setError("");
+    const { data, error: e } = await createClient().functions.invoke(
+      "write-copy",
+      {
+        body: {
+          purpose: "feedback_summary",
+          teamId,
+          responses: list.map((r) => ({
+            rating: r.rating,
+            label: r.rating ? SCALE[r.rating - 1] : null,
+            message: r.message,
+            going_well: r.going_well,
+            better: r.better,
+          })),
+        },
+      },
+    );
+    setBusy(false);
+    if (e || !data?.summary) {
+      setError(data?.error ?? "Couldn't summarise just now. Try again.");
+      return;
+    }
+    setSummary(data.summary as Summary);
+  }
+
+  const section = (title: string, items: string[]) =>
+    items.length > 0 && (
+      <div>
+        <p className="text-xs font-semibold tracking-wide text-stone-500 uppercase">
+          {title}
+        </p>
+        <ul className="mt-1 list-disc space-y-0.5 pl-5">
+          {items.map((t) => (
+            <li key={t}>{t}</li>
+          ))}
+        </ul>
+      </div>
+    );
+
   return (
     <div className="mt-3 space-y-3">
       {avg !== null && (
@@ -193,6 +253,35 @@ function Responses({ list }: { list: FeedbackResponse[] }) {
           5, from {rated.length})
         </p>
       )}
+      {summary ? (
+        <div className="space-y-3 rounded-xl bg-navy p-4 text-sm text-white">
+          <p className="font-semibold text-yellow">Summary</p>
+          {summary.overall && <p>{summary.overall}</p>}
+          {section("Working well", summary.working)}
+          {section("Could be better", summary.better)}
+          {section("Things to try", summary.ideas)}
+          <button
+            type="button"
+            onClick={summarise}
+            disabled={busy}
+            className="text-xs font-medium text-white/70 hover:text-white hover:underline"
+          >
+            {busy ? "Summarising…" : "Summarise again"}
+          </button>
+        </div>
+      ) : (
+        list.length > 1 && (
+          <button
+            type="button"
+            onClick={summarise}
+            disabled={busy}
+            className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong disabled:opacity-60"
+          >
+            {busy ? "Summarising…" : `Summarise the ${list.length} responses`}
+          </button>
+        )
+      )}
+      {error && <p className="text-sm text-red-700">{error}</p>}
       <ul className="space-y-2">
         {list.map((r) => (
           <li

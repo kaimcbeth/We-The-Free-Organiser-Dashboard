@@ -66,6 +66,10 @@ export const CHANGELOG: Release[] = [
     title: "Birthdays",
     changes: [
       {
+        level: "organiser",
+        text: 'Member feedback: "Summarise" on the Responses tab groups the answers into what\'s working, what could be better and a few things to try.',
+      },
+      {
         level: "regional_lead",
         text: 'People with "All communities" now lists everyone across them, with each person\'s community, so you can search the lot.',
       },

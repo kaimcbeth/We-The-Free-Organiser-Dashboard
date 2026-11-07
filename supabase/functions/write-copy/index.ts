@@ -1,6 +1,8 @@
 // Writes social media copy for an event: a few options per platform, in the
 // community's own voice (voice_examples) when it has some. Never posts
 // anything: it only returns text for a person to pick, edit and copy.
+// Also summarises member feedback responses ({ purpose: "feedback_summary" },
+// Kai 7 Nov 2026).
 // Also writes the quarterly member feedback message ({ purpose: "feedback" }),
 // the incident report form reminder ({ purpose: "incident" }), the mental health
 // resources reminder ({ purpose: "mental_health" }) and posts for
@@ -57,6 +59,7 @@ Deno.serve(async (req) => {
     if (!key) return json({ error: "The writing assistant isn't set up yet." }, 500);
 
     const body = await req.json();
+    if (body?.purpose === "feedback_summary") return await feedbackSummary(user.id, key, body);
     if (body?.purpose === "feedback") return await feedbackCopy(asUser, user.id, key, body);
     if (body?.purpose === "incident") return await feedbackCopy(asUser, user.id, key, body, "incident");
     if (body?.purpose === "mental_health") return await feedbackCopy(asUser, user.id, key, body, "mental_health");
@@ -423,4 +426,66 @@ Reply with JSON only, no other text, shaped like {${wanted.map((p) => `"${p}": [
     options[p] = (options[p] ?? []).map((s) => String(s).replace(/\s*[—–]\s*/g, ", ").trim()).slice(0, 3);
   await admin.from("copy_generations").insert({ team_id: teamId, event_id: eventId ?? null, user_id: userId });
   return json({ options });
+}
+
+
+// A short summary of the member feedback responses (Kai, 7 Nov 2026: "Can we
+// have a summary of responses to feedback survey"). The app sends the
+// responses the organiser can already read; we check they run that community.
+async function feedbackSummary(userId: string, key: string, body: any) {
+  const { teamId } = body ?? {};
+  const responses = Array.isArray(body?.responses) ? body.responses.slice(0, 200) : [];
+  if (!teamId || responses.length === 0) return json({ error: "No responses to summarise yet." }, 400);
+  const url = Deno.env.get("SUPABASE_URL")!;
+  const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const { data: me } = await admin.from("organisers").select("access, team_id, organiser_team_id").eq("id", userId).maybeSingle();
+  if (!me || !(me.access === "god" || me.access === "regional_lead" || me.team_id === teamId || me.organiser_team_id === teamId))
+    return json({ error: "Only organisers can use this." }, 403);
+  const since = new Date(Date.now() - 864e5).toISOString();
+  const { count } = await admin.from("copy_generations").select("id", { count: "exact", head: true }).eq("team_id", teamId).gte("created_at", since);
+  if ((count ?? 0) >= DAILY_LIMIT) return json({ error: "That's a lot of writing for one day. Try again tomorrow." }, 429);
+
+  const clip = (v: unknown) => String(v ?? "").trim().slice(0, 2000);
+  const text = responses
+    .map((r: any, i: number) =>
+      [`--- Response ${i + 1}${r.rating ? ` (rating ${r.rating}/5: ${clip(r.label)})` : ""}`,
+        r.message ? `Message: ${clip(r.message)}` : "",
+        r.going_well ? `Working well: ${clip(r.going_well)}` : "",
+        r.better ? `Make it better: ${clip(r.better)}` : ""].filter(Boolean).join("\n"))
+    .join("\n");
+  const prompt = `These are anonymous-or-named answers from members of a We The Free community (grassroots animal rights group) to a short feedback form: how they're finding it (1-5), what's working well, what would make it better.
+
+${text}
+
+Summarise them for the organisers. Be faithful: only say what the responses say, note how many people raised each point when more than one did ("2 of 3 mentioned…"), and keep anyone's identity out of it (never name a respondent). Group similar points. Call people in the community members, never volunteers, even if the responses say volunteers. Australian spelling, plain warm language, no em or en dashes.
+
+Reply with JSON only, shaped like:
+{"overall": "1-2 sentences on the overall mood", "working": ["short point", ...], "better": ["short point", ...], "ideas": ["a concrete thing the organisers could try, based on the feedback", ...]}
+Each list 1-5 items, each item under 30 words. "ideas" at most 3.`;
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+    body: JSON.stringify({
+      model: Deno.env.get("ANTHROPIC_MODEL") ?? "claude-sonnet-5-5",
+      max_tokens: 1200,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  if (!res.ok) {
+    console.error(res.status, await res.text());
+    return json({ error: "The writing assistant didn't answer. Try again in a moment." }, 502);
+  }
+  const out = await res.json();
+  const raw: string = (out.content ?? []).map((c: { text?: string }) => c.text ?? "").join("");
+  const match = raw.match(/\{[\s\S]*\}/);
+  try {
+    const s = JSON.parse(match ? match[0] : raw);
+    const tidy = (v: unknown) => String(v ?? "").replace(/\s*[—–]\s*/g, ", ").trim();
+    const list = (v: unknown) => (Array.isArray(v) ? v.map(tidy).filter(Boolean).slice(0, 5) : []);
+    await admin.from("copy_generations").insert({ team_id: teamId, event_id: null, user_id: userId });
+    return json({ summary: { overall: tidy(s.overall), working: list(s.working), better: list(s.better), ideas: list(s.ideas).slice(0, 3) } });
+  } catch {
+    return json({ error: "That didn't come out right. Try again." }, 502);
+  }
 }
