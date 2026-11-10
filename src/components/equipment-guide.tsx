@@ -275,7 +275,7 @@ export function Equipment({
   // for a portable kit, else the first.
   const startPick = (i: EquipmentItem) => {
     const p = portable ? (i.options ?? []).findIndex((o) => o.portable) : -1;
-    return have.size === 0 && p >= 0 ? p : firstPick(i, have);
+    return p >= 0 ? p : firstPick(i, have);
   };
   // Building a kit (new organiser, or none of the base kit yet).
   const buildingAny =
@@ -314,6 +314,7 @@ export function Equipment({
               hoverAbout={building}
               recommended={building && base}
               suggested={building && !base && suggestedItem(i)}
+              portable={building && portable}
               pick={
                 building || base ? (picks[i.key] ?? startPick(i)) : undefined
               }
@@ -634,7 +635,11 @@ function EquipmentRow({
   hoverAbout = false,
   recommended = false,
   suggested = false,
+  portable = false,
 }: {
+  // Portable kit: only the portable version, when the item has one (Kai,
+  // 11 Nov 2026: no budget table in portable mode).
+  portable?: boolean;
   suggested?: boolean; // new kit: a recommended upgrade, cyan pill
   // Building a kit: details only when hovering over the name (Kai, 11 Nov).
   hoverAbout?: boolean;
@@ -669,6 +674,7 @@ function EquipmentRow({
   // Items with a purchasing guide keep their shop link inside the guide
   // (Kai, 11 Nov 2026): read it before buying.
   const hasGuide = !!item.guide && opt?.instructions === undefined;
+  const onlyPortable = portable && !!item.options?.some((o) => o.portable);
   const shopUrl = opt?.url ?? item.url;
   const url = hasGuide ? undefined : shopUrl;
   const key = photoKey(item.key, opt);
@@ -873,7 +879,7 @@ function EquipmentRow({
             <div
               role="tablist"
               aria-label={`${item.name} options`}
-              className="inline-flex rounded-full bg-stone-100 p-0.5"
+              className={`${onlyPortable ? "hidden" : "inline-flex"} rounded-full bg-stone-100 p-0.5`}
             >
               {item.options.map((o, n) => (
                 <button
