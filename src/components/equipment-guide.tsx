@@ -663,7 +663,11 @@ function EquipmentRow({
   // Hovering over the photo opens the details too (Kai, 11 Nov 2026).
   const [photoHover, setPhotoHover] = useState(false);
   const opt = item.options?.[pick];
-  const url = opt?.url ?? item.url;
+  // Items with a purchasing guide keep their shop link inside the guide
+  // (Kai, 11 Nov 2026): read it before buying.
+  const hasGuide = !!item.guide && opt?.instructions === undefined;
+  const shopUrl = opt?.url ?? item.url;
+  const url = hasGuide ? undefined : shopUrl;
   const key = photoKey(item.key, opt);
   const owned = inventory.get(invKey(item, opt)) ?? null;
   const has = !!owned;
@@ -799,7 +803,18 @@ function EquipmentRow({
                 {opt?.shop ?? item.shop} ↗
               </a>
             )}
-            {item.guide && opt?.instructions === undefined && (
+            {/* Get it from the RSL: the same Purchasing guide button, its
+                pop-up says to ask them (Kai, 11 Nov 2026). */}
+            {opt?.contactLead && (
+              <button
+                type="button"
+                onClick={() => setContactOpen(true)}
+                className="rounded-lg px-2 py-0.5 text-xs font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50"
+              >
+                Purchasing guide
+              </button>
+            )}
+            {hasGuide && (
               <button
                 type="button"
                 onClick={() => setGuideOpen(true)}
@@ -826,6 +841,19 @@ function EquipmentRow({
                 </li>
               ))}
             </ul>
+            {shopUrl && (
+              <a
+                href={shopUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-block rounded-full bg-pink px-4 py-2 text-sm font-semibold text-navy hover:bg-pink/90"
+              >
+                {opt
+                  ? `Buy the ${opt.label.toLowerCase()} one from ${opt.shop ?? item.shop}`
+                  : `Buy from ${item.shop}`}{" "}
+                ↗
+              </a>
+            )}
           </Sheet>
         )}
         {item.options && (
@@ -881,18 +909,9 @@ function EquipmentRow({
                   Instructions coming soon.
                 </p>
               ))}
-            {opt?.contactLead && (
-              <button
-                type="button"
-                onClick={() => setContactOpen(true)}
-                className="mt-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50"
-              >
-                Contact your Regional Support Lead
-              </button>
-            )}
             {contactOpen && opt?.contactLead && (
               <Sheet
-                title={`${item.name} (${opt.label})`}
+                title={`Buying ${item.name.toLowerCase()} (${opt.label})`}
                 onClose={() => setContactOpen(false)}
               >
                 <p className="text-stone-700">{opt.contactLead}</p>
