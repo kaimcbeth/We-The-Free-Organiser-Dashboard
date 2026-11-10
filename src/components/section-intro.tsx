@@ -140,9 +140,13 @@ function Card({
   return (
     <section
       aria-label={`${intro.name} introduction`}
-      className="mb-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
+      className="relative mb-6 overflow-hidden rounded-2xl bg-navy p-4 text-white shadow-lg shadow-navy/20 ring-2 ring-pink/70 sm:p-5"
     >
-      <div className="flex items-start gap-3">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-pink/25 blur-3xl"
+      />
+      <div className="relative flex items-start gap-3">
         <div
           aria-hidden
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl ${intro.tone}`}
@@ -151,9 +155,9 @@ function Card({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-pink">
               {intro.name} introduction{" "}
-              <span className="font-normal normal-case tracking-normal text-stone-400">
+              <span className="font-normal normal-case tracking-normal text-white/50">
                 · {i + 1} of {intro.steps.length}
               </span>
             </p>
@@ -161,17 +165,17 @@ function Card({
               type="button"
               onClick={() => onClose(intro.key)}
               aria-label="Close the introduction"
-              className="-mr-1 -mt-1 rounded-lg px-2 py-1 text-stone-400 hover:bg-black/5 hover:text-stone-700"
+              className="-mr-1 -mt-1 rounded-lg px-2 py-1 text-white/60 hover:bg-white/10 hover:text-white"
             >
               ×
             </button>
           </div>
-          <h2 className="mt-1 font-semibold tracking-tight">{step.title}</h2>
-          <p className="mt-1 text-sm leading-snug text-stone-600">
-            {step.body}
-          </p>
+          <h2 className="mt-1 text-lg font-semibold tracking-tight text-white">
+            {step.title}
+          </h2>
+          <p className="mt-1 text-sm leading-snug text-white/80">{step.body}</p>
           {missing === i && (
-            <p className="mt-1 text-xs text-stone-400">
+            <p className="mt-1 text-xs text-white/50">
               Nothing to show here yet.
             </p>
           )}
@@ -181,7 +185,7 @@ function Card({
                 <span
                   key={n}
                   className={`h-1.5 rounded-full transition-all ${
-                    n === i ? "w-4 bg-pink" : "w-1.5 bg-stone-300"
+                    n === i ? "w-4 bg-pink" : "w-1.5 bg-white/30"
                   }`}
                 />
               ))}
@@ -190,7 +194,7 @@ function Card({
               <button
                 type="button"
                 onClick={() => setI(i - 1)}
-                className="rounded-lg px-2 py-1 text-sm font-medium text-stone-500 hover:bg-black/5"
+                className="rounded-lg px-2 py-1 text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white"
               >
                 Back
               </button>
@@ -199,7 +203,7 @@ function Card({
               <button
                 type="button"
                 onClick={() => setMissing(glow(step.target!) ? null : i)}
-                className="rounded-lg px-2 py-1 text-sm font-medium text-stone-600 hover:bg-black/5"
+                className="rounded-lg px-2 py-1 text-sm font-medium text-white/85 ring-1 ring-white/25 hover:bg-white/10"
               >
                 Show me
               </button>

@@ -71,7 +71,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Every tab has a short introduction card at the top the first time you open it. Step through it or close it, and it's gone. The ? at the top brings it back.",
+        text: "Every tab has a short introduction card (navy, with a pink edge) at the top the first time you open it. Step through it or close it, and it's gone. The ? at the top brings it back.",
       },
       {
         level: "organiser",
