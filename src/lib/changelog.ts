@@ -79,11 +79,11 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Equipment guide, for new organisers (and communities with none of the base kit yet): a running total for the base kit, with a How many for your kit counter on each item (about $430 on the budget options), which changes as you switch between Budget, DIY and Best. It counts 4 handheld signs (now our recommended start), 2 viewing devices and 2 pairs of headphones. Base kit items also show the price with the 2× local fundraising match. The Best (roll-up) table is $99 including shipping; the budget table needs to be picked up from Bunnings.",
+        text: "Equipment guide, for new organisers (and communities with none of the base kit yet): a running total for the base kit, with a How many for your kit counter on each item (about $430 on the budget options), which changes as you switch between Budget, DIY and Best. It counts 4 handheld signs (now our recommended start), 2 viewing devices and 2 pairs of headphones. Every item shows its price with the 2× match in pink beside the normal price, and a pink note at the top explains it: We The Free matches every local recurring sponsorship 2 for 1. The Best (roll-up) table is $99 including shipping; the budget table needs to be picked up from Bunnings.",
       },
       {
         level: "organiser",
-        text: "Equipment guide: new upgrades: Sign carry bag (A2 and A1 sizes) a portable power station, and the media wall now has its details and price. Every upgrade also shows its price with the 2× local fundraising match, and headphone splitters are now an upgrade instead of base kit.",
+        text: "Equipment guide: new upgrades: Sign carry bag (A2 and A1 sizes) a portable power station, and the media wall now has its details and price., and headphone splitters are now an upgrade instead of base kit.",
       },
     ],
   },

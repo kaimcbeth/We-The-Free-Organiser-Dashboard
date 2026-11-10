@@ -244,6 +244,15 @@ export function Equipment({
           </button>
         </div>
       )}
+      {!hidden && (
+        <p className="rounded-2xl bg-pink/15 px-4 py-3 text-sm text-navy ring-1 ring-pink/40">
+          <b className="font-semibold text-pink-ink">2× matching:</b> We The
+          Free matches every local recurring sponsorship your community raises,
+          2 for 1. Prices in{" "}
+          <span className="font-semibold text-pink-ink">pink</span> are what
+          things cost you with the match.
+        </p>
+      )}
       {!hidden &&
         EQUIPMENT_GUIDE.map((g) => (
           <div key={g.area} className="space-y-6">
@@ -395,16 +404,12 @@ function KitTotal({
       );
     else total += c;
   }
-  const counts = items
-    .filter((i) => qtyOf(i) !== 1)
-    .map((i) => `${qtyOf(i)} ${i.name.toLowerCase()}`)
-    .join(", ");
+
   return (
     <div className="mt-2 flex items-start justify-between gap-3 rounded-xl bg-navy px-3.5 py-2.5 text-white">
       <p className="text-xs leading-snug text-white/70">
         Building your kit? This is the whole base kit with the versions and
-        numbers picked below
-        {counts ? ` (incl. ${counts})` : ""}.
+        numbers picked below.
       </p>
       <p className="shrink-0 text-right leading-tight">
         <span className="block text-[11px] font-semibold uppercase tracking-wide text-pink">
@@ -434,34 +439,6 @@ const OPTION_EMOJI: Record<string, string> = {
   Best: "✨",
   DIY: "🛠️",
 };
-
-// Upgrades: what it costs with the 2x local fundraising match (half).
-function MatchedPrice({
-  item,
-  price,
-}: {
-  item: EquipmentItem;
-  price?: string;
-}) {
-  const parts = item.parts?.reduce(
-    (n, p) =>
-      n +
-      Number(p.price?.replace(/,/g, "").match(/\$(\d+(?:\.\d+)?)/)?.[1] ?? 0),
-    0,
-  );
-  const text = price
-    ? matchedPrice(price)
-    : parts
-      ? `${matchedPrice(`$${parts.toFixed(2)}`)} for all the parts`
-      : null;
-  if (!text || !/\$\d/.test(text)) return null;
-  return (
-    <span className="mt-0.5 block text-sm text-stone-600">
-      With the 2× local fundraising match:{" "}
-      <span className="font-semibold text-pink-ink">{text}</span>
-    </span>
-  );
-}
 
 // One piece of kit, linking to where to buy it. With options (like budget
 // and best), a small toggle switches between them. ticking "In community inventory" adds it to
@@ -533,12 +510,17 @@ function EquipmentRow({
             )}
             <span className="block text-sm text-stone-600">{item.about}</span>
             {(opt ? opt.price : item.price) && (
-              <span className="mt-0.5 block text-sm font-semibold text-navy">
+              <span className="mt-0.5 flex flex-wrap items-baseline gap-x-2 text-sm font-semibold text-navy">
                 {opt ? opt.price : item.price}
+                {matched && (
+                  <span
+                    className="text-pink-ink"
+                    title="With the 2× local fundraising match"
+                  >
+                    {matchedPrice((opt ? opt.price : item.price) ?? "")}
+                  </span>
+                )}
               </span>
-            )}
-            {matched && (
-              <MatchedPrice item={item} price={opt ? opt.price : item.price} />
             )}
             {kitQty !== undefined && onKitQty && (
               <span className="mt-1.5 flex items-center gap-2 text-xs text-stone-500">
