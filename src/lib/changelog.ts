@@ -83,7 +83,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Equipment guide: new upgrades: Sign carry bag (A2 and A1 sizes) a portable power station, and the media wall now has its details and price., and headphone splitters are now an upgrade instead of base kit.",
+        text: "Equipment guide: new upgrades: Sign carry bag (A2 and A1 sizes) and a portable power station. The media wall now has its details and price, and headphone splitters are now an upgrade instead of base kit.",
       },
     ],
   },
