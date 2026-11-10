@@ -1,10 +1,16 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { zipSync } from "fflate";
 import { PHOTO_TAGS, type EventPhoto } from "@/lib/event-photos";
 import { createClient } from "@/lib/supabase/client";
 import { Option } from "@/components/copy-maker";
+import {
+  drawNextEvent,
+  loadNextEvent,
+  loadNextEventFonts,
+  type NextEvent,
+} from "@/components/next-event-slide";
 
 // Carousel (Instagram or Facebook) from an event's photos: each photo full-bleed at 4:5,
 // with the logo bubble top-right and www.activism.wtf bottom-left (like our
@@ -123,6 +129,22 @@ export function CarouselMaker({
   const [shape, setShape] = useState<Shape>("portrait");
   const [branded, setBranded] = useState(true); // WTF logo + website on slides
   const [ratios, setRatios] = useState<Record<string, number>>({}); // w / h, as loaded
+  // Last slide: the next event of the same type (Kai, 11 Nov 2026).
+  const [next, setNext] = useState<NextEvent | null>(null);
+  const [withNext, setWithNext] = useState(true);
+  const [nextPreview, setNextPreview] = useState<string | null>(null);
+  useEffect(() => {
+    if (!eventId) return;
+    let live = true;
+    loadNextEvent(createClient(), eventId)
+      .then((n) => {
+        if (live) setNext(n);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [eventId]);
   const setOne = (id: string, p: Pos) => {
     setPos((all) => ({ ...all, [id]: p }));
     setMade(null);
@@ -134,6 +156,40 @@ export function CarouselMaker({
     shape,
     chosen[0] ? (ratios[chosen[0].id] ?? null) : null,
   );
+
+  const coverUrl = chosen[0]?.url ?? null;
+  const slideCount = chosen.length + (next && withNext ? 1 : 0);
+  // The next-event slide on a canvas, `width` wide (W for the real one).
+  async function drawNext(width: number) {
+    await loadNextEventFonts();
+    const [photo, mark] = await Promise.all([
+      coverUrl ? loadImage(coverUrl).catch(() => null) : null,
+      branded ? loadImage("/brand/wtf-mark.png") : null,
+    ]);
+    const full = document.createElement("canvas");
+    drawNextEvent(full, next!, W, slideH, photo, mark);
+    if (width >= W) return full;
+    const small = document.createElement("canvas");
+    small.width = width;
+    small.height = Math.round((width * slideH) / W);
+    small.getContext("2d")!.drawImage(full, 0, 0, small.width, small.height);
+    return small;
+  }
+
+  useEffect(() => {
+    if (!next || !withNext) return;
+    let live = true;
+    drawNext(320)
+      .then((c) => {
+        if (live) setNextPreview(c.toDataURL("image/jpeg", 0.85));
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+    // drawNext reads these; redraw when they change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [next, withNext, slideH, branded, coverUrl]);
 
   function toggle(id: string) {
     setNote("");
@@ -175,6 +231,24 @@ export function CarouselMaker({
         new File([blob], `${slug}-${String(i + 1).padStart(2, "0")}.jpg`, {
           type: "image/jpeg",
         }),
+      );
+    }
+    if (next && withNext) {
+      setBusy("Making the next event slide…");
+      const c = await drawNext(W);
+      const blob = await new Promise<Blob>((resolve, reject) =>
+        c.toBlob(
+          (b) => (b ? resolve(b) : reject(new Error("no image"))),
+          "image/jpeg",
+          0.92,
+        ),
+      );
+      files.push(
+        new File(
+          [blob],
+          `${slug}-${String(files.length + 1).padStart(2, "0")}.jpg`,
+          { type: "image/jpeg" },
+        ),
       );
     }
     return files;
@@ -321,7 +395,51 @@ export function CarouselMaker({
                 </div>
               </div>
             ))}
+            {next && withNext && (
+              <div className="w-44 shrink-0 snap-start">
+                <div
+                  className="overflow-hidden rounded-lg bg-navy shadow"
+                  style={{ aspectRatio: `${W} / ${slideH}` }}
+                >
+                  {nextPreview && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={nextPreview}
+                      alt="Next event slide"
+                      className="h-full w-full object-cover"
+                    />
+                  )}
+                </div>
+                <p className="mt-1 text-center text-xs text-stone-500">
+                  {chosen.length + 1} · Next event
+                </p>
+              </div>
+            )}
           </div>
+          {next && (
+            <label className="mt-2 flex items-start gap-2 text-sm text-stone-600">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={withNext}
+                onChange={(e) => {
+                  setWithNext(e.target.checked);
+                  setMade(null);
+                }}
+              />
+              <span>
+                End with the next {next.typeName ?? "event like this"}:{" "}
+                <b className="font-semibold text-navy">
+                  {new Intl.DateTimeFormat("en-AU", {
+                    timeZone: next.tz,
+                    weekday: "short",
+                    day: "numeric",
+                    month: "short",
+                  }).format(new Date(next.startsAt))}
+                </b>
+              </span>
+            </label>
+          )}
         </>
       )}
 
@@ -345,7 +463,7 @@ export function CarouselMaker({
             {busy ||
               (made
                 ? `Download ${made.length} slide${made.length === 1 ? "" : "s"}`
-                : `Make ${chosen.length} slide${chosen.length === 1 ? "" : "s"}`)}
+                : `Make ${slideCount} slide${slideCount === 1 ? "" : "s"}`)}
           </button>
         )}
         <button

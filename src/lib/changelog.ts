@@ -78,6 +78,9 @@ export const CHANGELOG: Release[] = [
         text: "The introduction for new organisers is much shorter: a quick look at each tab, then reminders and planning your actions.",
       },
       {
+        text: "Event carousels end with a slide for the next event of the same type (name, day, time and place, over your first photo), when there is one. Untick it under the preview to leave it off.",
+      },
+      {
         level: "organiser",
         text: "Equipment guide, for new organisers (and communities with none of the base kit yet): a Build Your Kit box with a running total for the base kit, with a How many for your kit counter on each item (about $430 on the budget options), which changes as you switch between Budget, DIY and Best. It shows how much of the $400 equipment grant every community gets is used (with a progress bar), and what's left over or what you'd cover yourselves, with and without the 2× sponsorship match. It counts 4 handheld signs (now our recommended start), 2 viewing devices and 2 pairs of headphones. A pink note at the top explains the 2× match: We The Free matches every local recurring sponsorship 2 for 1. The Best (roll-up) table is $99 including shipping; the budget table needs to be picked up from Bunnings.",
       },
