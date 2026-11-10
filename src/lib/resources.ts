@@ -106,6 +106,21 @@ export function matchedPrice(text: string): string {
   });
 }
 
+// What one item costs in a new base kit, for the version showing: the
+// listed price × how many the kit needs ("$137.50 for 4" is already a pack).
+// null = no price listed.
+export function kitCost(
+  item: EquipmentItem,
+  opt?: { price?: string },
+): number | null {
+  const text = opt ? opt.price : item.price;
+  const m = text?.replace(/,/g, "").match(/\$(\d+(?:\.\d+)?)/);
+  if (!m) return null;
+  const qty = item.kitQty ?? 1;
+  const pack = Number(text!.match(/\bfor (\d+)\b/)?.[1] ?? 1);
+  return Number(m[1]) * Math.ceil(qty / pack);
+}
+
 // Which photo slot: the item, or one of its options (e.g. "table:best").
 export const photoKey = (itemKey: string, option?: { label: string }) =>
   option ? `${itemKey}:${option.label.toLowerCase()}` : itemKey;
@@ -124,6 +139,8 @@ export type EquipmentItem = {
   image?: string; // a default photo (under /equipment); uploads replace it
   // Left out of "What to get next" (consumables, or not every team needs it).
   noSuggest?: boolean;
+  // How many a new community's base kit needs (for the kit total; default 1).
+  kitQty?: number;
   // Different versions of the same thing (e.g. budget and best), shown with
   // a toggle. The first is shown to start with; url above matches it.
   options?: {
@@ -175,7 +192,9 @@ export const EQUIPMENT_GUIDE: {
       {
         key: "signs",
         name: "Signs",
-        about: "Signs inviting people to take the challenge.",
+        about:
+          "Signs inviting people to take the challenge. We recommend starting with 4 handheld signs.",
+        kitQty: 4,
         options: [
           {
             label: "DIY",
@@ -206,6 +225,7 @@ export const EQUIPMENT_GUIDE: {
       },
       {
         key: "headphones",
+        kitQty: 2, // one pair per viewing device
         name: "Headphones",
         about: "So people watching can hear the footage properly.",
         shop: "AliExpress",
@@ -214,6 +234,7 @@ export const EQUIPMENT_GUIDE: {
       },
       {
         key: "viewing_devices",
+        kitQty: 2,
         name: "Viewing devices",
         about:
           "What people watch the footage on. Usually laptops, typically two.",

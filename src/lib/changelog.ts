@@ -79,6 +79,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Equipment guide: the base kit now shows a running total for a new kit (about $430 on the budget options), which changes as you switch between Budget, DIY and Best. It counts 4 handheld signs (now our recommended start), 2 viewing devices and 2 pairs of headphones.",
+      },
+      {
+        level: "organiser",
         text: "Equipment guide: new upgrades: Sign carry bag (A2 and A1 sizes) a portable power station, and the media wall now has its details and price. Every upgrade also shows its price with the 2× local fundraising match, and headphone splitters are now an upgrade instead of base kit.",
       },
     ],

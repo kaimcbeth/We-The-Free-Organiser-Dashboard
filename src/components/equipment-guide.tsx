@@ -12,6 +12,7 @@ import {
   CONDITIONS,
   EQUIPMENT_GUIDE,
   PRICES_CHECKED,
+  kitCost,
   matchedPrice,
   photoKey,
   type Condition,
@@ -62,6 +63,9 @@ export function Equipment({
   const [version, setVersion] = useState(0);
   // Guide items the community has, with the condition of (the first of) it.
   const [have, setHave] = useState<Map<string, Owned>>(new Map());
+  // Which version (Budget / Best / DIY) each base kit item is showing, for
+  // the kit total (Kai, 11 Nov 2026: for new organisers building a kit).
+  const [picks, setPicks] = useState<Record<string, number>>({});
   const bump = () => setVersion((v) => v + 1);
   const [photos, setPhotos] = useState<Record<string, string>>({});
 
@@ -250,11 +254,17 @@ export function Equipment({
                   </span>
                 )}
               </div>
+              <KitTotal
+                items={g.items}
+                pickOf={(i) => picks[i.key] ?? firstPick(i, have)}
+              />
               <ul className="mt-2 divide-y divide-black/5">
                 {g.items.map((i) => (
                   <EquipmentRow
                     key={i.key}
                     item={i}
+                    pick={picks[i.key] ?? firstPick(i, have)}
+                    onPick={(n) => setPicks((p) => ({ ...p, [i.key]: n }))}
                     inventory={have}
                     onOwned={
                       teamId ? (opt, c) => setOwned(i, opt, c) : undefined
@@ -334,6 +344,62 @@ const EMPTY: Owned = {
 
 // Which inventory entry: the item, or one version of it (Budget and Best are
 // tracked separately), e.g. "a_frame:budget".
+// The version a row opens on: the one the community has, else the first.
+function firstPick(item: EquipmentItem, inventory: Map<string, Owned>) {
+  return Math.max(
+    0,
+    (item.options ?? []).findIndex((o) => inventory.has(invKey(item, o))),
+  );
+}
+
+// The base kit's cost with the versions showing below, for new organisers.
+function KitTotal({
+  items,
+  pickOf,
+}: {
+  items: EquipmentItem[];
+  pickOf: (i: EquipmentItem) => number;
+}) {
+  let total = 0;
+  const unpriced: string[] = [];
+  for (const i of items) {
+    const opt = i.options?.[pickOf(i)];
+    const c = kitCost(i, opt);
+    if (c === null)
+      unpriced.push(
+        opt
+          ? `${opt.label.toLowerCase()} ${i.name.toLowerCase()}`
+          : i.name.toLowerCase(),
+      );
+    else total += c;
+  }
+  const counts = items
+    .filter((i) => (i.kitQty ?? 1) > 1)
+    .map((i) => `${i.kitQty} ${i.name.toLowerCase()}`)
+    .join(", ");
+  return (
+    <div className="mt-2 flex items-start justify-between gap-3 rounded-xl bg-navy px-3.5 py-2.5 text-white">
+      <p className="text-xs leading-snug text-white/70">
+        Starting from scratch? This is the whole base kit with the versions
+        picked below{counts ? ` (incl. ${counts})` : ""}.
+      </p>
+      <p className="shrink-0 text-right leading-tight">
+        <span className="block text-[11px] font-semibold uppercase tracking-wide text-pink">
+          Base kit total
+        </span>
+        <span className="text-xl font-semibold tabular-nums">
+          ~${Math.round(total).toLocaleString("en-AU")}
+        </span>
+        {unpriced.length > 0 && (
+          <span className="block text-[11px] text-white/60">
+            + {unpriced.join(", ")} (no price yet)
+          </span>
+        )}
+      </p>
+    </div>
+  );
+}
+
 const invKey = (item: EquipmentItem, opt?: Option) =>
   item.options && opt ? photoKey(item.key, opt) : item.key;
 
@@ -386,7 +452,11 @@ function EquipmentRow({
   people = [],
   places = [],
   matched = false,
+  onPick,
+  pick: pickProp,
 }: {
+  pick?: number;
+  onPick?: (n: number) => void; // the Budget / Best toggle changed
   matched?: boolean; // upgrades: also show the 2x fundraising match price
   people?: Person[]; // the community's people (for where it is)
   places?: string[]; // places typed before for any kit
@@ -398,12 +468,8 @@ function EquipmentRow({
   onUpload?: (key: string, file: File) => Promise<boolean>; // staff only
 }) {
   // Open on the version the community has, else the first.
-  const [pick, setPick] = useState(() =>
-    Math.max(
-      0,
-      (item.options ?? []).findIndex((o) => inventory.has(invKey(item, o))),
-    ),
-  );
+  const [ownPick, setPick] = useState(() => firstPick(item, inventory));
+  const pick = pickProp ?? ownPick; // base kit: the page keeps it (kit total)
   const [guideOpen, setGuideOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [locating, setLocating] = useState(false);
@@ -524,7 +590,10 @@ function EquipmentRow({
                   type="button"
                   role="tab"
                   aria-selected={pick === n}
-                  onClick={() => setPick(n)}
+                  onClick={() => {
+                    setPick(n);
+                    onPick?.(n);
+                  }}
                   className={`rounded-full px-3 py-0.5 text-xs font-semibold ${pick === n ? "bg-navy text-white" : "text-stone-600 hover:text-navy"}`}
                 >
                   {OPTION_EMOJI[o.label] && (
