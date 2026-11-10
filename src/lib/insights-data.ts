@@ -37,13 +37,16 @@ export async function loadInsightData(
       .returns<AttendanceRow[]>(),
     supabase
       .from("events")
-      .select("id, starts_at, event_type:event_types(counts_as_outreach)")
+      .select(
+        "id, starts_at, title, event_type:event_types(name, counts_as_outreach)",
+      )
       .eq("team_id", teamId)
       .returns<
         {
           id: string;
           starts_at: string;
-          event_type: { counts_as_outreach: boolean } | null;
+          title: string | null;
+          event_type: { name: string; counts_as_outreach: boolean } | null;
         }[]
       >(),
   ]);
@@ -62,6 +65,8 @@ export async function loadInsightData(
     id: e.id,
     starts_at: e.starts_at,
     outreach: !!e.event_type?.counts_as_outreach,
+    title: e.title,
+    typeName: e.event_type?.name ?? null,
   }));
 
   return { people: people.data ?? [], checkIns, events: evts };

@@ -19,10 +19,6 @@ export const COMING_SOON: { title: string; text: string }[] = [
     text: "More questions for volunteers (training, events, how supported they feel), with results you can compare over time.",
   },
   {
-    title: "Better insights",
-    text: "Clearer trends for your community: how newcomers become regulars, who's drifting, turnout over time and what's working.",
-  },
-  {
     title: "Fuller briefing and debrief guides",
     text: "Much more detailed guides for running the volunteer briefing before outreach and the debrief after.",
   },
@@ -61,6 +57,24 @@ export const COMING_SOON: { title: string; text: string }[] = [
 ];
 
 export const CHANGELOG: Release[] = [
+  {
+    date: "2026-11-11",
+    title: "Insights charts and tab introductions",
+    changes: [
+      {
+        level: "organiser",
+        text: "Insights now opens with charts: people at events each week or month (first-timers and people coming back), where everyone's at, how many newcomers come back, which kinds of events bring people in, and your biggest events. Who to reach out to sits below, and the per-person table is folded away at the bottom.",
+      },
+      {
+        level: "organiser",
+        text: "Every tab has a short introduction card at the top the first time you open it. Step through it or close it, and it's gone. The ? at the top brings it back.",
+      },
+      {
+        level: "organiser",
+        text: "The introduction for new organisers is much shorter: a quick look at each tab, then reminders and planning your actions.",
+      },
+    ],
+  },
   {
     date: "2026-11-05",
     title: "Birthdays",

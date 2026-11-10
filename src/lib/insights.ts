@@ -18,7 +18,13 @@ export type InsightCheckIn = {
   outreach: boolean; // event type counts as outreach
 };
 
-export type InsightEvent = { id: string; starts_at: string; outreach: boolean };
+export type InsightEvent = {
+  id: string;
+  starts_at: string;
+  outreach: boolean;
+  title?: string | null; // for the Insights charts
+  typeName?: string | null;
+};
 
 const DAY = 864e5;
 

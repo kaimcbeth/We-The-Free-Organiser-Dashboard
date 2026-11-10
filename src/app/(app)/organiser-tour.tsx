@@ -24,13 +24,12 @@ type Step = {
   extra?: React.ReactNode; // something to set up right there (Kai, 4 Nov 2026)
 };
 
-const TOUR_MINUTES = 5;
+const TOUR_MINUTES = 2;
 
 // The tour in a few bite-sized parts, so it doesn't feel like a wall of cards.
 const SECTIONS = [
-  { icon: "📅", name: "Events" },
-  { icon: "🧑‍🤝‍🧑", name: "People" },
-  { icon: "📝", name: "Actions" },
+  { icon: "🧭", name: "The tabs" },
+  { icon: "⚙️", name: "Set up" },
 ];
 
 // Welcome tour for new organisers. Ends by asking how much time they have
@@ -59,202 +58,90 @@ export function OrganiserTour({
   // Events → Calendar don't loop); cleared when the card changes.
   const pushed = useRef({ step: -1, keys: new Set<string>() });
 
+  // Kept short (Kai, 7 Nov 2026: "so many features"): one look at each tab,
+  // then two things to set up. Each tab has its own introduction card for
+  // the detail (src/lib/section-intros.ts).
   const steps: Step[] = [
     {
       section: -1,
       icon: "👋",
       tone: "bg-pink",
       title: `Welcome, ${firstName}!`,
-      body: `You're now an organiser for ${communityName}. The introduction has three short parts: your events, your people, and your actions. Along the way you'll set a couple of things up.`,
+      body: `You're now an organiser for ${communityName}. First a quick look at each tab, then two things to set up. When you open a tab for the first time, a short introduction for it waits at the top.`,
     },
     {
       section: 0,
       icon: "📅",
       tone: "bg-cyan",
-      title: "Events come in by themselves",
+      title: "Events",
       href: "/",
-      target: "today-event,next-event",
-      body: "Your events are copied from activism.wtf automatically, so you never have to type them in. Tap “activism.wtf ↗” on any event to open it on the We The Free website.",
+      target: "nav-events",
+      body: "Your events, copied from activism.wtf by themselves. On the day, open the event and tap names as people arrive.",
     },
     {
       section: 0,
-      icon: "🗓️",
+      icon: "📝",
       tone: "bg-yellow",
-      title: "List or calendar",
-      href: "/calendar",
-      target: "view-switch",
-      body: "Calendar shows the whole month at a glance. List puts today's event at the top, with the next one just below. Switch between them here.",
+      title: "Actions",
+      href: "/tasks",
+      target: "nav-actions",
+      body: "The regular jobs that keep your community growing, each with a time estimate. Most come with buttons that do the work for you, like writing the post or making the graphic.",
     },
     {
       section: 0,
+      icon: "🧑‍🤝‍🧑",
+      tone: "bg-pink",
+      title: "People",
+      href: "/people",
+      target: "nav-people",
+      body: "Everyone in your community, who's coming often and who's new, with WhatsApp and Messenger buttons to reach out. Give people roles here to build your crew.",
+    },
+    {
+      section: 0,
+      icon: "📊",
+      tone: "bg-cyan",
+      title: "Insights",
+      href: "/insights",
+      target: "nav-insights",
+      body: "Charts of how your community is growing, and who might need a friendly message.",
+    },
+    {
+      section: 0,
+      icon: "📚",
+      tone: "bg-yellow",
+      title: "Resources",
+      href: "/resources",
+      target: "nav-resources",
+      body: "Guides, forms and tools: the Social Media Hub, the Photo Hub, the Movie Challenge player, prizes, equipment and more.",
+    },
+    {
+      section: 0,
+      icon: "💸",
+      tone: "bg-pink",
+      title: "Funding",
+      href: "/funding",
+      target: "nav-funding",
+      body: "What your community has banked from We The Free, and what to get next with it.",
+    },
+    {
+      section: 1,
       icon: "⏰",
       tone: "bg-pink",
       title: "Your reminders",
       href: "/",
       target: "reminders-link",
-      body: "Set up reminders by email or text: the day before events you're going to, and a heads-up about upcoming ones. Change it any time from Reminders at the top of Events.",
+      body: "Get an email or text the day before events you're going to, and a heads-up about upcoming ones. Change it any time from Reminders at the top of Events.",
       extra: <MyReminders />,
     },
     {
-      section: 0,
-      icon: "🗺️",
-      tone: "bg-cyan",
-      title: "Nearby communities",
-      href: "/calendar",
-      target: "distance-slider",
-      body: "The calendar can show other communities' events too. Slide to see just yours, nearby ones, your region or everywhere. Their events open on activism.wtf.",
-    },
-    {
-      section: 0,
-      icon: "✅",
-      tone: "bg-pink",
-      title: "Attendance in 60 seconds",
-      follow: { on: "/", link: "today-event,next-event" },
-      target: "checkin-list",
-      body: "On the day, open the event and tap names as people arrive. The people most likely to come are at the top, and someone new is one tap away.",
-    },
-    {
-      section: 0,
-      icon: "🙌",
-      tone: "bg-cyan",
-      title: "Hand it off",
-      href: "/",
-      target: "helper-qr",
-      body: "Busy running the event? A member can scan the Helper QR and check people in from their own phone.",
-    },
-    {
-      section: 0,
-      icon: "📊",
-      tone: "bg-yellow",
-      title: "Insights",
-      href: "/insights",
-      target: "insights-table,nav-insights",
-      body: "See who's been coming to events, who's new, who hasn't been in a while, and upcoming milestones like someone's 10th event.",
-    },
-    {
       section: 1,
-      icon: "🧑‍🤝‍🧑",
-      tone: "bg-cyan",
-      title: "People",
-      href: "/people",
-      target: "people-search",
-      body: "Add a name and that's it. Members can add their own details and photo when they connect with their QR code, or you can add their phone number or Facebook link for them.",
-    },
-    {
-      section: 1,
-      icon: "💬",
-      tone: "bg-yellow",
-      title: "Reach out in one tap",
-      href: "/people",
-      target: "people-list",
-      body: "WhatsApp and Messenger buttons sit next to anyone with a phone number or Facebook link.",
-    },
-    {
-      section: 1,
-      icon: "📶",
-      tone: "bg-cyan",
-      title: "Engagement at a glance",
-      href: "/people",
-      target: "engagement-bar,people-list",
-      body: "The little bars show how engaged each person is, from red (rarely comes) to green (comes a lot), out of 10. An arrow means it's gone up or down a lot in the last two months. Hover over a bar to see the score.",
-    },
-    {
-      section: 1,
-      icon: "🤝",
-      tone: "bg-pink",
-      title: "Build your crew",
-      href: "/people",
-      click: "role-button",
-      target: "sheet",
-      whole: true,
-      body: "Tap + Role next to anyone to make them an Organiser or Core Team member, even before they've connected. The role switches on when they join.",
-    },
-    {
-      section: 1,
-      icon: "🌱",
-      tone: "bg-cyan",
-      title: "New member support",
-      follow: { on: "/people", link: "person-ringo" },
-      target: "buddy-section",
-      body: "Ringo is a first-timer, so on his profile George was picked to support him. George checks in and invites him back. Switch on New member support on a welcoming member's profile to add them to this list.",
-    },
-    {
-      section: 2,
       icon: "📝",
       tone: "bg-yellow",
-      title: "Pick your actions",
-      href: "/tasks",
-      click: "choose-open",
-      target: "task-chooser,choose-tasks",
-      whole: true,
-      body: "Actions are the regular jobs that keep a community growing. Tell us how much time you have each week and we'll suggest which ones to switch on. You'll pick yours at the end of the introduction.",
-    },
-    {
-      section: 2,
-      icon: "✔️",
-      tone: "bg-cyan",
-      title: "Your action list",
-      href: "/tasks",
-      target: "task-group,tasks-head",
-      body: "Actions appear around each event on the Actions page, each with a time estimate. Tick them off as you go.",
-    },
-    {
-      section: 2,
-      icon: "📆",
-      tone: "bg-yellow",
-      title: "Promote your event",
-      href: "/tasks",
-      target: "task-fb_event_setup,task-facebook_event,tasks-head",
-      body: "Two weeks before, an action shows up to create the Facebook event. We copy the details for you, so you just paste them into Facebook.",
-    },
-    {
-      section: 2,
-      icon: "📣",
-      tone: "bg-pink",
-      title: "Share in local Facebook groups",
-      href: "/tasks",
-      target: "task-promote_facebook_groups",
-      body: "We keep a database of over 600 local vegan Facebook groups. A week before each event, tap “Open all” and every group near you opens in its own tab, ready to post. One click, every group.",
-    },
-    {
-      section: 2,
-      icon: "🚓",
-      tone: "bg-cyan",
-      title: "Police approval in two taps",
-      href: "/tasks",
-      target: "task-approval_submitted,tasks-head",
-      body: "For outreach events, an action shows up three weeks before to notify the police. Tap Fill in & send: we fill in the form from the event and your saved details, and email it to the police for you, with you CC'd.",
-    },
-    {
-      section: 2,
-      icon: "🙋",
-      tone: "bg-yellow",
-      title: "Hand actions to your crew",
-      href: "/tasks",
-      click: "delegate-button",
-      target: "sheet",
-      whole: true,
-      body: "Tap Delegate on any action and pick who'll do it, just this once or every time. They get a notification and see it on their page.",
-    },
-    {
-      section: 2,
-      icon: "🔔",
-      tone: "bg-cyan",
-      title: "Notifications",
-      href: "/tasks",
-      click: "bell",
-      target: "bell-menu",
-      body: "The bell keeps you in the loop: actions due, newcomers, and what your Core Team has picked up.",
-    },
-    {
-      section: 2,
-      icon: "📝",
-      tone: "bg-yellow",
-      title: "Set up your actions",
+      title: "Plan your actions",
       href: "/tasks",
       target: "choose-tasks,nav-actions",
       choose: true,
-      body: "Last step: tell us how much time you have and pick which actions you want for your community. You can change them any time.",
+      body: "Last step: tell us how much time you have each week and we'll suggest which actions to switch on. You can change them any time.",
     },
   ];
 
@@ -422,7 +309,9 @@ export function OrganiserTour({
     : last
       ? "Finish"
       : steps[i + 1].section !== step.section
-        ? `${i === 0 ? "Start with" : "Next:"} ${SECTIONS[steps[i + 1].section].name}`
+        ? i === 0
+          ? "Let's go"
+          : `Next: ${SECTIONS[steps[i + 1].section].name}`
         : "Next";
 
   // Spotlighting something: a small card tucked next to it, so the page
