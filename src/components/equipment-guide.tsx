@@ -962,9 +962,7 @@ function HoverDetails({
   if (!text) return <>{children}</>;
   return (
     <span className="group/details relative inline-block">
-      <span className="cursor-help border-b border-dotted border-stone-400">
-        {children}
-      </span>
+      <span className="cursor-help">{children}</span>
       <span
         role="tooltip"
         className="pointer-events-none invisible absolute left-0 top-full z-20 mt-1.5 w-72 max-w-[80vw] rounded-lg bg-navy px-3 py-2 text-sm font-normal leading-snug text-white opacity-0 shadow-lg transition-opacity group-focus-within/details:visible group-focus-within/details:opacity-100 group-hover/details:visible group-hover/details:opacity-100"
