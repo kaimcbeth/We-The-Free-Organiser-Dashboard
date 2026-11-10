@@ -151,6 +151,12 @@ export type EquipmentItem = {
   image?: string; // a default photo (under /equipment); uploads replace it
   // Left out of "What to get next" (consumables, or not every team needs it).
   noSuggest?: boolean;
+  // An upgrade we recommend: a "Recommended" pill when building a kit (Kai,
+  // 11 Nov 2026; base kit items say "Essential").
+  recommended?: boolean;
+  // Portable kit (no car to carry it, Kai 11 Nov 2026): how the item counts
+  // when the community picks "Portable" in Build Your Kit.
+  portable?: "essential" | "recommended";
   // How many a new community's base kit needs (for the kit total; default 1).
   kitQty?: number;
   // Different versions of the same thing (e.g. budget and best), shown with
@@ -163,6 +169,7 @@ export type EquipmentItem = {
     instructions?: string; // DIY: link to how-to ("" = coming soon)
     contactLead?: string; // get it from your Regional Support Lead (pop-up text)
     image?: string; // a default photo for this option
+    portable?: boolean; // the version to start on for a portable kit
     product?: string; // when the options are different products
     shop?: string; // when they're from a different shop
   }[];
@@ -196,6 +203,7 @@ export const EQUIPMENT_GUIDE: {
             label: "Best",
             product: "Kings Aluminium Roll-Up Camp Table (Large)",
             about: "Rolls up small to carry.",
+            portable: true,
             price: "$99 including shipping",
             shop: "4WD Supacentre",
             url: "https://www.4wdsupacentre.com.au/kings-aluminium-roll-up-camping-table-large-rechargeable-lithium-led-worklight.html",
@@ -286,6 +294,7 @@ export const EQUIPMENT_GUIDE: {
       {
         key: "headphone_splitters",
         name: "Headphone splitters",
+        recommended: true,
         about: "Plug more than one pair of headphones into the same screen.",
         shop: "AliExpress",
         url: "https://www.aliexpress.com/item/1005006364582345.html",
@@ -352,6 +361,7 @@ export const EQUIPMENT_GUIDE: {
       {
         key: "hand_trolley",
         noSuggest: true,
+        portable: "essential",
         name: "Hand trolley",
         about:
           "Folding trolley for carrying the gear. More details coming soon.",
@@ -394,6 +404,7 @@ export const EQUIPMENT_GUIDE: {
       },
       {
         key: "sign_carry_bag",
+        portable: "recommended",
         name: "Sign carry bag",
         about:
           "Keeps your signs flat, dry and in one piece between events, and makes them easy to carry.",

@@ -78,8 +78,15 @@ export function Equipment({
   const baseKeys = new Set(
     EQUIPMENT_GUIDE.flatMap((g) => g.items.map((i) => i.key)),
   );
+  // Portable kit: no car to carry it (Kai, 11 Nov 2026). Some items become
+  // essential or recommended, and items with a portable version start on it.
+  const [portable, setPortable] = useState(false);
+  const essential = (i: EquipmentItem) =>
+    baseKeys.has(i.key) || (portable && i.portable === "essential");
+  const suggestedItem = (i: EquipmentItem) =>
+    !!i.recommended || (portable && i.portable === "recommended");
   const qtyOf = (i: EquipmentItem) =>
-    qtys[i.key] ?? (baseKeys.has(i.key) ? (i.kitQty ?? 1) : 0);
+    qtys[i.key] ?? (essential(i) ? (i.kitQty ?? 1) : 0);
   const bump = () => setVersion((v) => v + 1);
   // The order God set (Kai, 11 Nov 2026); items not in it keep their code
   // order, after the ones that are.
@@ -264,6 +271,12 @@ export function Equipment({
   // An item counts as had if any version of it is in the inventory.
   const hasAny = (i: EquipmentItem) =>
     i.options ? i.options.some((o) => have.has(invKey(i, o))) : have.has(i.key);
+  // The version a row starts on: the community's, else the portable one
+  // for a portable kit, else the first.
+  const startPick = (i: EquipmentItem) => {
+    const p = portable ? (i.options ?? []).findIndex((o) => o.portable) : -1;
+    return have.size === 0 && p >= 0 ? p : firstPick(i, have);
+  };
   // Building a kit (new organiser, or none of the base kit yet).
   const buildingAny =
     newOrganiser ||
@@ -300,10 +313,9 @@ export function Equipment({
               noAbout={base}
               hoverAbout={building}
               recommended={building && base}
+              suggested={building && !base && suggestedItem(i)}
               pick={
-                building || base
-                  ? (picks[i.key] ?? firstPick(i, have))
-                  : undefined
+                building || base ? (picks[i.key] ?? startPick(i)) : undefined
               }
               kitQty={
                 building && (i.price || i.options?.some((o) => o.price))
@@ -335,7 +347,7 @@ export function Equipment({
                       items={sorted([...g.items, ...g.upgrades]).map((i) => ({
                         key: i.key,
                         name: i.name,
-                        essential: baseKeys.has(i.key),
+                        essential: essential(i),
                       }))}
                       onSaved={setOrder}
                     />
@@ -358,16 +370,50 @@ export function Equipment({
                   </div>
                 )}
                 {building && (
+                  <div>
+                    <HoverDetails text="For communities without a car, or carrying the kit on public transport. It switches to the roll-up table and recommends a hand trolley and a sign carry bag, so everything can be carried in one trip.">
+                      <button
+                        type="button"
+                        aria-pressed={portable}
+                        onClick={(e) => {
+                          e.currentTarget.blur(); // closes the pop-up
+                          setPortable(!portable);
+                          // Start the items it changes again from the new
+                          // defaults.
+                          const keys = [...g.items, ...g.upgrades]
+                            .filter(
+                              (i) =>
+                                i.portable ||
+                                i.options?.some((x) => x.portable),
+                            )
+                            .map((i) => i.key);
+                          const drop = <T,>(r: Record<string, T>) =>
+                            Object.fromEntries(
+                              Object.entries(r).filter(
+                                ([k]) => !keys.includes(k),
+                              ),
+                            );
+                          setQtys(drop);
+                          setPicks(drop);
+                        }}
+                        className={`rounded-full px-3.5 py-1 text-sm font-semibold ring-1 ${portable ? "bg-navy text-white ring-navy" : "bg-white text-navy ring-black/15 hover:ring-navy"}`}
+                      >
+                        Portable kit
+                      </button>
+                    </HoverDetails>
+                  </div>
+                )}
+                {building && (
                   <KitTotal
                     items={[...g.items, ...g.upgrades]}
-                    pickOf={(i) => picks[i.key] ?? firstPick(i, have)}
+                    pickOf={(i) => picks[i.key] ?? startPick(i)}
                     qtyOf={qtyOf}
                   />
                 )}
                 <ul className="mt-2 divide-y divide-black/5">
                   {building
                     ? sorted([...g.items, ...g.upgrades]).map((i) =>
-                        row(i, baseKeys.has(i.key)),
+                        row(i, essential(i)),
                       )
                     : sorted(g.items).map((i) => row(i, true))}
                 </ul>
@@ -482,7 +528,7 @@ function KitTotal({
         <p className="leading-snug">
           <span className="block font-semibold">Build Your Kit</span>
           <span className="mt-0.5 block text-xs text-white/70">
-            Hover over the name of an item to get more details.
+            Hover over an item&apos;s name or picture to get more details.
           </span>
         </p>
         <p className="shrink-0 text-right leading-tight">
@@ -587,7 +633,9 @@ function EquipmentRow({
   noAbout = false,
   hoverAbout = false,
   recommended = false,
+  suggested = false,
 }: {
+  suggested?: boolean; // new kit: a recommended upgrade, cyan pill
   // Building a kit: details only when hovering over the name (Kai, 11 Nov).
   hoverAbout?: boolean;
   recommended?: boolean; // new kit: base kit item, Essential pill
@@ -612,6 +660,8 @@ function EquipmentRow({
   const [guideOpen, setGuideOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [locating, setLocating] = useState(false);
+  // Hovering over the photo opens the details too (Kai, 11 Nov 2026).
+  const [photoHover, setPhotoHover] = useState(false);
   const opt = item.options?.[pick];
   const url = opt?.url ?? item.url;
   const key = photoKey(item.key, opt);
@@ -632,19 +682,26 @@ function EquipmentRow({
   );
   return (
     <li className="flex gap-3 py-2.5">
-      <PhotoSlot
-        key={key}
-        photo={photo}
-        alt={opt?.product ?? item.name}
-        href={url}
-        onUpload={onUpload ? (f) => onUpload(key, f) : undefined}
-      />
+      <div
+        className="shrink-0"
+        onMouseEnter={hoverAbout ? () => setPhotoHover(true) : undefined}
+        onMouseLeave={hoverAbout ? () => setPhotoHover(false) : undefined}
+      >
+        <PhotoSlot
+          key={key}
+          photo={photo}
+          alt={opt?.product ?? item.name}
+          href={url}
+          onUpload={onUpload ? (f) => onUpload(key, f) : undefined}
+        />
+      </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
           <span>
             <span className="flex flex-wrap items-center gap-x-2">
               {hoverAbout ? (
                 <HoverDetails
+                  open={photoHover}
                   text={[item.about, opt?.about].filter(Boolean).join(" ")}
                 >
                   {name}
@@ -655,6 +712,11 @@ function EquipmentRow({
               {recommended && (
                 <span className="rounded-full bg-pink px-2 py-0.5 text-[11px] font-semibold text-navy">
                   Essential
+                </span>
+              )}
+              {suggested && (
+                <span className="rounded-full bg-cyan px-2 py-0.5 text-[11px] font-semibold text-navy">
+                  Recommended
                 </span>
               )}
             </span>
@@ -954,9 +1016,11 @@ function EquipmentRow({
 // its name, for the Build Your Kit list (Kai, 11 Nov 2026).
 function HoverDetails({
   text,
+  open = false,
   children,
 }: {
   text: string;
+  open?: boolean; // shown anyway (e.g. hovering over the photo)
   children: React.ReactNode;
 }) {
   if (!text) return <>{children}</>;
@@ -965,7 +1029,7 @@ function HoverDetails({
       <span className="cursor-help">{children}</span>
       <span
         role="tooltip"
-        className="pointer-events-none invisible absolute left-0 top-full z-20 mt-1.5 w-72 max-w-[80vw] rounded-lg bg-navy px-3 py-2 text-sm font-normal leading-snug text-white opacity-0 shadow-lg transition-opacity group-focus-within/details:visible group-focus-within/details:opacity-100 group-hover/details:visible group-hover/details:opacity-100"
+        className={`pointer-events-none absolute left-0 top-full z-20 mt-1.5 w-72 max-w-[80vw] rounded-lg bg-navy px-3 py-2 text-sm font-normal leading-snug text-white shadow-lg transition-opacity group-focus-within/details:visible group-focus-within/details:opacity-100 group-hover/details:visible group-hover/details:opacity-100 ${open ? "visible opacity-100" : "invisible opacity-0"}`}
       >
         {text}
       </span>

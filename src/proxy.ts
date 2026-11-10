@@ -16,6 +16,7 @@ const PUBLIC_PATHS = [
   "/calendar", // calendar feeds (secret link per community; apps can't log in)
   "/upcoming", // a community's upcoming events, to share with anyone
   "/guide", // Outreach guide questions (newcomers scan a QR code for it)
+  "/demo", // public demos to share (Build Your Kit, 11 Nov 2026)
   "/resources/movie-player.html", // blank offline player; the Hub's download adds the community link
 ];
 

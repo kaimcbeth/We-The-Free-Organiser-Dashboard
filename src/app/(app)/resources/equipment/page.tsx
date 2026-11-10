@@ -27,6 +27,8 @@ export default async function EquipmentPage() {
   );
   const hasBaseKit =
     !!owned && [...owned].some((k) => baseKeys.has(k.split(":")[0]));
+  // Building a kit: same test as the Equipment guide's.
+  const building = newOrganiser || (!!teamId && !hasBaseKit);
   const gear =
     owned && !newOrganiser && hasBaseKit
       ? gearSuggestions(
@@ -44,13 +46,19 @@ export default async function EquipmentPage() {
       >
         ← Resources &amp; Training
       </Link>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight">
-        Equipment guide and inventory
-      </h1>
-      <p className="mt-1 text-stone-600">
-        What to buy for the Movie Challenge and where, what your community
-        already has, and who has it.
-      </p>
+      {/* No page heading while building a kit (Kai, 11 Nov 2026): the
+          Build Your Kit box leads. */}
+      {!building && (
+        <>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight">
+            Equipment guide and inventory
+          </h1>
+          <p className="mt-1 text-stone-600">
+            What to buy for the Movie Challenge and where, what your community
+            already has, and who has it.
+          </p>
+        </>
+      )}
       {gear && (
         <div className="mt-5">
           <GearSuggestions
