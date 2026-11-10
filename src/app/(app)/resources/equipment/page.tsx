@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireOrganiser } from "@/lib/organiser";
 import { Equipment } from "@/components/equipment-guide";
 import { GearSuggestions } from "@/components/gear-suggestions";
+import { EQUIPMENT_GUIDE } from "@/lib/resources";
 import {
   MOCK_BANKED,
   MOCK_SAVING,
@@ -16,14 +17,25 @@ export default async function EquipmentPage() {
     organiser.allCommunities || organiser.exampleMode
       ? null
       : organiser.team_id;
-  const gear = teamId
-    ? gearSuggestions(
-        await loadOwnedGear(supabase, teamId),
-        MOCK_BANKED,
-        MOCK_SAVING,
-        await loadEquipmentPhotos(supabase),
-      )
-    : null;
+  const owned = teamId ? await loadOwnedGear(supabase, teamId) : null;
+  // New organisers (and communities with none of the base kit yet) build
+  // their kit with the kit total below instead (Kai, 11 Nov 2026).
+  const newOrganiser =
+    organiser.tourPreview || !!organiser.viewValue?.startsWith("new_organiser");
+  const baseKeys = new Set(
+    EQUIPMENT_GUIDE.flatMap((g) => g.items.map((i) => i.key)),
+  );
+  const hasBaseKit =
+    !!owned && [...owned].some((k) => baseKeys.has(k.split(":")[0]));
+  const gear =
+    owned && !newOrganiser && hasBaseKit
+      ? gearSuggestions(
+          owned,
+          MOCK_BANKED,
+          MOCK_SAVING,
+          await loadEquipmentPhotos(supabase),
+        )
+      : null;
   return (
     <>
       <Link
@@ -52,10 +64,7 @@ export default async function EquipmentPage() {
       <div className="mt-5">
         <Equipment
           teamId={teamId}
-          newOrganiser={
-            organiser.tourPreview ||
-            !!organiser.viewValue?.startsWith("new_organiser")
-          }
+          newOrganiser={newOrganiser}
           canEditPhotos={
             organiser.role === "god" || organiser.role === "regional_lead"
           }
