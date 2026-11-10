@@ -202,9 +202,9 @@ export const EQUIPMENT_GUIDE: {
           {
             label: "Best",
             product: "Kings Aluminium Roll-Up Camp Table (Large)",
-            about: "Rolls up small to carry.",
+            about: "Rolls up small to carry. The price includes shipping.",
             portable: true,
-            price: "$99 including shipping",
+            price: "$99",
             shop: "4WD Supacentre",
             url: "https://www.4wdsupacentre.com.au/kings-aluminium-roll-up-camping-table-large-rechargeable-lithium-led-worklight.html",
             image: "/equipment/table-kings.jpg",
@@ -460,10 +460,10 @@ export const EQUIPMENT_GUIDE: {
         key: "media_wall",
         name: "Media wall",
         about:
-          "A big printed fabric backdrop on a straight frame, 1.5 m wide × 2.2 m high. Great for photos at events and stalls. Premium fabric, single sided, with a bottom zipper.",
+          "A big printed fabric backdrop on a straight frame, 1.5 m wide × 2.2 m high. Great for photos at events and stalls. Premium fabric, single sided, with a bottom zipper. The price includes delivery.",
         shop: "Easy Signs",
         url: "https://www.easysigns.com.au/products/details/stretch-fabric-media-wall",
-        price: "$329.20 inc delivery",
+        price: "$329.20",
       },
       {
         key: "sign_poles",
