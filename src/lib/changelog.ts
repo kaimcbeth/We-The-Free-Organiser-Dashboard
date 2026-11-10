@@ -78,6 +78,7 @@ export const CHANGELOG: Release[] = [
         text: "The introduction for new organisers is much shorter: a quick look at each tab, then reminders and planning your actions.",
       },
       {
+        level: "organiser",
         text: "Event carousels end with a slide for the next event of the same type (name, day, time and place, over your first photo), when there is one. Untick it under the preview to leave it off.",
       },
       {

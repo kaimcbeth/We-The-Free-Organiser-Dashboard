@@ -382,7 +382,7 @@ export const EQUIPMENT_GUIDE: {
           "Clamp the video stations to the table so they stay put in high wind.",
         shop: "Bunnings",
         url: "https://www.bunnings.com.au/trojan-100mm-spring-clamp_p0319718",
-        price: "$8.48 each (Trojan 100mm)",
+        price: "$8.48 each",
       },
       {
         key: "sign_clamps",
