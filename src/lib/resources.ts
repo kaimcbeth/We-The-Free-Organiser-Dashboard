@@ -292,6 +292,29 @@ export const EQUIPMENT_GUIDE: {
     ],
     upgrades: [
       {
+        key: "sign_carry_bag",
+        portable: "essential",
+        name: "Sign carry bag",
+        about:
+          "Keeps your signs flat, dry and in one piece between events, and makes them easy to carry.",
+        shop: "AliExpress",
+        url: "https://www.aliexpress.com/item/1005008990198241.html",
+        options: [
+          {
+            label: "A2",
+            about: "Fits A2 signs (420 × 594 mm).",
+            url: "https://www.aliexpress.com/item/1005008990198241.html",
+            price: "~$14",
+          },
+          {
+            label: "A1",
+            about: "Fits bigger A1 signs (594 × 841 mm).",
+            url: "https://www.aliexpress.com/item/1005013138921601.html",
+            price: "~$13",
+          },
+        ],
+      },
+      {
         key: "headphone_splitters",
         name: "Headphone splitters",
         recommended: true,
@@ -401,29 +424,6 @@ export const EQUIPMENT_GUIDE: {
         shop: "Amazon",
         url: "https://www.amazon.com.au/dp/B0G4S4VHX6",
         price: "~$15",
-      },
-      {
-        key: "sign_carry_bag",
-        portable: "essential",
-        name: "Sign carry bag",
-        about:
-          "Keeps your signs flat, dry and in one piece between events, and makes them easy to carry.",
-        shop: "AliExpress",
-        url: "https://www.aliexpress.com/item/1005008990198241.html",
-        options: [
-          {
-            label: "A2",
-            about: "Fits A2 signs (420 × 594 mm).",
-            url: "https://www.aliexpress.com/item/1005008990198241.html",
-            price: "~$14",
-          },
-          {
-            label: "A1",
-            about: "Fits bigger A1 signs (594 × 841 mm).",
-            url: "https://www.aliexpress.com/item/1005013138921601.html",
-            price: "~$13",
-          },
-        ],
       },
       {
         key: "power_station",
