@@ -711,16 +711,8 @@ function EquipmentRow({
             </div>
             {opt && (
               <p className="mt-1 text-sm text-stone-600">
-                {opt.product && (
-                  <a
-                    href={opt.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-medium text-navy hover:underline"
-                  >
-                    {opt.product}.{" "}
-                  </a>
-                )}
+                {/* Product name left off (Kai, 11 Nov); the photo and shop
+                    link still go to it. */}
                 {opt.about}
               </p>
             )}
