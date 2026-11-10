@@ -96,6 +96,16 @@ export const CONDITIONS: { id: Condition; label: string }[] = [
 // When the prices in the guide were taken from the shops' listings.
 export const PRICES_CHECKED = "29 October 2026";
 
+// Upgrades: the price once local fundraising is matched 2 for 1 (Kai,
+// 11 Nov 2026), i.e. every dollar amount halved. "$132.44 with 2 signs"
+// -> "$66.22 with 2 signs".
+export function matchedPrice(text: string): string {
+  return text.replace(/\$(\d[\d,]*(?:\.\d+)?)/g, (_, n: string) => {
+    const half = Number(n.replace(/,/g, "")) / 2;
+    return `$${Number.isInteger(half) ? half : half.toFixed(2)}`;
+  });
+}
+
 // Which photo slot: the item, or one of its options (e.g. "table:best").
 export const photoKey = (itemKey: string, option?: { label: string }) =>
   option ? `${itemKey}:${option.label.toLowerCase()}` : itemKey;
@@ -203,14 +213,6 @@ export const EQUIPMENT_GUIDE: {
         price: "$8.19",
       },
       {
-        key: "headphone_splitters",
-        name: "Headphone splitters",
-        about: "Plug more than one pair of headphones into the same screen.",
-        shop: "AliExpress",
-        url: "https://www.aliexpress.com/item/1005006364582345.html",
-        price: "~$4 each",
-      },
-      {
         key: "viewing_devices",
         name: "Viewing devices",
         about:
@@ -246,6 +248,14 @@ export const EQUIPMENT_GUIDE: {
       },
     ],
     upgrades: [
+      {
+        key: "headphone_splitters",
+        name: "Headphone splitters",
+        about: "Plug more than one pair of headphones into the same screen.",
+        shop: "AliExpress",
+        url: "https://www.aliexpress.com/item/1005006364582345.html",
+        price: "~$4 each",
+      },
       {
         key: "a_frame",
         name: "A-frame sign",

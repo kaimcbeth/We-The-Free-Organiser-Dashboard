@@ -12,6 +12,7 @@ import {
   CONDITIONS,
   EQUIPMENT_GUIDE,
   PRICES_CHECKED,
+  matchedPrice,
   photoKey,
   type Condition,
   type EquipmentItem,
@@ -282,6 +283,7 @@ export function Equipment({
                   {g.upgrades.map((i) => (
                     <EquipmentRow
                       key={i.key}
+                      matched
                       item={i}
                       inventory={have}
                       onOwned={
@@ -343,6 +345,34 @@ const OPTION_EMOJI: Record<string, string> = {
   DIY: "🛠️",
 };
 
+// Upgrades: what it costs with the 2x local fundraising match (half).
+function MatchedPrice({
+  item,
+  price,
+}: {
+  item: EquipmentItem;
+  price?: string;
+}) {
+  const parts = item.parts?.reduce(
+    (n, p) =>
+      n +
+      Number(p.price?.replace(/,/g, "").match(/\$(\d+(?:\.\d+)?)/)?.[1] ?? 0),
+    0,
+  );
+  const text = price
+    ? matchedPrice(price)
+    : parts
+      ? `${matchedPrice(`$${parts.toFixed(2)}`)} for all the parts`
+      : null;
+  if (!text || !/\$\d/.test(text)) return null;
+  return (
+    <span className="mt-0.5 block text-sm text-stone-600">
+      With the 2× local fundraising match:{" "}
+      <span className="font-semibold text-pink-ink">{text}</span>
+    </span>
+  );
+}
+
 // One piece of kit, linking to where to buy it. With options (like budget
 // and best), a small toggle switches between them. ticking "In community inventory" adds it to
 // the community's gear (the option showing is the one recorded).
@@ -355,7 +385,9 @@ function EquipmentRow({
   onUpload,
   people = [],
   places = [],
+  matched = false,
 }: {
+  matched?: boolean; // upgrades: also show the 2x fundraising match price
   people?: Person[]; // the community's people (for where it is)
   places?: string[]; // places typed before for any kit
   item: EquipmentItem;
@@ -410,6 +442,9 @@ function EquipmentRow({
               <span className="mt-0.5 block text-sm font-semibold text-navy">
                 {opt ? opt.price : item.price}
               </span>
+            )}
+            {matched && (
+              <MatchedPrice item={item} price={opt ? opt.price : item.price} />
             )}
             {item.parts && (
               <ul className="mt-1 space-y-0.5">
