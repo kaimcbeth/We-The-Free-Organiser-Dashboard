@@ -264,7 +264,7 @@ export function Equipment({
                 <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
                   {g.area}
                 </span>
-                {teamId && (
+                {teamId && !newOrganiser && g.items.some((i) => hasAny(i)) && (
                   <span className="ml-auto text-sm text-stone-500">
                     You have {g.items.filter((i) => hasAny(i)).length} of{" "}
                     {g.items.length}
