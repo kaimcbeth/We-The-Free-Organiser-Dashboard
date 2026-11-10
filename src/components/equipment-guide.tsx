@@ -250,6 +250,9 @@ export function Equipment({
           <b className="font-semibold text-pink-ink">2× matching:</b> We The
           Free matches every local recurring sponsorship your community raises,
           2 for 1.
+          <span className="mt-1 block text-xs text-stone-600">
+            All prices are estimates and can vary.
+          </span>
         </p>
       )}
       {!hidden &&
@@ -480,6 +483,9 @@ function KitTotal({
           </>
         )}
       </dl>
+      <p className="mt-2 text-[11px] leading-snug text-white/55">
+        All prices are estimates and can change.
+      </p>
     </div>
   );
 }
