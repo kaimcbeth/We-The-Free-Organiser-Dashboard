@@ -249,9 +249,7 @@ export function Equipment({
         <p className="rounded-2xl bg-pink/15 px-4 py-3 text-sm text-navy ring-1 ring-pink/40">
           <b className="font-semibold text-pink-ink">2× matching:</b> We The
           Free matches every local recurring sponsorship your community raises,
-          2 for 1. Prices in{" "}
-          <span className="font-semibold text-pink-ink">pink</span> are what
-          things cost you with the match.
+          2 for 1.
         </p>
       )}
       {!hidden &&
@@ -283,7 +281,6 @@ export function Equipment({
                   <EquipmentRow
                     key={i.key}
                     item={i}
-                    matched
                     noAbout
                     pick={picks[i.key] ?? firstPick(i, have)}
                     kitQty={
@@ -322,7 +319,6 @@ export function Equipment({
                   {g.upgrades.map((i) => (
                     <EquipmentRow
                       key={i.key}
-                      matched
                       item={i}
                       inventory={have}
                       onOwned={
