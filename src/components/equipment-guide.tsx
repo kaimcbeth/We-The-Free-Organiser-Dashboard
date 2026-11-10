@@ -403,8 +403,7 @@ function KitTotal({
     <div className="mt-2 flex items-start justify-between gap-3 rounded-xl bg-navy px-3.5 py-2.5 text-white">
       <p className="text-xs leading-snug text-white/70">
         Building your kit? This is the whole base kit with the versions and
-        numbers picked below, and what it costs you with the 2× local
-        fundraising match
+        numbers picked below
         {counts ? ` (incl. ${counts})` : ""}.
       </p>
       <p className="shrink-0 text-right leading-tight">
@@ -414,12 +413,7 @@ function KitTotal({
         <span className="text-xl font-semibold tabular-nums">
           ~${Math.round(total).toLocaleString("en-AU")}
         </span>
-        <span className="block text-xs text-white/75">
-          <b className="font-semibold text-pink">
-            ~${Math.round(total / 2).toLocaleString("en-AU")}
-          </b>{" "}
-          with the 2× match
-        </span>
+
         {unpriced.length > 0 && (
           <span className="block text-[11px] text-white/60">
             + {unpriced.join(", ")} (no price yet)
