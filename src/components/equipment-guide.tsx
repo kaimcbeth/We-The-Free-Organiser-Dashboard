@@ -22,6 +22,7 @@ import {
 import { shrink } from "@/components/photo-uploader";
 import { PhotoSlot } from "@/components/photo-slot";
 import { Sheet } from "@/components/sheet";
+import { EquipmentOrderButton } from "@/components/equipment-order";
 
 // Equipment: the recommended kit (base kit, then upgrades) with where to buy
 // it, which of it the community already has, and the community's gear list
@@ -55,7 +56,9 @@ export function Equipment({
   teamId,
   canEditPhotos = false,
   newOrganiser = false,
+  isGod = false,
 }: {
+  isGod?: boolean; // God Mode: can change the order of the list
   teamId: string | null;
   // New organisers building a kit see the base kit total and how-many
   // boxes (Kai, 11 Nov 2026: "only for new organisers view").
@@ -63,8 +66,6 @@ export function Equipment({
   canEditPhotos?: boolean; // Regional Support Leads and God Mode
 }) {
   const stored = useSyncExternalStore(subscribe, readHidden, () => false);
-  // Only an inventory to show if there's a community to keep one for.
-  const hidden = !!teamId && stored;
   const [version, setVersion] = useState(0);
   // Guide items the community has, with the condition of (the first of) it.
   const [have, setHave] = useState<Map<string, Owned>>(new Map());
@@ -80,6 +81,32 @@ export function Equipment({
   const qtyOf = (i: EquipmentItem) =>
     qtys[i.key] ?? (baseKeys.has(i.key) ? (i.kitQty ?? 1) : 0);
   const bump = () => setVersion((v) => v + 1);
+  // The order God set (Kai, 11 Nov 2026); items not in it keep their code
+  // order, after the ones that are.
+  const [order, setOrder] = useState<string[]>([]);
+  useEffect(() => {
+    let live = true;
+    createClient()
+      .from("equipment_order")
+      .select("item_key")
+      .order("position")
+      .then(({ data }) => {
+        if (live) setOrder((data ?? []).map((r) => r.item_key as string));
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
+  const sorted = (list: EquipmentItem[]) => {
+    const at = (k: string) => {
+      const n = order.indexOf(k);
+      return n < 0 ? order.length : n;
+    };
+    return list
+      .map((i, n) => ({ i, n }))
+      .sort((a, b) => at(a.i.key) - at(b.i.key) || a.n - b.n)
+      .map((x) => x.i);
+  };
   const [photos, setPhotos] = useState<Record<string, string>>({});
 
   // Uploaded photos (shared by every community), as public links.
@@ -237,10 +264,17 @@ export function Equipment({
   // An item counts as had if any version of it is in the inventory.
   const hasAny = (i: EquipmentItem) =>
     i.options ? i.options.some((o) => have.has(invKey(i, o))) : have.has(i.key);
+  // Building a kit (new organiser, or none of the base kit yet).
+  const buildingAny =
+    newOrganiser ||
+    (!!teamId && EQUIPMENT_GUIDE.some((g) => !g.items.some((i) => hasAny(i))));
+  // Only an inventory to show if there's a community to keep one for, and
+  // never hidden while building a kit (Kai, 11 Nov 2026).
+  const hidden = !!teamId && stored && !buildingAny;
 
   return (
     <div className="space-y-6">
-      {teamId && (
+      {teamId && !buildingAny && (
         <div className="-mt-2 text-right">
           <button
             type="button"
@@ -250,16 +284,6 @@ export function Equipment({
             {hidden ? "Show recommendations" : "Hide recommendations"}
           </button>
         </div>
-      )}
-      {!hidden && (
-        <p className="rounded-2xl bg-pink/15 px-4 py-3 text-sm text-navy ring-1 ring-pink/40">
-          <b className="font-semibold text-pink-ink">2× matching:</b> We The
-          Free matches every local recurring sponsorship your community raises,
-          2 for 1.
-          <span className="mt-1 block text-xs text-stone-600">
-            All prices are estimates and can vary.
-          </span>
-        </p>
       )}
       {!hidden &&
         EQUIPMENT_GUIDE.map((g) => {
@@ -274,6 +298,7 @@ export function Equipment({
               key={i.key}
               item={i}
               noAbout={base}
+              hoverAbout={building}
               recommended={building && base}
               pick={
                 building || base
@@ -304,20 +329,34 @@ export function Equipment({
           return (
             <div key={g.area} className="space-y-6">
               <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="font-semibold">
-                    {building ? "Equipment" : "Base kit"}
-                  </h2>
-                  <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
-                    {g.area}
-                  </span>
-                  {teamId && !building && (
-                    <span className="ml-auto text-sm text-stone-500">
-                      You have {g.items.filter((i) => hasAny(i)).length} of{" "}
-                      {g.items.length}
+                {building && isGod && (
+                  <div className="-mt-1 mb-2 text-right">
+                    <EquipmentOrderButton
+                      items={sorted([...g.items, ...g.upgrades]).map((i) => ({
+                        key: i.key,
+                        name: i.name,
+                        essential: baseKeys.has(i.key),
+                      }))}
+                      onSaved={setOrder}
+                    />
+                  </div>
+                )}
+                {/* No "Equipment · Australia" heading while building a kit
+                    (Kai, 11 Nov 2026): the Build Your Kit box leads. */}
+                {!building && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="font-semibold">Base kit</h2>
+                    <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
+                      {g.area}
                     </span>
-                  )}
-                </div>
+                    {teamId && (
+                      <span className="ml-auto text-sm text-stone-500">
+                        You have {g.items.filter((i) => hasAny(i)).length} of{" "}
+                        {g.items.length}
+                      </span>
+                    )}
+                  </div>
+                )}
                 {building && (
                   <KitTotal
                     items={[...g.items, ...g.upgrades]}
@@ -326,8 +365,11 @@ export function Equipment({
                   />
                 )}
                 <ul className="mt-2 divide-y divide-black/5">
-                  {g.items.map((i) => row(i, true))}
-                  {building && g.upgrades.map((i) => row(i, false))}
+                  {building
+                    ? sorted([...g.items, ...g.upgrades]).map((i) =>
+                        row(i, baseKeys.has(i.key)),
+                      )
+                    : sorted(g.items).map((i) => row(i, true))}
                 </ul>
               </section>
               {!building && g.upgrades.length > 0 && (
@@ -337,7 +379,7 @@ export function Equipment({
                     Nice to have once the base kit is sorted.
                   </p>
                   <ul className="mt-1 divide-y divide-black/5">
-                    {g.upgrades.map((i) => row(i, false))}
+                    {sorted(g.upgrades).map((i) => row(i, false))}
                   </ul>
                 </section>
               )}
@@ -380,6 +422,22 @@ function firstPick(item: EquipmentItem, inventory: Map<string, Owned>) {
   );
 }
 
+// The height of the page's sticky header (if any), kept up to date.
+function readHeader() {
+  const h = document.querySelector("header");
+  return h && getComputedStyle(h).position === "sticky" ? h.offsetHeight : 0;
+}
+function subscribeHeader(cb: () => void) {
+  const h = document.querySelector("header");
+  const ro = h ? new ResizeObserver(cb) : null;
+  if (h) ro?.observe(h);
+  window.addEventListener("resize", cb);
+  return () => {
+    ro?.disconnect();
+    window.removeEventListener("resize", cb);
+  };
+}
+
 // The base kit's cost with the versions showing below, for new organisers.
 function KitTotal({
   items,
@@ -408,10 +466,25 @@ function KitTotal({
 
   const money = (n: number) => `$${Math.round(n).toLocaleString("en-AU")}`;
   const gap = total - EQUIPMENT_GRANT; // > 0: to cover; < 0: left over
+  // Stays on screen under the app's header while scrolling the list (Kai,
+  // 11 Nov 2026).
+  const headerHeight = useSyncExternalStore(
+    subscribeHeader,
+    readHeader,
+    () => 0,
+  );
   return (
-    <div className="mt-2 rounded-xl bg-navy px-3.5 py-3 text-white">
+    <div
+      className="sticky z-[5] mt-2 rounded-xl bg-navy px-3.5 py-3 text-white shadow-lg"
+      style={{ top: headerHeight + 8 }}
+    >
       <div className="flex items-start justify-between gap-3">
-        <p className="font-semibold leading-snug">Build Your Kit</p>
+        <p className="leading-snug">
+          <span className="block font-semibold">Build Your Kit</span>
+          <span className="mt-0.5 block text-xs text-white/70">
+            Hover over the name of an item to get more details.
+          </span>
+        </p>
         <p className="shrink-0 text-right leading-tight">
           <span className="block text-[11px] font-semibold uppercase tracking-wide text-pink">
             Kit total
@@ -463,12 +536,12 @@ function KitTotal({
         ) : (
           <>
             <div className="flex justify-between gap-3">
-              <dt className="text-white/75">You cover, without sponsorship</dt>
+              <dt className="text-white/75">You cover (without sponsorship)</dt>
               <dd className="font-semibold">{money(gap)}</dd>
             </div>
             <div className="flex justify-between gap-3">
               <dt className="text-white/75">
-                You cover, with the 2× sponsorship match
+                You cover (with the 2× sponsorship match)
               </dt>
               <dd className="font-semibold text-pink">{money(gap / 2)}</dd>
             </div>
@@ -512,8 +585,11 @@ function EquipmentRow({
   kitQty,
   onKitQty,
   noAbout = false,
+  hoverAbout = false,
   recommended = false,
 }: {
+  // Building a kit: details only when hovering over the name (Kai, 11 Nov).
+  hoverAbout?: boolean;
   recommended?: boolean; // new kit: base kit item, Essential pill
   noAbout?: boolean; // base kit: no description line under the name
   kitQty?: number; // building a kit: how many to get (undefined = hidden)
@@ -542,6 +618,18 @@ function EquipmentRow({
   const owned = inventory.get(invKey(item, opt)) ?? null;
   const has = !!owned;
   const photo = photos[key] ?? opt?.image ?? item.image ?? null;
+  const name = url ? (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="font-medium text-navy hover:underline"
+    >
+      {item.name}
+    </a>
+  ) : (
+    <span className="font-medium text-navy">{item.name}</span>
+  );
   return (
     <li className="flex gap-3 py-2.5">
       <PhotoSlot
@@ -555,17 +643,14 @@ function EquipmentRow({
         <div className="flex items-start justify-between gap-3">
           <span>
             <span className="flex flex-wrap items-center gap-x-2">
-              {url ? (
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-navy hover:underline"
+              {hoverAbout ? (
+                <HoverDetails
+                  text={[item.about, opt?.about].filter(Boolean).join(" ")}
                 >
-                  {item.name}
-                </a>
+                  {name}
+                </HoverDetails>
               ) : (
-                <span className="font-medium text-navy">{item.name}</span>
+                name
               )}
               {recommended && (
                 <span className="rounded-full bg-pink px-2 py-0.5 text-[11px] font-semibold text-navy">
@@ -573,7 +658,7 @@ function EquipmentRow({
                 </span>
               )}
             </span>
-            {!noAbout && (
+            {!noAbout && !hoverAbout && (
               <span className="block text-sm text-stone-600">{item.about}</span>
             )}
             {((opt ? opt.price : item.price) ||
@@ -709,7 +794,7 @@ function EquipmentRow({
                 </button>
               ))}
             </div>
-            {opt && (
+            {opt && !hoverAbout && (
               <p className="mt-1 text-sm text-stone-600">
                 {/* Product name left off (Kai, 11 Nov); the photo and shop
                     link still go to it. */}
@@ -862,5 +947,30 @@ function EquipmentRow({
         )}
       </div>
     </li>
+  );
+}
+
+// The item's details in a small pop-up when hovering over (or tabbing to)
+// its name, for the Build Your Kit list (Kai, 11 Nov 2026).
+function HoverDetails({
+  text,
+  children,
+}: {
+  text: string;
+  children: React.ReactNode;
+}) {
+  if (!text) return <>{children}</>;
+  return (
+    <span className="group/details relative inline-block">
+      <span className="cursor-help border-b border-dotted border-stone-400">
+        {children}
+      </span>
+      <span
+        role="tooltip"
+        className="pointer-events-none invisible absolute left-0 top-full z-20 mt-1.5 w-72 max-w-[80vw] rounded-lg bg-navy px-3 py-2 text-sm font-normal leading-snug text-white opacity-0 shadow-lg transition-opacity group-focus-within/details:visible group-focus-within/details:opacity-100 group-hover/details:visible group-hover/details:opacity-100"
+      >
+        {text}
+      </span>
+    </span>
   );
 }

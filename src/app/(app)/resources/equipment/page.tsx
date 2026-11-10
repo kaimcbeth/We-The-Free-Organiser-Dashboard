@@ -65,6 +65,7 @@ export default async function EquipmentPage() {
         <Equipment
           teamId={teamId}
           newOrganiser={newOrganiser}
+          isGod={organiser.access === "god"}
           canEditPhotos={
             organiser.role === "god" || organiser.role === "regional_lead"
           }
