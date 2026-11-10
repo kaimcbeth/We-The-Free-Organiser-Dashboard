@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Meeting point graphics: on any event page (or Make a post in the Social Media Hub), tap Meeting point, drop a pin on the map, say exactly where, and get a post or story with the map, the spot, the day and time. The spot is saved on the event, spots you've used before are one tap away, and Copy map link gives a Google Maps link for the caption.",
+      },
+      {
+        level: "organiser",
         text: "Insights now opens with charts: people at events each week or month (first-timers and people coming back), where everyone's at, how many newcomers come back, which kinds of events bring people in, and your biggest events. Who to reach out to sits below, and the per-person table is folded away at the bottom.",
       },
       {

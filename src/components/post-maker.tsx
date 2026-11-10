@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { GraphicMaker, type GraphicEvent } from "@/components/graphic-maker";
+import { MeetingPointMaker } from "@/components/meeting-point";
 import { CopyMaker } from "@/components/copy-maker";
 import { createClient } from "@/lib/supabase/client";
 import { MeetMembersButton } from "@/components/meet-members-maker";
@@ -234,6 +235,15 @@ export function PostMaker({ teamId, tz }: { teamId: string; tz: string }) {
               label="Write the words"
               className="rounded-full bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy/90"
             />
+            {ev && !ev.past && (
+              <MeetingPointMaker
+                key={`m-${picked}`}
+                event={{ ...ev, teamId, eventId: ev.id }}
+                tz={tz}
+                label="Meeting point"
+                className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50"
+              />
+            )}
           </div>
           <p className="mt-2 text-xs text-stone-500">
             Both can be saved straight to the planner.
