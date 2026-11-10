@@ -284,6 +284,7 @@ export function Equipment({
                     key={i.key}
                     item={i}
                     matched
+                    noAbout
                     pick={picks[i.key] ?? firstPick(i, have)}
                     kitQty={
                       newOrganiser ||
@@ -411,10 +412,7 @@ function KitTotal({
   return (
     <div className="mt-2 rounded-xl bg-navy px-3.5 py-3 text-white">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs leading-snug text-white/70">
-          Building your kit? This is the whole base kit with the versions and
-          numbers picked below.
-        </p>
+        <p className="font-semibold leading-snug">Build Your Kit</p>
         <p className="shrink-0 text-right leading-tight">
           <span className="block text-[11px] font-semibold uppercase tracking-wide text-pink">
             Base kit total
@@ -518,7 +516,9 @@ function EquipmentRow({
   pick: pickProp,
   kitQty,
   onKitQty,
+  noAbout = false,
 }: {
+  noAbout?: boolean; // base kit: no description line under the name
   kitQty?: number; // building a kit: how many to get (undefined = hidden)
   onKitQty?: (n: number) => void;
   pick?: number;
@@ -569,7 +569,9 @@ function EquipmentRow({
             ) : (
               <span className="block font-medium text-navy">{item.name}</span>
             )}
-            <span className="block text-sm text-stone-600">{item.about}</span>
+            {!noAbout && (
+              <span className="block text-sm text-stone-600">{item.about}</span>
+            )}
             {(opt ? opt.price : item.price) && (
               <span className="mt-0.5 flex flex-wrap items-baseline gap-x-2 text-sm font-semibold text-navy">
                 {opt ? opt.price : item.price}
