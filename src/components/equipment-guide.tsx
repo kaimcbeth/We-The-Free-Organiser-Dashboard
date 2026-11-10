@@ -10,10 +10,11 @@ import {
 } from "@/components/gear-tracker";
 import {
   CONDITIONS,
+  EQUIPMENT_GRANT,
   EQUIPMENT_GUIDE,
   PRICES_CHECKED,
   kitCost,
-  matchedPrice,
+  matchedShort,
   photoKey,
   type Condition,
   type EquipmentItem,
@@ -405,26 +406,86 @@ function KitTotal({
     else total += c;
   }
 
+  const money = (n: number) => `$${Math.round(n).toLocaleString("en-AU")}`;
+  const gap = total - EQUIPMENT_GRANT; // > 0: to cover; < 0: left over
   return (
-    <div className="mt-2 flex items-start justify-between gap-3 rounded-xl bg-navy px-3.5 py-2.5 text-white">
-      <p className="text-xs leading-snug text-white/70">
-        Building your kit? This is the whole base kit with the versions and
-        numbers picked below.
-      </p>
-      <p className="shrink-0 text-right leading-tight">
-        <span className="block text-[11px] font-semibold uppercase tracking-wide text-pink">
-          Base kit total
-        </span>
-        <span className="text-xl font-semibold tabular-nums">
-          ~${Math.round(total).toLocaleString("en-AU")}
-        </span>
-
-        {unpriced.length > 0 && (
-          <span className="block text-[11px] text-white/60">
-            + {unpriced.join(", ")} (no price yet)
+    <div className="mt-2 rounded-xl bg-navy px-3.5 py-3 text-white">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-xs leading-snug text-white/70">
+          Building your kit? This is the whole base kit with the versions and
+          numbers picked below.
+        </p>
+        <p className="shrink-0 text-right leading-tight">
+          <span className="block text-[11px] font-semibold uppercase tracking-wide text-pink">
+            Base kit total
           </span>
+          <span className="text-xl font-semibold tabular-nums">
+            ~{money(total)}
+          </span>
+          {unpriced.length > 0 && (
+            <span className="block text-[11px] text-white/60">
+              + {unpriced.join(", ")} (no price yet)
+            </span>
+          )}
+        </p>
+      </div>
+      <div className="mt-2.5 border-t border-white/15 pt-2.5">
+        <div className="flex items-baseline justify-between text-xs text-white/75">
+          <span>Grant used</span>
+          <span className="tabular-nums">
+            <b className="font-semibold text-white">
+              {money(Math.min(total, EQUIPMENT_GRANT))}
+            </b>{" "}
+            of {money(EQUIPMENT_GRANT)}
+          </span>
+        </div>
+        <div
+          role="progressbar"
+          aria-label="Equipment grant used"
+          aria-valuemin={0}
+          aria-valuemax={EQUIPMENT_GRANT}
+          aria-valuenow={Math.round(Math.min(total, EQUIPMENT_GRANT))}
+          className="mt-1 h-2.5 overflow-hidden rounded-full bg-white/15"
+        >
+          <div
+            className={`h-full rounded-full transition-all ${gap > 0 ? "bg-pink" : "bg-cyan"}`}
+            style={{
+              width: `${Math.min(100, (total / EQUIPMENT_GRANT) * 100)}%`,
+            }}
+          />
+        </div>
+      </div>
+      <dl className="mt-2 space-y-1 text-sm tabular-nums">
+        <div className="flex justify-between gap-3">
+          <dt className="text-white/75">Equipment grant (every community)</dt>
+          <dd className="font-semibold">−{money(EQUIPMENT_GRANT)}</dd>
+        </div>
+        {gap <= 0 ? (
+          <div className="flex justify-between gap-3">
+            <dt className="font-semibold text-cyan">
+              Left over from the grant
+            </dt>
+            <dd className="font-semibold text-cyan">{money(-gap)}</dd>
+          </div>
+        ) : (
+          <>
+            <div className="flex justify-between gap-3">
+              <dt className="text-white/75">You cover, without sponsorship</dt>
+              <dd className="font-semibold">{money(gap)}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-white/75">
+                You cover, with the 2× sponsorship match
+              </dt>
+              <dd className="font-semibold text-pink">{money(gap / 2)}</dd>
+            </div>
+            <p className="pt-0.5 text-[11px] leading-snug text-white/55">
+              Raise it as a local recurring sponsorship (you can sponsor your
+              own community) and We The Free matches it 2 for 1.
+            </p>
+          </>
         )}
-      </p>
+      </dl>
     </div>
   );
 }
@@ -517,7 +578,7 @@ function EquipmentRow({
                     className="text-pink-ink"
                     title="With the 2× local fundraising match"
                   >
-                    {matchedPrice((opt ? opt.price : item.price) ?? "")}
+                    {matchedShort((opt ? opt.price : item.price) ?? "")}
                   </span>
                 )}
               </span>

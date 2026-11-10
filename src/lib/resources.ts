@@ -106,6 +106,9 @@ export function matchedPrice(text: string): string {
   });
 }
 
+// Every community gets this to spend on equipment (Kai, 11 Nov 2026).
+export const EQUIPMENT_GRANT = 400; // AUD
+
 // What one item costs in a new base kit, for the version showing: the
 // listed price × how many the kit needs ("$137.50 for 4" is already a pack).
 // null = no price listed.
@@ -119,6 +122,15 @@ export function kitCost(
   if (!m) return null;
   const pack = Number(text!.match(/\bfor (\d+)\b/)?.[1] ?? 1);
   return Number(m[1]) * Math.ceil(qty / pack);
+}
+
+// Just the matched amount for the pink price beside the main one (Kai,
+// 11 Nov 2026: no repeated words): "$99 including shipping" -> "$49.50",
+// "~$5 each" -> "~$2.50 each", "From $85" -> "From $42.50".
+export function matchedShort(text: string): string {
+  const m = text.match(/(from\s+|~|<)?\$\d[\d,]*(?:\.\d+)?/i);
+  if (!m) return "";
+  return matchedPrice(m[0]) + (/\beach\b/i.test(text) ? " each" : "");
 }
 
 // Which photo slot: the item, or one of its options (e.g. "table:best").
