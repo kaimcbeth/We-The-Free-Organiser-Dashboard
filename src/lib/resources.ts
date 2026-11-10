@@ -174,7 +174,8 @@ export const EQUIPMENT_GUIDE: {
           {
             label: "Budget",
             product: "Lifetime 6ft Standard Blow Mould Trestle Table",
-            about: "A standard 6ft trestle table.",
+            about:
+              "A standard 6ft trestle table. Needs to be picked up from Bunnings (it isn't delivered).",
             shop: "Bunnings",
             url: "https://www.bunnings.com.au/lifetime-6ft-standard-blow-mould-trestle-table_p3192212",
             price: "$69",
@@ -183,6 +184,7 @@ export const EQUIPMENT_GUIDE: {
             label: "Best",
             product: "Kings Aluminium Roll-Up Camp Table (Large)",
             about: "Rolls up small to carry.",
+            price: "$99 including shipping",
             shop: "4WD Supacentre",
             url: "https://www.4wdsupacentre.com.au/kings-aluminium-roll-up-camping-table-large-rechargeable-lithium-led-worklight.html",
             image: "/equipment/table-kings.jpg",
