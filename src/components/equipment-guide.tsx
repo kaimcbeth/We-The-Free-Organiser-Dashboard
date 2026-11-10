@@ -53,8 +53,12 @@ function subscribe(l: () => void) {
 export function Equipment({
   teamId,
   canEditPhotos = false,
+  newOrganiser = false,
 }: {
   teamId: string | null;
+  // New organisers building a kit see the base kit total and how-many
+  // boxes (Kai, 11 Nov 2026: "only for new organisers view").
+  newOrganiser?: boolean;
   canEditPhotos?: boolean; // Regional Support Leads and God Mode
 }) {
   const stored = useSyncExternalStore(subscribe, readHidden, () => false);
@@ -66,6 +70,8 @@ export function Equipment({
   // Which version (Budget / Best / DIY) each base kit item is showing, for
   // the kit total (Kai, 11 Nov 2026: for new organisers building a kit).
   const [picks, setPicks] = useState<Record<string, number>>({});
+  const [qtys, setQtys] = useState<Record<string, number>>({});
+  const qtyOf = (i: EquipmentItem) => qtys[i.key] ?? i.kitQty ?? 1;
   const bump = () => setVersion((v) => v + 1);
   const [photos, setPhotos] = useState<Record<string, string>>({});
 
@@ -254,10 +260,14 @@ export function Equipment({
                   </span>
                 )}
               </div>
-              <KitTotal
-                items={g.items}
-                pickOf={(i) => picks[i.key] ?? firstPick(i, have)}
-              />
+              {(newOrganiser ||
+                (!!teamId && !g.items.some((i) => hasAny(i)))) && (
+                <KitTotal
+                  items={g.items}
+                  pickOf={(i) => picks[i.key] ?? firstPick(i, have)}
+                  qtyOf={qtyOf}
+                />
+              )}
               <ul className="mt-2 divide-y divide-black/5">
                 {g.items.map((i) => (
                   <EquipmentRow
@@ -265,6 +275,13 @@ export function Equipment({
                     item={i}
                     matched
                     pick={picks[i.key] ?? firstPick(i, have)}
+                    kitQty={
+                      newOrganiser ||
+                      (!!teamId && !g.items.some((x) => hasAny(x)))
+                        ? qtyOf(i)
+                        : undefined
+                    }
+                    onKitQty={(n) => setQtys((q) => ({ ...q, [i.key]: n }))}
                     onPick={(n) => setPicks((p) => ({ ...p, [i.key]: n }))}
                     inventory={have}
                     onOwned={
@@ -357,15 +374,19 @@ function firstPick(item: EquipmentItem, inventory: Map<string, Owned>) {
 function KitTotal({
   items,
   pickOf,
+  qtyOf,
 }: {
   items: EquipmentItem[];
   pickOf: (i: EquipmentItem) => number;
+  qtyOf: (i: EquipmentItem) => number;
 }) {
   let total = 0;
   const unpriced: string[] = [];
   for (const i of items) {
     const opt = i.options?.[pickOf(i)];
-    const c = kitCost(i, opt);
+    const n = qtyOf(i);
+    if (n === 0) continue;
+    const c = kitCost(i, opt, n);
     if (c === null)
       unpriced.push(
         opt
@@ -375,14 +396,15 @@ function KitTotal({
     else total += c;
   }
   const counts = items
-    .filter((i) => (i.kitQty ?? 1) > 1)
-    .map((i) => `${i.kitQty} ${i.name.toLowerCase()}`)
+    .filter((i) => qtyOf(i) !== 1)
+    .map((i) => `${qtyOf(i)} ${i.name.toLowerCase()}`)
     .join(", ");
   return (
     <div className="mt-2 flex items-start justify-between gap-3 rounded-xl bg-navy px-3.5 py-2.5 text-white">
       <p className="text-xs leading-snug text-white/70">
-        Starting from scratch? This is the whole base kit with the versions
-        picked below, and what it costs you with the 2× local fundraising match
+        Building your kit? This is the whole base kit with the versions and
+        numbers picked below, and what it costs you with the 2× local
+        fundraising match
         {counts ? ` (incl. ${counts})` : ""}.
       </p>
       <p className="shrink-0 text-right leading-tight">
@@ -462,7 +484,11 @@ function EquipmentRow({
   matched = false,
   onPick,
   pick: pickProp,
+  kitQty,
+  onKitQty,
 }: {
+  kitQty?: number; // building a kit: how many to get (undefined = hidden)
+  onKitQty?: (n: number) => void;
   pick?: number;
   onPick?: (n: number) => void; // the Budget / Best toggle changed
   matched?: boolean; // also show the 2x fundraising match price
@@ -519,6 +545,32 @@ function EquipmentRow({
             )}
             {matched && (
               <MatchedPrice item={item} price={opt ? opt.price : item.price} />
+            )}
+            {kitQty !== undefined && onKitQty && (
+              <span className="mt-1.5 flex items-center gap-2 text-xs text-stone-500">
+                How many for your kit
+                <span className="inline-flex items-center rounded-full ring-1 ring-black/10">
+                  <button
+                    type="button"
+                    aria-label={`One less ${item.name}`}
+                    onClick={() => onKitQty(Math.max(0, kitQty - 1))}
+                    className="h-7 w-7 rounded-l-full text-base font-semibold text-navy hover:bg-stone-100"
+                  >
+                    −
+                  </button>
+                  <span className="w-6 text-center text-sm font-semibold tabular-nums text-navy">
+                    {kitQty}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={`One more ${item.name}`}
+                    onClick={() => onKitQty(Math.min(50, kitQty + 1))}
+                    className="h-7 w-7 rounded-r-full text-base font-semibold text-navy hover:bg-stone-100"
+                  >
+                    +
+                  </button>
+                </span>
+              </span>
             )}
             {item.parts && (
               <ul className="mt-1 space-y-0.5">

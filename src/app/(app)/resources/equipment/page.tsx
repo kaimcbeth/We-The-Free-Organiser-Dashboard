@@ -52,6 +52,10 @@ export default async function EquipmentPage() {
       <div className="mt-5">
         <Equipment
           teamId={teamId}
+          newOrganiser={
+            organiser.tourPreview ||
+            !!organiser.viewValue?.startsWith("new_organiser")
+          }
           canEditPhotos={
             organiser.role === "god" || organiser.role === "regional_lead"
           }

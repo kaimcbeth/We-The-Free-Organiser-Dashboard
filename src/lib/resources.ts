@@ -112,11 +112,11 @@ export function matchedPrice(text: string): string {
 export function kitCost(
   item: EquipmentItem,
   opt?: { price?: string },
+  qty = item.kitQty ?? 1,
 ): number | null {
   const text = opt ? opt.price : item.price;
   const m = text?.replace(/,/g, "").match(/\$(\d+(?:\.\d+)?)/);
   if (!m) return null;
-  const qty = item.kitQty ?? 1;
   const pack = Number(text!.match(/\bfor (\d+)\b/)?.[1] ?? 1);
   return Number(m[1]) * Math.ceil(qty / pack);
 }
