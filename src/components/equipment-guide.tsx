@@ -659,6 +659,9 @@ function EquipmentRow({
   const pick = pickProp ?? ownPick; // base kit: the page keeps it (kit total)
   const [guideOpen, setGuideOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+  // DIY versions: how to make it (and the sign splitter) in a Purchasing
+  // guide pop-up, not on the row (Kai, 11 Nov 2026).
+  const [diyOpen, setDiyOpen] = useState(false);
   const [locating, setLocating] = useState(false);
   // Hovering over the photo opens the details too (Kai, 11 Nov 2026).
   const [photoHover, setPhotoHover] = useState(false);
@@ -805,6 +808,15 @@ function EquipmentRow({
             )}
             {/* Get it from the RSL: the same Purchasing guide button, its
                 pop-up says to ask them (Kai, 11 Nov 2026). */}
+            {opt?.instructions !== undefined && (
+              <button
+                type="button"
+                onClick={() => setDiyOpen(true)}
+                className="rounded-lg px-2 py-0.5 text-xs font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50"
+              >
+                Purchasing guide
+              </button>
+            )}
             {opt?.contactLead && (
               <button
                 type="button"
@@ -891,24 +903,31 @@ function EquipmentRow({
                 {opt.about}
               </p>
             )}
-            {opt?.instructions !== undefined &&
-              (opt.instructions ? (
-                <a
-                  href={opt.instructions}
-                  {...(opt.instructions.startsWith("/")
-                    ? {}
-                    : { target: "_blank", rel: "noopener noreferrer" })}
-                  className="mt-1 inline-block text-sm font-medium text-pink-ink hover:underline"
-                >
-                  {opt.instructions.startsWith("/")
-                    ? "Print it with the sign splitter →"
-                    : "Instructions ↗"}
-                </a>
-              ) : (
-                <p className="mt-1 text-sm text-stone-400">
-                  Instructions coming soon.
-                </p>
-              ))}
+            {diyOpen && opt?.instructions !== undefined && (
+              <Sheet
+                title={`Making ${item.name.toLowerCase()} (${opt.label})`}
+                onClose={() => setDiyOpen(false)}
+              >
+                <p className="text-stone-700">{opt.about}</p>
+                {opt.instructions ? (
+                  <a
+                    href={opt.instructions}
+                    {...(opt.instructions.startsWith("/")
+                      ? {}
+                      : { target: "_blank", rel: "noopener noreferrer" })}
+                    className="mt-4 inline-block rounded-full bg-pink px-4 py-2 text-sm font-semibold text-navy hover:bg-pink/90"
+                  >
+                    {opt.instructions.startsWith("/")
+                      ? "Print it with the sign splitter →"
+                      : "Instructions ↗"}
+                  </a>
+                ) : (
+                  <p className="mt-3 text-sm text-stone-400">
+                    Instructions coming soon.
+                  </p>
+                )}
+              </Sheet>
+            )}
             {contactOpen && opt?.contactLead && (
               <Sheet
                 title={`Buying ${item.name.toLowerCase()} (${opt.label})`}
