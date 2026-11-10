@@ -413,7 +413,11 @@ export const EQUIPMENT_GUIDE: {
       {
         key: "media_wall",
         name: "Media wall",
-        about: "More details coming soon.",
+        about:
+          "A big printed fabric backdrop on a straight frame, 1.5 m wide × 2.2 m high. Great for photos at events and stalls. Premium fabric, single sided, with a bottom zipper.",
+        shop: "Easy Signs",
+        url: "https://www.easysigns.com.au/products/details/stretch-fabric-media-wall",
+        price: "$329.20 inc delivery",
       },
       {
         key: "sign_poles",
