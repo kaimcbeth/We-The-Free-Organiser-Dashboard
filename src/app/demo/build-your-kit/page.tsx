@@ -36,7 +36,7 @@ export default function BuildYourKitDemo() {
         <p className="mt-1 text-stone-600">
           This is what a new organiser sees when setting up their Movie
           Challenge kit. Switch between Budget, DIY and Best, change the
-          numbers, and watch the total and the $400 equipment grant update.
+          numbers, and watch the total and the $500 equipment grant update.
           It&apos;s a demo, so nothing is saved.
         </p>
         <div className="mt-5">

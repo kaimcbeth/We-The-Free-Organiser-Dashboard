@@ -107,7 +107,7 @@ export function matchedPrice(text: string): string {
 }
 
 // Every community gets this to spend on equipment (Kai, 11 Nov 2026).
-export const EQUIPMENT_GRANT = 400; // AUD
+export const EQUIPMENT_GRANT = 500; // AUD (Kai, 11 Nov 2026: was 400)
 
 // What one item costs in a new base kit, for the version showing: the
 // listed price × how many the kit needs ("$137.50 for 4" is already a pack).
