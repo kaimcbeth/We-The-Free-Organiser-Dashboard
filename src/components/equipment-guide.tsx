@@ -72,7 +72,13 @@ export function Equipment({
   // the kit total (Kai, 11 Nov 2026: for new organisers building a kit).
   const [picks, setPicks] = useState<Record<string, number>>({});
   const [qtys, setQtys] = useState<Record<string, number>>({});
-  const qtyOf = (i: EquipmentItem) => qtys[i.key] ?? i.kitQty ?? 1;
+  // How many for the kit: base kit items start at their recommended number,
+  // upgrades at 0 (added with + when building a new kit).
+  const baseKeys = new Set(
+    EQUIPMENT_GUIDE.flatMap((g) => g.items.map((i) => i.key)),
+  );
+  const qtyOf = (i: EquipmentItem) =>
+    qtys[i.key] ?? (baseKeys.has(i.key) ? (i.kitQty ?? 1) : 0);
   const bump = () => setVersion((v) => v + 1);
   const [photos, setPhotos] = useState<Record<string, string>>({});
 
@@ -256,94 +262,88 @@ export function Equipment({
         </p>
       )}
       {!hidden &&
-        EQUIPMENT_GUIDE.map((g) => (
-          <div key={g.area} className="space-y-6">
-            <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="font-semibold">Base kit</h2>
-                <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
-                  {g.area}
-                </span>
-                {teamId && !newOrganiser && g.items.some((i) => hasAny(i)) && (
-                  <span className="ml-auto text-sm text-stone-500">
-                    You have {g.items.filter((i) => hasAny(i)).length} of{" "}
-                    {g.items.length}
-                  </span>
-                )}
-              </div>
-              {(newOrganiser ||
-                (!!teamId && !g.items.some((i) => hasAny(i)))) && (
-                <KitTotal
-                  items={g.items}
-                  pickOf={(i) => picks[i.key] ?? firstPick(i, have)}
-                  qtyOf={qtyOf}
-                />
-              )}
-              <ul className="mt-2 divide-y divide-black/5">
-                {g.items.map((i) => (
-                  <EquipmentRow
-                    key={i.key}
-                    item={i}
-                    noAbout
-                    pick={picks[i.key] ?? firstPick(i, have)}
-                    kitQty={
-                      newOrganiser ||
-                      (!!teamId && !g.items.some((x) => hasAny(x)))
-                        ? qtyOf(i)
-                        : undefined
-                    }
-                    onKitQty={(n) => setQtys((q) => ({ ...q, [i.key]: n }))}
-                    onPick={(n) => setPicks((p) => ({ ...p, [i.key]: n }))}
-                    inventory={have}
-                    onOwned={
-                      teamId ? (opt, c) => setOwned(i, opt, c) : undefined
-                    }
-                    onHave={
-                      teamId
-                        ? (opt, on) =>
-                            on ? add(i, opt) : removeFromInventory(i, opt)
-                        : undefined
-                    }
-                    photos={photos}
-                    onUpload={canEditPhotos ? upload : undefined}
-                    people={people}
-                    places={places}
-                  />
-                ))}
-              </ul>
-            </section>
-            {g.upgrades.length > 0 && (
+        EQUIPMENT_GUIDE.map((g) => {
+          // A new kit (new organiser, or nothing from the base kit yet): one
+          // list, base kit first and highlighted as recommended, upgrades
+          // after with 0 to start; all of it counts in the kit total (Kai,
+          // 11 Nov 2026).
+          const building =
+            newOrganiser || (!!teamId && !g.items.some((i) => hasAny(i)));
+          const row = (i: EquipmentItem, base: boolean) => (
+            <EquipmentRow
+              key={i.key}
+              item={i}
+              noAbout={base}
+              recommended={building && base}
+              pick={
+                building || base
+                  ? (picks[i.key] ?? firstPick(i, have))
+                  : undefined
+              }
+              kitQty={
+                building && (i.price || i.options?.some((o) => o.price))
+                  ? qtyOf(i)
+                  : undefined
+              }
+              onKitQty={(n) => setQtys((q) => ({ ...q, [i.key]: n }))}
+              onPick={(n) => setPicks((p) => ({ ...p, [i.key]: n }))}
+              inventory={have}
+              onOwned={teamId ? (opt, c) => setOwned(i, opt, c) : undefined}
+              onHave={
+                teamId
+                  ? (opt, on) =>
+                      on ? add(i, opt) : removeFromInventory(i, opt)
+                  : undefined
+              }
+              photos={photos}
+              onUpload={canEditPhotos ? upload : undefined}
+              people={people}
+              places={places}
+            />
+          );
+          return (
+            <div key={g.area} className="space-y-6">
               <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-                <h2 className="font-semibold">Upgrades</h2>
-                <p className="text-sm text-stone-500">
-                  Nice to have once the base kit is sorted.
-                </p>
-                <ul className="mt-1 divide-y divide-black/5">
-                  {g.upgrades.map((i) => (
-                    <EquipmentRow
-                      key={i.key}
-                      item={i}
-                      inventory={have}
-                      onOwned={
-                        teamId ? (opt, c) => setOwned(i, opt, c) : undefined
-                      }
-                      onHave={
-                        teamId
-                          ? (opt, on) =>
-                              on ? add(i, opt) : removeFromInventory(i, opt)
-                          : undefined
-                      }
-                      photos={photos}
-                      onUpload={canEditPhotos ? upload : undefined}
-                      people={people}
-                      places={places}
-                    />
-                  ))}
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="font-semibold">
+                    {building ? "Equipment" : "Base kit"}
+                  </h2>
+                  <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
+                    {g.area}
+                  </span>
+                  {teamId && !building && (
+                    <span className="ml-auto text-sm text-stone-500">
+                      You have {g.items.filter((i) => hasAny(i)).length} of{" "}
+                      {g.items.length}
+                    </span>
+                  )}
+                </div>
+                {building && (
+                  <KitTotal
+                    items={[...g.items, ...g.upgrades]}
+                    pickOf={(i) => picks[i.key] ?? firstPick(i, have)}
+                    qtyOf={qtyOf}
+                  />
+                )}
+                <ul className="mt-2 divide-y divide-black/5">
+                  {g.items.map((i) => row(i, true))}
+                  {building && g.upgrades.map((i) => row(i, false))}
                 </ul>
               </section>
-            )}
-          </div>
-        ))}
+              {!building && g.upgrades.length > 0 && (
+                <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+                  <h2 className="font-semibold">Upgrades</h2>
+                  <p className="text-sm text-stone-500">
+                    Nice to have once the base kit is sorted.
+                  </p>
+                  <ul className="mt-1 divide-y divide-black/5">
+                    {g.upgrades.map((i) => row(i, false))}
+                  </ul>
+                </section>
+              )}
+            </div>
+          );
+        })}
       {!hidden && (
         <p className="-mt-3 text-xs text-stone-500">
           Prices are from each shop&apos;s listing on {PRICES_CHECKED},
@@ -414,7 +414,7 @@ function KitTotal({
         <p className="font-semibold leading-snug">Build Your Kit</p>
         <p className="shrink-0 text-right leading-tight">
           <span className="block text-[11px] font-semibold uppercase tracking-wide text-pink">
-            Base kit total
+            Kit total
           </span>
           <span className="text-xl font-semibold tabular-nums">
             ~{money(total)}
@@ -453,10 +453,6 @@ function KitTotal({
         </div>
       </div>
       <dl className="mt-2 space-y-1 text-sm tabular-nums">
-        <div className="flex justify-between gap-3">
-          <dt className="text-white/75">Equipment grant (every community)</dt>
-          <dd className="font-semibold">−{money(EQUIPMENT_GRANT)}</dd>
-        </div>
         {gap <= 0 ? (
           <div className="flex justify-between gap-3">
             <dt className="font-semibold text-cyan">
@@ -483,9 +479,6 @@ function KitTotal({
           </>
         )}
       </dl>
-      <p className="mt-2 text-[11px] leading-snug text-white/55">
-        All prices are estimates and can change.
-      </p>
     </div>
   );
 }
@@ -519,7 +512,9 @@ function EquipmentRow({
   kitQty,
   onKitQty,
   noAbout = false,
+  recommended = false,
 }: {
+  recommended?: boolean; // new kit: base kit item, pink highlight
   noAbout?: boolean; // base kit: no description line under the name
   kitQty?: number; // building a kit: how many to get (undefined = hidden)
   onKitQty?: (n: number) => void;
@@ -548,7 +543,13 @@ function EquipmentRow({
   const has = !!owned;
   const photo = photos[key] ?? opt?.image ?? item.image ?? null;
   return (
-    <li className="flex gap-3 py-2.5">
+    <li
+      className={
+        recommended
+          ? "relative my-2 flex gap-3 rounded-xl bg-pink/5 px-2.5 py-2.5 ring-2 ring-pink/60"
+          : "flex gap-3 py-2.5"
+      }
+    >
       <PhotoSlot
         key={key}
         photo={photo}
@@ -559,23 +560,31 @@ function EquipmentRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
           <span>
-            {url ? (
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block font-medium text-navy hover:underline"
-              >
-                {item.name}
-              </a>
-            ) : (
-              <span className="block font-medium text-navy">{item.name}</span>
-            )}
+            <span className="flex flex-wrap items-center gap-x-2">
+              {url ? (
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-navy hover:underline"
+                >
+                  {item.name}
+                </a>
+              ) : (
+                <span className="font-medium text-navy">{item.name}</span>
+              )}
+              {recommended && (
+                <span className="rounded-full bg-pink px-2 py-0.5 text-[11px] font-semibold text-navy">
+                  Recommended
+                </span>
+              )}
+            </span>
             {!noAbout && (
               <span className="block text-sm text-stone-600">{item.about}</span>
             )}
-            {(opt ? opt.price : item.price) && (
-              <span className="mt-0.5 flex flex-wrap items-baseline gap-x-2 text-sm font-semibold text-navy">
+            {((opt ? opt.price : item.price) ||
+              (kitQty !== undefined && onKitQty)) && (
+              <span className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-semibold text-navy">
                 {opt ? opt.price : item.price}
                 {matched && (
                   <span
@@ -585,32 +594,32 @@ function EquipmentRow({
                     {matchedShort((opt ? opt.price : item.price) ?? "")}
                   </span>
                 )}
-              </span>
-            )}
-            {kitQty !== undefined && onKitQty && (
-              <span className="mt-1.5 flex items-center gap-2 text-xs text-stone-500">
-                How many for your kit
-                <span className="inline-flex items-center rounded-full ring-1 ring-black/10">
-                  <button
-                    type="button"
-                    aria-label={`One less ${item.name}`}
-                    onClick={() => onKitQty(Math.max(0, kitQty - 1))}
-                    className="h-7 w-7 rounded-l-full text-base font-semibold text-navy hover:bg-stone-100"
+                {kitQty !== undefined && onKitQty && (
+                  <span
+                    className="inline-flex items-center rounded-full font-normal ring-1 ring-black/10"
+                    title="How many for your kit"
                   >
-                    −
-                  </button>
-                  <span className="w-6 text-center text-sm font-semibold tabular-nums text-navy">
-                    {kitQty}
+                    <button
+                      type="button"
+                      aria-label={`One less ${item.name}`}
+                      onClick={() => onKitQty(Math.max(0, kitQty - 1))}
+                      className="h-7 w-7 rounded-l-full text-base font-semibold text-navy hover:bg-stone-100"
+                    >
+                      −
+                    </button>
+                    <span className="w-6 text-center text-sm font-semibold tabular-nums text-navy">
+                      {kitQty}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={`One more ${item.name}`}
+                      onClick={() => onKitQty(Math.min(50, kitQty + 1))}
+                      className="h-7 w-7 rounded-r-full text-base font-semibold text-navy hover:bg-stone-100"
+                    >
+                      +
+                    </button>
                   </span>
-                  <button
-                    type="button"
-                    aria-label={`One more ${item.name}`}
-                    onClick={() => onKitQty(Math.min(50, kitQty + 1))}
-                    className="h-7 w-7 rounded-r-full text-base font-semibold text-navy hover:bg-stone-100"
-                  >
-                    +
-                  </button>
-                </span>
+                )}
               </span>
             )}
             {item.parts && (
