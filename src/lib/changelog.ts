@@ -79,7 +79,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Equipment guide: the base kit now shows a running total for a new kit (about $430 on the budget options), which changes as you switch between Budget, DIY and Best. It counts 4 handheld signs (now our recommended start), 2 viewing devices and 2 pairs of headphones.",
+        text: "Equipment guide: the base kit now shows a running total for a new kit (about $430 on the budget options), which changes as you switch between Budget, DIY and Best. It counts 4 handheld signs (now our recommended start), 2 viewing devices and 2 pairs of headphones. Base kit items and the total also show the price with the 2× local fundraising match.",
       },
       {
         level: "organiser",

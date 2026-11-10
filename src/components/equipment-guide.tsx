@@ -263,6 +263,7 @@ export function Equipment({
                   <EquipmentRow
                     key={i.key}
                     item={i}
+                    matched
                     pick={picks[i.key] ?? firstPick(i, have)}
                     onPick={(n) => setPicks((p) => ({ ...p, [i.key]: n }))}
                     inventory={have}
@@ -381,7 +382,8 @@ function KitTotal({
     <div className="mt-2 flex items-start justify-between gap-3 rounded-xl bg-navy px-3.5 py-2.5 text-white">
       <p className="text-xs leading-snug text-white/70">
         Starting from scratch? This is the whole base kit with the versions
-        picked below{counts ? ` (incl. ${counts})` : ""}.
+        picked below, and what it costs you with the 2× local fundraising match
+        {counts ? ` (incl. ${counts})` : ""}.
       </p>
       <p className="shrink-0 text-right leading-tight">
         <span className="block text-[11px] font-semibold uppercase tracking-wide text-pink">
@@ -389,6 +391,12 @@ function KitTotal({
         </span>
         <span className="text-xl font-semibold tabular-nums">
           ~${Math.round(total).toLocaleString("en-AU")}
+        </span>
+        <span className="block text-xs text-white/75">
+          <b className="font-semibold text-pink">
+            ~${Math.round(total / 2).toLocaleString("en-AU")}
+          </b>{" "}
+          with the 2× match
         </span>
         {unpriced.length > 0 && (
           <span className="block text-[11px] text-white/60">
@@ -457,7 +465,7 @@ function EquipmentRow({
 }: {
   pick?: number;
   onPick?: (n: number) => void; // the Budget / Best toggle changed
-  matched?: boolean; // upgrades: also show the 2x fundraising match price
+  matched?: boolean; // also show the 2x fundraising match price
   people?: Person[]; // the community's people (for where it is)
   places?: string[]; // places typed before for any kit
   item: EquipmentItem;
