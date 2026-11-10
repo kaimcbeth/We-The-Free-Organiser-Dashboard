@@ -264,7 +264,7 @@ export function Equipment({
       {!hidden &&
         EQUIPMENT_GUIDE.map((g) => {
           // A new kit (new organiser, or nothing from the base kit yet): one
-          // list, base kit first and highlighted as recommended, upgrades
+          // list, base kit first with an Essential pill (no ring, Kai 11 Nov), upgrades
           // after with 0 to start; all of it counts in the kit total (Kai,
           // 11 Nov 2026).
           const building =
@@ -514,7 +514,7 @@ function EquipmentRow({
   noAbout = false,
   recommended = false,
 }: {
-  recommended?: boolean; // new kit: base kit item, pink highlight
+  recommended?: boolean; // new kit: base kit item, Essential pill
   noAbout?: boolean; // base kit: no description line under the name
   kitQty?: number; // building a kit: how many to get (undefined = hidden)
   onKitQty?: (n: number) => void;
@@ -543,13 +543,7 @@ function EquipmentRow({
   const has = !!owned;
   const photo = photos[key] ?? opt?.image ?? item.image ?? null;
   return (
-    <li
-      className={
-        recommended
-          ? "relative my-2 flex gap-3 rounded-xl bg-pink/5 px-2.5 py-2.5 ring-2 ring-pink/60"
-          : "flex gap-3 py-2.5"
-      }
-    >
+    <li className="flex gap-3 py-2.5">
       <PhotoSlot
         key={key}
         photo={photo}
@@ -575,7 +569,7 @@ function EquipmentRow({
               )}
               {recommended && (
                 <span className="rounded-full bg-pink px-2 py-0.5 text-[11px] font-semibold text-navy">
-                  Recommended
+                  Essential
                 </span>
               )}
             </span>
