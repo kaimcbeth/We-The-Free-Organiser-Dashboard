@@ -75,7 +75,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Equipment guide: new upgrade, Sign carry bag, in A2 and A1 sizes.",
+        text: "Equipment guide: new upgrades: Sign carry bag (A2 and A1 sizes) and a portable power station.",
       },
     ],
   },

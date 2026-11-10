@@ -370,6 +370,15 @@ export const EQUIPMENT_GUIDE: {
         ],
       },
       {
+        key: "power_station",
+        name: "Portable power station",
+        about:
+          "A big rechargeable battery with power points, to keep the screens, laptops and phones charged at events with no power nearby. BLUETTI AC2A: 204 Wh battery, 300 W output.",
+        shop: "Amazon",
+        url: "https://www.amazon.com.au/dp/B0DWXFJSR9",
+        price: "~$300 (often on sale)",
+      },
+      {
         key: "lanyards",
         name: "Lanyards",
         about:
