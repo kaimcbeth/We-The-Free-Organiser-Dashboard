@@ -348,6 +348,28 @@ export const EQUIPMENT_GUIDE: {
         price: "~$15",
       },
       {
+        key: "sign_carry_bag",
+        name: "Sign carry bag",
+        about:
+          "Keeps your signs flat, dry and in one piece between events, and makes them easy to carry.",
+        shop: "AliExpress",
+        url: "https://www.aliexpress.com/item/1005008990198241.html",
+        options: [
+          {
+            label: "A2",
+            about: "Fits A2 signs (420 × 594 mm).",
+            url: "https://www.aliexpress.com/item/1005008990198241.html",
+            price: "~$14",
+          },
+          {
+            label: "A1",
+            about: "Fits bigger A1 signs (594 × 841 mm).",
+            url: "https://www.aliexpress.com/item/1005013138921601.html",
+            price: "~$13",
+          },
+        ],
+      },
+      {
         key: "lanyards",
         name: "Lanyards",
         about:

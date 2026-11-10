@@ -73,6 +73,10 @@ export const CHANGELOG: Release[] = [
         level: "organiser",
         text: "The introduction for new organisers is much shorter: a quick look at each tab, then reminders and planning your actions.",
       },
+      {
+        level: "organiser",
+        text: "Equipment guide: new upgrade, Sign carry bag, in A2 and A1 sizes.",
+      },
     ],
   },
   {
