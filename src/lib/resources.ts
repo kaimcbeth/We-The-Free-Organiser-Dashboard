@@ -361,7 +361,7 @@ export const EQUIPMENT_GUIDE: {
       {
         key: "hand_trolley",
         noSuggest: true,
-        portable: "essential",
+        portable: "recommended",
         name: "Hand trolley",
         about:
           "Folding trolley for carrying the gear. More details coming soon.",
@@ -404,7 +404,7 @@ export const EQUIPMENT_GUIDE: {
       },
       {
         key: "sign_carry_bag",
-        portable: "recommended",
+        portable: "essential",
         name: "Sign carry bag",
         about:
           "Keeps your signs flat, dry and in one piece between events, and makes them easy to carry.",
