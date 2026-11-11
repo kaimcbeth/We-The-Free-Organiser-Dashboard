@@ -130,13 +130,22 @@ export function CarouselMaker({
   const [branded, setBranded] = useState(true); // WTF logo + website on slides
   const [ratios, setRatios] = useState<Record<string, number>>({}); // w / h, as loaded
   // Last slide: the next event of the same type (Kai, 11 Nov 2026).
-  const [next, setNext] = useState<NextEvent | null>(null);
+  const [found, setNext] = useState<NextEvent | null>(null);
   const [withNext, setWithNext] = useState(true);
   const [nextPreview, setNextPreview] = useState<string | null>(null);
+  // From the Photo Hub there's no event given: use the event most of the
+  // chosen photos are from (Kai, 11 Nov 2026: "Where is it?").
+  const counts = new Map<string, number>();
+  for (const id of order) {
+    const e = photos.find((p) => p.id === id)?.eventId;
+    if (e) counts.set(e, (counts.get(e) ?? 0) + 1);
+  }
+  const fromEvent =
+    eventId ?? [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
   useEffect(() => {
-    if (!eventId) return;
+    if (!fromEvent) return;
     let live = true;
-    loadNextEvent(createClient(), eventId)
+    loadNextEvent(createClient(), fromEvent)
       .then((n) => {
         if (live) setNext(n);
       })
@@ -144,7 +153,9 @@ export function CarouselMaker({
     return () => {
       live = false;
     };
-  }, [eventId]);
+  }, [fromEvent]);
+  // None of the chosen photos is from an event: no last slide.
+  const next = fromEvent ? found : null;
   const setOne = (id: string, p: Pos) => {
     setPos((all) => ({ ...all, [id]: p }));
     setMade(null);

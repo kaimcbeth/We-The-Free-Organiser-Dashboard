@@ -91,7 +91,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Event carousels end with a slide for the next event of the same type (name, day, time and place, over your first photo), when there is one. Untick it under the preview to leave it off.",
+        text: "Event carousels end with a slide for the next event of the same type (name, day, time and place, over your first photo), when there is one. This works from the Photo Hub too, when the photos you pick are attached to an event. Untick it under the preview to leave it off.",
       },
       {
         level: "organiser",
