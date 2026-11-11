@@ -83,11 +83,11 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Equipment guide, for new organisers (and communities with none of the base kit yet): base kit and upgrades in one list (base kit marked Essential, headphone splitters Recommended; hover over an item's name or picture for its details; a Portable kit button for communities without a car switches to the roll-up table and adds a sign carry bag), a Build Your Kit box with a running total, and a quantity next to each price (upgrades start at 0) (about $430 on the budget options), which changes as you switch between Budget, DIY and Best. It shows how much of the $450 equipment grant every community gets is used (with a progress bar), and what's left over or what you'd cover yourselves, with and without the 2× sponsorship match. It counts 4 handheld signs (now our recommended start), 2 viewing devices and 2 pairs of headphones. The Build Your Kit box stays on screen as you scroll. The Best (roll-up) table is $99 including shipping; the budget table needs to be picked up from Bunnings.",
+        text: "Equipment guide, for new organisers (and communities with none of the base kit yet): base kit and upgrades in one list (base kit marked Essential, headphone splitters Recommended; hover over an item's name or picture for its details; a Portable kit button for communities without a car switches to the roll-up table, adds a sign carry bag and recommends a kit backpack), a Build Your Kit box with a running total, and a quantity next to each price (upgrades start at 0) (about $430 on the budget options), which changes as you switch between Budget, DIY and Best. It shows how much of the $450 equipment grant every community gets is used (with a progress bar), and what's left over or what you'd cover yourselves, with and without the 2× sponsorship match. It counts 4 handheld signs (now our recommended start), 2 viewing devices and 2 pairs of headphones. The Build Your Kit box stays on screen as you scroll. The Best (roll-up) table is $99 including shipping; the budget table needs to be picked up from Bunnings.",
       },
       {
         level: "organiser",
-        text: "Equipment guide: new upgrades: Sign carry bag (A2 and A1 sizes) and a portable power station. The media wall now has its details and price, and headphone splitters are now an upgrade instead of base kit.",
+        text: "Equipment guide: new upgrades: Sign carry bag (A2 and A1 sizes) and a portable power station. New upgrades: a sign pole bag and a kit backpack. The media wall now has its details and price, and headphone splitters are now an upgrade instead of base kit.",
       },
     ],
   },

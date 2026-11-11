@@ -394,14 +394,20 @@ export const EQUIPMENT_GUIDE: {
         key: "sign_pole_bag",
         name: "Sign pole bag",
         about:
-          "Keeps the sign poles together and easy to carry. More details coming soon.",
+          "An 80 cm Oxford-cloth bag that keeps the sign poles together and easy to carry.",
+        shop: "AliExpress",
+        url: "https://www.aliexpress.com/item/1005007499571811.html",
+        price: "~$5",
       },
       {
         key: "kit_bag",
         portable: "recommended",
-        name: "Kit bag",
+        name: "Kit backpack",
         about:
-          "A big bag to carry the rest of the kit in one go. More details coming soon.",
+          "A padded, waterproof camera backpack (grey, size M) for carrying the laptops, headphones and small gear in one go.",
+        shop: "AliExpress",
+        url: "https://www.aliexpress.com/item/1005010109986450.html",
+        price: "~$28",
       },
       {
         key: "video_player_box",
