@@ -328,15 +328,17 @@ export function drawChristmas(canvas: HTMLCanvasElement, o: Options) {
     ctx.fillText(heading, cx, y + s * 0.78);
     y += s * 0.8;
   }
+  let scriptMid = y + 90 * u;
   if (script) {
     const s = fitOne(
       ctx,
       script,
       (n) => `${n}px ${SCRIPT}`,
-      200 * u,
+      190 * u,
       60 * u,
-      colW * 0.66,
+      colW * (wide ? 0.66 : 0.52),
     );
+    scriptMid = y + s * 0.45;
     ctx.save();
     ctx.translate(cx, y + s * 0.62);
     ctx.rotate(-0.07);
@@ -350,11 +352,11 @@ export function drawChristmas(canvas: HTMLCanvasElement, o: Options) {
     const sw = ctx.measureText(script).width;
     ctx.beginPath();
     ctx.moveTo(-sw * 0.1, s * 0.3);
-    ctx.quadraticCurveTo(sw * 0.3, s * 0.4, sw * 0.62, s * 0.18);
+    ctx.quadraticCurveTo(sw * 0.2, s * 0.38, sw * 0.46, s * 0.22);
     ctx.stroke();
     ctx.restore();
     y += s * 1.05;
-  }
+  } else y += 40 * u;
 
   // Snowflakes.
   const flakes = wide
@@ -365,10 +367,9 @@ export function drawChristmas(canvas: HTMLCanvasElement, o: Options) {
         [0.96, 0.9, 30],
       ]
     : [
-        [0.1, 0.3, 34],
         [0.92, 0.06, 40],
-        [0.1, 0.68, 32],
-        [0.88, 0.68, 26],
+        [0.05, 0.71, 28],
+        [0.95, 0.71, 24],
       ];
   for (const [fx, fy, r] of flakes) snowflake(ctx, fx * w, fy * h, r * u);
 
@@ -424,7 +425,6 @@ export function drawChristmas(canvas: HTMLCanvasElement, o: Options) {
 
   // Middle: the picture area.
   let mx0: number, mx1: number, my0: number, my1: number;
-  let dateBottom = 0;
   if (wide) {
     mx0 = w * 0.52;
     mx1 = w - 60 * u;
@@ -440,30 +440,24 @@ export function drawChristmas(canvas: HTMLCanvasElement, o: Options) {
     mx1 = w;
     my0 = y + 20 * u;
     my1 = bottom - 30 * u;
-    const ds = 76 * u;
-    stack(ctx, date, w * 0.15, my0 + ds * 0.8, ds);
-    stack(ctx, time, w * 0.85, my0 + ds * 0.8, ds);
-    dateBottom = my0 + ds * 1.9;
+    // Date and time flank the script word, leaving the middle to the
+    // picture (Kai, 11 Nov 2026: the photo was too small).
+    const ds = 60 * u;
+    stack(ctx, date, w * 0.1, scriptMid, ds);
+    stack(ctx, time, w * 0.9, scriptMid, ds);
   }
   const roomW = mx1 - mx0;
   const mcx = (mx0 + mx1) / 2;
-  // Between the date and the time the picture can be 0.58 of the width; a
-  // wider one goes below them.
-  const narrow = wide ? roomW * 0.86 : w * 0.58;
-  const tall = h > w * 1.6;
 
   // Picture box size.
   let bw: number, bh: number;
-  let top = my0;
+  const top = my0;
   if (photo) {
     const ratio = o.shape === "portrait" ? 4 / 5 : 3 / 2;
-    const maxW = wide ? roomW * 0.86 : tall ? w * 0.8 : w * 0.72;
-    if (!wide && maxW > narrow) top = Math.max(my0, dateBottom);
-    bw = Math.min(maxW, (my1 - top) * 0.88 * ratio);
-    if (!wide && bw <= narrow) top = my0;
+    bw = Math.min(roomW * (wide ? 0.88 : 0.86), (my1 - top) * 0.92 * ratio);
     bh = bw / ratio;
   } else {
-    bw = Math.min(wide ? roomW * 0.8 : narrow, (my1 - my0) * 1.1);
+    bw = Math.min(roomW * (wide ? 0.8 : 0.66), (my1 - my0) * 1.1);
     bh = Math.min((my1 - my0) * 0.86, bw);
   }
   const roomH = my1 - top;
@@ -493,11 +487,17 @@ export function drawChristmas(canvas: HTMLCanvasElement, o: Options) {
   if (photo) framed(ctx, photo, bx, by, bw, bh, u);
   else baubles(ctx, mcx, by, by + bh, u);
 
-  // Logo mark, small, top left.
+  // Logo mark, small, top left, in the same cream as the words (Kai, 11
+  // Nov 2026: the coloured mark didn't pop on the red).
   if (o.mark) {
-    const m = 74 * u;
-    ctx.globalAlpha = 0.95;
-    ctx.drawImage(o.mark, 36 * u, 36 * u, m, m);
-    ctx.globalAlpha = 1;
+    const m = Math.round(74 * u);
+    const tint = document.createElement("canvas");
+    tint.width = tint.height = m;
+    const t2 = tint.getContext("2d")!;
+    t2.drawImage(o.mark, 0, 0, m, m);
+    t2.globalCompositeOperation = "source-in";
+    t2.fillStyle = CREAM;
+    t2.fillRect(0, 0, m, m);
+    ctx.drawImage(tint, 36 * u, 36 * u);
   }
 }
