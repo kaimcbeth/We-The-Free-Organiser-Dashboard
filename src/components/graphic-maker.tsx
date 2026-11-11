@@ -18,8 +18,13 @@ import {
   type PhotoFilter,
 } from "@/components/photo-tile";
 import {
+  cover,
   drawPoster,
+  frameOf,
   loadPosterFonts,
+  nudgeFrame,
+  photoAt,
+  setFrame,
   posterDefaults,
   posterText,
 } from "@/components/graphic-poster";
@@ -114,31 +119,6 @@ function lines(ctx: CanvasRenderingContext2D, text: string, max: number) {
   }
   if (line) out.push(line);
   return out;
-}
-
-// Draw an image to fill a box, cropped from the centre.
-function cover(
-  ctx: CanvasRenderingContext2D,
-  img: HTMLImageElement,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-) {
-  const s = Math.max(w / img.naturalWidth, h / img.naturalHeight);
-  const sw = w / s;
-  const sh = h / s;
-  ctx.drawImage(
-    img,
-    (img.naturalWidth - sw) / 2,
-    (img.naturalHeight - sh) / 2,
-    sw,
-    sh,
-    x,
-    y,
-    w,
-    h,
-  );
 }
 
 const loadImage = (url: string) =>
@@ -452,6 +432,14 @@ export function GraphicMaker({
   const [colours, setColours] = useState<Colours>("warm");
   const [handle, setHandle] = useState<string | null>(null);
   const [reload, setReload] = useState(0); // bumped after an upload
+  // Moving and zooming photos (the frame lives on each image).
+  const [frameTick, setFrameTick] = useState(0);
+  const [active, setActive] = useState(0); // photo the zoom slider works on
+  const dragRef = useRef<{
+    img: HTMLImageElement;
+    x: number;
+    y: number;
+  } | null>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
 
   // Load the community's photos when the panel opens.
@@ -651,7 +639,30 @@ export function GraphicMaker({
     mark,
     texts,
     colours,
+    frameTick,
   ]);
+
+  const framed = imgs.length > 0 && style !== "teaser" && style !== "synthwave";
+  const activeImg = imgs[Math.min(active, imgs.length - 1)] ?? null;
+  const activeFrame = activeImg ? frameOf(activeImg) : null;
+  // Canvas pixels for a point on the shown (scaled) preview.
+  function toCanvas(e: { clientX: number; clientY: number }) {
+    const c = canvas.current!;
+    const r = c.getBoundingClientRect();
+    const k = c.width / r.width;
+    return { x: (e.clientX - r.left) * k, y: (e.clientY - r.top) * k, k };
+  }
+  function pickAt(e: { clientX: number; clientY: number }) {
+    const p = toCanvas(e);
+    const hit = photoAt(imgs, canvas.current!, p.x, p.y) ?? activeImg;
+    if (hit) setActive(imgs.indexOf(hit));
+    return hit;
+  }
+  function zoomBy(img: HTMLImageElement, zoom: number) {
+    const f = frameOf(img);
+    setFrame(img, { ...f, zoom: Math.max(1, Math.min(4, zoom)) });
+    setFrameTick((t) => t + 1);
+  }
   const input =
     "mt-1 block w-full rounded-lg bg-white px-2.5 py-1.5 text-sm text-navy ring-1 ring-stone-300 placeholder:text-stone-400";
 
@@ -758,9 +769,73 @@ export function GraphicMaker({
               <div className="mt-3 flex justify-center rounded-2xl bg-stone-100 p-3">
                 <canvas
                   ref={canvas}
-                  className="max-h-[48vh] w-auto max-w-full rounded-lg shadow"
+                  onPointerDown={(e) => {
+                    if (!framed) return;
+                    const img = pickAt(e);
+                    if (!img) return;
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                    dragRef.current = { img, x: e.clientX, y: e.clientY };
+                  }}
+                  onPointerMove={(e) => {
+                    const d = dragRef.current;
+                    if (!d) return;
+                    const { k } = toCanvas(e);
+                    nudgeFrame(
+                      d.img,
+                      (e.clientX - d.x) * k,
+                      (e.clientY - d.y) * k,
+                    );
+                    d.x = e.clientX;
+                    d.y = e.clientY;
+                    setFrameTick((t) => t + 1);
+                  }}
+                  onPointerUp={() => (dragRef.current = null)}
+                  onPointerCancel={() => (dragRef.current = null)}
+                  className={`max-h-[48vh] w-auto max-w-full rounded-lg shadow ${
+                    framed
+                      ? "cursor-grab touch-none active:cursor-grabbing"
+                      : ""
+                  }`}
                 />
               </div>
+              {framed && activeImg && activeFrame && (
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-stone-500">
+                  <span>
+                    Drag the photo to move it
+                    {imgs.length > 1
+                      ? ` (photo ${imgs.indexOf(activeImg) + 1})`
+                      : ""}
+                  </span>
+                  <label className="flex items-center gap-1.5">
+                    Size
+                    <input
+                      type="range"
+                      min={1}
+                      max={4}
+                      step={0.05}
+                      value={activeFrame.zoom}
+                      onChange={(e) =>
+                        zoomBy(activeImg, Number(e.target.value))
+                      }
+                      className="w-28 accent-pink"
+                    />
+                  </label>
+                  {(activeFrame.zoom !== 1 ||
+                    activeFrame.x !== 0 ||
+                    activeFrame.y !== 0) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFrame(activeImg, null);
+                        setFrameTick((t) => t + 1);
+                      }}
+                      className="hover:underline"
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+              )}
 
               <div className="mt-3">
                 <div className="mb-1 flex items-center justify-between">

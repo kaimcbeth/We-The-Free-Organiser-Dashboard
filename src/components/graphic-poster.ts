@@ -137,6 +137,56 @@ function fit(
   return s;
 }
 
+// How a photo sits in its box: zoom 1–4, x/y −1…1 across the spare picture
+// (0 = centred). Set by dragging and zooming in the graphic maker.
+export type Frame = { zoom: number; x: number; y: number };
+const frames = new WeakMap<HTMLImageElement, Frame>();
+// The last box each photo was drawn in, so a drag on the preview can be
+// turned into the right shift: canvas pixels per photo pixel and the spare.
+const drawn = new WeakMap<
+  HTMLImageElement,
+  {
+    s: number;
+    spareX: number;
+    spareY: number;
+    canvas: HTMLCanvasElement | OffscreenCanvas;
+    box: [number, number, number, number];
+  }
+>();
+// The photo whose box is under a point on the canvas (the last drawn wins).
+export function photoAt(
+  imgs: HTMLImageElement[],
+  canvas: HTMLCanvasElement,
+  px: number,
+  py: number,
+): HTMLImageElement | null {
+  for (const img of [...imgs].reverse()) {
+    const d = drawn.get(img);
+    if (!d || d.canvas !== canvas) continue;
+    const [x, y, w, h] = d.box;
+    if (px >= x && px <= x + w && py >= y && py <= y + h) return img;
+  }
+  return null;
+}
+export const frameOf = (img: HTMLImageElement): Frame =>
+  frames.get(img) ?? { zoom: 1, x: 0, y: 0 };
+export function setFrame(img: HTMLImageElement, f: Frame | null) {
+  if (f) frames.set(img, f);
+  else frames.delete(img);
+}
+// Move a photo by a drag of dx, dy canvas pixels.
+export function nudgeFrame(img: HTMLImageElement, dx: number, dy: number) {
+  const d = drawn.get(img);
+  const f = frameOf(img);
+  if (!d) return;
+  const clamp = (v: number) => Math.max(-1, Math.min(1, v));
+  setFrame(img, {
+    ...f,
+    x: d.spareX > 0 ? clamp(f.x - (2 * dx) / d.s / d.spareX) : 0,
+    y: d.spareY > 0 ? clamp(f.y - (2 * dy) / d.s / d.spareY) : 0,
+  });
+}
+
 export function cover(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement,
@@ -145,13 +195,17 @@ export function cover(
   w: number,
   h: number,
 ) {
-  const s = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+  const f = frameOf(img);
+  const s = Math.max(w / img.naturalWidth, h / img.naturalHeight) * f.zoom;
   const sw = w / s;
   const sh = h / s;
+  const spareX = img.naturalWidth - sw;
+  const spareY = img.naturalHeight - sh;
+  drawn.set(img, { s, spareX, spareY, canvas: ctx.canvas, box: [x, y, w, h] });
   ctx.drawImage(
     img,
-    (img.naturalWidth - sw) / 2,
-    (img.naturalHeight - sh) / 2,
+    (spareX * (1 + f.x)) / 2,
+    (spareY * (1 + f.y)) / 2,
     sw,
     sh,
     x,
