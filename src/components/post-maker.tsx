@@ -34,13 +34,19 @@ function nextSeasonStart(tz: string, now: number) {
   return nm ? Date.UTC(y, nm - 1, 1) : Date.UTC(y + 1, 2, 1);
 }
 
-type Ev = GraphicEvent & { id: string; past: boolean };
+type Ev = GraphicEvent & {
+  id: string;
+  past: boolean;
+  special: boolean;
+  soon: boolean;
+};
 
 export function PostMaker({ teamId, tz }: { teamId: string; tz: string }) {
   const [events, setEvents] = useState<Ev[] | null>(null);
   const [community, setCommunity] = useState<string | null>(null);
   const [picked, setPicked] = useState<string>(""); // event id, "none" = no event
   const [showRecent, setShowRecent] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const [season] = useState(() => nextSeasonStart(tz, Date.now()));
   // The makers work the season out from their action's due date: the
   // calendar is due the day before, the hosts ask 3 weeks before.
@@ -56,11 +62,11 @@ export function PostMaker({ teamId, tz }: { teamId: string; tz: string }) {
       supabase
         .from("events")
         .select(
-          "id, title, starts_at, ends_at, venue, address, event_type:event_types(name)",
+          "id, title, starts_at, ends_at, venue, address, special_event_id, event_type:event_types(name)",
         )
         .eq("team_id", teamId)
         .gte("starts_at", new Date(now - 30 * 864e5).toISOString())
-        .lte("starts_at", new Date(now + 90 * 864e5).toISOString())
+        .lte("starts_at", new Date(now + 120 * 864e5).toISOString())
         .order("starts_at"),
     ]).then(([team, evs]) => {
       if (!live) return;
@@ -75,6 +81,7 @@ export function PostMaker({ teamId, tz }: { teamId: string; tz: string }) {
           ends_at: string | null;
           venue: string | null;
           address: string | null;
+          special_event_id: string | null;
           event_type: { name: string } | null;
         }[]
       ).map((e) => ({
@@ -89,6 +96,10 @@ export function PostMaker({ teamId, tz }: { teamId: string; tz: string }) {
         typeName: e.event_type?.name ?? null,
         community: name,
         past: Date.parse(e.ends_at ?? e.starts_at) < now,
+        soon: Date.parse(e.starts_at) < now + 90 * 864e5,
+        // Special events (Christmas, New Year's Eve…) get their own list.
+        special:
+          !!e.special_event_id || /christmas|xmas|new\s*year/i.test(e.title),
       }));
       setEvents([
         ...list.filter((e) => !e.past),
@@ -144,6 +155,11 @@ export function PostMaker({ teamId, tz }: { teamId: string; tz: string }) {
       month: "short",
     }).format(new Date(iso));
   const upcoming = events?.filter((e) => !e.past) ?? [];
+  const special = upcoming.filter((e) => e.special);
+  // Ordinary events: the next 8, the rest behind "Show all" (Kai, 11 Nov
+  // 2026: the list scrolled inside a box, so Christmas was out of sight).
+  const regular = upcoming.filter((e) => !e.special && e.soon);
+  const shown = showAll ? regular : regular.slice(0, 8);
   const recent = events?.filter((e) => e.past) ?? [];
   const ev = events?.find((e) => e.id === picked) ?? null;
 
@@ -184,14 +200,33 @@ export function PostMaker({ teamId, tz }: { teamId: string; tz: string }) {
           <ul className="mt-3 space-y-1">
             {row("none", "No event", "Something else")}
           </ul>
-          {upcoming.length > 0 && (
+          {special.length > 0 && (
+            <>
+              <p className="mt-4 mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-500">
+                Special events
+              </p>
+              <ul className="space-y-1">
+                {special.map((e) => row(e.id, day(e.startsAt), e.title))}
+              </ul>
+            </>
+          )}
+          {regular.length > 0 && (
             <>
               <p className="mt-4 mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-500">
                 Coming up
               </p>
-              <ul className="max-h-72 space-y-1 overflow-y-auto">
-                {upcoming.map((e) => row(e.id, day(e.startsAt), e.title))}
+              <ul className="space-y-1">
+                {shown.map((e) => row(e.id, day(e.startsAt), e.title))}
               </ul>
+              {regular.length > shown.length && (
+                <button
+                  type="button"
+                  onClick={() => setShowAll(true)}
+                  className="mt-1.5 text-xs text-stone-500 hover:text-navy hover:underline"
+                >
+                  Show all {regular.length} ▾
+                </button>
+              )}
             </>
           )}
           {recent.length > 0 && (

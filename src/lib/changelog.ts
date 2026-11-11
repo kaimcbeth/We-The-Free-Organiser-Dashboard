@@ -91,6 +91,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Make a post: special events like Christmas and New Year's Eve have their own list at the top (up to four months ahead), and Coming up shows the next 8 events with Show all for the rest (it no longer scrolls inside a box).",
+      },
+      {
+        level: "organiser",
         text: "Graphic maker style 9: a retro Christmas party poster (red and cream, checkered bands, snowflakes) with a choice of landscape photo, portrait photo or no photo (hanging baubles instead). Christmas events open on it.",
       },
       {
