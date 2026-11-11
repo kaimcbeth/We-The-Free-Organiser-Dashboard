@@ -372,7 +372,7 @@ export function Equipment({
                 )}
                 {building && (
                   <div>
-                    <HoverDetails text="For communities without a car, or carrying the kit on public transport. It switches to the roll-up table and adds a sign carry bag, so everything can be carried. A hand trolley is recommended too.">
+                    <HoverDetails text="For communities without a car, or carrying the kit on public transport.">
                       <button
                         type="button"
                         aria-pressed={portable}
