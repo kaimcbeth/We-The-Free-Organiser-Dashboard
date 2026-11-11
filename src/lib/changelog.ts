@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "New action every two weeks: share a win for animals in your community chat. Find wins searches the web for recent good news for animals in your country and writes three ready-to-send messages with the source link. Regional Support Leads get the same for their organiser chat.",
+      },
+      {
+        level: "organiser",
         text: "New graphic style 7: a synthwave look with a neon sunset, a striped retro sun and a glowing grid floor, made for New Year's Eve (the big number is the year you're ringing in). New Year's events open on it by itself, and every word can be changed, so it works for any event.",
       },
       {

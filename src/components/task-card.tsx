@@ -23,6 +23,7 @@ import {
   OrganiserQuestionsSheet,
 } from "@/components/incident-form-sheet";
 import { ThrowbackSheet } from "@/components/throwback-sheet";
+import { WinsSheet } from "@/components/wins-sheet";
 import { Sheet } from "@/components/sheet";
 import { Avatar } from "@/components/avatar";
 import { PhotoUploader } from "@/components/photo-uploader";
@@ -676,6 +677,18 @@ export function TaskCard({
                 >
                   Read the feedback
                 </a>
+              )}
+              {task.kind === "com_share_win" && (
+                <WinsSheet
+                  teamId={task.teamId}
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
+              )}
+              {task.kind === "rsl_share_win" && task.regionId && (
+                <WinsSheet
+                  regionId={task.regionId}
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
               )}
               {task.kind === "com_mental_health" && (
                 <MentalHealthSheet
