@@ -18,6 +18,14 @@ import {
   type PhotoFilter,
 } from "@/components/photo-tile";
 import {
+  christmasFields,
+  drawChristmas,
+  isChristmas,
+  loadChristmasFonts,
+  XMAS_PHOTO,
+  type XmasPhoto,
+} from "@/components/graphic-christmas";
+import {
   cover,
   drawPoster,
   frameOf,
@@ -85,7 +93,8 @@ type Style =
   | "details"
   | "stripes"
   | "synthwave"
-  | "synthphoto";
+  | "synthphoto"
+  | "christmas";
 // Shown as plain numbers (Kai, 5 Nov 2026: the names were janky). In code:
 // classic, poster, teaser = "Coming soon", bigphoto = "Big photo",
 // details = "Photo + details".
@@ -98,6 +107,7 @@ const STYLES: Record<Style, string> = {
   stripes: "6", // Kai's Kittl poster: heading up the side, stripes, photo
   synthwave: "7", // neon sunset + grid (New Year's Eve, 11 Nov 2026)
   synthphoto: "8", // style 7 with a photo in the sun
+  christmas: "9", // retro Christmas party poster (Kai, 11 Nov 2026)
 };
 // Styles with a Warm / WTF colours choice.
 const COLOURED: Style[] = ["teaser", "bigphoto", "details", "stripes"];
@@ -422,8 +432,13 @@ export function GraphicMaker({
   const [mark, setMark] = useState<HTMLImageElement | null>(null);
   // New Year's events open on the synthwave style.
   const [style, setStyle] = useState<Style>(() =>
-    isNewYear(event.title) ? "synthwave" : "classic",
+    isNewYear(event.title)
+      ? "synthwave"
+      : isChristmas(event.title)
+        ? "christmas"
+        : "classic",
   );
+  const [xmasPhoto, setXmasPhoto] = useState<XmasPhoto>("landscape");
   const [fonts, setFonts] = useState(0); // bumped when a style's fonts load
   // Words the organiser has changed, keyed "style.field" ("" = left off).
   const [edits, setEdits] = useState<Record<string, string>>(
@@ -522,7 +537,9 @@ export function GraphicMaker({
             ? loadStripesFonts()
             : style === "synthwave" || style === "synthphoto"
               ? loadSynthwaveFonts()
-              : loadPhotoStyleFonts();
+              : style === "christmas"
+                ? loadChristmasFonts()
+                : loadPhotoStyleFonts();
     load.then(() => live && setFonts((n) => n + 1));
     if (!mark)
       loadImage("/brand/wtf-mark.png")
@@ -563,7 +580,9 @@ export function GraphicMaker({
                 ? stripesFields(event, tz, recap, handle)
                 : style === "synthwave" || style === "synthphoto"
                   ? synthwaveFields(event, tz, recap, handle)
-                  : detailsFields(event, tz, recap, handle),
+                  : style === "christmas"
+                    ? christmasFields(event, tz, recap, handle)
+                    : detailsFields(event, tz, recap, handle),
     [style, event, tz, template, recap, handle],
   );
   const texts = useMemo(
@@ -580,6 +599,15 @@ export function GraphicMaker({
     const { w, h } = SIZES[size];
     if (style === "teaser") {
       drawTeaser(canvas.current, { w, h, t: texts, colours, mark });
+    } else if (style === "christmas") {
+      drawChristmas(canvas.current, {
+        w,
+        h,
+        t: texts,
+        mark,
+        photo: imgs[0] ?? null,
+        shape: xmasPhoto,
+      });
     } else if (style === "synthwave" || style === "synthphoto") {
       drawSynthwave(canvas.current, {
         w,
@@ -640,9 +668,15 @@ export function GraphicMaker({
     texts,
     colours,
     frameTick,
+    xmasPhoto,
   ]);
 
-  const framed = imgs.length > 0 && style !== "teaser" && style !== "synthwave";
+  const xmasNoPhoto = style === "christmas" && xmasPhoto === "none";
+  const framed =
+    imgs.length > 0 &&
+    style !== "teaser" &&
+    style !== "synthwave" &&
+    !xmasNoPhoto;
   const activeImg = imgs[Math.min(active, imgs.length - 1)] ?? null;
   const activeFrame = activeImg ? frameOf(activeImg) : null;
   // Canvas pixels for a point on the shown (scaled) preview.
@@ -913,7 +947,8 @@ export function GraphicMaker({
                 style === "details" ||
                 style === "stripes" ||
                 style === "synthwave" ||
-                style === "synthphoto") &&
+                style === "synthphoto" ||
+                style === "christmas") &&
                 !handle && (
                   <p className="mt-2 text-xs text-stone-500">
                     Add your community&apos;s Instagram username in the Social
@@ -921,9 +956,29 @@ export function GraphicMaker({
                   </p>
                 )}
 
+              {style === "christmas" && (
+                <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs font-medium text-stone-500">
+                  Photo
+                  {(Object.keys(XMAS_PHOTO) as XmasPhoto[]).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setXmasPhoto(p)}
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${
+                        xmasPhoto === p
+                          ? "bg-navy text-white ring-navy"
+                          : "bg-white text-stone-500 ring-stone-300"
+                      }`}
+                    >
+                      {XMAS_PHOTO[p]}
+                    </button>
+                  ))}
+                </div>
+              )}
               {all.length > 0 &&
                 style !== "teaser" &&
-                style !== "synthwave" && (
+                style !== "synthwave" &&
+                !xmasNoPhoto && (
                   <div className="mt-3">
                     <div className="mb-1.5 flex flex-wrap items-center gap-2">
                       <p className="text-xs font-medium text-stone-500">

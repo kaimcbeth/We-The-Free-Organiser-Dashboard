@@ -91,6 +91,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Graphic maker style 9: a retro Christmas party poster (red and cream, checkered bands, snowflakes) with a choice of landscape photo, portrait photo or no photo (hanging baubles instead). Christmas events open on it.",
+      },
+      {
+        level: "organiser",
         text: "Graphic maker: drag a photo on the preview to move it, and use the Size slider to zoom in. Reset puts it back.",
       },
       {
