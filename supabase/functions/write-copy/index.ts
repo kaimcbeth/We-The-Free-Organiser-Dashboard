@@ -553,6 +553,16 @@ async function winsCopy(asUser: any, userId: string, key: string, body: any) {
   const code = COUNTRY_CODES[country.toLowerCase()];
   const today = new Intl.DateTimeFormat("en-AU", { timeZone: tz, day: "numeric", month: "long", year: "numeric" }).format(new Date());
 
+  // What organisers marked "Not our vibe" (everyone's, newest first): shown as
+  // examples to avoid, and those links are never offered again.
+  const { data: nope } = await admin
+    .from("win_feedback")
+    .select("headline, url")
+    .order("created_at", { ascending: false })
+    .limit(40);
+  const blocked = new Set((nope ?? []).map((n) => String(n.url ?? "").replace(/\/$/, "")).filter(Boolean));
+  const avoid = (nope ?? []).slice(0, 25).map((n) => `- ${n.headline}`).join("\n");
+
   const audience = forOrganisers
     ? `the WhatsApp group chat for We The Free organisers across ${place}. Upbeat, a reminder that the movement is winning.`
     : `the We The Free ${community} member WhatsApp group chat. Casual, like a friend sharing good news with the group.`;
@@ -576,7 +586,7 @@ NEVER
 - Polls and surveys, however good the number (they read as more negative than a win).
 - Niche news few people would care about (e.g. an inquiry into one small issue).
 - Anything that's mostly bad news with a small upside, or a cruelty case.
-- Only use what you found in the search results. Never invent or guess details, numbers or dates. Every win needs the link of the page you found it on.
+${avoid ? `- Organisers marked these as not our vibe. Skip them and anything like them:\n${avoid}\n` : ""}- Only use what you found in the search results. Never invent or guess details, numbers or dates. Every win needs the link of the page you found it on.
 ${note && String(note).trim() ? `- From the organiser: ${String(note).slice(0, 400)}\n` : ""}
 WRITING
 - 3 messages, each 25-70 words. Make them different: e.g. one about the biggest win, one about another win, one quick roundup of 2-3 wins.
@@ -625,7 +635,8 @@ List 3 to 8 wins, newest first. If you only find 1 or 2, that's fine: never pad 
   for (const b of blocks)
     if (b.type === "web_search_tool_result" && Array.isArray(b.content))
       for (const r of b.content) if (r?.url) seen.add(String(r.url).replace(/\/$/, ""));
-  const real = (u: string) => seen.has(String(u).trim().replace(/[).,]+$/, "").replace(/\/$/, ""));
+  const clean = (u: string) => String(u).trim().replace(/[).,]+$/, "").replace(/\/$/, "");
+  const real = (u: string) => seen.has(clean(u)) && !blocked.has(clean(u));
 
   const text = blocks.filter((b) => b.type === "text").map((b) => b.text ?? "").join("");
   // The JSON is at the end; any words before it (while searching) are skipped.

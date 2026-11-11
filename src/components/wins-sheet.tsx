@@ -36,7 +36,34 @@ export function WinsSheet({
   const [options, setOptions] = useState<string[]>([]);
   const [round, setRound] = useState(0);
   const [chat, setChat] = useState<string | null>(null);
+  // Wins marked "Not our vibe": url → feedback row id (for Undo).
+  const [nope, setNope] = useState<Record<string, string>>({});
   const forOrganisers = !teamId;
+
+  // Teaches the finder: the next searches skip this and anything like it.
+  async function notOurVibe(w: Win) {
+    const { data } = await createClient()
+      .from("win_feedback")
+      .insert({
+        team_id: teamId ?? null,
+        region_id: regionId ?? null,
+        headline: w.headline.slice(0, 300),
+        url: w.url.slice(0, 1000),
+        kind: w.kind,
+      })
+      .select("id")
+      .single<{ id: string }>();
+    if (data) setNope((n) => ({ ...n, [w.url]: data.id }));
+  }
+  async function undo(w: Win) {
+    const id = nope[w.url];
+    setNope((n) => {
+      const rest = { ...n };
+      delete rest[w.url];
+      return rest;
+    });
+    if (id) await createClient().from("win_feedback").delete().eq("id", id);
+  }
 
   async function find() {
     setError("");
@@ -111,7 +138,10 @@ export function WinsSheet({
                 </p>
                 <ul className="space-y-1.5">
                   {wins.map((w, i) => (
-                    <li key={i} className="text-sm leading-snug">
+                    <li
+                      key={i}
+                      className={`group text-sm leading-snug ${nope[w.url] ? "opacity-50" : ""}`}
+                    >
                       {w.kind === "progress" && (
                         <span className="mr-1.5 rounded-full bg-cyan/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-cyan-800">
                           Step forward
@@ -132,6 +162,26 @@ export function WinsSheet({
                           {w.source || "source"}
                         </a>
                       </span>
+                      {nope[w.url] ? (
+                        <span className="ml-1.5 text-xs text-stone-500">
+                          Got it, fewer like this ·{" "}
+                          <button
+                            type="button"
+                            onClick={() => undo(w)}
+                            className="hover:underline"
+                          >
+                            Undo
+                          </button>
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => notOurVibe(w)}
+                          className="ml-1.5 text-xs text-stone-400 hover:text-stone-600 hover:underline"
+                        >
+                          Not our vibe
+                        </button>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -139,9 +189,11 @@ export function WinsSheet({
             )}
             {options.length > 0 && (
               <ul key={round} className="space-y-2">
-                {options.map((t, i) => (
-                  <Option key={i} text={t} />
-                ))}
+                {options
+                  .filter((t) => !Object.keys(nope).some((u) => t.includes(u)))
+                  .map((t) => (
+                    <Option key={t} text={t} />
+                  ))}
               </ul>
             )}
             {(wins || error) && !busy && (

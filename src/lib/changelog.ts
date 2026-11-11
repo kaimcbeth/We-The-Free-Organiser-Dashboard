@@ -63,7 +63,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "New action every two weeks: share a win for animals in your community chat. Find wins searches the web for recent good news for animals in your country and writes three ready-to-send messages with the source link. Regional Support Leads get the same for their organiser chat.",
+        text: "New action every two weeks: share a win for animals in your community chat. Find wins searches the web for recent good news for animals in your country and writes three ready-to-send messages with the source link. Regional Support Leads get the same for their organiser chat. Tap \"Not our vibe\" beside any win and future searches skip that kind of news.",
       },
       {
         level: "organiser",
