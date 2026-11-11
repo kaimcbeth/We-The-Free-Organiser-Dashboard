@@ -1,7 +1,7 @@
 // Meeting point graphic (Kai, 11 Nov 2026: "pick a spot that then generates a
 // graphic to go on socials for our meeting point at events"). A street map
 // centred on the spot with a big pink pin, and a navy panel saying where
-// exactly, when, and what for. Map tiles are CARTO's (OpenStreetMap data);
+// exactly, when, and what for. Map tiles are OpenStreetMap's own (CARTO started asking for an API key, 11 Nov 2026); the dark look is the same tiles with the lightness flipped;
 // both need crediting, so the credit is drawn on the map.
 
 import { grain } from "@/components/graphic-poster";
@@ -19,16 +19,18 @@ export const MAP_LOOKS: { id: MapLook; label: string }[] = [
   { id: "light", label: "Light map" },
   { id: "dark", label: "Dark map" },
 ];
-const TILES: Record<MapLook, string> = {
-  light:
-    "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-  dark: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-};
-export const tileUrl = (look: MapLook) => TILES[look].replace("@2x", "{r}");
-export const CREDIT = "© OpenStreetMap contributors © CARTO";
+// OpenStreetMap's standard tiles: free with the credit, CORS-enabled (so the
+// canvas can be saved), 256 px, zoom 0–19. No @2x, so the graphic fetches
+// one zoom level deeper to stay sharp.
+const OSM = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+export const tileUrl = () => OSM;
+export const OSM_MAX_ZOOM = 19;
+export const CREDIT = "© OpenStreetMap contributors";
+// The Leaflet picker gets the dark look from this CSS filter.
+export const DARK_FILTER =
+  "invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9)";
 
-const TILE = 512; // @2x tiles, drawn at full size
-const SUBS = ["a", "b", "c", "d"];
+const WORLD_TILE = 512; // the graphic's scale: 512 px per tile at the chosen zoom
 
 const tileCache = new Map<string, Promise<HTMLImageElement | null>>();
 function loadTile(url: string) {
@@ -48,12 +50,27 @@ function loadTile(url: string) {
 
 // Web Mercator: world pixel position of a point at zoom z (512-px tiles).
 function project(lat: number, lng: number, z: number) {
-  const world = TILE * 2 ** z;
+  const world = WORLD_TILE * 2 ** z;
   const s = Math.sin((lat * Math.PI) / 180);
   return {
     x: ((lng + 180) / 360) * world,
     y: (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * world,
   };
+}
+
+// Flip the lightness but keep the colours (like the CSS filter above), then
+// tint towards navy.
+function darken(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const data = ctx.getImageData(0, 0, w, h);
+  const d = data.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const l = 0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2];
+    const shift = 255 - 2 * l;
+    d[i] = Math.max(0, Math.min(255, (d[i] + shift) * 0.82 + 6));
+    d[i + 1] = Math.max(0, Math.min(255, (d[i + 1] + shift) * 0.82 + 8));
+    d[i + 2] = Math.max(0, Math.min(255, (d[i + 2] + shift) * 0.82 + 18));
+  }
+  ctx.putImageData(data, 0, 0);
 }
 
 // A map picture w × h with the point at (cx, cy). null if no tiles loaded.
@@ -68,38 +85,40 @@ export async function renderMap(
   look: MapLook,
 ): Promise<HTMLCanvasElement | null> {
   const z = Math.round(zoom);
+  const zf = Math.min(z + 1, OSM_MAX_ZOOM); // zoom the tiles are fetched at
+  const T = WORLD_TILE / 2 ** (zf - z); // drawn size of each 256-px tile
   const p = project(lat, lng, z);
   const left = p.x - cx;
   const top = p.y - cy;
-  const n = 2 ** z;
+  const n = 2 ** zf;
   const jobs: Promise<void>[] = [];
   const out = document.createElement("canvas");
   out.width = w;
   out.height = h;
   const ctx = out.getContext("2d")!;
-  ctx.fillStyle = look === "dark" ? "#1b1d24" : "#f2efe9";
+  ctx.fillStyle = "#f2efe9";
   ctx.fillRect(0, 0, w, h);
   let got = 0;
-  for (let ty = Math.floor(top / TILE); ty * TILE < top + h; ty++) {
+  for (let ty = Math.floor(top / T); ty * T < top + h; ty++) {
     if (ty < 0 || ty >= n) continue;
-    for (let tx = Math.floor(left / TILE); tx * TILE < left + w; tx++) {
+    for (let tx = Math.floor(left / T); tx * T < left + w; tx++) {
       const x = ((tx % n) + n) % n;
-      const url = TILES[look]
-        .replace("{s}", SUBS[(x + ty) % SUBS.length])
-        .replace("{z}", String(z))
+      const url = OSM.replace("{z}", String(zf))
         .replace("{x}", String(x))
         .replace("{y}", String(ty));
       jobs.push(
         loadTile(url).then((img) => {
           if (!img) return;
           got++;
-          ctx.drawImage(img, tx * TILE - left, ty * TILE - top, TILE, TILE);
+          ctx.drawImage(img, tx * T - left, ty * T - top, T, T);
         }),
       );
     }
   }
   await Promise.all(jobs);
-  return got ? out : null;
+  if (!got) return null;
+  if (look === "dark") darken(ctx, w, h);
+  return out;
 }
 
 export type MeetSize = "post" | "story";

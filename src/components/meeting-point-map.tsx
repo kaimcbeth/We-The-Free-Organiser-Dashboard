@@ -3,7 +3,12 @@
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState } from "react";
 import type { Map as LeafletMap, Marker, TileLayer } from "leaflet";
-import { tileUrl, type MapLook } from "@/components/meeting-point-graphic";
+import {
+  DARK_FILTER,
+  OSM_MAX_ZOOM,
+  tileUrl,
+  type MapLook,
+} from "@/components/meeting-point-graphic";
 
 export type Spot = { lat: number; lng: number };
 
@@ -48,11 +53,10 @@ export function MeetingPointMap({
         .map(el.current, { zoomControl: true, attributionControl: true })
         .setView([spot?.lat ?? centre.lat, spot?.lng ?? centre.lng], zoom);
       tiles.current = leaflet
-        .tileLayer(tileUrl(look), {
+        .tileLayer(tileUrl(), {
           attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; CARTO',
-          subdomains: "abcd",
-          maxZoom: 19,
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: OSM_MAX_ZOOM,
         })
         .addTo(m);
       m.on("click", (e) =>
@@ -75,8 +79,9 @@ export function MeetingPointMap({
 
   // Map look.
   useEffect(() => {
-    tiles.current?.setUrl(tileUrl(look));
-  }, [look]);
+    const pane = tiles.current?.getContainer();
+    if (pane) pane.style.filter = look === "dark" ? DARK_FILTER : "";
+  }, [look, ready]);
 
   // Re-centre when a new place is searched for (centre changes).
   useEffect(() => {

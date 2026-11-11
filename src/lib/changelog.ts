@@ -91,6 +91,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: 'Meeting point: the map now uses OpenStreetMap, so it shows real streets instead of an "API key required" message.',
+      },
+      {
+        level: "organiser",
         text: "New suggested special event: the 2026 Finale Movie Challenge, on the second Saturday of December, to finish the year with one last big Movie Challenge, and the End of 2026 Celebration Dinner on the third Saturday.",
       },
       {
