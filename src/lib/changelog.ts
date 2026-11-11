@@ -91,6 +91,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "New suggested special event: the 2026 Finale Movie Challenge, on the second Saturday of December, to finish the year with one last big Movie Challenge.",
+      },
+      {
+        level: "organiser",
         text: "Make a post: special events like Christmas and New Year's Eve have their own list at the top (up to four months ahead), and Coming up shows the next 8 events with Show all for the rest (it no longer scrolls inside a box).",
       },
       {
