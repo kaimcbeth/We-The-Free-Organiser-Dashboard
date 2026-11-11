@@ -111,3 +111,8 @@ body {
     animation: none;
   }
 }
+
+/* Calendar scope map: OpenStreetMap tiles toned down (CARTO's light look). */
+.wtf-quiet-tiles {
+  filter: grayscale(0.9) brightness(1.08) contrast(0.85);
+}

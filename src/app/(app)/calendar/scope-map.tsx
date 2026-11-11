@@ -75,15 +75,14 @@ export function ScopeMap({
         })
         .setView([centre.lat, centre.lng], 9);
       leaflet
-        .tileLayer(
-          "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-          {
-            attribution:
-              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; CARTO',
-            subdomains: "abcd",
-            maxZoom: 12,
-          },
-        )
+        // CARTO now asks for an API key (12 Nov 2026): OpenStreetMap's own
+        // tiles, greyed down to the quiet look CARTO's light map had.
+        .tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 12,
+          className: "wtf-quiet-tiles",
+        })
         .addTo(m);
       circle.current = leaflet
         .circle([centre.lat, centre.lng], {

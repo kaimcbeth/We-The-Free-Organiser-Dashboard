@@ -91,7 +91,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: 'Meeting point: the map now uses OpenStreetMap, so it shows real streets instead of an "API key required" message.',
+        text: "Meeting point: a cleaner, softer map (light and dark), free with no API key. The calendar's area map works again too.",
       },
       {
         level: "organiser",
