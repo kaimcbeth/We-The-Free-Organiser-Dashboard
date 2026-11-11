@@ -79,7 +79,8 @@ type Style =
   | "bigphoto"
   | "details"
   | "stripes"
-  | "synthwave";
+  | "synthwave"
+  | "synthphoto";
 // Shown as plain numbers (Kai, 5 Nov 2026: the names were janky). In code:
 // classic, poster, teaser = "Coming soon", bigphoto = "Big photo",
 // details = "Photo + details".
@@ -91,6 +92,7 @@ const STYLES: Record<Style, string> = {
   details: "5",
   stripes: "6", // Kai's Kittl poster: heading up the side, stripes, photo
   synthwave: "7", // neon sunset + grid (New Year's Eve, 11 Nov 2026)
+  synthphoto: "8", // style 7 with a photo in the sun
 };
 // Styles with a Warm / WTF colours choice.
 const COLOURED: Style[] = ["teaser", "bigphoto", "details", "stripes"];
@@ -530,7 +532,7 @@ export function GraphicMaker({
           ? loadTeaserFonts()
           : style === "stripes"
             ? loadStripesFonts()
-            : style === "synthwave"
+            : style === "synthwave" || style === "synthphoto"
               ? loadSynthwaveFonts()
               : loadPhotoStyleFonts();
     load.then(() => live && setFonts((n) => n + 1));
@@ -571,7 +573,7 @@ export function GraphicMaker({
               ? bigPhotoFields(event, tz, recap, handle)
               : style === "stripes"
                 ? stripesFields(event, tz, recap, handle)
-                : style === "synthwave"
+                : style === "synthwave" || style === "synthphoto"
                   ? synthwaveFields(event, tz, recap, handle)
                   : detailsFields(event, tz, recap, handle),
     [style, event, tz, template, recap, handle],
@@ -590,8 +592,14 @@ export function GraphicMaker({
     const { w, h } = SIZES[size];
     if (style === "teaser") {
       drawTeaser(canvas.current, { w, h, t: texts, colours, mark });
-    } else if (style === "synthwave") {
-      drawSynthwave(canvas.current, { w, h, t: texts, mark });
+    } else if (style === "synthwave" || style === "synthphoto") {
+      drawSynthwave(canvas.current, {
+        w,
+        h,
+        t: texts,
+        mark,
+        photo: style === "synthphoto" ? (imgs[0] ?? null) : null,
+      });
     } else if (style === "stripes") {
       drawStripes(canvas.current, {
         w,
@@ -829,7 +837,8 @@ export function GraphicMaker({
               {(style === "bigphoto" ||
                 style === "details" ||
                 style === "stripes" ||
-                style === "synthwave") &&
+                style === "synthwave" ||
+                style === "synthphoto") &&
                 !handle && (
                   <p className="mt-2 text-xs text-stone-500">
                     Add your community&apos;s Instagram username in the Social

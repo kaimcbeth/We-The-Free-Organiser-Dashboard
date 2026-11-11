@@ -7,8 +7,12 @@
 //
 // Never fireworks (Kai, 5 Nov 2026: not in line with veganism): the sky
 // only has stars.
+//
+// Style 8 (Kai, 11 Nov 2026: "a version of the nye template with a spot of
+// photo") is the same drawing with a photo inside the sun, tinted
+// sunset colours; the words move up so they don't cover faces.
 
-import { grain } from "@/components/graphic-poster";
+import { cover, grain } from "@/components/graphic-poster";
 import { fitLines, spaced, wrap } from "@/components/graphic-teaser";
 import {
   fmt,
@@ -104,6 +108,7 @@ type Options = {
   h: number;
   t: Texts;
   mark: HTMLImageElement | null;
+  photo?: HTMLImageElement | null;
 };
 
 const val = (s: string | undefined) => (s ?? "").trim();
@@ -185,6 +190,7 @@ function sun(
   cy: number,
   r: number,
   visible: number,
+  photo: HTMLImageElement | null = null,
 ) {
   // Soft glow behind it.
   const glow = ctx.createRadialGradient(cx, cy, r * 0.6, cx, cy, r * 2.1);
@@ -208,15 +214,43 @@ function sun(
   s.beginPath();
   s.arc(size / 2, size / 2, r, 0, Math.PI * 2);
   s.fill();
+  if (photo) {
+    // The photo in black and white, then the sunset colours laid over it
+    // (keeps the photo's light and shade, takes the sun's colours).
+    s.save();
+    s.beginPath();
+    s.arc(size / 2, size / 2, r, 0, Math.PI * 2);
+    s.clip();
+    // Fill only the part above the horizon, so the middle of the photo
+    // (usually the faces) is what shows.
+    s.filter = "grayscale(1) contrast(1.1) brightness(1.08)";
+    cover(s, photo, size / 2 - r, size / 2 - r, r * 2, r + visible);
+    s.filter = "none";
+    s.globalCompositeOperation = "color";
+    s.globalAlpha = 0.72;
+    s.fillStyle = g;
+    s.fillRect(0, 0, size, size);
+    s.globalAlpha = 0.35;
+    s.globalCompositeOperation = "soft-light";
+    s.fillRect(0, 0, size, size);
+    s.restore();
+    // A thin glowing rim so it still reads as a sun.
+    s.strokeStyle = "rgba(255,230,160,0.9)";
+    s.lineWidth = Math.max(2, r * 0.012);
+    s.beginPath();
+    s.arc(size / 2, size / 2, r - s.lineWidth / 2, 0, Math.PI * 2);
+    s.stroke();
+  }
   // Cut the stripes out of the part above the horizon (`visible` = how far
   // below the sun's middle the horizon is), each gap wider than the last.
   s.globalCompositeOperation = "destination-out";
-  const start = size / 2 - r * 0.5;
+  // With a photo: three thin stripes in the bottom fifth only.
   const end = size / 2 + visible;
-  const n = 6;
+  const start = photo ? end - (r + visible) * 0.2 : size / 2 - r * 0.5;
+  const n = photo ? 3 : 6;
   for (let i = 0; i < n; i++) {
     const at = start + (end - start) * Math.pow(i / n, 0.8);
-    const gap = Math.max(2, r * (0.014 + 0.012 * i));
+    const gap = Math.max(2, r * ((photo ? 0.008 : 0.014) + 0.01 * i));
     s.fillRect(0, at, size, gap);
   }
   ctx.drawImage(c, cx - size / 2, cy - size / 2);
@@ -231,13 +265,15 @@ function mountains(
   cx: number,
   maxH: number,
   u: number,
+  clear = 0, // keep this far either side of cx flat (the photo sun)
 ) {
   const rnd = seeded(5);
   const pts: [number, number][] = [[0, horizon]];
   const step = 46 * u;
   for (let x = 0; x <= w + step; x += step * (0.6 + rnd() * 0.8)) {
     const away = Math.min(1, Math.abs(x - cx) / (w * 0.42));
-    const peak = maxH * (0.08 + 0.92 * Math.pow(away, 1.4));
+    const flat = clear && Math.abs(x - cx) < clear ? 0.04 : 1;
+    const peak = maxH * flat * (0.08 + 0.92 * Math.pow(away, 1.4));
     const hgt = peak * (0.45 + rnd() * 0.55);
     pts.push([x, horizon - hgt]);
   }
@@ -457,13 +493,26 @@ export function drawSynthwave(canvas: HTMLCanvasElement, o: Options) {
 
   const horizon = Math.round(h * (wide ? 0.66 : tall ? 0.58 : 0.62));
   const cx = wide ? w * 0.73 : w / 2;
-  const r = wide ? h * 0.34 : w * (tall ? 0.42 : 0.32);
-  const sunY = horizon - r * 0.18;
+  const photo = o.photo ?? null;
+  const r = wide
+    ? h * 0.34
+    : w * (tall ? (photo ? 0.38 : 0.42) : photo ? 0.31 : 0.32);
+  // With a photo the sun sits higher so more of the photo shows.
+  const sunY = horizon - r * (photo && !wide ? 0.05 : 0.18);
+  const sunTop = sunY - r;
 
   sky(ctx, w, horizon);
   stars(ctx, w, horizon - r * 0.4, u);
-  sun(ctx, cx, sunY, r, horizon - sunY);
-  mountains(ctx, w, horizon, cx, (wide ? 0.11 : 0.1) * h, u);
+  sun(ctx, cx, sunY, r, horizon - sunY, photo);
+  mountains(
+    ctx,
+    w,
+    horizon,
+    cx,
+    (wide ? 0.11 : 0.1) * h,
+    u,
+    photo ? r * 1.04 : 0,
+  );
   floor(ctx, w, h, horizon, cx, u);
 
   // Darken the bottom so the details read over the grid.
@@ -512,9 +561,13 @@ export function drawSynthwave(canvas: HTMLCanvasElement, o: Options) {
 
   // Bottom of the big number: across the sun in portrait, above the
   // horizon on wide covers.
+  // With a photo (portrait) the words sit above the sun, clear of faces.
   const yearBase = wide
     ? horizon - r * 0.78
-    : Math.min(sunY - r * 0.28, horizon - 120 * u);
+    : photo
+      ? sunTop - 34 * u
+      : Math.min(sunY - r * 0.28, horizon - 120 * u);
+  const room = yearBase - stackTop;
   let yearCap = 0;
   let yearSize = 0;
   if (year) {
@@ -522,7 +575,13 @@ export function drawSynthwave(canvas: HTMLCanvasElement, o: Options) {
       ctx,
       year,
       display,
-      Math.round((wide ? 300 : tall ? 360 : 330) * u),
+      Math.round(
+        Math.min(
+          (wide ? 300 : tall ? 360 : 330) * u,
+          // Leave room for the heading above it.
+          photo && !wide ? room * 0.62 : Infinity,
+        ),
+      ),
       60,
       textW * (wide ? 0.95 : 0.92),
     );
