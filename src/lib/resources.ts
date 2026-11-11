@@ -384,7 +384,6 @@ export const EQUIPMENT_GUIDE: {
       {
         key: "hand_trolley",
         noSuggest: true,
-        portable: "recommended",
         name: "Hand trolley",
         about:
           "Folding trolley for carrying the gear. More details coming soon.",
