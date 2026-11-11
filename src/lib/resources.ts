@@ -391,6 +391,19 @@ export const EQUIPMENT_GUIDE: {
         price: "$79",
       },
       {
+        key: "sign_pole_bag",
+        name: "Sign pole bag",
+        about:
+          "Keeps the sign poles together and easy to carry. More details coming soon.",
+      },
+      {
+        key: "kit_bag",
+        portable: "recommended",
+        name: "Kit bag",
+        about:
+          "A big bag to carry the rest of the kit in one go. More details coming soon.",
+      },
+      {
         key: "video_player_box",
         name: "Video player box",
         about:
