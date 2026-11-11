@@ -42,6 +42,12 @@ import {
   loadStripesFonts,
   stripesFields,
 } from "@/components/graphic-stripes";
+import {
+  drawSynthwave,
+  loadSynthwaveFonts,
+  isNewYear,
+  synthwaveFields,
+} from "@/components/graphic-synthwave";
 import { PALETTES, type Colours } from "@/components/graphic-colours";
 
 // Event graphics, drawn in the browser on a canvas from the event's details
@@ -67,7 +73,13 @@ const SIZES: Record<GraphicSize, { label: string; w: number; h: number }> = {
 };
 type Template = "promo" | "recap";
 type Style =
-  "classic" | "poster" | "teaser" | "bigphoto" | "details" | "stripes";
+  | "classic"
+  | "poster"
+  | "teaser"
+  | "bigphoto"
+  | "details"
+  | "stripes"
+  | "synthwave";
 // Shown as plain numbers (Kai, 5 Nov 2026: the names were janky). In code:
 // classic, poster, teaser = "Coming soon", bigphoto = "Big photo",
 // details = "Photo + details".
@@ -78,6 +90,7 @@ const STYLES: Record<Style, string> = {
   bigphoto: "4",
   details: "5",
   stripes: "6", // Kai's Kittl poster: heading up the side, stripes, photo
+  synthwave: "7", // neon sunset + grid (New Year's Eve, 11 Nov 2026)
 };
 // Styles with a Warm / WTF colours choice.
 const COLOURED: Style[] = ["teaser", "bigphoto", "details", "stripes"];
@@ -425,7 +438,10 @@ export function GraphicMaker({
   const [imgs, setImgs] = useState<HTMLImageElement[]>([]);
   const [logo, setLogo] = useState<HTMLImageElement | null>(null);
   const [mark, setMark] = useState<HTMLImageElement | null>(null);
-  const [style, setStyle] = useState<Style>("classic");
+  // New Year's events open on the synthwave style.
+  const [style, setStyle] = useState<Style>(() =>
+    isNewYear(event.title) ? "synthwave" : "classic",
+  );
   const [fonts, setFonts] = useState(0); // bumped when a style's fonts load
   // Words the organiser has changed, keyed "style.field" ("" = left off).
   const [edits, setEdits] = useState<Record<string, string>>(
@@ -514,7 +530,9 @@ export function GraphicMaker({
           ? loadTeaserFonts()
           : style === "stripes"
             ? loadStripesFonts()
-            : loadPhotoStyleFonts();
+            : style === "synthwave"
+              ? loadSynthwaveFonts()
+              : loadPhotoStyleFonts();
     load.then(() => live && setFonts((n) => n + 1));
     if (!mark)
       loadImage("/brand/wtf-mark.png")
@@ -553,7 +571,9 @@ export function GraphicMaker({
               ? bigPhotoFields(event, tz, recap, handle)
               : style === "stripes"
                 ? stripesFields(event, tz, recap, handle)
-                : detailsFields(event, tz, recap, handle),
+                : style === "synthwave"
+                  ? synthwaveFields(event, tz, recap, handle)
+                  : detailsFields(event, tz, recap, handle),
     [style, event, tz, template, recap, handle],
   );
   const texts = useMemo(
@@ -570,6 +590,8 @@ export function GraphicMaker({
     const { w, h } = SIZES[size];
     if (style === "teaser") {
       drawTeaser(canvas.current, { w, h, t: texts, colours, mark });
+    } else if (style === "synthwave") {
+      drawSynthwave(canvas.current, { w, h, t: texts, mark });
     } else if (style === "stripes") {
       drawStripes(canvas.current, {
         w,
@@ -806,7 +828,8 @@ export function GraphicMaker({
               )}
               {(style === "bigphoto" ||
                 style === "details" ||
-                style === "stripes") &&
+                style === "stripes" ||
+                style === "synthwave") &&
                 !handle && (
                   <p className="mt-2 text-xs text-stone-500">
                     Add your community&apos;s Instagram username in the Social
@@ -814,55 +837,57 @@ export function GraphicMaker({
                   </p>
                 )}
 
-              {all.length > 0 && style !== "teaser" && (
-                <div className="mt-3">
-                  <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                    <p className="text-xs font-medium text-stone-500">
-                      {template === "recap" ? "Lead photo" : "Photo"}
-                    </p>
-                    <TagFilter
-                      photos={all}
-                      value={tag}
-                      onChange={(t) => {
-                        setTag(t);
-                        setChosen(null);
-                      }}
-                      small
-                    />
+              {all.length > 0 &&
+                style !== "teaser" &&
+                style !== "synthwave" && (
+                  <div className="mt-3">
+                    <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                      <p className="text-xs font-medium text-stone-500">
+                        {template === "recap" ? "Lead photo" : "Photo"}
+                      </p>
+                      <TagFilter
+                        photos={all}
+                        value={tag}
+                        onChange={(t) => {
+                          setTag(t);
+                          setChosen(null);
+                        }}
+                        small
+                      />
+                    </div>
+                    <div className="flex gap-1.5 overflow-x-auto pb-1">
+                      {template === "promo" && (
+                        <button
+                          type="button"
+                          onClick={() => setChosen("")}
+                          className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-navy text-[10px] font-semibold text-white ring-2 ${pickId === "" ? "ring-pink" : "ring-transparent"}`}
+                        >
+                          No photo
+                        </button>
+                      )}
+                      {pool.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => setChosen(p.id)}
+                          className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg ring-2 ${pickId === p.id ? "ring-pink" : "ring-transparent"}`}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
+                          <img
+                            src={p.url}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                          {p.favourite && (
+                            <span className="absolute left-0.5 top-0.5 text-[10px]">
+                              ⭐
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex gap-1.5 overflow-x-auto pb-1">
-                    {template === "promo" && (
-                      <button
-                        type="button"
-                        onClick={() => setChosen("")}
-                        className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-navy text-[10px] font-semibold text-white ring-2 ${pickId === "" ? "ring-pink" : "ring-transparent"}`}
-                      >
-                        No photo
-                      </button>
-                    )}
-                    {pool.map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => setChosen(p.id)}
-                        className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg ring-2 ${pickId === p.id ? "ring-pink" : "ring-transparent"}`}
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
-                        <img
-                          src={p.url}
-                          alt=""
-                          className="h-full w-full object-cover"
-                        />
-                        {p.favourite && (
-                          <span className="absolute left-0.5 top-0.5 text-[10px]">
-                            ⭐
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+                )}
 
               <div className="mt-3 flex gap-2">
                 <button

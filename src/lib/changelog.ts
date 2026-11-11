@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "New graphic style 7: a synthwave look with a neon sunset, a striped retro sun and a glowing grid floor, made for New Year's Eve (the big number is the year you're ringing in). New Year's events open on it by itself, and every word can be changed, so it works for any event.",
+      },
+      {
+        level: "organiser",
         text: "Meeting point graphics: on any event page (or Make a post in the Social Media Hub), tap Meeting point, drop a pin on the map, say exactly where, and get a post or story with the map, the spot, the day and time. The spot is saved on the event, spots you've used before are one tap away, and Copy map link gives a Google Maps link for the caption.",
       },
       {
