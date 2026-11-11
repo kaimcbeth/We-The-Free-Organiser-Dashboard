@@ -41,7 +41,7 @@ export function SpecialPicker({
           {specials.map((s) => (
             <option key={s.id} value={s.id}>
               {s.emoji ? `${s.emoji} ` : ""}
-              {s.name.replace("{year} ", "")}
+              {s.name.replace("{year} ", "").replace("{year}", "the year")}
             </option>
           ))}
         </optgroup>
