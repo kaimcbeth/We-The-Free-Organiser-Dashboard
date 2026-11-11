@@ -848,6 +848,20 @@ function EquipmentRow({
             title={`Buying ${item.name.toLowerCase()}`}
             onClose={() => setGuideOpen(false)}
           >
+            {item.steps && (
+              <ol className="mb-3 space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+                {item.steps.map((step, n) => (
+                  <li key={n} className="flex gap-3 text-stone-700">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-navy text-xs font-semibold text-white">
+                      {n + 1}
+                    </span>
+                    <span className="pt-0.5">
+                      <StepText text={step} />
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            )}
             <ul className="space-y-3">
               {item.guide.map((g) => (
                 <li
@@ -1078,5 +1092,30 @@ function HoverDetails({
         {text}
       </span>
     </span>
+  );
+}
+
+// "[text](url)" in a purchasing guide step becomes a link.
+function StepText({ text }: { text: string }) {
+  const parts = text.split(/(\[[^\]]+\]\([^)]+\))/);
+  return (
+    <>
+      {parts.map((p, i) => {
+        const m = p.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+        return m ? (
+          <a
+            key={i}
+            href={m[2]}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-navy underline hover:text-pink"
+          >
+            {m[1]}
+          </a>
+        ) : (
+          p
+        );
+      })}
+    </>
   );
 }

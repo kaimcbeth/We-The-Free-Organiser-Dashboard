@@ -58,6 +58,16 @@ export const COMING_SOON: { title: string; text: string }[] = [
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-11-12",
+    title: "Ordering signs step by step",
+    changes: [
+      {
+        level: "organiser",
+        text: "Equipment guide: the signs' Purchasing guide now walks you through ordering A1 handheld signs from Easy Signs, step by step (size, thickness, double-sided printing and the rest).",
+      },
+    ],
+  },
+  {
     date: "2026-11-11",
     title: "Insights charts and tab introductions",
     changes: [

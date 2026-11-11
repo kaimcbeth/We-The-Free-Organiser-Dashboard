@@ -148,6 +148,9 @@ export type EquipmentItem = {
   parts?: { name: string; shop: string; url: string; price?: string }[];
   // Tips for buying it, shown in a pop-up (instead of a shop link).
   guide?: { label: string; text: string }[];
+  // Step-by-step ordering instructions, shown numbered at the top of the
+  // purchasing guide. "[text](url)" becomes a link (Kai, 12 Nov 2026).
+  steps?: string[];
   image?: string; // a default photo (under /equipment); uploads replace it
   // Left out of "What to get next" (consumables, or not every team needs it).
   noSuggest?: boolean;
@@ -234,14 +237,23 @@ export const EQUIPMENT_GUIDE: {
             price: "$137.50 for 4 (600 × 900mm)",
           },
         ],
+        steps: [
+          "Go to [Easy Signs](https://www.easysigns.com.au/products/details/signflute-corrugated-plastic-signs) and select Signflute corrugated plastic signs.",
+          "Choose a quantity of 5 or more (signs get much cheaper per sign past 4). Number of designs: 1.",
+          "Size: Custom.",
+          "Width: 841 mm.",
+          "Height: 594 mm (A1 size).",
+          "Thickness: 5 mm.",
+          "Printing: Double-sided.",
+          "Islet quantity and location: No islets.",
+          "Cutting: Standard.",
+          "Select priority files and delivery.",
+          "Click Calculate Price, then My Price, then Add to Cart, and enter your payment details in the cart.",
+        ],
         guide: [
           {
             label: "When you order",
             text: "Ask for vertical flute: write “vertical flute” in the notes section when you order the signs.",
-          },
-          {
-            label: "Order more than 4",
-            text: "Signs get significantly cheaper per sign once you order more than 4.",
           },
         ],
       },
@@ -329,14 +341,23 @@ export const EQUIPMENT_GUIDE: {
         about: "Stands on its own, so people can spot you from further away.",
         shop: "Easy Signs",
         url: "https://www.easysigns.com.au/products/details/signflute-insertable-a-frame-sandwich-board",
+        steps: [
+          "Go to [Easy Signs](https://www.easysigns.com.au/products/details/signflute-corrugated-plastic-signs) and select Signflute corrugated plastic signs.",
+          "Choose a quantity of 5 or more (signs get much cheaper per sign past 4). Number of designs: 1.",
+          "Size: Custom.",
+          "Width: 841 mm.",
+          "Height: 594 mm (A1 size).",
+          "Thickness: 5 mm.",
+          "Printing: Double-sided.",
+          "Islet quantity and location: No islets.",
+          "Cutting: Standard.",
+          "Select priority files and delivery.",
+          "Click Calculate Price, then My Price, then Add to Cart, and enter your payment details in the cart.",
+        ],
         guide: [
           {
             label: "When you order",
             text: "Ask for vertical flute: write “vertical flute” in the notes section when you order the signs.",
-          },
-          {
-            label: "Order more than 4",
-            text: "Signs get significantly cheaper per sign once you order more than 4.",
           },
         ],
         options: [
