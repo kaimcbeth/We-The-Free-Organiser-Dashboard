@@ -248,14 +248,11 @@ export const EQUIPMENT_GUIDE: {
           "Islet quantity and location: No islets.",
           "Cutting: Standard.",
           "Select priority files and delivery.",
-          "Click Calculate Price, then My Price, then Add to Cart, and enter your payment details in the cart.",
+          "Click Calculate Price, then My Price, then Add to Cart.",
+          "In the notes section, write “vertical flute”.",
+          "Enter your payment details in the cart.",
         ],
-        guide: [
-          {
-            label: "When you order",
-            text: "Ask for vertical flute: write “vertical flute” in the notes section when you order the signs.",
-          },
-        ],
+        guide: [],
       },
       {
         key: "headphones",
