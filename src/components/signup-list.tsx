@@ -196,8 +196,7 @@ export function drawSignups(
   ctx.fill();
 
   // Roles (Kai, 12 Nov 2026: "just have the roles at the top"): a line,
-  // then one role per row as a white-outlined pill followed by whoever has
-  // taken it.
+  // then the roles as white-outlined pills.
   const story = h > 1500;
   if (roles.length) {
     y += story ? 76 : 62;
@@ -207,38 +206,53 @@ export function drawSignups(
       ctx.fillText(t.rolesTitle, m, y);
       y += story ? 18 : 10;
     }
-    const pillH = story ? 52 : 46;
-    const gap = story ? 14 : 10;
-    let py = y;
-    roles.forEach((r) => {
-      py += gap;
+    // All the pills on one line (Kai), each followed by whoever has taken
+    // it in yellow. Everything shrinks to fit; only if it still can't fit
+    // does it wrap onto another line.
+    const gap = story ? 14 : 12;
+    let ps = story ? 26 : 24;
+    const itemW = (r: Role, size: number) => {
+      ctx.font = `800 ${size}px ${body}`;
+      let iw = ctx.measureText(r.label || "Role").width + size * 1.5;
+      if (r.names.length) {
+        ctx.font = `700 ${size}px ${body}`;
+        iw += 12 + ctx.measureText(r.names.join(", ")).width;
+      }
+      return iw;
+    };
+    const rowW = (size: number) =>
+      roles.reduce((sum, r) => sum + itemW(r, size) + gap, -gap);
+    const minPs = story ? 23 : 21;
+    while (ps > minPs && rowW(ps) > w - m * 2) ps -= 1;
+    const pillH = ps * 1.9;
+    let x = m;
+    let py = y + gap;
+    for (const r of roles) {
+      const iw = itemW(r, ps);
+      if (x > m && x + iw > w - m) {
+        x = m;
+        py += pillH + gap;
+      }
       const label = r.label || "Role";
-      ctx.font = `800 ${story ? 26 : 24}px ${body}`;
-      const pw = ctx.measureText(label).width + 36;
+      ctx.font = `800 ${ps}px ${body}`;
+      const pw = ctx.measureText(label).width + ps * 1.5;
       ctx.strokeStyle = "rgba(255,255,255,0.5)";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.roundRect(m + 1, py + 1, pw - 2, pillH - 2, pillH / 2);
+      ctx.roundRect(x + 1, py + 1, pw - 2, pillH - 2, pillH / 2);
       ctx.stroke();
       ctx.fillStyle = "#ffffff";
       ctx.textBaseline = "middle";
-      ctx.fillText(label, m + 18, py + pillH / 2 + 1);
+      ctx.fillText(label, x + ps * 0.75, py + pillH / 2 + 1);
       if (r.names.length) {
-        const who = r.names.join(", ");
-        const room = w - m - (m + pw + 20);
-        let fs = story ? 30 : 27;
-        ctx.font = `700 ${fs}px ${body}`;
-        while (fs > 16 && ctx.measureText(who).width > room) {
-          fs -= 1;
-          ctx.font = `700 ${fs}px ${body}`;
-        }
+        ctx.font = `700 ${ps}px ${body}`;
         ctx.fillStyle = YELLOW;
-        ctx.fillText(who, m + pw + 20, py + pillH / 2 + 1, room);
+        ctx.fillText(r.names.join(", "), x + pw + 12, py + pillH / 2 + 1);
       }
       ctx.textBaseline = "alphabetic";
-      py += pillH;
-    });
-    y = py;
+      x += iw + gap;
+    }
+    y = py + pillH;
     // A thin rule between the roles and the numbered list.
     y += story ? 40 : 28;
     ctx.fillStyle = "rgba(255,255,255,0.15)";
