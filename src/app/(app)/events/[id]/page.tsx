@@ -1,3 +1,4 @@
+import { ClashNote } from "./clash-note";
 import { WhosComing } from "./whos-coming";
 import { LivePlayers } from "@/components/live-players";
 import { isMovieChallenge, showLivePlayers } from "@/lib/live-window";
@@ -166,6 +167,7 @@ export default async function EventCheckInPage({
         <h1 className="mt-0.5 text-2xl font-semibold leading-tight tracking-tight">
           {event.title}
         </h1>
+        <ClashNote supabase={supabase} event={event} />
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <TypePicker
             eventId={event.id}

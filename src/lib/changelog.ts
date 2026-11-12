@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Clash check: an upcoming event's page now shows anything else on that day, in your community or a nearby one (within 50 km).",
+      },
+      {
+        level: "organiser",
         text: 'Members who tap Going now get "Add to your calendar" on that event (Google Calendar, or Apple / Outlook).',
       },
       {
