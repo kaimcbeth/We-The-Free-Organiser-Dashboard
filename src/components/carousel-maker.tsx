@@ -760,7 +760,7 @@ export function PhotoPicker({
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
             <img
-              src={p.url}
+              src={p.thumb ?? p.url}
               alt=""
               draggable={false}
               className="pointer-events-none h-full w-full object-cover"
@@ -779,7 +779,12 @@ export function PhotoPicker({
             className="relative aspect-square overflow-hidden rounded-lg opacity-50 ring-2 ring-transparent hover:opacity-80"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
-            <img src={p.url} alt="" className="h-full w-full object-cover" />
+            <img
+              src={p.thumb ?? p.url}
+              alt=""
+              loading="lazy"
+              className="h-full w-full object-cover"
+            />
             {p.favourite && (
               <span className="absolute bottom-0.5 left-0.5 text-[10px]">
                 ⭐

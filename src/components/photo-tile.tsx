@@ -220,9 +220,11 @@ export function PhotoTile({
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
         <img
-          src={p.url}
+          src={p.thumb ?? p.url}
           alt={p.caption ?? ""}
           draggable={false}
+          loading="lazy"
+          decoding="async"
           className="pointer-events-none h-full w-full object-cover"
         />
       </button>

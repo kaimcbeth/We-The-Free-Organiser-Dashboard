@@ -24,6 +24,7 @@ export const PHOTO_TAGS: { id: PhotoTag; label: string; short: string }[] = [
 export type EventPhoto = {
   id: string;
   url: string; // signed, valid for an hour
+  thumb?: string | null; // small copy for grids (signed), when made (0227)
   favourite: boolean;
   noPromo: boolean;
   eventId: string | null; // null: a community photo, not from one event
@@ -48,22 +49,24 @@ type Row = {
   caption: string | null;
   tags: PhotoTag[] | null;
   original_path: string | null;
+  thumb_path?: string | null;
   event_kind: string | null;
   event?: { starts_at: string; title: string } | null;
 };
 
 async function sign(supabase: SupabaseClient, rows: Row[]) {
   if (rows.length === 0) return [];
-  const { data } = await supabase.storage.from("event-photos").createSignedUrls(
-    rows.map((r) => r.path),
-    3600,
-  );
+  const thumbs = rows.map((r) => r.thumb_path).filter((t): t is string => !!t);
+  const { data } = await supabase.storage
+    .from("event-photos")
+    .createSignedUrls([...rows.map((r) => r.path), ...thumbs], 3600);
   const url = new Map((data ?? []).map((d) => [d.path, d.signedUrl]));
   return rows
     .filter((r) => url.get(r.path))
     .map((r) => ({
       id: r.id,
       url: url.get(r.path)!,
+      thumb: r.thumb_path ? (url.get(r.thumb_path) ?? null) : null,
       favourite: r.favourite,
       noPromo: r.no_promo,
       eventId: r.event_id,
@@ -87,7 +90,7 @@ async function sign(supabase: SupabaseClient, rows: Row[]) {
 }
 
 const COLS =
-  "id, path, favourite, no_promo, event_id, taken_year, taken_month, caption, tags, original_path, event_kind";
+  "id, path, favourite, no_promo, event_id, taken_year, taken_month, caption, tags, original_path, thumb_path, event_kind";
 
 // One event's photos, newest first.
 export async function loadEventPhotos(

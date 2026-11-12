@@ -171,6 +171,7 @@ export function PhotoCrop({
           height: sh,
           original_path: row.original_path ?? row.path,
           phash: null, // worked out again by Find duplicates
+          thumb_path: null, // made again next time the hub opens
         })
         .eq("id", photo.id);
       if (done.error) throw done.error;
@@ -293,6 +294,7 @@ export async function resetCrop(id: string) {
       width: null,
       height: null,
       phash: null,
+      thumb_path: null,
     })
     .eq("id", id);
   if (error) return null;

@@ -121,8 +121,10 @@ export function PhotoHubView({ teamId }: { teamId: string }) {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
                   <img
-                    src={p.url}
+                    src={p.thumb ?? p.url}
                     alt={p.caption ?? ""}
+                    loading="lazy"
+                    decoding="async"
                     className="h-full w-full object-cover"
                   />
                 </button>

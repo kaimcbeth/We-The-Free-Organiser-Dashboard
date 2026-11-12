@@ -1,5 +1,6 @@
 "use client";
 
+import { makeThumb, saveThumb } from "@/lib/photo-thumbs";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -140,6 +141,9 @@ export function PhotoUploader({
           ...extra,
         });
         if (row.error) throw row.error;
+        // Small copy for the Photo Hub grid (no harm if it fails).
+        const thumb = await makeThumb(blob);
+        if (thumb) await saveThumb(supabase, teamId, id, thumb);
         if (phash) known.push(phash);
         ids.push(id);
         done++;

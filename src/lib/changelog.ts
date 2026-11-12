@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Photo Hub loads much faster, especially on phones: the grid now shows small preview copies and only loads photos as you scroll to them. The full photo still opens when you tap it.",
+      },
+      {
+        level: "organiser",
         text: "Weather update post: when the forecast looks bad, make a graphic and a ready-made message saying the event is still on, cancelled or has moved to a new spot. On the Weather backup plan action and on every event page.",
       },
       {

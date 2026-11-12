@@ -1013,8 +1013,9 @@ export function GraphicMaker({
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
                           <img
-                            src={p.url}
+                            src={p.thumb ?? p.url}
                             alt=""
+                            loading="lazy"
                             className="h-full w-full object-cover"
                           />
                           {p.favourite && (

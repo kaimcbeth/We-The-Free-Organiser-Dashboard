@@ -1,5 +1,6 @@
 "use client";
 
+import { fillThumbs } from "@/lib/photo-thumbs";
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -130,8 +131,13 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
 
   useEffect(() => {
     let live = true;
-    loadCommunityPhotos(createClient(), teamId).then((p) => {
-      if (live) setPhotos(p);
+    const db = createClient();
+    loadCommunityPhotos(db, teamId).then((p) => {
+      if (!live) return;
+      setPhotos(p);
+      // Older photos get their small grid copy once (organisers and Core
+      // Team can upload); next time the hub opens they load fast.
+      fillThumbs(db, teamId, p);
     });
     return () => {
       live = false;
