@@ -855,30 +855,58 @@ function EquipmentRow({
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-navy text-xs font-semibold text-white">
                       {n + 1}
                     </span>
-                    <span className="pt-0.5">
+                    <span className="relative pt-0.5">
                       <StepText
                         text={typeof step === "string" ? step : step.text}
                         onJump={() => setGuideOpen(false)}
+                        tip={
+                          typeof step !== "string" && step.note ? (
+                            <StepText
+                              text={step.note}
+                              onJump={() => setGuideOpen(false)}
+                            />
+                          ) : undefined
+                        }
                       />
                       {typeof step !== "string" && step.sub && (
                         <ul className="mt-1.5 list-disc space-y-1 pl-5 marker:text-stone-400">
-                          {step.sub.map((sub) => (
-                            <li key={sub}>
-                              <StepText
-                                text={sub}
-                                onJump={() => setGuideOpen(false)}
-                              />
-                            </li>
-                          ))}
+                          {step.sub.map((sub) =>
+                            typeof sub === "string" ? (
+                              <li key={sub}>
+                                <StepText
+                                  text={sub}
+                                  onJump={() => setGuideOpen(false)}
+                                />
+                              </li>
+                            ) : "text" in sub ? (
+                              <li key={sub.text} className="relative">
+                                <StepText
+                                  text={sub.text}
+                                  onJump={() => setGuideOpen(false)}
+                                  tip={sub.note}
+                                />
+                              </li>
+                            ) : (
+                              <li
+                                key={sub.label}
+                                className="-ml-5 flex list-none items-center gap-2"
+                              >
+                                <ul className="list-disc space-y-1 pl-5 marker:text-stone-400">
+                                  {sub.group.map((g) => (
+                                    <li key={g}>{g}</li>
+                                  ))}
+                                </ul>
+                                <span
+                                  aria-hidden
+                                  className="w-2 self-stretch rounded-r-md border-y-2 border-r-2 border-stone-300"
+                                />
+                                <span className="text-sm text-stone-500">
+                                  ({sub.label})
+                                </span>
+                              </li>
+                            ),
+                          )}
                         </ul>
-                      )}
-                      {typeof step !== "string" && step.note && (
-                        <span className="mt-2 block rounded-xl bg-yellow-100 px-3 py-2 text-sm text-stone-800 ring-1 ring-yellow-300">
-                          <StepText
-                            text={step.note}
-                            onJump={() => setGuideOpen(false)}
-                          />
-                        </span>
                       )}
                     </span>
                   </li>
@@ -892,7 +920,12 @@ function EquipmentRow({
                   className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5"
                 >
                   <p className="font-semibold text-navy">{g.label}</p>
-                  <p className="mt-1 text-stone-700">{g.text}</p>
+                  <p className="mt-1 text-stone-700">
+                    <StepText
+                      text={g.text}
+                      onJump={() => setGuideOpen(false)}
+                    />
+                  </p>
                 </li>
               ))}
             </ul>
@@ -1134,12 +1167,37 @@ function jumpTo(hash: string) {
   }, 50);
 }
 
-function StepText({ text, onJump }: { text: string; onJump?: () => void }) {
+// With a tip, the bold words are highlighted and show the tip in a yellow
+// box on hover (or tap, on phones) (Kai, 12 Nov 2026). The box spans the
+// nearest positioned parent (the step, or the sub-point) so it never runs
+// off a phone screen.
+function StepText({
+  text,
+  onJump,
+  tip,
+}: {
+  text: string;
+  onJump?: () => void;
+  tip?: React.ReactNode;
+}) {
   const parts = text.split(/(\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*)/);
   return (
     <>
       {parts.map((p, i) => {
         const bold = p.match(/^\*\*([^*]+)\*\*$/);
+        if (bold && tip)
+          return (
+            <span key={i} tabIndex={0} className="group outline-none">
+              <strong className="cursor-help rounded bg-yellow-100 px-1 font-semibold text-navy ring-1 ring-yellow-300">
+                {bold[1]}
+              </strong>
+              <span className="invisible absolute inset-x-0 top-full z-20 pt-1.5 opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+                <span className="block rounded-xl bg-yellow-100 px-3 py-2 text-sm font-normal text-stone-800 shadow-md ring-1 ring-yellow-300">
+                  {tip}
+                </span>
+              </span>
+            </span>
+          );
         if (bold)
           return (
             <strong key={i} className="font-semibold text-navy">

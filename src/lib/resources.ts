@@ -153,7 +153,20 @@ export type EquipmentItem = {
   // step can have sub-points shown as a list under it (Kai, 12 Nov 2026).
   // A step's note is a highlighted box under it; "[text](#item-<key>)"
   // links to another item in the guide.
-  steps?: (string | { text: string; sub?: string[]; note?: string })[];
+  // Sub-points can be grouped with a side bracket and a label, e.g. width
+  // and height → "A1 size".
+  steps?: (
+    | string
+    | {
+        text: string;
+        sub?: (
+          | string
+          | { text: string; note: string }
+          | { group: string[]; label: string }
+        )[];
+        note?: string;
+      }
+  )[];
   image?: string; // a default photo (under /equipment); uploads replace it
   // Left out of "What to get next" (consumables, or not every team needs it).
   noSuggest?: boolean;
@@ -245,17 +258,22 @@ export const EQUIPMENT_GUIDE: {
           {
             text: "Choose a quantity of 5 or more (signs get much cheaper per sign past 4). Number of designs: 1.",
             sub: [
-              "Size: Custom.",
-              "Width: 841 mm.",
-              "Height: 594 mm (A1 size).",
-              "Thickness: 5 mm.",
-              "Printing: Double-sided.",
-              "Eyelet quantity and location: No eyelets.",
-              "Cutting: Standard.",
+              "Size: Custom",
+              {
+                group: ["Width: 841 mm", "Height: 594 mm"],
+                label: "A1 size",
+              },
+              {
+                text: "Thickness: **5 mm**",
+                note: "5 mm costs the same as thinner signs and is more resistant to bending.",
+              },
+              "Printing: Double-sided",
+              "Eyelet quantity and location: No eyelets",
+              "Cutting: Standard",
             ],
           },
-          "Select priority files and delivery.",
-          "Click Calculate Price, then My Price, then Add to Cart.",
+          "Select “I already have print-ready files”, then choose your delivery.",
+          "Click Calculate My Price, then Add to Cart.",
           {
             text: "In the notes section, write **“vertical flute”**.",
             note: "This is important if you want to mount your signs on [handheld poles](#item-sign_poles) later on.",
@@ -265,7 +283,7 @@ export const EQUIPMENT_GUIDE: {
         guide: [
           {
             label: "Important",
-            text: "Keep the box the signs arrive in if you're not buying a sign carry bag. It makes them easy to carry and store, and protects them from wear and tear on the way to events.",
+            text: "Keep the box the signs arrive in if you're not buying a [sign carry bag](#item-sign_carry_bag). It makes them easy to carry and store, and protects them from wear and tear on the way to events.",
           },
         ],
       },
