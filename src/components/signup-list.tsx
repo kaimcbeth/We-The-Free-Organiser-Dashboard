@@ -51,7 +51,7 @@ function defaults(e: GraphicEvent, tz: string): Texts {
       ? "3 Minute Movie Challenge"
       : shortTitle(e.title, e.community),
     details: [day, time, place(e)].filter(Boolean).join(" · "),
-    footer: "Reply in the chat to grab a spot",
+    footer: "Reply to grab a spot",
   };
 }
 
