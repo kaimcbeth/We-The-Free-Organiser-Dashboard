@@ -338,23 +338,14 @@ export const EQUIPMENT_GUIDE: {
         about: "Stands on its own, so people can spot you from further away.",
         shop: "Easy Signs",
         url: "https://www.easysigns.com.au/products/details/signflute-insertable-a-frame-sandwich-board",
-        steps: [
-          "Go to [Easy Signs](https://www.easysigns.com.au/products/details/signflute-corrugated-plastic-signs) and select Signflute corrugated plastic signs.",
-          "Choose a quantity of 5 or more (signs get much cheaper per sign past 4). Number of designs: 1.",
-          "Size: Custom.",
-          "Width: 841 mm.",
-          "Height: 594 mm (A1 size).",
-          "Thickness: 5 mm.",
-          "Printing: Double-sided.",
-          "Eyelet quantity and location: No eyelets.",
-          "Cutting: Standard.",
-          "Select priority files and delivery.",
-          "Click Calculate Price, then My Price, then Add to Cart, and enter your payment details in the cart.",
-        ],
         guide: [
           {
             label: "When you order",
             text: "Ask for vertical flute: write “vertical flute” in the notes section when you order the signs.",
+          },
+          {
+            label: "Order more than 4",
+            text: "Signs get significantly cheaper per sign once you order more than 4.",
           },
         ],
         options: [
