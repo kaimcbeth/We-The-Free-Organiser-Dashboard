@@ -18,6 +18,7 @@ import { DeleteEvent } from "./delete-event";
 import { EventActions } from "./event-actions";
 import { GraphicMaker } from "@/components/graphic-maker";
 import { MeetingPointMaker } from "@/components/meeting-point";
+import { SignupListMaker } from "@/components/signup-list";
 import { CopyMaker } from "@/components/copy-maker";
 import { AddToCalendar } from "@/components/add-to-calendar";
 import { EventPhotos } from "@/components/event-photos";
@@ -236,6 +237,22 @@ export default async function EventCheckInPage({
             }}
           />
           <MeetingPointMaker
+            tz={team.timezone}
+            event={{
+              title: event.title,
+              startsAt: event.starts_at,
+              endsAt: event.ends_at,
+              venue: event.venue,
+              address: event.address,
+              typeName:
+                (types.data ?? []).find((t) => t.id === event.event_type_id)
+                  ?.name ?? null,
+              community: team.name.replace(/, (Australia|New Zealand)$/, ""),
+              teamId: event.team_id,
+              eventId: event.id,
+            }}
+          />
+          <SignupListMaker
             tz={team.timezone}
             event={{
               title: event.title,

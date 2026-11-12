@@ -69,6 +69,10 @@ export const CHANGELOG: Release[] = [
         level: "organiser",
         text: "Events: a Nearby communities option above Upcoming (Off, 25, 50 or 100 km) adds nearby communities' events to your list, marked with their community and how far away they are. Tap one to see it on activism.wtf.",
       },
+      {
+        level: "organiser",
+        text: "Event pages: Sign-up list. A graphic of numbered spots (20 to start) with the names filled in so far, for asking the group chat who's coming. Type names, or paste replies straight from WhatsApp and it adds everyone who replied by first name. Saved on the event, with Copy as text for the chat.",
+      },
     ],
   },
   {
