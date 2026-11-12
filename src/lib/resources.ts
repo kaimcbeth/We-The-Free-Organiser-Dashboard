@@ -149,8 +149,11 @@ export type EquipmentItem = {
   // Tips for buying it, shown in a pop-up (instead of a shop link).
   guide?: { label: string; text: string }[];
   // Step-by-step ordering instructions, shown numbered at the top of the
-  // purchasing guide. "[text](url)" becomes a link (Kai, 12 Nov 2026).
-  steps?: string[];
+  // purchasing guide. "[text](url)" becomes a link and "**text**" bold; a
+  // step can have sub-points shown as a list under it (Kai, 12 Nov 2026).
+  // A step's note is a highlighted box under it; "[text](#item-<key>)"
+  // links to another item in the guide.
+  steps?: (string | { text: string; sub?: string[]; note?: string })[];
   image?: string; // a default photo (under /equipment); uploads replace it
   // Left out of "What to get next" (consumables, or not every team needs it).
   noSuggest?: boolean;
@@ -239,20 +242,32 @@ export const EQUIPMENT_GUIDE: {
         ],
         steps: [
           "Go to [Easy Signs](https://www.easysigns.com.au/products/details/signflute-corrugated-plastic-signs) and select Signflute corrugated plastic signs.",
-          "Choose a quantity of 5 or more (signs get much cheaper per sign past 4). Number of designs: 1.",
-          "Size: Custom.",
-          "Width: 841 mm.",
-          "Height: 594 mm (A1 size).",
-          "Thickness: 5 mm.",
-          "Printing: Double-sided.",
-          "Eyelet quantity and location: No eyelets.",
-          "Cutting: Standard.",
+          {
+            text: "Choose a quantity of 5 or more (signs get much cheaper per sign past 4). Number of designs: 1.",
+            sub: [
+              "Size: Custom.",
+              "Width: 841 mm.",
+              "Height: 594 mm (A1 size).",
+              "Thickness: 5 mm.",
+              "Printing: Double-sided.",
+              "Eyelet quantity and location: No eyelets.",
+              "Cutting: Standard.",
+            ],
+          },
           "Select priority files and delivery.",
           "Click Calculate Price, then My Price, then Add to Cart.",
-          "In the notes section, write “vertical flute”.",
+          {
+            text: "In the notes section, write **“vertical flute”**.",
+            note: "This is important if you want to mount your signs on [handheld poles](#item-sign_poles) later on.",
+          },
           "Enter your payment details in the cart.",
         ],
-        guide: [],
+        guide: [
+          {
+            label: "Important",
+            text: "Keep the box the signs arrive in if you're not buying a sign carry bag. It makes them easy to carry and store, and protects them from wear and tear on the way to events.",
+          },
+        ],
       },
       {
         key: "headphones",

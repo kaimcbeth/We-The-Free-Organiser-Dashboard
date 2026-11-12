@@ -694,7 +694,7 @@ function EquipmentRow({
     <span className="font-medium text-navy">{item.name}</span>
   );
   return (
-    <li className="flex gap-3 py-2.5">
+    <li id={`item-${item.key}`} className="flex scroll-mt-32 gap-3 py-2.5">
       <div
         className="shrink-0"
         onMouseEnter={hoverAbout ? () => setPhotoHover(true) : undefined}
@@ -856,7 +856,30 @@ function EquipmentRow({
                       {n + 1}
                     </span>
                     <span className="pt-0.5">
-                      <StepText text={step} />
+                      <StepText
+                        text={typeof step === "string" ? step : step.text}
+                        onJump={() => setGuideOpen(false)}
+                      />
+                      {typeof step !== "string" && step.sub && (
+                        <ul className="mt-1.5 list-disc space-y-1 pl-5 marker:text-stone-400">
+                          {step.sub.map((sub) => (
+                            <li key={sub}>
+                              <StepText
+                                text={sub}
+                                onJump={() => setGuideOpen(false)}
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {typeof step !== "string" && step.note && (
+                        <span className="mt-2 block rounded-xl bg-yellow-100 px-3 py-2 text-sm text-stone-800 ring-1 ring-yellow-300">
+                          <StepText
+                            text={step.note}
+                            onJump={() => setGuideOpen(false)}
+                          />
+                        </span>
+                      )}
                     </span>
                   </li>
                 ))}
@@ -1096,12 +1119,49 @@ function HoverDetails({
 }
 
 // "[text](url)" in a purchasing guide step becomes a link.
-function StepText({ text }: { text: string }) {
-  const parts = text.split(/(\[[^\]]+\]\([^)]+\))/);
+// "#item-<key>" links close the pop-up and scroll to that item, with a
+// short pink glow so it's easy to spot.
+function jumpTo(hash: string) {
+  window.setTimeout(() => {
+    const el = document.getElementById(hash.slice(1));
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.add("rounded-xl", "ring-2", "ring-pink", "bg-pink/10");
+    window.setTimeout(
+      () => el.classList.remove("ring-2", "ring-pink", "bg-pink/10"),
+      2500,
+    );
+  }, 50);
+}
+
+function StepText({ text, onJump }: { text: string; onJump?: () => void }) {
+  const parts = text.split(/(\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*)/);
   return (
     <>
       {parts.map((p, i) => {
+        const bold = p.match(/^\*\*([^*]+)\*\*$/);
+        if (bold)
+          return (
+            <strong key={i} className="font-semibold text-navy">
+              {bold[1]}
+            </strong>
+          );
         const m = p.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+        if (m && m[2].startsWith("#"))
+          return (
+            <a
+              key={i}
+              href={m[2]}
+              onClick={(e) => {
+                e.preventDefault();
+                onJump?.();
+                jumpTo(m[2]);
+              }}
+              className="font-semibold text-navy underline hover:text-pink"
+            >
+              {m[1]}
+            </a>
+          );
         return m ? (
           <a
             key={i}
