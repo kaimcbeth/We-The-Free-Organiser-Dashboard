@@ -74,7 +74,7 @@ function defaults(e: GraphicEvent, tz: string): Texts {
       ? "3 Minute Movie Challenge"
       : shortTitle(e.title, e.community),
     details: [day, time, place(e)].filter(Boolean).join(" · "),
-    rolesTitle: "We especially need help with",
+    rolesTitle: "",
     rolesNote:
       "Please don't hesitate to specify if you ONLY want to outreach, hold signs or set people up on the video",
     intro:
