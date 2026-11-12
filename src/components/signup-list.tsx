@@ -37,25 +37,35 @@ type Texts = {
   footer: string;
 };
 
-// Roles above the numbered list (Kai, 12 Nov 2026, from his message:
-// "📸 Photos - ____ ✅ Attendance and welcoming new members - ____ …").
+// Roles (Kai, 12 Nov 2026: "I want everyone to have roles from now on …
+// can have multiple per person"). Role.names = the people on the list who
+// have that role; spots is a leftover from the first version and unused.
 export type Role = {
   emoji: string;
   label: string;
   spots: number;
   names: string[];
 };
+const role = (emoji: string, label: string): Role => ({
+  emoji,
+  label,
+  spots: 0,
+  names: [],
+});
 export const DEFAULT_ROLES: Role[] = [
-  { emoji: "📸", label: "Photos", spots: 3, names: [] },
-  {
-    emoji: "✅",
-    label: "Attendance and welcoming new members",
-    spots: 1,
-    names: [],
-  },
-  { emoji: "🛠️", label: "Equipment setup", spots: 5, names: [] },
+  role("🪧", "Signs"),
+  role("💬", "Outreach"),
+  role("📸", "Photos"),
+  role("👋", "Newcomer welcomes"),
+  role("🛠️", "Equipment setup"),
+  role("🍩", "Prize table"),
 ];
-const ROLE_COLOURS = [PINK, "#3fd0ea", YELLOW];
+// The first version's roles (Photos / Attendance… / Equipment setup with
+// blanks): an event saved with them starts on the new set.
+const OLD_LABELS =
+  "Photos|Attendance and welcoming new members|Equipment setup";
+const ROLE_COLOURS = [PINK, "#3fd0ea", YELLOW, "#a3e635", "#ff9f43", "#c4a7ff"];
+const colourOf = (i: number) => ROLE_COLOURS[i % ROLE_COLOURS.length];
 
 function defaults(e: GraphicEvent, tz: string): Texts {
   const movie = /movie challenge|3mmc/i.test(e.title);
@@ -74,11 +84,10 @@ function defaults(e: GraphicEvent, tz: string): Texts {
       ? "3 Minute Movie Challenge"
       : shortTitle(e.title, e.community),
     details: [day, time, place(e)].filter(Boolean).join(" · "),
-    rolesTitle: "We especially need help with",
-    rolesNote:
-      "Please don't hesitate to specify if you ONLY want to outreach, hold signs or set people up on the video",
+    rolesTitle: "Pick a role (or a few)",
+    rolesNote: "",
     intro:
-      "You're super welcome to have a more fluid role at the event but we are in big need for people to specifically help with the following:",
+      "Everyone gets a role at this one, and you can pick more than one. Reply with your name and the role(s) you'd like:",
     footer: "Reply to grab a spot",
   };
 }
@@ -191,7 +200,8 @@ export function drawSignups(
   );
   ctx.fill();
 
-  // Roles: a coloured pill per role, then its names or blanks.
+  // Roles: a row of coloured pills (they're also the key for the chips
+  // beside each name).
   const story = h > 1500;
   if (roles.length) {
     y += story ? 76 : 62;
@@ -204,68 +214,41 @@ export function drawSignups(
       y += story ? 22 : 14;
     }
     const pillH = story ? 50 : 44;
-    const gap = story ? 16 : 10;
-    roles.forEach((role, i) => {
-      const py = y + gap;
-      ctx.font = `800 ${story ? 25 : 23}px ${body}`;
-      const label = role.label || "Role";
-      const lw = Math.min(ctx.measureText(label).width, w * 0.5);
-      ctx.fillStyle = ROLE_COLOURS[i % ROLE_COLOURS.length];
+    const gap = story ? 14 : 10;
+    ctx.font = `800 ${story ? 25 : 23}px ${body}`;
+    let x = m;
+    let py = y + gap;
+    roles.forEach((r, i) => {
+      const label = r.label || "Role";
+      const pw = ctx.measureText(label).width + 32;
+      if (x > m && x + pw > w - m) {
+        x = m;
+        py += pillH + gap;
+      }
+      ctx.fillStyle = colourOf(i);
       ctx.beginPath();
-      ctx.roundRect(m, py, lw + 32, pillH, pillH / 2);
+      ctx.roundRect(x, py, pw, pillH, pillH / 2);
       ctx.fill();
       ctx.fillStyle = NAVY;
       ctx.textBaseline = "middle";
-      ctx.fillText(label, m + 16, py + pillH / 2 + 1, w * 0.5);
-      // Names or dashed blanks, all on the pill's line (Kai): shrink the
-      // names, blanks and gaps until they fit.
-      let x = m + lw + 32 + 20;
-      const ly = py + pillH / 2;
-      const items = Array.from(
-        { length: Math.max(role.spots, role.names.length) },
-        (_, k) => role.names[k] ?? null,
-      );
-      let fs = story ? 30 : 27;
-      let blank = 90;
-      let gapX = 22;
-      const widthAt = () => {
-        ctx.font = `700 ${fs}px ${body}`;
-        return items.reduce(
-          (sum, n) => sum + (n ? ctx.measureText(n).width : blank) + gapX,
-          -gapX,
-        );
-      };
-      while (widthAt() > w - m - x && (fs > 16 || blank > 30)) {
-        if (blank > 30) blank -= 6;
-        if (fs > 16) fs -= 1;
-        if (gapX > 12) gapX -= 1;
-      }
-      for (const name of items) {
-        const iw = name ? ctx.measureText(name).width : blank;
-        if (name) {
-          ctx.fillStyle = "#ffffff";
-          ctx.fillText(name, x, ly + 1);
-        } else {
-          ctx.strokeStyle = "rgba(255,255,255,0.35)";
-          ctx.lineWidth = 2;
-          ctx.setLineDash([8, 7]);
-          ctx.beginPath();
-          ctx.moveTo(x, ly + 12);
-          ctx.lineTo(x + iw, ly + 12);
-          ctx.stroke();
-          ctx.setLineDash([]);
-        }
-        x += iw + gapX;
-      }
+      ctx.fillText(label, x + 16, py + pillH / 2 + 1);
       ctx.textBaseline = "alphabetic";
-      y = ly + pillH / 2;
+      x += pw + gap;
     });
+    y = py + pillH;
     // A thin rule between the roles and the numbered list.
     y += story ? 40 : 28;
     ctx.fillStyle = "rgba(255,255,255,0.15)";
     ctx.fillRect(m, y, w - m * 2, 2);
     y -= 8;
   }
+  // Each person's roles, by role index.
+  const rolesFor = (name: string) =>
+    roles
+      .map((r, i) => ({ r, i }))
+      .filter(({ r }) =>
+        r.names.some((n) => n.toLowerCase() === name.toLowerCase()),
+      );
 
   // The spots.
   const footH = t.footer ? 110 : 50;
@@ -304,14 +287,64 @@ export function drawSignups(
     const nx = cx + r + 18;
     const maxW = colW - (nx - (m + c * colW)) - 24;
     if (name) {
-      ctx.fillStyle = "#ffffff";
       let s = nameSize;
-      ctx.font = `700 ${s}px ${body}`;
-      while (s > 16 && ctx.measureText(name).width > maxW) {
-        s -= 2;
-        ctx.font = `700 ${s}px ${body}`;
+      const mine = rolesFor(name);
+      // Chips with the role names if they fit (shrinking the name a little
+      // first), else coloured dots (the pills at the top say which is which).
+      const chipW = (cs: number) => {
+        ctx.font = `800 ${cs}px ${body}`;
+        return mine.reduce(
+          (sum, { r: ro }) => sum + ctx.measureText(ro.label).width + cs + 8,
+          -8,
+        );
+      };
+      const nameW = (size: number) => {
+        ctx.font = `700 ${size}px ${body}`;
+        return ctx.measureText(name).width;
+      };
+      let cs = 0;
+      if (mine.length) {
+        for (let t = s; t >= Math.max(18, s * 0.7); t -= 2) {
+          const c2 = Math.round(
+            Math.min(rowH * 0.3, story ? 24 : 20, t * 0.72),
+          );
+          if (c2 >= 14 && nameW(t) + 14 + chipW(c2) <= maxW) {
+            s = t;
+            cs = c2;
+            break;
+          }
+        }
       }
+      const dotsW = mine.length && !cs ? mine.length * r * 0.7 + 12 : 0;
+      while (s > 16 && nameW(s) > maxW - dotsW - (cs ? 14 + chipW(cs) : 0))
+        s -= 2;
+      ctx.font = `700 ${s}px ${body}`;
+      ctx.fillStyle = "#ffffff";
       ctx.fillText(name, nx, cy + 1);
+      let x = nx + ctx.measureText(name).width + 14;
+      if (cs) {
+        chipW(cs);
+        const ch = cs * 1.6;
+        for (const { r: ro, i: k } of mine) {
+          const cw = ctx.measureText(ro.label).width + cs;
+          ctx.fillStyle = colourOf(k);
+          ctx.beginPath();
+          ctx.roundRect(x, cy - ch / 2, cw, ch, ch / 2);
+          ctx.fill();
+          ctx.fillStyle = NAVY;
+          ctx.fillText(ro.label, x + cs / 2, cy + 1);
+          x += cw + 8;
+        }
+      } else if (mine.length) {
+        const d = Math.min(r * 0.42, 11);
+        for (const { i: k } of mine) {
+          ctx.fillStyle = colourOf(k);
+          ctx.beginPath();
+          ctx.arc(x + d, cy, d, 0, Math.PI * 2);
+          ctx.fill();
+          x += d * 2 + 6;
+        }
+      }
     } else {
       ctx.strokeStyle = "rgba(255,255,255,0.25)";
       ctx.lineWidth = 2;
@@ -367,8 +400,9 @@ export function namesFromChat(text: string): string[] {
   });
 }
 
-// The list as text for the group chat, like Kai's: the roles first
-// ("📸 Photos - Asha, ____"), then "1. Kai M / 2. ____".
+// The list as text for the group chat, like Kai's: the opening line, each
+// role with who's on it ("📸 Photos - Asha, Rory" or "____"), then the
+// numbered list ("1. Kai M / 2. ____").
 export function listText(
   names: string[],
   target: number,
@@ -381,13 +415,10 @@ export function listText(
     (_, i) => `${i + 1}. ${names[i] ?? "________"}`,
   ).join("\n");
   if (!roles.length) return list;
-  const roleLines = roles.map((r) => {
-    const spots = Array.from(
-      { length: Math.max(r.spots, r.names.length) },
-      (_, k) => r.names[k] ?? "____",
-    ).join(", ");
-    return `${r.emoji ? `${r.emoji} ` : ""}${r.label} - ${spots}`;
-  });
+  const roleLines = roles.map(
+    (r) =>
+      `${r.emoji ? `${r.emoji} ` : ""}${r.label} - ${r.names.length ? r.names.join(", ") : "____"}`,
+  );
   return [
     t?.intro,
     roleLines.join("\n"),
@@ -397,25 +428,6 @@ export function listText(
     .filter(Boolean)
     .join("\n\n");
 }
-
-// Roles while editing: names as typed ("Asha, Rory").
-type RoleDraft = { emoji: string; label: string; spots: number; who: string };
-const toDraft = (r: Role): RoleDraft => ({
-  emoji: r.emoji,
-  label: r.label,
-  spots: r.spots,
-  who: r.names.join(", "),
-});
-const fromDraft = (d: RoleDraft): Role => ({
-  emoji: d.emoji.trim(),
-  label: d.label.trim(),
-  spots: Math.min(20, Math.max(1, d.spots || 1)),
-  names: d.who
-    .split(/[,\n]/)
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .slice(0, 20),
-});
 
 export function SignupListMaker({
   event,
@@ -463,11 +475,6 @@ function Maker({
   const [msg, setMsg] = useState("");
   const [saved, setSaved] = useState("");
   const [pasted, setPasted] = useState("");
-  const [drafts, setDrafts] = useState<RoleDraft[]>(() =>
-    DEFAULT_ROLES.map(toDraft),
-  );
-  const roles = drafts.map(fromDraft).filter((r) => r.label);
-  const rolesKey = JSON.stringify(roles);
   const canvas = useRef<HTMLCanvasElement>(null);
   const names = list
     .split("\n")
@@ -478,6 +485,18 @@ function Maker({
         .trim(),
     )
     .filter(Boolean);
+  const [drafts, setDrafts] = useState<Role[]>(DEFAULT_ROLES);
+  // Only people still on the list keep their roles.
+  const roles = drafts
+    .filter((r) => r.label.trim())
+    .map((r) => ({
+      ...r,
+      label: r.label.trim(),
+      names: names.filter((n) =>
+        r.names.some((x) => x.toLowerCase() === n.toLowerCase()),
+      ),
+    }));
+  const rolesKey = JSON.stringify(roles);
 
   useEffect(() => {
     let live = true;
@@ -510,7 +529,13 @@ function Maker({
       setList((savedNames ?? short).join("\n"));
       if (ev.data?.signup_target) setTarget(ev.data.signup_target as number);
       const savedRoles = ev.data?.signup_roles as Role[] | null;
-      if (Array.isArray(savedRoles)) setDrafts(savedRoles.map(toDraft));
+      if (
+        Array.isArray(savedRoles) &&
+        savedRoles.map((r) => r.label).join("|") !== OLD_LABELS
+      )
+        setDrafts(
+          savedRoles.map((r) => ({ ...r, names: r.names ?? [], spots: 0 })),
+        );
       setLoaded(true);
     });
     return () => {
@@ -720,85 +745,133 @@ function Maker({
             </button>
           )}
         </div>
+        {drafts.length > 0 && names.length > 0 && (
+          <div>
+            <p className="text-xs font-medium text-stone-600">
+              Who&apos;s doing what
+            </p>
+            <ul className="mt-1 divide-y divide-stone-100 rounded-xl bg-stone-50 ring-1 ring-stone-200">
+              {names.map((n) => (
+                <li
+                  key={n}
+                  className="flex flex-wrap items-center gap-1.5 px-2.5 py-1.5"
+                >
+                  <span className="mr-1 min-w-16 text-sm font-semibold text-navy">
+                    {n}
+                  </span>
+                  {drafts.map((d, i) => {
+                    if (!d.label.trim()) return null;
+                    const on = d.names.some(
+                      (x) => x.toLowerCase() === n.toLowerCase(),
+                    );
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => {
+                          setSaved("");
+                          setDrafts(
+                            drafts.map((x, k) =>
+                              k !== i
+                                ? x
+                                : {
+                                    ...x,
+                                    names: on
+                                      ? x.names.filter(
+                                          (y) =>
+                                            y.toLowerCase() !== n.toLowerCase(),
+                                        )
+                                      : [...x.names, n],
+                                  },
+                            ),
+                          );
+                        }}
+                        style={on ? { background: colourOf(i) } : undefined}
+                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ${on ? "text-navy ring-transparent" : "bg-white text-stone-500 ring-stone-300 hover:text-navy"}`}
+                      >
+                        {d.label}
+                      </button>
+                    );
+                  })}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-1 text-xs text-stone-500">
+              Tap a role to give it to someone. People can have more than one.
+            </p>
+          </div>
+        )}
         <div>
-          <p className="text-xs font-medium text-stone-600">Roles</p>
-          <div className="mt-1 space-y-2">
+          <p className="text-xs font-medium text-stone-600">The roles</p>
+          <div className="mt-1 space-y-1.5">
             {drafts.map((d, i) => {
-              const set = (patch: Partial<RoleDraft>) => {
+              const set = (patch: Partial<Role>) => {
                 setSaved("");
                 setDrafts(
                   drafts.map((x, k) => (k === i ? { ...x, ...patch } : x)),
                 );
               };
               return (
-                <div
-                  key={i}
-                  className="rounded-xl bg-stone-50 p-2 ring-1 ring-stone-200"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      aria-label="Emoji"
-                      value={d.emoji}
-                      onChange={(e) => set({ emoji: e.target.value })}
-                      className="w-11 rounded-lg bg-white px-1.5 py-1.5 text-center text-sm ring-1 ring-stone-300"
-                    />
-                    <input
-                      aria-label="Role"
-                      value={d.label}
-                      placeholder="Role"
-                      onChange={(e) => set({ label: e.target.value })}
-                      className="min-w-0 flex-1 rounded-lg bg-white px-2.5 py-1.5 text-sm text-navy ring-1 ring-stone-300"
-                    />
-                    <input
-                      aria-label="How many"
-                      type="number"
-                      min={1}
-                      max={20}
-                      value={d.spots}
-                      onChange={(e) => set({ spots: Number(e.target.value) })}
-                      className="w-14 rounded-lg bg-white px-2 py-1.5 text-sm text-navy ring-1 ring-stone-300"
-                    />
-                    <button
-                      type="button"
-                      aria-label={`Remove ${d.label || "role"}`}
-                      onClick={() => {
-                        setSaved("");
-                        setDrafts(drafts.filter((_, k) => k !== i));
-                      }}
-                      className="px-1 text-stone-400 hover:text-navy"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  <input
-                    aria-label={`Who's on ${d.label || "this role"}`}
-                    value={d.who}
-                    placeholder="Names, with commas between"
-                    onChange={(e) => set({ who: e.target.value })}
-                    className="mt-1.5 block w-full rounded-lg bg-white px-2.5 py-1.5 text-sm text-navy ring-1 ring-stone-300"
+                <div key={i} className="flex items-center gap-1.5">
+                  <span
+                    className="h-3 w-3 shrink-0 rounded-full"
+                    style={{ background: colourOf(i) }}
                   />
+                  <input
+                    aria-label="Emoji"
+                    value={d.emoji}
+                    onChange={(e) => set({ emoji: e.target.value })}
+                    className="w-11 rounded-lg bg-white px-1.5 py-1.5 text-center text-sm ring-1 ring-stone-300"
+                  />
+                  <input
+                    aria-label="Role"
+                    value={d.label}
+                    placeholder="Role"
+                    onChange={(e) => set({ label: e.target.value })}
+                    className="min-w-0 flex-1 rounded-lg bg-white px-2.5 py-1.5 text-sm text-navy ring-1 ring-stone-300"
+                  />
+                  <button
+                    type="button"
+                    aria-label={`Remove ${d.label || "role"}`}
+                    onClick={() => {
+                      setSaved("");
+                      setDrafts(drafts.filter((_, k) => k !== i));
+                    }}
+                    className="px-1 text-stone-400 hover:text-navy"
+                  >
+                    ×
+                  </button>
                 </div>
               );
             })}
           </div>
-          {drafts.length < 10 && (
+          <div className="mt-1.5 flex flex-wrap gap-x-3">
+            {drafts.length < 10 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSaved("");
+                  setDrafts([...drafts, role("", "")]);
+                }}
+                className="text-xs font-medium text-pink-ink hover:underline"
+              >
+                + Add a role
+              </button>
+            )}
             <button
               type="button"
               onClick={() => {
                 setSaved("");
-                setDrafts([
-                  ...drafts,
-                  { emoji: "", label: "", spots: 1, who: "" },
-                ]);
+                setDrafts(DEFAULT_ROLES);
               }}
-              className="mt-1.5 text-xs font-medium text-pink-ink hover:underline"
+              className="text-xs text-stone-500 hover:text-navy hover:underline"
             >
-              + Add a role
+              Back to the usual roles
             </button>
-          )}
+          </div>
           <p className="mt-1 text-xs text-stone-500">
-            Remove every role to leave them off. The emoji only go in Copy as
-            text.
+            The emoji only go in Copy as text.
           </p>
         </div>
         <label className="block text-xs font-medium text-stone-600">
@@ -820,7 +893,10 @@ function Maker({
         {field("details", "Date, time and place")}
         {roles.length > 0 && field("rolesTitle", "Above the roles")}
         {roles.length > 0 &&
-          field("rolesNote", "Note after the roles (Copy as text only)")}
+          field(
+            "rolesNote",
+            "Note after the roles (Copy as text only, optional)",
+          )}
         {roles.length > 0 && field("intro", "Opening line (Copy as text only)")}
         {field("footer", "Bottom line")}
         <button
