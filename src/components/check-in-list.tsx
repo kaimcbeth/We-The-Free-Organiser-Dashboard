@@ -720,7 +720,7 @@ function QuickAdd({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!firstName.trim()) return;
+    if (!firstName.trim() || !bestContact || !contact.trim()) return;
     setSaving(true);
     const ok = await onSave(firstName.trim(), lastName.trim(), {
       newToActivism,
@@ -811,10 +811,11 @@ function QuickAdd({
           <select
             value={bestContact}
             onChange={(e) => setBestContact(e.target.value)}
+            required
             aria-label="Best way to reach them"
             className={`${inputClass} ${bestContact ? "" : "text-stone-500"}`}
           >
-            <option value="">Best contact (optional)</option>
+            <option value="">Best contact</option>
             {BEST_CONTACT.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.label}
@@ -824,6 +825,7 @@ function QuickAdd({
           {how && (
             <input
               type={how.input}
+              required
               value={contact}
               onChange={(e) => setContact(e.target.value)}
               placeholder={how.placeholder}

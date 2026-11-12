@@ -74,6 +74,10 @@ export const CHANGELOG: Release[] = [
         text: "Organiser chats has a WTF team tab too: mark chats with WTF team members to read and reply to them from the Hub (no community or check-ins).",
       },
       {
+        level: "organiser",
+        text: "Adding someone new at check-in now needs their best contact (WhatsApp, text, call, email, Instagram or Facebook) and the number, email or handle.",
+      },
+      {
         level: "god",
         text: "0231: beeper_links / beeper_chats / beeper_messages / beeper_outbox (own rows only), beeper_sync for the Mac helper (public/beeper/relay.js, a LaunchAgent every 30 s, Beeper token in the Keychain). Message text is only kept for chats marked as organiser chats (last 40).",
       },
