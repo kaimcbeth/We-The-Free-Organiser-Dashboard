@@ -29,6 +29,23 @@ const fullName = (p: CheckInPerson) =>
   [p.first_name, p.last_name].filter(Boolean).join(" ");
 const byName = (a: CheckInPerson, b: CheckInPerson) =>
   fullName(a).localeCompare(fullName(b));
+// Check-ins that couldn't be sent (no signal at an outdoor event, Kai
+// 12 Nov 2026) wait on the phone and go when the connection is back.
+// New people added offline get a temporary id until they're sent.
+type Queued =
+  | { kind: "tick"; id: string; name: string; here: boolean; tries: number }
+  | {
+      kind: "add";
+      tmp: string;
+      first: string;
+      last: string;
+      x: NewcomerExtras;
+      tries: number;
+    };
+const TMP = "tmp-";
+const isOffline = () =>
+  typeof navigator !== "undefined" && navigator.onLine === false;
+
 // Below this someone's last visit was long ago (or only ever to the other kind of event).
 const LIKELY_MIN = 0.15;
 
@@ -99,6 +116,164 @@ export function CheckInList({
     return isMilestone(n) ? n : null;
   };
 
+  // ---- Waiting to send (offline) ----
+  const queueKey = useRef("");
+  const queue = useRef<Queued[]>([]);
+  const flushing = useRef(false);
+  const [waiting, setWaiting] = useState<Set<string>>(new Set());
+  const [sending, setSending] = useState(false);
+
+  function saveQueue() {
+    try {
+      localStorage.setItem(queueKey.current, JSON.stringify(queue.current));
+    } catch {}
+    setWaiting(
+      new Set(queue.current.map((q) => (q.kind === "tick" ? q.id : q.tmp))),
+    );
+  }
+  function enqueue(item: Queued) {
+    if (item.kind === "tick")
+      queue.current = queue.current.filter(
+        (q) => !(q.kind === "tick" && q.id === item.id),
+      );
+    queue.current.push(item);
+    saveQueue();
+  }
+  // Shows queued ticks and new people on top of what the server says.
+  function overlay(list: CheckInPerson[], here: Set<string>) {
+    const people = [...list];
+    const next = new Set(here);
+    for (const q of queue.current) {
+      if (q.kind === "add") {
+        if (!people.some((p) => p.id === q.tmp))
+          people.push({
+            id: q.tmp,
+            first_name: q.first,
+            last_name: q.last || null,
+          });
+        next.add(q.tmp);
+      } else if (q.here) next.add(q.id);
+      else next.delete(q.id);
+    }
+    return { people: people.sort(byName), here: next };
+  }
+
+  function sendExtras(person: CheckInPerson, x: NewcomerExtras) {
+    if (x.newToActivism)
+      void createClient().rpc("set_new_to_activism", {
+        p_person_id: person.id,
+        p_value: true,
+        p_token: linkToken ?? null,
+      });
+    if (x.foundVia || x.bestContact)
+      void createClient().rpc("set_newcomer_details", {
+        p_person_id: person.id,
+        p_token: linkToken ?? null,
+        p_found_via: x.foundVia || null,
+        p_via_person:
+          x.foundVia === "person" && x.viaPerson ? x.viaPerson : null,
+        p_note:
+          x.foundVia === "other" || (x.foundVia === "person" && !x.viaPerson)
+            ? x.viaNote
+            : null,
+        p_best_contact: x.bestContact || null,
+        p_contact: x.bestContact ? x.contact : null,
+      });
+  }
+
+  // Sends what's waiting, oldest first. Stops at the first failure (still no
+  // signal); something that fails 3 times while online is dropped and undone.
+  async function flush() {
+    if (flushing.current || queue.current.length === 0 || isOffline()) return;
+    flushing.current = true;
+    setSending(true);
+    while (queue.current.length) {
+      const q = queue.current[0];
+      let ok = false;
+      if (q.kind === "add") {
+        const person = await onAdd(q.first, q.last).catch(() => null);
+        if (person) {
+          ok = true;
+          sendExtras(person, q.x);
+          for (const t of queue.current)
+            if (t.kind === "tick" && t.id === q.tmp) t.id = person.id;
+          setPeople((prev) =>
+            prev.map((p) => (p.id === q.tmp ? person : p)).sort(byName),
+          );
+          setCheckedIn((prev) => {
+            const next = new Set(prev);
+            if (next.delete(q.tmp)) next.add(person.id);
+            return next;
+          });
+        }
+      } else if (q.id.startsWith(TMP)) {
+        ok = true; // its person never got sent; nothing to do
+      } else {
+        ok = await onToggle(
+          { id: q.id, first_name: q.name, last_name: null },
+          q.here,
+        ).catch(() => false);
+      }
+      if (ok) {
+        queue.current.shift();
+        saveQueue();
+        continue;
+      }
+      q.tries++;
+      if (q.tries >= 3 && !isOffline()) {
+        queue.current.shift();
+        if (q.kind === "tick") {
+          flip(q.id, !q.here);
+          setError(`Couldn't save ${q.name}. Please try again.`);
+        } else {
+          setPeople((prev) => prev.filter((p) => p.id !== q.tmp));
+          setError(`Couldn't add ${q.first}. Please add them again.`);
+        }
+        saveQueue();
+        continue;
+      }
+      saveQueue();
+      break;
+    }
+    flushing.current = false;
+    setSending(false);
+  }
+  const flushRef = useRef(flush);
+  useEffect(() => {
+    flushRef.current = flush;
+  });
+
+  // Load anything left from before (page reloaded while offline), then keep
+  // trying: when the phone says it's back online, and every 20 seconds.
+  useEffect(() => {
+    queueKey.current = `wtf-checkin-queue:${location.pathname}`;
+    try {
+      queue.current = JSON.parse(
+        localStorage.getItem(queueKey.current) ?? "[]",
+      ) as Queued[];
+    } catch {
+      queue.current = [];
+    }
+    queueMicrotask(() => {
+      if (queue.current.length) {
+        const o = overlay(people, checkedIn);
+        setPeople(o.people);
+        setCheckedIn(o.here);
+        saveQueue();
+        void flushRef.current();
+      }
+    });
+    const online = () => void flushRef.current();
+    window.addEventListener("online", online);
+    const t = setInterval(() => void flushRef.current(), 20000);
+    return () => {
+      window.removeEventListener("online", online);
+      clearInterval(t);
+    };
+    // Runs once: the first people/checkedIn are what the queue goes on top of.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Pick up ticks made on other phones every 15 seconds.
   const busy = useRef(false);
   useEffect(() => {
@@ -110,8 +285,9 @@ export function CheckInList({
       if (busy.current || document.hidden) return;
       const fresh = await poll();
       if (!fresh || busy.current) return;
-      setPeople([...fresh.people].sort(byName));
-      setCheckedIn(new Set(fresh.checkedIn));
+      const o = overlay(fresh.people, new Set(fresh.checkedIn));
+      setPeople(o.people);
+      setCheckedIn(o.here);
     }, 15000);
     return () => clearInterval(t);
   }, [poll]);
@@ -166,24 +342,45 @@ export function CheckInList({
     if (pending.has(person.id)) return;
     const here = !checkedIn.has(person.id);
     setError("");
-    setBusy(person.id, true);
     flip(person.id, here); // update the screen straight away, then save
-    const ok = await onToggle(person, here);
-    if (ok && here && isOutreach) {
+    const celebrateIf = () => {
+      if (!here || !isOutreach) return;
       const n = (outreachBefore[person.id] ?? 0) + 1;
       if (isMilestone(n)) setCelebrate({ name: person.first_name, n });
+    };
+    const tick: Queued = {
+      kind: "tick",
+      id: person.id,
+      name: person.first_name,
+      here,
+      tries: 0,
+    };
+    // No signal, or other ticks still waiting (keep them in order): keep it
+    // on the phone and send it later.
+    if (isOffline() || queue.current.length > 0) {
+      enqueue(tick);
+      celebrateIf();
+      void flush();
+      return;
     }
-    if (!ok) {
-      flip(person.id, !here);
-      setError(
-        `Couldn't save ${person.first_name}. Check your connection and try again.`,
-      );
+    setBusy(person.id, true);
+    const ok = await onToggle(person, here).catch(() => false);
+    if (ok) celebrateIf();
+    else {
+      enqueue({ ...tick, tries: 1 });
+      celebrateIf();
     }
     setBusy(person.id, false);
   }
 
   async function markNotNew(person: CheckInPerson) {
     setError("");
+    if (person.id.startsWith(TMP)) {
+      setError(
+        `${person.first_name} hasn't been sent yet. Try again once they have.`,
+      );
+      return;
+    }
     setMarkedNotNew((prev) => new Set(prev).add(person.id));
     const ok = await onMarkNotNew?.(person);
     if (!ok) {
@@ -198,31 +395,26 @@ export function CheckInList({
 
   async function add(first: string, last: string, x: NewcomerExtras) {
     setError("");
-    const person = await onAdd(first, last);
+    const person =
+      isOffline() || queue.current.length > 0
+        ? null
+        : await onAdd(first, last).catch(() => null);
     if (!person) {
-      setError("Couldn't add that person. Please try again.");
-      return false;
+      // No signal: add them on this phone now and send them later.
+      const tmp: CheckInPerson = {
+        id: `${TMP}${crypto.randomUUID()}`,
+        first_name: first,
+        last_name: last || null,
+      };
+      enqueue({ kind: "add", tmp: tmp.id, first, last, x, tries: 0 });
+      setPeople((prev) => [...prev, tmp].sort(byName));
+      flip(tmp.id, true);
+      setQuery("");
+      setAdding(false);
+      void flush();
+      return true;
     }
-    if (x.newToActivism)
-      void createClient().rpc("set_new_to_activism", {
-        p_person_id: person.id,
-        p_value: true,
-        p_token: linkToken ?? null,
-      });
-    if (x.foundVia || x.bestContact)
-      void createClient().rpc("set_newcomer_details", {
-        p_person_id: person.id,
-        p_token: linkToken ?? null,
-        p_found_via: x.foundVia || null,
-        p_via_person:
-          x.foundVia === "person" && x.viaPerson ? x.viaPerson : null,
-        p_note:
-          x.foundVia === "other" || (x.foundVia === "person" && !x.viaPerson)
-            ? x.viaNote
-            : null,
-        p_best_contact: x.bestContact || null,
-        p_contact: x.bestContact ? x.contact : null,
-      });
+    sendExtras(person, x);
     setPeople((prev) => [...prev, person].sort(byName));
     flip(person.id, true);
     setQuery("");
@@ -318,6 +510,28 @@ export function CheckInList({
         >
           {error}
         </p>
+      )}
+
+      {waiting.size > 0 && (
+        <div
+          role="status"
+          className="mb-3 flex items-center gap-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200"
+        >
+          <p className="min-w-0 flex-1">
+            {sending ? "Sending" : "No signal?"} {waiting.size}{" "}
+            {waiting.size === 1 ? "check-in is" : "check-ins are"} saved on this
+            phone{sending ? "…" : " and will send when you're back online."}
+          </p>
+          {!sending && (
+            <button
+              type="button"
+              onClick={() => void flush()}
+              className="shrink-0 rounded-lg bg-white px-2.5 py-1 text-xs font-semibold text-amber-900 ring-1 ring-amber-300 hover:bg-amber-100"
+            >
+              Send now
+            </button>
+          )}
+        </div>
       )}
 
       {celebrate && (
@@ -430,6 +644,11 @@ export function CheckInList({
                       <Avatar name={fullName(p)} url={photos[p.id]} size={40} />
                       <span className="min-w-0 flex-1 truncate font-medium">
                         {fullName(p)}
+                        {waiting.has(p.id) && (
+                          <span className="ml-2 text-xs font-normal text-amber-700">
+                            Not sent yet
+                          </span>
+                        )}
                       </span>
                       {milestoneFor(p.id) && (
                         <span className="shrink-0 rounded-full bg-pink px-2 py-0.5 text-xs font-semibold text-navy">

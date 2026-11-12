@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Check-in works with bad reception: ticks and new people are kept on the phone and sent when the signal comes back.",
+      },
+      {
+        level: "organiser",
         text: "Movie Challenge day summary: a graph of films watched through the day, with the busiest hour. Updates every minute while the event is on.",
       },
       {
