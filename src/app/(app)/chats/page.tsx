@@ -10,11 +10,11 @@ import { OrganiserChats, type ChatTeam } from "./organiser-chats";
 export default async function ChatsPage({ searchParams }: PageProps<"/chats">) {
   const { chat } = await searchParams;
   const { supabase, organiser } = await requireOrganiser();
+  // God can open it while previewing too (the chats are always their own).
   const allowed =
-    !organiser.viewingAs &&
-    (organiser.access === "god" ||
-      organiser.access === "regional_lead" ||
-      organiser.leadRegionIds.length > 0);
+    organiser.access === "god" ||
+    organiser.access === "regional_lead" ||
+    organiser.leadRegionIds.length > 0;
   if (!allowed)
     return (
       <div className="space-y-3">

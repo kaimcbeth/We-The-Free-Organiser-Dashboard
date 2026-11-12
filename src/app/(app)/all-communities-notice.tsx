@@ -13,6 +13,7 @@ const REGION_WIDE = [
   "/test-accounts",
   "/usage",
   "/action-ranking",
+  "/chats",
   "/events/",
 ];
 
