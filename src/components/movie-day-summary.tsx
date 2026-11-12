@@ -183,6 +183,104 @@ export function drawDaySummary(
   ctx.fillText("activism.wtf", pad, H - 90);
 }
 
+// Running total of films watched through the day (Kai, 12 Nov 2026: "a graph
+// for total video views throughout the duration of a 3MMC"). Every answer row
+// (including skips) is one view, at the time the question came up.
+const hourLabel = (ms: number, tz: string) =>
+  new Intl.DateTimeFormat("en-AU", { timeZone: tz, hour: "numeric" })
+    .format(new Date(ms))
+    .replace(/\s/g, "")
+    .toLowerCase();
+
+export function ViewsChart({ times, tz }: { times: number[]; tz: string }) {
+  if (times.length < 2) return null;
+  const sorted = [...times].sort((a, b) => a - b);
+  const H = 36e5;
+  const Q = H / 4;
+  const start = Math.floor(sorted[0] / Q) * Q;
+  const end = Math.max(Math.ceil(sorted[sorted.length - 1] / Q) * Q, start + H);
+  const total = sorted.length;
+  const W = 600;
+  const Ht = 190;
+  const pad = { l: 34, r: 12, t: 12, b: 24 };
+  const x = (t: number) =>
+    pad.l + ((t - start) / (end - start)) * (W - pad.l - pad.r);
+  const y = (n: number) => pad.t + (1 - n / total) * (Ht - pad.t - pad.b);
+  // Step line: flat until each view, then up by one.
+  let d = `M${x(start)},${y(0)}`;
+  sorted.forEach((t, i) => {
+    d += ` H${x(t).toFixed(1)} V${y(i + 1).toFixed(1)}`;
+  });
+  d += ` H${x(end)}`;
+  const area = `${d} V${y(0)} H${x(start)} Z`;
+  const span = (end - start) / H;
+  const step = span > 8 ? 2 * H : H;
+  const ticks: number[] = [];
+  for (let t = Math.ceil(start / H) * H; t <= end; t += step) ticks.push(t);
+  const perHour = new Map<number, number>();
+  for (const t of sorted) {
+    const h = Math.floor(t / H) * H;
+    perHour.set(h, (perHour.get(h) ?? 0) + 1);
+  }
+  const [peakAt, peakN] = [...perHour.entries()].sort((a, b) => b[1] - a[1])[0];
+  const yTicks = [...new Set([0, Math.round(total / 2), total])];
+  return (
+    <figure className="mt-3">
+      <figcaption className="flex flex-wrap items-baseline justify-between gap-x-3 text-xs text-stone-500">
+        <span className="font-medium text-stone-700">
+          Films watched through the day
+        </span>
+        <span>
+          Busiest hour: {hourLabel(peakAt, tz)}–{hourLabel(peakAt + H, tz)} (
+          {peakN})
+        </span>
+      </figcaption>
+      <svg
+        viewBox={`0 0 ${W} ${Ht}`}
+        className="mt-1 w-full"
+        role="img"
+        aria-label={`${total} films watched between ${hourLabel(start, tz)} and ${hourLabel(end, tz)}`}
+      >
+        {yTicks.map((n) => (
+          <g key={n}>
+            <line
+              x1={pad.l}
+              x2={W - pad.r}
+              y1={y(n)}
+              y2={y(n)}
+              stroke="#e7e5e4"
+              strokeWidth="1"
+            />
+            <text
+              x={pad.l - 6}
+              y={y(n) + 4}
+              textAnchor="end"
+              fontSize="11"
+              fill="#78716c"
+            >
+              {n}
+            </text>
+          </g>
+        ))}
+        <path d={area} fill="#ff47b9" fillOpacity="0.12" />
+        <path d={d} fill="none" stroke="#ff47b9" strokeWidth="2.5" />
+        {ticks.map((t) => (
+          <text
+            key={t}
+            x={x(t)}
+            y={Ht - 6}
+            textAnchor="middle"
+            fontSize="11"
+            fill="#78716c"
+          >
+            {hourLabel(t, tz)}
+          </text>
+        ))}
+      </svg>
+    </figure>
+  );
+}
+
 export function MovieDaySummary({
   teamId,
   tz,
@@ -202,7 +300,16 @@ export function MovieDaySummary({
   const [copied, setCopied] = useState("");
   const [logo, setLogo] = useState<HTMLImageElement | null>(null);
   const [fonts, setFonts] = useState(false);
+  const [tick, setTick] = useState(0);
   const canvas = useRef<HTMLCanvasElement>(null);
+
+  // Keep the numbers and graph fresh during the day (once a minute).
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      if (document.visibilityState === "visible") setTick((n) => n + 1);
+    }, 60_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -234,7 +341,7 @@ export function MovieDaySummary({
     return () => {
       live = false;
     };
-  }, [teamId, tz]);
+  }, [teamId, tz, tick]);
 
   const days = useMemo(() => {
     const seen: string[] = [];
@@ -245,6 +352,15 @@ export function MovieDaySummary({
     return seen;
   }, [answers, tz]);
   const key = picked ?? days[0] ?? null;
+  const times = useMemo(
+    () =>
+      key && answers
+        ? answers
+            .filter((a) => dayKey(a.answered_at, tz) === key)
+            .map((a) => Date.parse(a.answered_at))
+        : [],
+    [key, answers, tz],
+  );
   const summary = useMemo(
     () =>
       key && answers
@@ -373,6 +489,7 @@ export function MovieDaySummary({
         {stat(String(summary.languages.length), "languages")}
         {stat(String(summary.tapouts), "tapouts")}
       </div>
+      <ViewsChart times={times} tz={tz} />
       {(summary.languages.length > 1 || summary.films.length > 1) && (
         <p className="mt-2 text-sm text-stone-600">
           {[

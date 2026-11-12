@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Movie Challenge day summary: a graph of films watched through the day, with the busiest hour. Updates every minute while the event is on.",
+      },
+      {
+        level: "organiser",
         text: "Photo Hub loads much faster, especially on phones: the grid now shows small preview copies and only loads photos as you scroll to them. The full photo still opens when you tap it.",
       },
       {
