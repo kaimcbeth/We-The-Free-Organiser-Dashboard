@@ -25,6 +25,8 @@ import {
 import { loadConnectContext } from "@/lib/connect";
 import { loadRslTeams } from "@/lib/rsl-teams";
 import { GroupedCheckIns } from "@/components/grouped-checkins";
+import { OrganiserChatsLink } from "@/components/organiser-chats-link";
+import { loadChatLinks } from "@/lib/beeper";
 import { RegionTasks } from "./region-tasks";
 import { GodOverview } from "./god-overview";
 import { CoreTeamTasks } from "./core-team-tasks";
@@ -142,6 +144,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         loadConnectContext(supabase, rslTeams),
       ])
     : [null, null];
+  const chats = rslTeams.length ? await loadChatLinks(supabase) : null;
   const rslTeamById = Object.fromEntries(rslTeams.map((t) => [t.id, t]));
   const withTeam = <T extends { title: string; teamId: string }>(t: T): T =>
     rslTeamById[t.teamId]
@@ -485,6 +488,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
             <>
               <AddRegionAction regionId={organiser.leadRegionIds[0]} />
               <RegionPlanner regionId={organiser.leadRegionIds[0]} />
+              <OrganiserChatsLink waiting={chats?.waiting ?? 0} />
             </>
           )}
           {showLocal && (
@@ -518,6 +522,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
               community: rslTeamById[t.teamId]?.name.replace(/, .*$/, "") ?? "",
               tz: rslTeamById[t.teamId]?.timezone ?? common.tz,
               ctx: allConnect[t.teamId] ?? null,
+              chat: chats?.byTeam[t.teamId] ?? null,
             }))}
           />
         </section>

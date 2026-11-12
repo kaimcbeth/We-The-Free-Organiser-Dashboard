@@ -13,6 +13,8 @@ import type { TaskRow } from "@/components/task-card";
 import { RegionActions } from "./region-actions";
 import { RegionPlanner } from "@/components/region-planner";
 import { AddRegionAction } from "@/components/add-region-action";
+import { OrganiserChatsLink } from "@/components/organiser-chats-link";
+import { loadChatLinks } from "@/lib/beeper";
 
 const short = (name: string) =>
   name.replace(/, (Australia|New Zealand|Canada)$/, "");
@@ -34,7 +36,7 @@ export async function RegionTasks({
   planRegionId?: string; // their region, for Plan RSL actions
 }) {
   const ids = teams.map((t) => t.id);
-  const [tasks, connect, { data: waitRows }] = await Promise.all([
+  const [tasks, connect, { data: waitRows }, chats] = await Promise.all([
     loadTeamTasks(supabase, ids, { regional: true }),
     loadConnectContext(supabase, teams),
     supabase
@@ -42,6 +44,7 @@ export async function RegionTasks({
       .select("id, connect_waiting_since")
       .in("id", ids)
       .not("connect_waiting_since", "is", null),
+    loadChatLinks(supabase),
   ]);
   if (!tasks) return <LoadError what="tasks" />;
   // eslint-disable-next-line react-hooks/purity -- server component, rendered per request
@@ -90,6 +93,7 @@ export async function RegionTasks({
           <div className="mt-3 flex flex-wrap gap-2">
             <AddRegionAction regionId={planRegionId} />
             <RegionPlanner regionId={planRegionId} />
+            <OrganiserChatsLink waiting={chats.waiting} />
           </div>
         )}
       </div>
@@ -113,6 +117,7 @@ export async function RegionTasks({
               community: short(byId[t.teamId]?.name ?? "").replace(/, .*$/, ""),
               tz: byId[t.teamId]?.timezone ?? "Australia/Sydney",
               ctx: connect[t.teamId] ?? null,
+              chat: chats.byTeam[t.teamId] ?? null,
             }))}
           />
         </section>

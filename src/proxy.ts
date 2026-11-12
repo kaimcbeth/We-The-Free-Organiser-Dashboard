@@ -8,6 +8,7 @@ const PUBLIC_PATHS = [
   "/auth",
   "/join",
   "/invite",
+  "/beeper", // Mac helper files for Organiser chats (0231; no secrets)
   "/start", // one-use link that makes someone an organiser (0213)
   "/checkin",
   "/drop", // temporary photo upload links (Photo Hub QR code)

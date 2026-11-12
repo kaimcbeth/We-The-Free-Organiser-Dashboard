@@ -18,6 +18,11 @@ const PAGES: { label: string; href: string; words?: string }[] = [
   { label: "Show all past events", href: "/?past=all", words: "history old" },
   { label: "Calendar", href: "/calendar" },
   { label: "Actions", href: "/tasks", words: "tasks to do plan" },
+  {
+    label: "Organiser chats",
+    href: "/chats",
+    words: "beeper whatsapp messages reply rsl",
+  },
   { label: "People", href: "/people", words: "members contacts" },
   {
     label: "Insights",

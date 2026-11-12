@@ -58,6 +58,24 @@ export const COMING_SOON: { title: string; text: string }[] = [
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-11-13",
+    title: "Organiser chats",
+    changes: [
+      {
+        level: "regional_lead",
+        text: "Organiser chats (Actions → Organiser chats): link your WhatsApp, Instagram and other chats through Beeper on your Mac, mark which chats are with organisers, see who's waiting on a reply, and reply from the Hub with each community's events beside the chat.",
+      },
+      {
+        level: "regional_lead",
+        text: "Messaging an organiser (from the Hub or straight from Beeper) ticks that community's check-in, and each check-in row shows when you last messaged them.",
+      },
+      {
+        level: "god",
+        text: "0231: beeper_links / beeper_chats / beeper_messages / beeper_outbox (own rows only), beeper_sync for the Mac helper (public/beeper/relay.js, a LaunchAgent every 30 s, Beeper token in the Keychain). Message text is only kept for chats marked as organiser chats (last 40).",
+      },
+    ],
+  },
+  {
     date: "2026-11-12",
     title: "Signs guide and nearby events",
     changes: [

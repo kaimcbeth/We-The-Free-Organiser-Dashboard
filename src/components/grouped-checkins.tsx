@@ -6,6 +6,8 @@ import { useFold } from "@/lib/use-fold";
 import { TaskDoneBox } from "@/components/task-done-box";
 import { ConnectIdeas } from "@/components/connect-ideas";
 import type { ConnectContext } from "@/lib/connect";
+import Link from "next/link";
+import { ago, chatHref, type ChatLink } from "@/lib/beeper";
 
 // RSL actions made for every community (organiser check-ins, 1:1 calls…) as
 // one card per kind, with a row per community (Kai, 6 Nov 2026: "have them
@@ -18,6 +20,7 @@ export type CheckInItem = {
   community: string; // "Perth"
   tz: string;
   ctx: ConnectContext | null;
+  chat?: ChatLink | null; // their organiser chat in Organiser chats (0231)
 };
 
 function status(ctx: ConnectContext | null) {
@@ -159,6 +162,22 @@ function Group({ list, now }: { list: CheckInItem[]; now: number }) {
                     </span>
                   )}
                 </button>
+                {it.chat && (
+                  <Link
+                    href={chatHref(it.chat.chatId)}
+                    className={`shrink-0 pt-0.5 text-xs underline-offset-2 hover:underline ${
+                      it.chat.waitingSince
+                        ? "font-medium text-pink-ink"
+                        : "text-stone-400"
+                    }`}
+                  >
+                    {it.chat.waitingSince
+                      ? `Waiting on you · ${ago(it.chat.waitingSince, now)}`
+                      : it.chat.lastMineAt
+                        ? `Messaged ${ago(it.chat.lastMineAt, now)}`
+                        : "Chat"}
+                  </Link>
+                )}
               </div>
               {isOpen && (
                 <div className="mt-2">
