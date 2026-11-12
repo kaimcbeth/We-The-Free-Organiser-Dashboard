@@ -59,11 +59,15 @@ export const COMING_SOON: { title: string; text: string }[] = [
 export const CHANGELOG: Release[] = [
   {
     date: "2026-11-12",
-    title: "Ordering signs step by step",
+    title: "Signs guide and nearby events",
     changes: [
       {
         level: "organiser",
         text: "Equipment guide: the signs' Purchasing guide now walks you through ordering A1 handheld signs from Easy Signs, step by step (size, thickness, double-sided printing and the rest).",
+      },
+      {
+        level: "organiser",
+        text: "Events: a Nearby communities option above Upcoming (Off, 25, 50 or 100 km) adds nearby communities' events to your list, marked with their community and how far away they are. Tap one to see it on activism.wtf.",
       },
     ],
   },

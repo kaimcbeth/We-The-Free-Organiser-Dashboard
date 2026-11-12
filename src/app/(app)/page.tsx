@@ -13,6 +13,8 @@ import { describeImport } from "@/lib/import-status";
 import { requireOrganiser } from "@/lib/organiser";
 import { RegionEvents } from "./region-events";
 import { PastPicker } from "./past-picker";
+import { NearbyToggle } from "./nearby-toggle";
+import { NEARBY_COOKIE, NEARBY_KM } from "@/lib/nearby";
 import { EventRecap } from "@/components/event-recap";
 import { NewcomerReport } from "@/components/newcomer-report";
 import { SetupChecklist, type SetupStatus } from "./setup-checklist";
@@ -40,6 +42,20 @@ type EventRow = {
   source?: string;
   notes?: string | null;
   attendance: { count: number }[];
+};
+
+// Another community's event near this one (the "Nearby communities"
+// option): a listing only, linking to activism.wtf.
+type NearbyRow = {
+  id: string;
+  team_name: string;
+  title: string;
+  starts_at: string;
+  ends_at: string | null;
+  venue: string | null;
+  address: string | null;
+  source_url: string | null;
+  km: number;
 };
 
 // An Organiser Hangout (activism.wtf/hangouts): listed so organisers know
@@ -111,9 +127,13 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
   const { setup: justToured, past: pastParam } = await searchParams;
   const allPast = pastParam === "all";
   const { supabase, organiser } = await requireOrganiser();
+  const jar = await cookies();
+  const nearbyRaw = Number(jar.get(NEARBY_COOKIE)?.value ?? 0);
+  const nearbyKm = (NEARBY_KM as readonly number[]).includes(nearbyRaw)
+    ? nearbyRaw
+    : 0;
   // Last time they chose the calendar view.
-  if ((await cookies()).get("events_view")?.value === "calendar")
-    redirect("/calendar");
+  if (jar.get("events_view")?.value === "calendar") redirect("/calendar");
   if (organiser.allCommunities)
     return <RegionEvents supabase={supabase} teams={organiser.teams} />;
   const { start: todayStart, end: todayEnd } = dayBoundsUtc(todayInTz());
@@ -226,6 +246,20 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
     (h) => !lastShown || h.starts_at <= lastShown,
   );
   const suggestions = (suggestData ?? []) as Suggestion[];
+
+  // Nearby communities' events over the same stretch as Upcoming.
+  const { data: nearbyData } =
+    nearbyKm && !organiser.exampleMode
+      ? await supabase.rpc("nearby_events", {
+          p_team_id: organiser.team_id,
+          p_km: nearbyKm,
+          p_from: todayEnd,
+          p_to:
+            lastShown ??
+            new Date(Date.parse(todayEnd) + 92 * 864e5).toISOString(),
+        })
+      : { data: [] };
+  const nearby = (nearbyData ?? []) as NearbyRow[];
 
   // Event recaps: events that ended in the last week, until each organiser
   // closes theirs (Kai, 4 Nov 2026). At most 3, newest first.
@@ -449,6 +483,10 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
         title="Upcoming"
         events={upcoming.data ?? []}
         hangouts={hangouts}
+        nearby={nearby}
+        extra={
+          organiser.exampleMode ? undefined : <NearbyToggle km={nearbyKm} />
+        }
         empty="Nothing scheduled yet."
         nextId={next?.id}
         actions={actionsFor}
@@ -547,8 +585,12 @@ function EventList({
   nextId,
   actions,
   hangouts = [],
+  nearby = [],
+  extra,
   newestFirst = false,
 }: {
+  nearby?: NearbyRow[];
+  extra?: React.ReactNode; // beside the heading
   newestFirst?: boolean; // the full past list: newest at the top
   actions?: Map<string, number>;
   title: string;
@@ -559,23 +601,78 @@ function EventList({
 }) {
   // Events and hangouts together, in date order.
   const rows = [
-    ...events.map((e) => ({ at: e.starts_at, event: e, hangout: null })),
-    ...hangouts.map((h) => ({ at: h.starts_at, event: null, hangout: h })),
+    ...events.map((e) => ({
+      at: e.starts_at,
+      event: e,
+      hangout: null,
+      near: null,
+    })),
+    ...hangouts.map((h) => ({
+      at: h.starts_at,
+      event: null,
+      hangout: h,
+      near: null,
+    })),
+    ...nearby.map((n) => ({
+      at: n.starts_at,
+      event: null,
+      hangout: null,
+      near: n,
+    })),
   ].sort((a, b) =>
     newestFirst ? b.at.localeCompare(a.at) : a.at.localeCompare(b.at),
   );
   const thisYear = nowIso().slice(0, 4);
   return (
     <section>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
-        {title}
-      </h2>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+          {title}
+        </h2>
+        {extra}
+      </div>
       {rows.length === 0 ? (
         <p className="text-sm text-stone-500">{empty}</p>
       ) : (
         <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-          {rows.map(({ event: e, hangout: h }) =>
-            h ? (
+          {rows.map(({ event: e, hangout: h, near: n }) =>
+            n ? (
+              <li
+                key={`n-${n.id}`}
+                className="flex items-center bg-cyan/5 hover:bg-stone-50"
+              >
+                <a
+                  href={n.source_url ?? undefined}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-3 pr-3 sm:gap-4 sm:py-3.5 sm:pl-4 sm:pr-4"
+                >
+                  <div className="w-11 shrink-0 text-xs font-medium leading-tight text-stone-500 sm:w-16 sm:text-sm">
+                    {formatEventDate(n.starts_at)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-start gap-2 font-medium leading-snug">
+                      <span className="line-clamp-2 sm:truncate">
+                        {n.title}
+                      </span>
+                      <span className="mt-0.5 shrink-0 rounded-full bg-cyan/20 px-1.5 py-px text-[10px] font-semibold text-navy sm:px-2 sm:py-0.5 sm:text-xs">
+                        {n.team_name}
+                      </span>
+                    </p>
+                    <p className="truncate text-xs text-stone-500 sm:text-sm">
+                      {formatTimeRange(n.starts_at, n.ends_at)}
+                      {n.venue || n.address ? ` · ${n.venue ?? n.address}` : ""}
+                      {` · ${n.km} km away`}
+                    </p>
+                  </div>
+                  {n.source_url && (
+                    <span className="shrink-0 text-stone-300" aria-hidden>
+                      ↗
+                    </span>
+                  )}
+                </a>
+              </li>
+            ) : h ? (
               <li
                 key={`h-${h.id}`}
                 className="flex items-center hover:bg-stone-50"
