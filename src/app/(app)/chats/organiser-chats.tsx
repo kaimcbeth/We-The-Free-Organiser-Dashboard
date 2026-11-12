@@ -398,8 +398,8 @@ function Setup({
         <li className={step}>
           <span className={num}>2</span>
           <span>
-            In Beeper: <b>Settings → Developers</b>, turn on{" "}
-            <b>Beeper Desktop API</b> and <b>Start on launch</b>.
+            In Beeper: <b>Settings → Integrations</b>, turn on{" "}
+            <b>Allow connections</b>.
           </span>
         </li>
         <li className={step}>

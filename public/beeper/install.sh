@@ -38,7 +38,7 @@ printf '{"supabaseUrl":"%s","key":"%s","link":"%s"}\n' "$SUPABASE_URL" "$SUPABAS
 
 # The Beeper token, asked for in a pop-up and kept in this Mac's Keychain.
 if ! security find-generic-password -s "WTF Hub Beeper" -w >/dev/null 2>&1; then
-  TOKEN=$(osascript -e 'text returned of (display dialog "Paste your Beeper token.\n\nIn Beeper: Settings → Developers → Approved connections → + (turn on \"Allow sensitive actions\" so replies can be sent)." default answer "" with hidden answer with title "Movement Hub" buttons {"Cancel", "Save"} default button "Save")' 2>/dev/null || true)
+  TOKEN=$(osascript -e 'text returned of (display dialog "Paste your Beeper token.\n\nIn Beeper: Settings → Integrations → Approved connections → + (turn on \"Allow sensitive actions\" so replies can be sent)." default answer "" with hidden answer with title "Movement Hub" buttons {"Cancel", "Save"} default button "Save")' 2>/dev/null || true)
   if [ -z "$TOKEN" ]; then
     echo "No Beeper token entered. Run the same line again when you have it."; exit 1
   fi
