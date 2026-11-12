@@ -55,7 +55,7 @@ type Raw = {
 };
 
 const SELECT =
-  "id, team_id, due_at, show_from, done_at, assigned_to, checked, skipped, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes, audience, schedule, checklist), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, facebook_url, rain_chance, rain_mm, max_temp, event_type_id, event_type:event_types(name), team:teams(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name), person:people!tasks_person_id_fkey(id, first_name, last_name), pod_post:pod_posts(url, note, shared_by_name, team:teams(pod_whatsapp_url))";
+  "id, team_id, due_at, show_from, done_at, assigned_to, checked, skipped, note, kind:task_kinds(kind, sort_order, title, description, estimate_minutes, estimate_max_minutes, audience, schedule, checklist), event:events(id, title, starts_at, ends_at, venue, address, description, source_url, facebook_url, rain_chance, rain_mm, max_temp, event_type_id, event_type:event_types(name), team:teams(name)), assignee:people!tasks_assigned_to_fkey(first_name, last_name), person:people!tasks_person_id_fkey(id, first_name, last_name), pod_post:pod_posts(url, note, shared_by_name, team:teams(pod_whatsapp_url))";
 
 // Promo actions that get a "Get graphic" button, and the size they need.
 const GRAPHIC_SIZE: Record<string, GraphicSize | undefined> = {
@@ -126,6 +126,7 @@ function toRow(t: Raw): TaskRow {
           season: "Every season",
           newcomer: "Each newcomer",
           birthday: "On their birthday",
+          reconnect: "When a regular goes quiet",
           region_weekly: "Every week",
           region_fortnightly: "Every 2 weeks",
           region_monthly: "Every month",
@@ -365,7 +366,7 @@ export async function loadRegionTasks(
 ) {
   if (!regionIds.length) return { open: [], later: [], done: [] };
   const since = new Date(Date.now() - 14 * 864e5).toISOString();
-  const select = `${SELECT}, region_id, note, hangout:hangouts(title, starts_at, source_url)`;
+  const select = `${SELECT}, region_id, hangout:hangouts(title, starts_at, source_url)`;
   const [open, done] = await Promise.all([
     supabase
       .from("tasks")

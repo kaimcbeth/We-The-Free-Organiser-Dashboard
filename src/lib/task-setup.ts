@@ -183,7 +183,9 @@ export function toSetupKind(k: KindRow): SetupKind {
       ? `${k.estimate_minutes}–${k.estimate_max_minutes}`
       : String(k.estimate_minutes),
     when:
-      k.schedule === "weekly" || k.schedule === "fortnightly"
+      k.schedule === "weekly" ||
+      k.schedule === "fortnightly" ||
+      k.schedule === "reconnect"
         ? "weekly"
         : k.schedule === "monthly"
           ? "monthly"
@@ -201,7 +203,7 @@ export function toSetupKind(k: KindRow): SetupKind {
     timesPerWeek:
       k.schedule === "weekly"
         ? 1
-        : k.schedule === "fortnightly"
+        : k.schedule === "fortnightly" || k.schedule === "reconnect"
           ? 0.5
           : k.schedule === "monthly"
             ? 0.25

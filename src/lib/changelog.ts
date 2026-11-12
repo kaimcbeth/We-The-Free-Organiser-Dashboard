@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "New action: when a regular hasn't been in about six weeks, you'll get a nudge to send them a friendly message.",
+      },
+      {
+        level: "organiser",
         text: "Monday summary: an email each Monday morning with last week's numbers and first-timers, this week's events, actions due and birthdays. Switch it off in Reminders.",
       },
       {
