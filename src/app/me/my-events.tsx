@@ -1,6 +1,7 @@
 "use client";
 
 import { Countdown } from "@/components/countdown";
+import { AddToCalendar } from "@/components/add-to-calendar";
 
 import { useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -119,6 +120,21 @@ export function MyEvents({ events, tz }: { events: MyEvent[]; tz: string }) {
                   </button>
                 );
               })}
+              {/* Going? Put it in their phone's calendar (Kai, 12 Nov 2026). */}
+              {e.my_status === "going" && (
+                <AddToCalendar
+                  event={{
+                    id: e.id,
+                    title: e.title,
+                    starts_at: e.starts_at,
+                    ends_at: e.ends_at,
+                    venue: e.venue,
+                    address: e.address,
+                    description: null,
+                    url: e.source_url,
+                  }}
+                />
+              )}
               {e.source_url && (
                 <a
                   href={e.source_url}

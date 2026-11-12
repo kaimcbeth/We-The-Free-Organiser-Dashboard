@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'Members who tap Going now get "Add to your calendar" on that event (Google Calendar, or Apple / Outlook).',
+      },
+      {
+        level: "organiser",
         text: "Search: the magnifying glass at the top finds people, events, open actions and Hub pages. Ctrl + K (⌘ K on a Mac) opens it too.",
       },
       {
