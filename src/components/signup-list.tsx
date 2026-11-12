@@ -53,17 +53,15 @@ const role = (emoji: string, label: string): Role => ({
   names: [],
 });
 export const DEFAULT_ROLES: Role[] = [
-  role("🪧", "Signs"),
-  role("💬", "Outreach"),
   role("📸", "Photos"),
   role("👋", "Newcomer welcomes"),
   role("🛠️", "Equipment setup"),
-  role("🍩", "Prize table"),
 ];
-// The first version's roles (Photos / Attendance… / Equipment setup with
-// blanks): an event saved with them starts on the new set.
-const OLD_LABELS =
-  "Photos|Attendance and welcoming new members|Equipment setup";
+// Earlier default sets: an event saved with one of them starts on the new set.
+const OLD_LABELS = [
+  "Photos|Attendance and welcoming new members|Equipment setup",
+  "Signs|Outreach|Photos|Newcomer welcomes|Equipment setup|Prize table",
+];
 
 function defaults(e: GraphicEvent, tz: string): Texts {
   const movie = /movie challenge|3mmc/i.test(e.title);
@@ -82,10 +80,9 @@ function defaults(e: GraphicEvent, tz: string): Texts {
       ? "3 Minute Movie Challenge"
       : shortTitle(e.title, e.community),
     details: [day, time, place(e)].filter(Boolean).join(" · "),
-    rolesTitle: "Pick a role (or a few)",
+    rolesTitle: "We are especially in need of help with:",
     rolesNote: "",
-    intro:
-      "Everyone gets a role at this one, and you can pick more than one. Reply with your name and the role(s) you'd like:",
+    intro: "",
     footer: "Reply to grab a spot",
   };
 }
@@ -198,57 +195,56 @@ export function drawSignups(
   );
   ctx.fill();
 
-  // Roles: a row of coloured pills (they're also the key for the chips
-  // beside each name).
+  // Roles (Kai, 12 Nov 2026: "just have the roles at the top"): a line,
+  // then one role per row as a white-outlined pill followed by whoever has
+  // taken it.
   const story = h > 1500;
   if (roles.length) {
     y += story ? 76 : 62;
     if (t.rolesTitle) {
-      ctx.fillStyle = "rgba(255,255,255,0.7)";
-      ctx.font = `700 26px ${body}`;
-      ctx.letterSpacing = "2px";
-      ctx.fillText(t.rolesTitle.toUpperCase(), m, y);
-      ctx.letterSpacing = "0px";
-      y += story ? 22 : 14;
+      ctx.fillStyle = "#ffffff";
+      ctx.font = `700 ${story ? 32 : 30}px ${body}`;
+      ctx.fillText(t.rolesTitle, m, y);
+      y += story ? 18 : 10;
     }
-    const pillH = story ? 50 : 44;
+    const pillH = story ? 52 : 46;
     const gap = story ? 14 : 10;
-    ctx.font = `800 ${story ? 25 : 23}px ${body}`;
-    let x = m;
-    let py = y + gap;
+    let py = y;
     roles.forEach((r) => {
+      py += gap;
       const label = r.label || "Role";
-      const pw = ctx.measureText(label).width + 32;
-      if (x > m && x + pw > w - m) {
-        x = m;
-        py += pillH + gap;
-      }
-      ctx.strokeStyle = "rgba(255,255,255,0.45)";
+      ctx.font = `800 ${story ? 26 : 24}px ${body}`;
+      const pw = ctx.measureText(label).width + 36;
+      ctx.strokeStyle = "rgba(255,255,255,0.5)";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.roundRect(x + 1, py + 1, pw - 2, pillH - 2, pillH / 2);
+      ctx.roundRect(m + 1, py + 1, pw - 2, pillH - 2, pillH / 2);
       ctx.stroke();
       ctx.fillStyle = "#ffffff";
       ctx.textBaseline = "middle";
-      ctx.fillText(label, x + 16, py + pillH / 2 + 1);
+      ctx.fillText(label, m + 18, py + pillH / 2 + 1);
+      if (r.names.length) {
+        const who = r.names.join(", ");
+        const room = w - m - (m + pw + 20);
+        let fs = story ? 30 : 27;
+        ctx.font = `700 ${fs}px ${body}`;
+        while (fs > 16 && ctx.measureText(who).width > room) {
+          fs -= 1;
+          ctx.font = `700 ${fs}px ${body}`;
+        }
+        ctx.fillStyle = YELLOW;
+        ctx.fillText(who, m + pw + 20, py + pillH / 2 + 1, room);
+      }
       ctx.textBaseline = "alphabetic";
-      x += pw + gap;
+      py += pillH;
     });
-    y = py + pillH;
+    y = py;
     // A thin rule between the roles and the numbered list.
     y += story ? 40 : 28;
     ctx.fillStyle = "rgba(255,255,255,0.15)";
     ctx.fillRect(m, y, w - m * 2, 2);
     y -= 8;
   }
-  // Each person's roles, by role index.
-  const rolesFor = (name: string) =>
-    roles
-      .map((r, i) => ({ r, i }))
-      .filter(({ r }) =>
-        r.names.some((n) => n.toLowerCase() === name.toLowerCase()),
-      );
-
   // The spots.
   const footH = t.footer ? 110 : 50;
   const top = y + 44;
@@ -287,82 +283,13 @@ export function drawSignups(
     const maxW = colW - (nx - (m + c * colW)) - 24;
     if (name) {
       let s = nameSize;
-      const mine = rolesFor(name).map(({ r: ro }) => ro.label);
-      // Quiet see-through chips with the role names (Kai: the colours were
-      // too much). First choice: after the name on the same line (chips and
-      // name may shrink a little). Then, when the row is tall enough, on a
-      // line under the name. Last resort: the last ones become "+N".
-      const chipsW = (labels: string[], size: number) => {
-        ctx.font = `700 ${size}px ${body}`;
-        return labels.reduce(
-          (sum, l) => sum + ctx.measureText(l).width + size + 8,
-          -8,
-        );
-      };
-      const nameW = (size: number) => {
-        ctx.font = `700 ${size}px ${body}`;
-        return ctx.measureText(name).width;
-      };
-      const drawChips = (
-        labels: string[],
-        x: number,
-        y: number,
-        size: number,
-      ) => {
-        ctx.font = `700 ${size}px ${body}`;
-        const ch = size * 1.6;
-        for (const label of labels) {
-          const cw = ctx.measureText(label).width + size;
-          ctx.fillStyle = "rgba(255,255,255,0.12)";
-          ctx.beginPath();
-          ctx.roundRect(x, y - ch / 2, cw, ch, ch / 2);
-          ctx.fill();
-          ctx.fillStyle = "rgba(255,255,255,0.85)";
-          ctx.fillText(label, x + size / 2, y + 1);
-          x += cw + 8;
-        }
-      };
-      const cs0 = Math.round(Math.min(rowH * 0.3, story ? 24 : 20));
-      let inline: { size: number; cs: number } | null = null;
-      if (mine.length) {
-        for (let t = s; t >= s * 0.85 && !inline; t -= 2)
-          for (let c2 = cs0; c2 >= 14 && !inline; c2--)
-            if (nameW(t) + 14 + chipsW(mine, c2) <= maxW)
-              inline = { size: t, cs: c2 };
+      ctx.font = `700 ${s}px ${body}`;
+      while (s > 16 && ctx.measureText(name).width > maxW) {
+        s -= 2;
+        ctx.font = `700 ${s}px ${body}`;
       }
-      const below = mine.length > 0 && !inline && rowH >= 64;
-      if (!mine.length || inline) {
-        if (inline) s = inline.size;
-        while (s > 16 && nameW(s) > maxW) s -= 2;
-        ctx.font = `700 ${s}px ${body}`;
-        ctx.fillStyle = "#ffffff";
-        ctx.fillText(name, nx, cy + 1);
-        if (inline) drawChips(mine, nx + nameW(s) + 14, cy, inline.cs);
-      } else if (below) {
-        // Name in the top half of the row, chips under it.
-        s = Math.min(s, Math.round(rowH * 0.36));
-        while (s > 16 && nameW(s) > maxW) s -= 2;
-        ctx.font = `700 ${s}px ${body}`;
-        ctx.fillStyle = "#ffffff";
-        ctx.fillText(name, nx, cy - rowH * 0.16);
-        let c2 = Math.round(Math.min(rowH * 0.2, 22));
-        let labels = mine;
-        while (c2 > 13 && chipsW(labels, c2) > maxW) c2--;
-        for (let k = mine.length - 1; k >= 1 && chipsW(labels, c2) > maxW; k--)
-          labels = [...mine.slice(0, k), `+${mine.length - k}`];
-        drawChips(labels, nx, cy + rowH * 0.22, c2);
-      } else {
-        let labels = mine;
-        for (let k = mine.length - 1; k >= 0; k--) {
-          labels = [...mine.slice(0, k), `+${mine.length - k}`];
-          if (nameW(s) + 14 + chipsW(labels, 14) <= maxW) break;
-        }
-        while (s > 16 && nameW(s) + 14 + chipsW(labels, 14) > maxW) s -= 2;
-        ctx.font = `700 ${s}px ${body}`;
-        ctx.fillStyle = "#ffffff";
-        ctx.fillText(name, nx, cy + 1);
-        drawChips(labels, nx + nameW(s) + 14, cy, 14);
-      }
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(name, nx, cy + 1);
     } else {
       ctx.strokeStyle = "rgba(255,255,255,0.25)";
       ctx.lineWidth = 2;
@@ -425,7 +352,7 @@ export function listText(
   names: string[],
   target: number,
   roles: Role[] = [],
-  t?: Pick<Texts, "intro" | "rolesNote">,
+  t?: Pick<Texts, "intro" | "rolesNote" | "rolesTitle">,
 ) {
   const n = Math.max(target, names.length);
   const list = Array.from(
@@ -439,7 +366,7 @@ export function listText(
   );
   return [
     t?.intro,
-    roleLines.join("\n"),
+    [t?.rolesTitle, ...roleLines].filter(Boolean).join("\n"),
     t?.rolesNote ? `🩵 ${t.rolesNote}` : "",
     list,
   ]
@@ -549,7 +476,7 @@ function Maker({
       const savedRoles = ev.data?.signup_roles as Role[] | null;
       if (
         Array.isArray(savedRoles) &&
-        savedRoles.map((r) => r.label).join("|") !== OLD_LABELS
+        !OLD_LABELS.includes(savedRoles.map((r) => r.label).join("|"))
       )
         setDrafts(
           savedRoles.map((r) => ({ ...r, names: r.names ?? [], spots: 0 })),
@@ -910,7 +837,8 @@ function Maker({
             "rolesNote",
             "Note after the roles (Copy as text only, optional)",
           )}
-        {roles.length > 0 && field("intro", "Opening line (Copy as text only)")}
+        {roles.length > 0 &&
+          field("intro", "Opening line (Copy as text only, optional)")}
         {field("footer", "Bottom line")}
         <button
           type="button"
