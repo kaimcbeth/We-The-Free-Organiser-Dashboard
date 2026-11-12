@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Monday summary: an email each Monday morning with last week's numbers and first-timers, this week's events, actions due and birthdays. Switch it off in Reminders.",
+      },
+      {
+        level: "organiser",
         text: "Check-in works with bad reception: ticks and new people are kept on the phone and sent when the signal comes back.",
       },
       {

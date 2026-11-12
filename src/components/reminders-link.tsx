@@ -145,12 +145,74 @@ export function PodOptIn({ dryRun = false }: { dryRun?: boolean }) {
   );
 }
 
+// Monday email summary (Kai, 12 Nov 2026; 0228): organisers only.
+export function WeeklySummaryOptIn() {
+  const [on, setOn] = useState<boolean | null>(null);
+  const [msg, setMsg] = useState("");
+  const [pending, start] = useTransition();
+  useEffect(() => {
+    let live = true;
+    createClient()
+      .rpc("my_weekly_summary")
+      .then(({ data }) => {
+        if (live) setOn(data !== false);
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
+  if (on === null) return null;
+  function flip() {
+    const next = !on;
+    setOn(next);
+    setMsg("");
+    start(async () => {
+      const { error } = await createClient().rpc("set_weekly_summary", {
+        p_on: next,
+      });
+      if (error) {
+        setOn(!next);
+        setMsg("Couldn't save that. Please try again.");
+      }
+    });
+  }
+  return (
+    <div className="mt-5 border-t border-black/5 pt-4">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="font-semibold text-navy">Monday summary</p>
+          <p className="mt-0.5 text-sm text-stone-500">
+            An email each Monday morning: last week's numbers and first-timers,
+            this week's events, actions due and birthdays.
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={on}
+          aria-label="Monday summary"
+          disabled={pending}
+          onClick={flip}
+          className={`relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-60 ${on ? "bg-pink" : "bg-stone-300"}`}
+        >
+          <span
+            className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all ${on ? "left-[22px]" : "left-0.5"}`}
+          />
+        </button>
+      </div>
+      {msg && <p className="mt-2 text-sm text-red-700">{msg}</p>}
+    </div>
+  );
+}
+
 // "Reminders" (Kai, 4 Nov 2026): a small link in the Events page header that
 // opens the reminder settings (moved here from the profile).
 export function RemindersLink({
   className = "text-sm font-medium text-stone-500 hover:text-stone-800 hover:underline",
+  organiser = false,
 }: {
   className?: string;
+  organiser?: boolean; // shows the Monday summary switch
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -166,6 +228,7 @@ export function RemindersLink({
       {open && (
         <Sheet title="Reminders" onClose={() => setOpen(false)}>
           <MyReminders />
+          {organiser && <WeeklySummaryOptIn />}
         </Sheet>
       )}
     </>
