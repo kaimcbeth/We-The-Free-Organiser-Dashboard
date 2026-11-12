@@ -64,8 +64,6 @@ export const DEFAULT_ROLES: Role[] = [
 // blanks): an event saved with them starts on the new set.
 const OLD_LABELS =
   "Photos|Attendance and welcoming new members|Equipment setup";
-const ROLE_COLOURS = [PINK, "#3fd0ea", YELLOW, "#a3e635", "#ff9f43", "#c4a7ff"];
-const colourOf = (i: number) => ROLE_COLOURS[i % ROLE_COLOURS.length];
 
 function defaults(e: GraphicEvent, tz: string): Texts {
   const movie = /movie challenge|3mmc/i.test(e.title);
@@ -218,18 +216,19 @@ export function drawSignups(
     ctx.font = `800 ${story ? 25 : 23}px ${body}`;
     let x = m;
     let py = y + gap;
-    roles.forEach((r, i) => {
+    roles.forEach((r) => {
       const label = r.label || "Role";
       const pw = ctx.measureText(label).width + 32;
       if (x > m && x + pw > w - m) {
         x = m;
         py += pillH + gap;
       }
-      ctx.fillStyle = colourOf(i);
+      ctx.strokeStyle = "rgba(255,255,255,0.45)";
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.roundRect(x, py, pw, pillH, pillH / 2);
-      ctx.fill();
-      ctx.fillStyle = NAVY;
+      ctx.roundRect(x + 1, py + 1, pw - 2, pillH - 2, pillH / 2);
+      ctx.stroke();
+      ctx.fillStyle = "#ffffff";
       ctx.textBaseline = "middle";
       ctx.fillText(label, x + 16, py + pillH / 2 + 1);
       ctx.textBaseline = "alphabetic";
@@ -288,13 +287,15 @@ export function drawSignups(
     const maxW = colW - (nx - (m + c * colW)) - 24;
     if (name) {
       let s = nameSize;
-      const mine = rolesFor(name);
-      // Chips with the role names if they fit (shrinking the name a little
-      // first), else coloured dots (the pills at the top say which is which).
-      const chipW = (cs: number) => {
-        ctx.font = `800 ${cs}px ${body}`;
-        return mine.reduce(
-          (sum, { r: ro }) => sum + ctx.measureText(ro.label).width + cs + 8,
+      const mine = rolesFor(name).map(({ r: ro }) => ro.label);
+      // Quiet see-through chips with the role names (Kai: the colours were
+      // too much). First choice: after the name on the same line (chips and
+      // name may shrink a little). Then, when the row is tall enough, on a
+      // line under the name. Last resort: the last ones become "+N".
+      const chipsW = (labels: string[], size: number) => {
+        ctx.font = `700 ${size}px ${body}`;
+        return labels.reduce(
+          (sum, l) => sum + ctx.measureText(l).width + size + 8,
           -8,
         );
       };
@@ -302,48 +303,65 @@ export function drawSignups(
         ctx.font = `700 ${size}px ${body}`;
         return ctx.measureText(name).width;
       };
-      let cs = 0;
-      if (mine.length) {
-        for (let t = s; t >= Math.max(18, s * 0.7); t -= 2) {
-          const c2 = Math.round(
-            Math.min(rowH * 0.3, story ? 24 : 20, t * 0.72),
-          );
-          if (c2 >= 14 && nameW(t) + 14 + chipW(c2) <= maxW) {
-            s = t;
-            cs = c2;
-            break;
-          }
-        }
-      }
-      const dotsW = mine.length && !cs ? mine.length * r * 0.7 + 12 : 0;
-      while (s > 16 && nameW(s) > maxW - dotsW - (cs ? 14 + chipW(cs) : 0))
-        s -= 2;
-      ctx.font = `700 ${s}px ${body}`;
-      ctx.fillStyle = "#ffffff";
-      ctx.fillText(name, nx, cy + 1);
-      let x = nx + ctx.measureText(name).width + 14;
-      if (cs) {
-        chipW(cs);
-        const ch = cs * 1.6;
-        for (const { r: ro, i: k } of mine) {
-          const cw = ctx.measureText(ro.label).width + cs;
-          ctx.fillStyle = colourOf(k);
+      const drawChips = (
+        labels: string[],
+        x: number,
+        y: number,
+        size: number,
+      ) => {
+        ctx.font = `700 ${size}px ${body}`;
+        const ch = size * 1.6;
+        for (const label of labels) {
+          const cw = ctx.measureText(label).width + size;
+          ctx.fillStyle = "rgba(255,255,255,0.12)";
           ctx.beginPath();
-          ctx.roundRect(x, cy - ch / 2, cw, ch, ch / 2);
+          ctx.roundRect(x, y - ch / 2, cw, ch, ch / 2);
           ctx.fill();
-          ctx.fillStyle = NAVY;
-          ctx.fillText(ro.label, x + cs / 2, cy + 1);
+          ctx.fillStyle = "rgba(255,255,255,0.85)";
+          ctx.fillText(label, x + size / 2, y + 1);
           x += cw + 8;
         }
-      } else if (mine.length) {
-        const d = Math.min(r * 0.42, 11);
-        for (const { i: k } of mine) {
-          ctx.fillStyle = colourOf(k);
-          ctx.beginPath();
-          ctx.arc(x + d, cy, d, 0, Math.PI * 2);
-          ctx.fill();
-          x += d * 2 + 6;
+      };
+      const cs0 = Math.round(Math.min(rowH * 0.3, story ? 24 : 20));
+      let inline: { size: number; cs: number } | null = null;
+      if (mine.length) {
+        for (let t = s; t >= s * 0.85 && !inline; t -= 2)
+          for (let c2 = cs0; c2 >= 14 && !inline; c2--)
+            if (nameW(t) + 14 + chipsW(mine, c2) <= maxW)
+              inline = { size: t, cs: c2 };
+      }
+      const below = mine.length > 0 && !inline && rowH >= 64;
+      if (!mine.length || inline) {
+        if (inline) s = inline.size;
+        while (s > 16 && nameW(s) > maxW) s -= 2;
+        ctx.font = `700 ${s}px ${body}`;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(name, nx, cy + 1);
+        if (inline) drawChips(mine, nx + nameW(s) + 14, cy, inline.cs);
+      } else if (below) {
+        // Name in the top half of the row, chips under it.
+        s = Math.min(s, Math.round(rowH * 0.36));
+        while (s > 16 && nameW(s) > maxW) s -= 2;
+        ctx.font = `700 ${s}px ${body}`;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(name, nx, cy - rowH * 0.16);
+        let c2 = Math.round(Math.min(rowH * 0.2, 22));
+        let labels = mine;
+        while (c2 > 13 && chipsW(labels, c2) > maxW) c2--;
+        for (let k = mine.length - 1; k >= 1 && chipsW(labels, c2) > maxW; k--)
+          labels = [...mine.slice(0, k), `+${mine.length - k}`];
+        drawChips(labels, nx, cy + rowH * 0.22, c2);
+      } else {
+        let labels = mine;
+        for (let k = mine.length - 1; k >= 0; k--) {
+          labels = [...mine.slice(0, k), `+${mine.length - k}`];
+          if (nameW(s) + 14 + chipsW(labels, 14) <= maxW) break;
         }
+        while (s > 16 && nameW(s) + 14 + chipsW(labels, 14) > maxW) s -= 2;
+        ctx.font = `700 ${s}px ${body}`;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(name, nx, cy + 1);
+        drawChips(labels, nx + nameW(s) + 14, cy, 14);
       }
     } else {
       ctx.strokeStyle = "rgba(255,255,255,0.25)";
@@ -787,8 +805,7 @@ function Maker({
                             ),
                           );
                         }}
-                        style={on ? { background: colourOf(i) } : undefined}
-                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ${on ? "text-navy ring-transparent" : "bg-white text-stone-500 ring-stone-300 hover:text-navy"}`}
+                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ${on ? "bg-navy text-white ring-navy" : "bg-white text-stone-500 ring-stone-300 hover:text-navy"}`}
                       >
                         {d.label}
                       </button>
@@ -814,10 +831,6 @@ function Maker({
               };
               return (
                 <div key={i} className="flex items-center gap-1.5">
-                  <span
-                    className="h-3 w-3 shrink-0 rounded-full"
-                    style={{ background: colourOf(i) }}
-                  />
                   <input
                     aria-label="Emoji"
                     value={d.emoji}
