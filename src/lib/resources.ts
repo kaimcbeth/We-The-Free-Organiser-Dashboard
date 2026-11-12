@@ -216,7 +216,7 @@ export const EQUIPMENT_GUIDE: {
       },
       {
         key: "signs",
-        name: "Signs",
+        name: "Handheld Signs",
         about:
           "Signs inviting people to take the challenge. We recommend starting with 4 handheld signs.",
         kitQty: 4,
