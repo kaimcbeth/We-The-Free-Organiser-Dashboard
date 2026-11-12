@@ -46,7 +46,7 @@ function defaults(e: GraphicEvent, tz: string): Texts {
     .replace(":00", "")
     .toLowerCase();
   return {
-    kicker: "We need you",
+    kicker: "",
     heading: movie
       ? "3 Minute Movie Challenge"
       : shortTitle(e.title, e.community),
