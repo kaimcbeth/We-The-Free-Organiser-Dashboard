@@ -71,7 +71,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Event pages: Sign-up list. A graphic of numbered spots (20 to start) with the names filled in so far, for asking the group chat who's coming. Type names, or paste replies straight from WhatsApp and it adds everyone who replied by first name. Saved on the event, with Copy as text for the chat.",
+        text: "Event pages: Sign-up list. A graphic of numbered spots (20 to start) with the names filled in so far, for asking the group chat who's coming. Type names, or paste replies straight from WhatsApp and it adds everyone who replied by first name. Saved on the event, with Copy as text for the chat. Roles go above the list (Photos, Attendance and welcoming new members, Equipment setup to start), each with its own spots to fill.",
       },
     ],
   },

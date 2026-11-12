@@ -31,8 +31,31 @@ type Texts = {
   kicker: string;
   heading: string;
   details: string;
+  rolesTitle: string;
+  rolesNote: string;
+  intro: string;
   footer: string;
 };
+
+// Roles above the numbered list (Kai, 12 Nov 2026, from his message:
+// "📸 Photos - ____ ✅ Attendance and welcoming new members - ____ …").
+export type Role = {
+  emoji: string;
+  label: string;
+  spots: number;
+  names: string[];
+};
+export const DEFAULT_ROLES: Role[] = [
+  { emoji: "📸", label: "Photos", spots: 3, names: [] },
+  {
+    emoji: "✅",
+    label: "Attendance and welcoming new members",
+    spots: 1,
+    names: [],
+  },
+  { emoji: "🛠️", label: "Equipment setup", spots: 5, names: [] },
+];
+const ROLE_COLOURS = [PINK, "#3fd0ea", YELLOW];
 
 function defaults(e: GraphicEvent, tz: string): Texts {
   const movie = /movie challenge|3mmc/i.test(e.title);
@@ -51,6 +74,11 @@ function defaults(e: GraphicEvent, tz: string): Texts {
       ? "3 Minute Movie Challenge"
       : shortTitle(e.title, e.community),
     details: [day, time, place(e)].filter(Boolean).join(" · "),
+    rolesTitle: "We especially need help with",
+    rolesNote:
+      "Only want to do outreach, hold signs or set people up on the videos? Just say so in your reply.",
+    intro:
+      "You're super welcome to have a more fluid role at the event but we are in big need for people to specifically help with the following:",
     footer: "Reply to grab a spot",
   };
 }
@@ -83,6 +111,7 @@ export function drawSignups(
   names: string[],
   target: number,
   mark: HTMLImageElement | null,
+  roles: Role[] = [],
 ) {
   const body = bodyFont();
   const m = 72;
@@ -162,15 +191,96 @@ export function drawSignups(
   );
   ctx.fill();
 
+  // Roles: a coloured pill per role, then its names or blanks.
+  const story = h > 1500;
+  if (roles.length) {
+    y += story ? 76 : 62;
+    if (t.rolesTitle) {
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.font = `700 26px ${body}`;
+      ctx.letterSpacing = "2px";
+      ctx.fillText(t.rolesTitle.toUpperCase(), m, y);
+      ctx.letterSpacing = "0px";
+      y += story ? 22 : 14;
+    }
+    const pillH = story ? 50 : 44;
+    const gap = story ? 16 : 10;
+    roles.forEach((role, i) => {
+      const py = y + gap;
+      ctx.font = `800 ${story ? 25 : 23}px ${body}`;
+      const label = role.label || "Role";
+      const lw = Math.min(ctx.measureText(label).width, w * 0.5);
+      ctx.fillStyle = ROLE_COLOURS[i % ROLE_COLOURS.length];
+      ctx.beginPath();
+      ctx.roundRect(m, py, lw + 32, pillH, pillH / 2);
+      ctx.fill();
+      ctx.fillStyle = NAVY;
+      ctx.textBaseline = "middle";
+      ctx.fillText(label, m + 16, py + pillH / 2 + 1, w * 0.5);
+      // Names or dashed blanks, wrapping onto a second line if needed.
+      let x = m + lw + 32 + 20;
+      let ly = py + pillH / 2;
+      const items = Array.from(
+        { length: Math.max(role.spots, role.names.length) },
+        (_, k) => role.names[k] ?? null,
+      );
+      ctx.font = `700 ${story ? 30 : 27}px ${body}`;
+      for (const name of items) {
+        const iw = name ? ctx.measureText(name).width : 90;
+        if (x + iw > w - m) {
+          x = m + 16;
+          ly += pillH;
+        }
+        if (name) {
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(name, x, ly + 1);
+        } else {
+          ctx.strokeStyle = "rgba(255,255,255,0.35)";
+          ctx.lineWidth = 2;
+          ctx.setLineDash([8, 7]);
+          ctx.beginPath();
+          ctx.moveTo(x, ly + 12);
+          ctx.lineTo(x + iw, ly + 12);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        x += iw + 22;
+      }
+      ctx.textBaseline = "alphabetic";
+      y = ly + pillH / 2;
+    });
+    if (t.rolesNote) {
+      ctx.fillStyle = "rgba(255,255,255,0.75)";
+      let ns = story ? 27 : 24;
+      ctx.font = `italic 500 ${ns}px ${body}`;
+      let note = lines(ctx, t.rolesNote, w - m * 2, 2);
+      while (!note && ns > 16) {
+        ns -= 2;
+        ctx.font = `italic 500 ${ns}px ${body}`;
+        note = lines(ctx, t.rolesNote, w - m * 2, 2);
+      }
+      y += story ? 22 : 14;
+      for (const l of note ?? [t.rolesNote]) {
+        y += ns * 1.3;
+        ctx.fillText(l, m, y);
+      }
+    }
+    // A thin rule between the roles and the numbered list.
+    y += story ? 40 : 28;
+    ctx.fillStyle = "rgba(255,255,255,0.15)";
+    ctx.fillRect(m, y, w - m * 2, 2);
+    y -= 8;
+  }
+
   // The spots.
   const footH = t.footer ? 110 : 50;
   const top = y + 44;
   const bottom = h - footH;
   const cols = spots <= 10 ? 1 : spots <= 30 ? 2 : 3;
   const rows = Math.ceil(spots / cols);
-  const rowH = Math.min(h > 1500 ? 112 : 76, (bottom - top) / rows);
+  const rowH = Math.min(story ? 112 : 76, (bottom - top) / rows);
   // Stories have room to spare: centre the spots in it.
-  const top0 = top + (h > 1500 ? (bottom - top - rowH * rows) / 2 : 0);
+  const top0 = top + (story ? (bottom - top - rowH * rows) / 2 : 0);
   const colW = (w - m * 2) / cols;
   const r = rowH * 0.34;
   const nameSize = Math.round(rowH * 0.46);
@@ -262,14 +372,55 @@ export function namesFromChat(text: string): string[] {
   });
 }
 
-// The list as text for the group chat, like Kai's: "1. Kai M / 2. ____".
-function listText(names: string[], target: number) {
+// The list as text for the group chat, like Kai's: the roles first
+// ("📸 Photos - Asha, ____"), then "1. Kai M / 2. ____".
+export function listText(
+  names: string[],
+  target: number,
+  roles: Role[] = [],
+  t?: Pick<Texts, "intro" | "rolesNote">,
+) {
   const n = Math.max(target, names.length);
-  return Array.from(
+  const list = Array.from(
     { length: n },
     (_, i) => `${i + 1}. ${names[i] ?? "________"}`,
   ).join("\n");
+  if (!roles.length) return list;
+  const roleLines = roles.map((r) => {
+    const spots = Array.from(
+      { length: Math.max(r.spots, r.names.length) },
+      (_, k) => r.names[k] ?? "____",
+    ).join(", ");
+    return `${r.emoji ? `${r.emoji} ` : ""}${r.label} - ${spots}`;
+  });
+  return [
+    t?.intro,
+    roleLines.join("\n"),
+    t?.rolesNote ? `🩵 ${t.rolesNote}` : "",
+    list,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 }
+
+// Roles while editing: names as typed ("Asha, Rory").
+type RoleDraft = { emoji: string; label: string; spots: number; who: string };
+const toDraft = (r: Role): RoleDraft => ({
+  emoji: r.emoji,
+  label: r.label,
+  spots: r.spots,
+  who: r.names.join(", "),
+});
+const fromDraft = (d: RoleDraft): Role => ({
+  emoji: d.emoji.trim(),
+  label: d.label.trim(),
+  spots: Math.min(20, Math.max(1, d.spots || 1)),
+  names: d.who
+    .split(/[,\n]/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 20),
+});
 
 export function SignupListMaker({
   event,
@@ -317,6 +468,11 @@ function Maker({
   const [msg, setMsg] = useState("");
   const [saved, setSaved] = useState("");
   const [pasted, setPasted] = useState("");
+  const [drafts, setDrafts] = useState<RoleDraft[]>(() =>
+    DEFAULT_ROLES.map(toDraft),
+  );
+  const roles = drafts.map(fromDraft).filter((r) => r.label);
+  const rolesKey = JSON.stringify(roles);
   const canvas = useRef<HTMLCanvasElement>(null);
   const names = list
     .split("\n")
@@ -338,7 +494,7 @@ function Maker({
     Promise.all([
       supabase
         .from("events")
-        .select("signup_names, signup_target")
+        .select("signup_names, signup_target, signup_roles")
         .eq("id", event.eventId)
         .maybeSingle(),
       supabase
@@ -358,6 +514,8 @@ function Maker({
       const savedNames = (ev.data?.signup_names as string[] | null) ?? null;
       setList((savedNames ?? short).join("\n"));
       if (ev.data?.signup_target) setTarget(ev.data.signup_target as number);
+      const savedRoles = ev.data?.signup_roles as Role[] | null;
+      if (Array.isArray(savedRoles)) setDrafts(savedRoles.map(toDraft));
       setLoaded(true);
     });
     return () => {
@@ -373,13 +531,14 @@ function Maker({
         p_event_id: event.eventId,
         p_names: names,
         p_target: target,
+        p_roles: JSON.parse(rolesKey),
       });
       setSaved(data ? "Saved" : "Couldn't save the list.");
     }, 900);
     return () => window.clearTimeout(id);
     // names comes from list; saving on list/target changes is enough.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [list, target, loaded, event.eventId]);
+  }, [list, target, rolesKey, loaded, event.eventId]);
 
   const { w, h } = SIZES[size];
   const namesKey = names.join("\n");
@@ -394,8 +553,9 @@ function Maker({
       namesKey ? namesKey.split("\n") : [],
       target,
       mark,
+      JSON.parse(rolesKey),
     );
-  }, [w, h, texts, namesKey, target, mark, fonts]);
+  }, [w, h, texts, namesKey, target, mark, fonts, rolesKey]);
 
   const missing = going.filter(
     (g) => !names.some((n) => n.toLowerCase() === g.toLowerCase()),
@@ -434,7 +594,9 @@ function Maker({
   }
   async function copyText() {
     try {
-      await navigator.clipboard.writeText(listText(names, target));
+      await navigator.clipboard.writeText(
+        listText(names, target, roles, texts),
+      );
       setMsg("Copied the list as text.");
     } catch {
       setMsg("Couldn't copy the text.");
@@ -563,8 +725,89 @@ function Maker({
             </button>
           )}
         </div>
+        <div>
+          <p className="text-xs font-medium text-stone-600">Roles</p>
+          <div className="mt-1 space-y-2">
+            {drafts.map((d, i) => {
+              const set = (patch: Partial<RoleDraft>) => {
+                setSaved("");
+                setDrafts(
+                  drafts.map((x, k) => (k === i ? { ...x, ...patch } : x)),
+                );
+              };
+              return (
+                <div
+                  key={i}
+                  className="rounded-xl bg-stone-50 p-2 ring-1 ring-stone-200"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      aria-label="Emoji"
+                      value={d.emoji}
+                      onChange={(e) => set({ emoji: e.target.value })}
+                      className="w-11 rounded-lg bg-white px-1.5 py-1.5 text-center text-sm ring-1 ring-stone-300"
+                    />
+                    <input
+                      aria-label="Role"
+                      value={d.label}
+                      placeholder="Role"
+                      onChange={(e) => set({ label: e.target.value })}
+                      className="min-w-0 flex-1 rounded-lg bg-white px-2.5 py-1.5 text-sm text-navy ring-1 ring-stone-300"
+                    />
+                    <input
+                      aria-label="How many"
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={d.spots}
+                      onChange={(e) => set({ spots: Number(e.target.value) })}
+                      className="w-14 rounded-lg bg-white px-2 py-1.5 text-sm text-navy ring-1 ring-stone-300"
+                    />
+                    <button
+                      type="button"
+                      aria-label={`Remove ${d.label || "role"}`}
+                      onClick={() => {
+                        setSaved("");
+                        setDrafts(drafts.filter((_, k) => k !== i));
+                      }}
+                      className="px-1 text-stone-400 hover:text-navy"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <input
+                    aria-label={`Who's on ${d.label || "this role"}`}
+                    value={d.who}
+                    placeholder="Names, with commas between"
+                    onChange={(e) => set({ who: e.target.value })}
+                    className="mt-1.5 block w-full rounded-lg bg-white px-2.5 py-1.5 text-sm text-navy ring-1 ring-stone-300"
+                  />
+                </div>
+              );
+            })}
+          </div>
+          {drafts.length < 10 && (
+            <button
+              type="button"
+              onClick={() => {
+                setSaved("");
+                setDrafts([
+                  ...drafts,
+                  { emoji: "", label: "", spots: 1, who: "" },
+                ]);
+              }}
+              className="mt-1.5 text-xs font-medium text-pink-ink hover:underline"
+            >
+              + Add a role
+            </button>
+          )}
+          <p className="mt-1 text-xs text-stone-500">
+            Remove every role to leave them off. The emoji only go in Copy as
+            text.
+          </p>
+        </div>
         <label className="block text-xs font-medium text-stone-600">
-          Spots
+          Spots in the numbered list
           <input
             type="number"
             min={1}
@@ -580,6 +823,9 @@ function Maker({
         {field("kicker", "Small line")}
         {field("heading", "Heading")}
         {field("details", "Date, time and place")}
+        {roles.length > 0 && field("rolesTitle", "Above the roles")}
+        {roles.length > 0 && field("rolesNote", "Under the roles")}
+        {roles.length > 0 && field("intro", "Opening line (Copy as text only)")}
         {field("footer", "Bottom line")}
         <button
           type="button"
