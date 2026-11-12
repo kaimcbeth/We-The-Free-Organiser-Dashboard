@@ -1,5 +1,6 @@
 "use client";
 
+import { WeatherUpdateMaker, type Forecast } from "@/components/weather-update";
 import { RegionWhatsOnButton } from "@/components/region-whats-on";
 import { RegionSpotlightButton } from "@/components/region-spotlight";
 import { useFold } from "@/lib/use-fold";
@@ -155,6 +156,11 @@ export type TaskRow = {
   eventAt: string | null;
   fbEvent?: FbEventDetails | null; // "Facebook event created" tasks
   graphic?: { size: GraphicSize; event: GraphicEvent } | null; // promo actions
+  // "Weather backup plan made": still on / cancelled / moved post.
+  weather?: {
+    event: GraphicEvent & { teamId: string };
+    forecast: Forecast;
+  } | null;
   // "Post liked and commented on" (engagement pod, 0180): the post to cheer on.
   podPost?: {
     url: string;
@@ -807,6 +813,18 @@ export function TaskCard({
                     />
                   );
                 })()}
+              {task.weather && (
+                <WeatherUpdateMaker
+                  event={task.weather.event}
+                  forecast={task.weather.forecast}
+                  tz={tz}
+                  planDay={new Intl.DateTimeFormat("en-CA", {
+                    timeZone: tz,
+                  }).format(new Date(task.dueAt))}
+                  label="Weather update post"
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
+              )}
               {task.fbEvent && (
                 <FacebookEventButton event={task.fbEvent} tz={tz} />
               )}

@@ -19,6 +19,7 @@ import { EventActions } from "./event-actions";
 import { GraphicMaker } from "@/components/graphic-maker";
 import { MeetingPointMaker } from "@/components/meeting-point";
 import { SignupListMaker } from "@/components/signup-list";
+import { WeatherUpdateMaker } from "@/components/weather-update";
 import { CopyMaker } from "@/components/copy-maker";
 import { AddToCalendar } from "@/components/add-to-calendar";
 import { EventPhotos } from "@/components/event-photos";
@@ -47,6 +48,9 @@ type EventDetail = {
   notes: string | null;
   source: string;
   time_unknown: boolean;
+  rain_chance: number | null;
+  rain_mm: number | null;
+  max_temp: number | null;
 };
 
 export default async function EventCheckInPage({
@@ -58,7 +62,7 @@ export default async function EventCheckInPage({
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, team_id, title, starts_at, ends_at, venue, address, source_url, facebook_url, description, event_type_id, notes, special_event_id, source, time_unknown",
+      "id, team_id, title, starts_at, ends_at, venue, address, source_url, facebook_url, description, event_type_id, notes, special_event_id, source, time_unknown, rain_chance, rain_mm, max_temp",
     )
     .eq("id", id)
     .maybeSingle<EventDetail>();
@@ -254,6 +258,27 @@ export default async function EventCheckInPage({
           />
           <SignupListMaker
             tz={team.timezone}
+            event={{
+              title: event.title,
+              startsAt: event.starts_at,
+              endsAt: event.ends_at,
+              venue: event.venue,
+              address: event.address,
+              typeName:
+                (types.data ?? []).find((t) => t.id === event.event_type_id)
+                  ?.name ?? null,
+              community: team.name.replace(/, (Australia|New Zealand)$/, ""),
+              teamId: event.team_id,
+              eventId: event.id,
+            }}
+          />
+          <WeatherUpdateMaker
+            tz={team.timezone}
+            forecast={{
+              chance: event.rain_chance ?? null,
+              mm: event.rain_mm == null ? null : Number(event.rain_mm),
+              temp: event.max_temp == null ? null : Number(event.max_temp),
+            }}
             event={{
               title: event.title,
               startsAt: event.starts_at,

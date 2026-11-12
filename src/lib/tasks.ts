@@ -171,6 +171,30 @@ function toRow(t: Raw): TaskRow {
             },
           }
         : null,
+    // Weather backup plan: a "still on / cancelled / moved" post (12 Nov 2026).
+    weather:
+      t.kind?.kind === "rain_backup" && t.event && t.team_id
+        ? {
+            event: {
+              title: t.event.title,
+              startsAt: t.event.starts_at,
+              endsAt: t.event.ends_at,
+              venue: t.event.venue,
+              address: t.event.address,
+              typeName: t.event.event_type?.name ?? null,
+              community:
+                t.event.team?.name.replace(/, (Australia|New Zealand)$/, "") ??
+                null,
+              teamId: t.team_id,
+              eventId: t.event.id,
+            },
+            forecast: {
+              chance: t.event.rain_chance ?? null,
+              mm: t.event.rain_mm == null ? null : Number(t.event.rain_mm),
+              temp: t.event.max_temp == null ? null : Number(t.event.max_temp),
+            },
+          }
+        : null,
     podPost: t.pod_post
       ? {
           url: t.pod_post.url,

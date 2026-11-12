@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Weather update post: when the forecast looks bad, make a graphic and a ready-made message saying the event is still on, cancelled or has moved to a new spot. On the Weather backup plan action and on every event page.",
+      },
+      {
+        level: "organiser",
         text: "Equipment guide: the signs' Purchasing guide now walks you through ordering A1 handheld signs from Easy Signs, step by step (size, thickness, double-sided printing and the rest).",
       },
       {
