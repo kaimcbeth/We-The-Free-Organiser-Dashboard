@@ -1,3 +1,4 @@
+import { HubSearch } from "@/components/hub-search";
 import Link from "next/link";
 import { EasterEggLogo } from "@/components/easter-egg-logo";
 import { cookies } from "next/headers";
@@ -152,6 +153,14 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
                   <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-pink ring-2 ring-navy" />
                 )}
               </Link>
+              <HubSearch
+                teamIds={
+                  organiser.allCommunities
+                    ? organiser.teams.map((t) => t.id)
+                    : [organiser.team_id]
+                }
+                timezone={organiser.team?.timezone ?? "Australia/Sydney"}
+              />
               <IntroButton />
               <NotificationBell
                 supabase={supabase}

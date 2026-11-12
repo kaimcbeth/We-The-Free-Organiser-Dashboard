@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Search: the magnifying glass at the top finds people, events, open actions and Hub pages. Ctrl + K (⌘ K on a Mac) opens it too.",
+      },
+      {
+        level: "organiser",
         text: "New action: when a regular hasn't been in about six weeks, you'll get a nudge to send them a friendly message.",
       },
       {
