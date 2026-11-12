@@ -76,7 +76,7 @@ function defaults(e: GraphicEvent, tz: string): Texts {
     details: [day, time, place(e)].filter(Boolean).join(" · "),
     rolesTitle: "We especially need help with",
     rolesNote:
-      "Only want to do outreach, hold signs or set people up on the videos? Just say so in your reply.",
+      "Please don't hesitate to specify if you ONLY want to outreach, hold signs or set people up on the video",
     intro:
       "You're super welcome to have a more fluid role at the event but we are in big need for people to specifically help with the following:",
     footer: "Reply to grab a spot",
@@ -217,20 +217,31 @@ export function drawSignups(
       ctx.fillStyle = NAVY;
       ctx.textBaseline = "middle";
       ctx.fillText(label, m + 16, py + pillH / 2 + 1, w * 0.5);
-      // Names or dashed blanks, wrapping onto a second line if needed.
+      // Names or dashed blanks, all on the pill's line (Kai): shrink the
+      // names, blanks and gaps until they fit.
       let x = m + lw + 32 + 20;
-      let ly = py + pillH / 2;
+      const ly = py + pillH / 2;
       const items = Array.from(
         { length: Math.max(role.spots, role.names.length) },
         (_, k) => role.names[k] ?? null,
       );
-      ctx.font = `700 ${story ? 30 : 27}px ${body}`;
+      let fs = story ? 30 : 27;
+      let blank = 90;
+      let gapX = 22;
+      const widthAt = () => {
+        ctx.font = `700 ${fs}px ${body}`;
+        return items.reduce(
+          (sum, n) => sum + (n ? ctx.measureText(n).width : blank) + gapX,
+          -gapX,
+        );
+      };
+      while (widthAt() > w - m - x && (fs > 16 || blank > 30)) {
+        if (blank > 30) blank -= 6;
+        if (fs > 16) fs -= 1;
+        if (gapX > 12) gapX -= 1;
+      }
       for (const name of items) {
-        const iw = name ? ctx.measureText(name).width : 90;
-        if (x + iw > w - m) {
-          x = m + 16;
-          ly += pillH;
-        }
+        const iw = name ? ctx.measureText(name).width : blank;
         if (name) {
           ctx.fillStyle = "#ffffff";
           ctx.fillText(name, x, ly + 1);
@@ -244,27 +255,11 @@ export function drawSignups(
           ctx.stroke();
           ctx.setLineDash([]);
         }
-        x += iw + 22;
+        x += iw + gapX;
       }
       ctx.textBaseline = "alphabetic";
       y = ly + pillH / 2;
     });
-    if (t.rolesNote) {
-      ctx.fillStyle = "rgba(255,255,255,0.75)";
-      let ns = story ? 27 : 24;
-      ctx.font = `italic 500 ${ns}px ${body}`;
-      let note = lines(ctx, t.rolesNote, w - m * 2, 2);
-      while (!note && ns > 16) {
-        ns -= 2;
-        ctx.font = `italic 500 ${ns}px ${body}`;
-        note = lines(ctx, t.rolesNote, w - m * 2, 2);
-      }
-      y += story ? 22 : 14;
-      for (const l of note ?? [t.rolesNote]) {
-        y += ns * 1.3;
-        ctx.fillText(l, m, y);
-      }
-    }
     // A thin rule between the roles and the numbered list.
     y += story ? 40 : 28;
     ctx.fillStyle = "rgba(255,255,255,0.15)";
@@ -824,7 +819,8 @@ function Maker({
         {field("heading", "Heading")}
         {field("details", "Date, time and place")}
         {roles.length > 0 && field("rolesTitle", "Above the roles")}
-        {roles.length > 0 && field("rolesNote", "Under the roles")}
+        {roles.length > 0 &&
+          field("rolesNote", "Note after the roles (Copy as text only)")}
         {roles.length > 0 && field("intro", "Opening line (Copy as text only)")}
         {field("footer", "Bottom line")}
         <button
