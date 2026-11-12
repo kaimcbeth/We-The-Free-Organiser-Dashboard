@@ -70,6 +70,10 @@ export const CHANGELOG: Release[] = [
         text: "Messaging an organiser (from the Hub or straight from Beeper) ticks that community's check-in, and each check-in row shows when you last messaged them.",
       },
       {
+        level: "regional_lead",
+        text: "Organiser chats has a WTF team tab too: mark chats with WTF team members to read and reply to them from the Hub (no community or check-ins).",
+      },
+      {
         level: "god",
         text: "0231: beeper_links / beeper_chats / beeper_messages / beeper_outbox (own rows only), beeper_sync for the Mac helper (public/beeper/relay.js, a LaunchAgent every 30 s, Beeper token in the Keychain). Message text is only kept for chats marked as organiser chats (last 40).",
       },

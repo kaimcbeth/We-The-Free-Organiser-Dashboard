@@ -37,7 +37,7 @@ type Chat = {
   last_theirs_at: string | null;
   preview: string | null;
   preview_mine: boolean | null;
-  tag: "organiser" | "other" | null;
+  tag: "organiser" | "team" | "other" | null;
   team_id: string | null;
 };
 
@@ -59,7 +59,7 @@ type Out = {
   sent_at: string | null;
 };
 
-type Tab = "organiser" | "sort" | "other";
+type Tab = "organiser" | "team" | "sort" | "other";
 
 const HELPER_LINE = (code: string) =>
   `curl -fsSL https://wtf-movement-hub.vercel.app/beeper/install.sh | bash -s ${code}`;
@@ -132,21 +132,17 @@ export function OrganiserChats({
   const list = chats ?? [];
   const counts = {
     organiser: list.filter((c) => c.tag === "organiser").length,
+    team: list.filter((c) => c.tag === "team").length,
     sort: list.filter((c) => !c.tag).length,
     other: list.filter((c) => c.tag === "other").length,
   };
   const waitingCount = list.filter(
-    (c) => c.tag === "organiser" && waiting(c),
+    (c) =>
+      (tab === "team" ? c.tag === "team" : c.tag === "organiser") && waiting(c),
   ).length;
   const q = search.trim().toLowerCase();
   const shown = list
-    .filter((c) =>
-      tab === "organiser"
-        ? c.tag === "organiser"
-        : tab === "other"
-          ? c.tag === "other"
-          : !c.tag,
-    )
+    .filter((c) => (tab === "sort" ? !c.tag : c.tag === tab))
     .filter(
       (c) =>
         !q ||
@@ -154,7 +150,7 @@ export function OrganiserChats({
         (c.team_id && teamById[c.team_id]?.name.toLowerCase().includes(q)),
     )
     .sort((a, b) =>
-      tab === "organiser" && waiting(a) !== waiting(b)
+      (tab === "organiser" || tab === "team") && waiting(a) !== waiting(b)
         ? waiting(a)
           ? -1
           : 1
@@ -198,29 +194,30 @@ export function OrganiserChats({
             {(
               [
                 ["organiser", "Organisers", counts.organiser],
+                ["team", "WTF team", counts.team],
                 ["sort", "To sort", counts.sort],
-                ["other", "Others", counts.other],
+                ["other", "Not relevant", counts.other],
               ] as [Tab, string, number][]
             ).map(([k, label, n]) => (
               <button
                 key={k}
                 type="button"
                 onClick={() => setTab(k)}
-                className={`flex-1 rounded-lg px-2 py-1.5 font-medium whitespace-nowrap ${tab === k ? "bg-white text-navy shadow-sm" : "text-stone-500"}`}
+                className={`flex-1 rounded-lg px-1.5 py-1.5 text-xs font-medium whitespace-nowrap sm:text-sm ${tab === k ? "bg-white text-navy shadow-sm" : "text-stone-500"}`}
               >
                 {label} <span className="text-xs text-stone-400">{n}</span>
               </button>
             ))}
           </div>
-          {tab === "organiser" && waitingCount > 0 && (
+          {(tab === "organiser" || tab === "team") && waitingCount > 0 && (
             <p className="mt-2 text-xs font-medium text-pink-ink">
               {waitingCount} waiting on a reply from you
             </p>
           )}
           {tab === "sort" && counts.sort > 0 && (
             <p className="mt-2 text-xs text-stone-500">
-              Mark the chats with organisers. Others only keep their name here,
-              never their messages.
+              Mark the chats with organisers and the WTF team. The rest only
+              keep their name here, never their messages.
             </p>
           )}
           <input
@@ -235,9 +232,11 @@ export function OrganiserChats({
             <p className="mt-4 rounded-2xl border border-dashed border-stone-300 px-4 py-6 text-center text-sm text-stone-500">
               {tab === "organiser"
                 ? "No organiser chats yet. Mark them in To sort."
-                : tab === "sort"
-                  ? "Nothing to sort. New chats show up here."
-                  : "No chats marked as not organisers."}
+                : tab === "team"
+                  ? "No WTF team chats yet. Mark them in To sort."
+                  : tab === "sort"
+                    ? "Nothing to sort. New chats show up here."
+                    : "No chats marked as not relevant."}
             </p>
           ) : (
             <ul className="mt-2 divide-y divide-stone-100 rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
@@ -270,7 +269,7 @@ export function OrganiserChats({
             />
           ) : (
             <div className="rounded-2xl border border-dashed border-stone-300 px-4 py-16 text-center text-sm text-stone-500">
-              Pick an organiser chat to read and reply.
+              Pick a chat to read and reply.
             </div>
           )}
         </section>
@@ -459,9 +458,9 @@ function Setup({
         </li>
       </ol>
       <p className="text-xs text-stone-500">
-        For chats you mark as organiser chats, the Hub keeps the last 40
-        messages. For every other chat it keeps only the name. Your Beeper token
-        stays in your Mac&apos;s Keychain.
+        For chats you mark as organiser or WTF team chats, the Hub keeps the
+        last 40 messages. For every other chat it keeps only the name. Your
+        Beeper token stays in your Mac&apos;s Keychain.
       </p>
       {reconnect && (
         <div className="space-y-1 border-t border-stone-100 pt-3 text-xs text-stone-500">
@@ -570,10 +569,17 @@ function ChatRow({
             </button>
             <button
               type="button"
+              onClick={() => onTag("team", null)}
+              className="rounded-lg bg-cyan/25 px-3 py-1 text-xs font-semibold text-navy"
+            >
+              WTF team
+            </button>
+            <button
+              type="button"
               onClick={() => onTag("other", null)}
               className="rounded-lg bg-stone-100 px-3 py-1 text-xs font-medium text-stone-600"
             >
-              Not an organiser
+              Not relevant
             </button>
           </div>
         )}
@@ -752,12 +758,36 @@ function Thread({
               .join(" · ")}
           </span>
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <TeamPicker
-            teams={teams}
-            value={chat.team_id}
-            onPick={(t) => onTag("organiser", t)}
-          />
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
+          {chat.tag === "team" ? (
+            <>
+              <span className="rounded-full bg-cyan/25 px-2 py-0.5 font-medium text-navy">
+                WTF team
+              </span>
+              <button
+                type="button"
+                onClick={() => onTag("organiser", null)}
+                className="text-stone-400 underline-offset-2 hover:underline"
+              >
+                Move to organisers
+              </button>
+            </>
+          ) : (
+            <>
+              <TeamPicker
+                teams={teams}
+                value={chat.team_id}
+                onPick={(t) => onTag("organiser", t)}
+              />
+              <button
+                type="button"
+                onClick={() => onTag("team", null)}
+                className="text-stone-400 underline-offset-2 hover:underline"
+              >
+                Move to WTF team
+              </button>
+            </>
+          )}
           <button
             type="button"
             onClick={() => {
@@ -766,7 +796,7 @@ function Thread({
             }}
             className="text-stone-400 underline-offset-2 hover:underline"
           >
-            Not an organiser chat
+            Not relevant
           </button>
         </div>
         {team && (
