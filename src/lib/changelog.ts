@@ -71,7 +71,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "regional_lead",
-        text: "Organiser chats has a WTF team tab too: mark chats with WTF team members to read and reply to them from the Hub (no community or check-ins).",
+        text: "Organiser chats is now just Chats, with four categories: Regional organiser, Local team, WTF team and Not relevant. You can read and reply to the first three from the Hub.",
       },
       {
         level: "organiser",

@@ -18,7 +18,7 @@ export default async function ChatsPage({ searchParams }: PageProps<"/chats">) {
   if (!allowed)
     return (
       <div className="space-y-3">
-        <h1 className="text-2xl font-bold">Organiser chats</h1>
+        <h1 className="text-2xl font-bold">Chats</h1>
         <p className="text-sm text-stone-600">
           This page is for Regional Support Leads.{" "}
           <Link href="/tasks" className="underline">

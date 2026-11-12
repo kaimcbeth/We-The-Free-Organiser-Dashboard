@@ -19,9 +19,9 @@ const PAGES: { label: string; href: string; words?: string }[] = [
   { label: "Calendar", href: "/calendar" },
   { label: "Actions", href: "/tasks", words: "tasks to do plan" },
   {
-    label: "Organiser chats",
+    label: "Chats",
     href: "/chats",
-    words: "beeper whatsapp messages reply rsl",
+    words: "beeper whatsapp messages reply rsl organiser chats",
   },
   { label: "People", href: "/people", words: "members contacts" },
   {
