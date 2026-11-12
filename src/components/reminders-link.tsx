@@ -182,8 +182,8 @@ export function WeeklySummaryOptIn() {
         <div>
           <p className="font-semibold text-navy">Monday summary</p>
           <p className="mt-0.5 text-sm text-stone-500">
-            An email each Monday morning: last week's numbers and first-timers,
-            this week's events, actions due and birthdays.
+            An email each Monday morning: last week&apos;s numbers and
+            first-timers, this week&apos;s events, actions due and birthdays.
           </p>
         </div>
         <button
