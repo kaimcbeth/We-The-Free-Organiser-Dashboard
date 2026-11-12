@@ -163,7 +163,7 @@ export function drawSignups(
   ctx.fill();
 
   // The spots.
-  const footH = t.footer ? 130 : 70;
+  const footH = t.footer ? 110 : 50;
   const top = y + 44;
   const bottom = h - footH;
   const cols = spots <= 10 ? 1 : spots <= 30 ? 2 : 3;
@@ -225,11 +225,8 @@ export function drawSignups(
   if (t.footer) {
     ctx.fillStyle = "#ffffff";
     ctx.font = `700 34px ${body}`;
-    ctx.fillText(t.footer, w / 2, h - 82);
+    ctx.fillText(t.footer, w / 2, h - 60);
   }
-  ctx.fillStyle = "rgba(255,255,255,0.6)";
-  ctx.font = `600 24px ${body}`;
-  ctx.fillText("www.activism.wtf", w / 2, h - 40);
   ctx.textAlign = "left";
 }
 
