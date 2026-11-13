@@ -116,3 +116,29 @@ body {
 .wtf-quiet-tiles {
   filter: grayscale(0.9) brightness(1.08) contrast(0.85);
 }
+
+/* "New" tag on Resources cards: yellow–pink shimmer, a pop and a soft glow. */
+.new-tag {
+  background-image: linear-gradient(90deg, #ffd90f, #ff47b9, #2fd9df, #ffd90f);
+  background-size: 300% 100%;
+  box-shadow: 0 0 12px rgba(255, 71, 185, 0.55);
+  animation:
+    reminder-pop 500ms cubic-bezier(0.2, 1.6, 0.4, 1),
+    new-tag-shine 3s linear infinite,
+    new-tag-glow 1.8s ease-in-out infinite;
+}
+@keyframes new-tag-shine {
+  to {
+    background-position: 300% 50%;
+  }
+}
+@keyframes new-tag-glow {
+  50% {
+    box-shadow: 0 0 20px rgba(255, 217, 15, 0.8);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .new-tag {
+    animation: none;
+  }
+}

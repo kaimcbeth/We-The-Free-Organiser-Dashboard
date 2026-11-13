@@ -9,7 +9,12 @@ type Raw = {
   team_id: string | null; // null: a region-wide action (region_id)
   region_id?: string | null;
   note?: string | null;
-  hangout?: { title: string; starts_at: string; source_url: string } | null;
+  hangout?: {
+    id: string;
+    title: string;
+    starts_at: string;
+    source_url: string;
+  } | null;
   due_at: string;
   show_from: string | null;
   done_at: string | null;
@@ -85,6 +90,7 @@ function toRow(t: Raw): TaskRow {
     regional: t.kind?.audience === "regional",
     regionId: t.region_id ?? null,
     hangoutUrl: t.hangout?.source_url ?? null,
+    hangoutId: t.hangout?.id ?? null,
     kind: t.kind?.kind ?? "",
     sortOrder: t.kind?.sort_order ?? 0,
     eventId: t.event?.id ?? null,
@@ -366,7 +372,7 @@ export async function loadRegionTasks(
 ) {
   if (!regionIds.length) return { open: [], later: [], done: [] };
   const since = new Date(Date.now() - 14 * 864e5).toISOString();
-  const select = `${SELECT}, region_id, hangout:hangouts(title, starts_at, source_url)`;
+  const select = `${SELECT}, region_id, hangout:hangouts(id, title, starts_at, source_url)`;
   const [open, done] = await Promise.all([
     supabase
       .from("tasks")

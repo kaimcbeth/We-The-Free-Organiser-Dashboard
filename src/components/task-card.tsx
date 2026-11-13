@@ -131,6 +131,7 @@ export type TaskRow = {
   regional: boolean; // a Regional Support Lead task
   regionId?: string | null; // region-wide (not one community's) action
   hangoutUrl?: string | null; // promoting an Organiser Hangout: its activism.wtf page
+  hangoutId?: string | null; // …and the hangout, to plan it in the hangout builder
 
   kind: string;
   sortOrder: number;
@@ -462,14 +463,24 @@ export function TaskCard({
               </p>
             )}
           {task.hangoutUrl && !done && (
-            <a
-              href={task.hangoutUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-1 inline-block text-sm font-medium text-pink-ink hover:underline"
-            >
-              Hangout page and RSVPs ↗
-            </a>
+            <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              {task.hangoutId && (
+                <a
+                  href={`/resources/hangouts?hangout=${task.hangoutId}`}
+                  className="font-medium text-pink-ink hover:underline"
+                >
+                  Plan the hangout
+                </a>
+              )}
+              <a
+                href={task.hangoutUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-pink-ink hover:underline"
+              >
+                Hangout page and RSVPs ↗
+              </a>
+            </p>
           )}
           {extra && !done && <div className="mt-3">{extra}</div>}
 

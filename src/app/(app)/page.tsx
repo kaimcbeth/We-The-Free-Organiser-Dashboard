@@ -486,6 +486,9 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
         title="Upcoming"
         events={upcoming.data ?? []}
         hangouts={hangouts}
+        planHangouts={
+          organiser.role === "god" || organiser.role === "regional_lead"
+        }
         nearby={nearby}
         extra={
           organiser.exampleMode ? undefined : <NearbyToggle km={nearbyKm} />
@@ -591,7 +594,9 @@ function EventList({
   nearby = [],
   extra,
   newestFirst = false,
+  planHangouts = false,
 }: {
+  planHangouts?: boolean; // RSL / God: "Plan it" on hangouts
   nearby?: NearbyRow[];
   extra?: React.ReactNode; // beside the heading
   newestFirst?: boolean; // the full past list: newest at the top
@@ -703,6 +708,14 @@ function EventList({
                     ↗
                   </span>
                 </a>
+                {planHangouts && (
+                  <Link
+                    href={`/resources/hangouts?hangout=${h.id}`}
+                    className="shrink-0 pr-3 text-xs font-medium text-pink-ink hover:underline sm:pr-4"
+                  >
+                    Plan it
+                  </Link>
+                )}
               </li>
             ) : (
               <li

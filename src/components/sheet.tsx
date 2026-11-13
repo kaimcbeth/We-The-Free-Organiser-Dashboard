@@ -7,10 +7,12 @@ export function Sheet({
   title,
   onClose,
   children,
+  wide = false,
 }: {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  wide?: boolean; // a roomier dialog on bigger screens
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -39,7 +41,7 @@ export function Sheet({
         aria-label={title}
         data-tour="sheet"
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-background p-5 pb-8 sm:max-w-sm sm:rounded-3xl"
+        className={`max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-background p-5 pb-8 ${wide ? "sm:max-w-3xl" : "sm:max-w-sm"} sm:rounded-3xl`}
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">{title}</h2>

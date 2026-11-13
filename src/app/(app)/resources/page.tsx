@@ -22,6 +22,7 @@ export default async function ResourcesPage() {
       teamId={teamId}
       teamSlug={team?.slug ?? null}
       isGod={organiser.role === "god"}
+      rsl={organiser.role === "god" || organiser.role === "regional_lead"}
     />
   );
 }

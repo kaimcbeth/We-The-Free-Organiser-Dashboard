@@ -59,6 +59,36 @@ export const COMING_SOON: { title: string; text: string }[] = [
 export const CHANGELOG: Release[] = [
   {
     date: "2026-11-13",
+    title: "Organiser hangouts",
+    changes: [
+      {
+        level: "regional_lead",
+        text: "Organiser hangouts (Resources): put together your monthly one-hour hangout from ready-made welcome, icebreaker, exercise, announcement and wrap-up blocks, with a bar that keeps it to the hour.",
+      },
+      {
+        level: "regional_lead",
+        text: "Present the hangout full screen from the Hub with a notes window (or the notes on your phone), or download it as a PowerPoint with speaker notes or a PDF.",
+      },
+      {
+        level: "regional_lead",
+        text: "Blocks used in your region's other hangouts are marked, the Announcements slide suggests upcoming special events, last month's numbers and the next hangout, and you can write your own blocks or change any block just for one hangout.",
+      },
+      {
+        level: "regional_lead",
+        text: '"Plan the hangout" on the hangout promotion action and "Plan it" on hangouts in your Events list open it straight away.',
+      },
+      {
+        level: "organiser",
+        text: "Resources you haven't opened yet now have a New tag.",
+      },
+      {
+        level: "god",
+        text: "0234 hangout_blocks (32 library blocks, God edits the shared library) + hangout_plans (per region, can_plan_region), hangout_suggestions, region_hangouts, hangout_region_for; 0235 resource_seen. pptxgenjs for the PowerPoint, pdf-lib for the PDF, BroadcastChannel for the notes window (/hangout-notes/<plan>).",
+      },
+    ],
+  },
+  {
+    date: "2026-11-13",
     title: "Organiser chats",
     changes: [
       {
