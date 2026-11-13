@@ -348,15 +348,41 @@ export function HangoutBuilder({
     return true;
   }
 
-  async function archiveBlock(b: Block) {
-    if (!confirm(`Remove "${b.title}" from the library?`)) return;
+  // Delete a block outright (Kai, 13 Nov 2026: God deletes library blocks he
+  // doesn't like; RSLs their own). It also comes out of every hangout in this
+  // region that used it.
+  async function deleteBlock(b: Block) {
+    if (
+      !confirm(
+        `Delete "${b.title}"? It's removed for good, including from hangouts that use it.`,
+      )
+    )
+      return;
     const { error } = await supabase
       .from("hangout_blocks")
-      .update({ archived_at: new Date().toISOString() })
+      .delete()
       .eq("id", b.id);
-    if (error) return setNote("Couldn't remove it.");
+    if (error) return setNote("Couldn't delete it.");
     setBlocks((list) => (list ?? []).filter((x) => x.id !== b.id));
     setEditing(null);
+    const strip = (items: PlanItem[]) => items.filter((i) => i.block !== b.id);
+    const touched = plans.filter(
+      (p) => p.id !== plan?.id && p.items.some((i) => i.block === b.id),
+    );
+    setPlans((list) =>
+      list.map((p) =>
+        p.items.some((i) => i.block === b.id)
+          ? { ...p, items: strip(p.items) }
+          : p,
+      ),
+    );
+    if (plan?.items.some((i) => i.block === b.id)) setItems(strip);
+    for (const p of touched)
+      await supabase
+        .from("hangout_plans")
+        .update({ items: strip(p.items) })
+        .eq("id", p.id);
+    setNote(`Deleted ${b.title}.`);
   }
 
   async function exportAs(kind: "pptx" | "pdf") {
@@ -809,6 +835,15 @@ export function HangoutBuilder({
               >
                 {canEditBlock(b) ? "See and edit" : "See the slides"}
               </button>
+              {canEditBlock(b) && (
+                <button
+                  type="button"
+                  onClick={() => deleteBlock(b)}
+                  className="ml-3 mt-1 text-xs text-stone-400 hover:text-navy"
+                >
+                  Delete
+                </button>
+              )}
             </li>
           ))}
         </ul>
@@ -852,7 +887,7 @@ export function HangoutBuilder({
           onSaveBlock={async (b) => {
             if (await saveBlock(b)) setEditing(null);
           }}
-          onArchive={archiveBlock}
+          onArchive={deleteBlock}
           onSaveItem={(slides) => {
             if (editing.mode !== "item") return;
             const target = editing.item.uid;
@@ -1332,7 +1367,7 @@ function BlockEditor({
                 onClick={() => onArchive(source)}
                 className="ml-auto text-xs text-stone-400 hover:text-navy"
               >
-                Remove from the library
+                Delete this block
               </button>
             )}
           </>
