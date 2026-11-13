@@ -59,7 +59,8 @@ export const COMING_SOON: { title: string; text: string }[] = [
 export const CHANGELOG: Release[] = [
   {
     date: "2026-11-13",
-    title: "Introductions point things out, park dinner graphic",
+    title:
+      "Tidier event pages, introductions point things out, park dinner graphic",
     changes: [
       {
         level: "organiser",
@@ -68,6 +69,10 @@ export const CHANGELOG: Release[] = [
       {
         level: "organiser",
         text: "New graphic style 10 for dinners and picnics in the park: festoon lights, a pink gingham picnic blanket, and your photo as a polaroid. Pick Landscape photo, Portrait photo or No photo (a drawn sunset picnic). Park dinner events open on it by themselves.",
+      },
+      {
+        level: "organiser",
+        text: "Event pages are tidier: Going, Checked in and Actions at the top, the tools (graphic, write post, sign-up list, meeting point, weather update and more) as a grid of tiles, and the order changes with the event: promotion first before it, check-in first on the day, recap and photos first after it.",
       },
     ],
   },
