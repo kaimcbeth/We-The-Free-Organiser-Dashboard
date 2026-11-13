@@ -276,7 +276,9 @@ export function announcementIdeas(
 ) {
   if (!s) return [];
   const out: { label: string; text: string }[] = [];
-  for (const e of s.specials.slice(0, 4)) {
+  // Only what's still ahead on the day of the hangout.
+  const from = heldOn ?? new Date().toISOString().slice(0, 10);
+  for (const e of s.specials.filter((x) => x.date >= from).slice(0, 4)) {
     const text = `${e.emoji ? `${e.emoji} ` : ""}${e.name}: ${fmtDay(e.date)}`;
     out.push({ label: text, text });
   }

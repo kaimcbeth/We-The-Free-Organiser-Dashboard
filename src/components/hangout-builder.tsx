@@ -98,23 +98,21 @@ export function HangoutBuilder({
   }, []);
 
   const loadAll = useCallback(async () => {
-    const [b, p, s, name, h] = await Promise.all([
+    const [b, p, name, h] = await Promise.all([
       loadBlocks(supabase, region),
       loadPlans(supabase, region),
-      loadSuggestions(supabase, region),
       regionLabel(supabase, region),
       supabase.rpc("region_hangouts", { p_region: region }),
     ]);
-    return { b, p, s, name, h: (h.data as HangoutRow[] | null) ?? [] };
+    return { b, p, name, h: (h.data as HangoutRow[] | null) ?? [] };
   }, [supabase, region]);
 
   useEffect(() => {
     let live = true;
-    loadAll().then(async ({ b, p, s, name, h }) => {
+    loadAll().then(async ({ b, p, name, h }) => {
       if (!live) return;
       setBlocks(b);
       setPlans(p);
-      setSuggestions(s);
       setRegionName(name);
       setHangouts(h);
       // Opened from a hangout (action card or listing): its plan, or a new one.
@@ -175,6 +173,18 @@ export function HangoutBuilder({
     }
     return data as Plan;
   }
+
+  // Announcement suggestions follow the hangout's date.
+  const heldOn = plan?.held_on ?? null;
+  useEffect(() => {
+    let live = true;
+    loadSuggestions(supabase, region, heldOn).then(
+      (s) => live && setSuggestions(s),
+    );
+    return () => {
+      live = false;
+    };
+  }, [supabase, region, heldOn]);
 
   // Save a moment after each change.
   useEffect(() => {

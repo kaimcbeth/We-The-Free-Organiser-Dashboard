@@ -37,12 +37,16 @@ export async function loadPlans(supabase: SupabaseClient, regionId: string) {
   return (data ?? []) as Plan[];
 }
 
+// Worked out from the hangout's date (Kai, 13 Nov 2026): special events on or
+// after it, the month before it, and later hangouts.
 export async function loadSuggestions(
   supabase: SupabaseClient,
   regionId: string,
+  on: string | null = null,
 ) {
   const { data } = await supabase.rpc("hangout_suggestions", {
     p_region: regionId,
+    p_on: on,
   });
   return (data as Suggestions | null) ?? null;
 }
@@ -88,7 +92,7 @@ export async function loadPlanDeck(supabase: SupabaseClient, planId: string) {
   if (!plan) return null;
   const [blocks, suggestions, region] = await Promise.all([
     loadBlocks(supabase, plan.region_id),
-    loadSuggestions(supabase, plan.region_id),
+    loadSuggestions(supabase, plan.region_id, plan.held_on),
     regionLabel(supabase, plan.region_id),
   ]);
   return {
