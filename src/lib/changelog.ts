@@ -59,11 +59,15 @@ export const COMING_SOON: { title: string; text: string }[] = [
 export const CHANGELOG: Release[] = [
   {
     date: "2026-11-13",
-    title: "Introductions point things out",
+    title: "Introductions point things out, park dinner graphic",
     changes: [
       {
         level: "organiser",
         text: "Tab introductions now stay at the top while you scroll, and each step lights up the part of the page it's talking about. No more Show me button.",
+      },
+      {
+        level: "organiser",
+        text: "New graphic style 10 for dinners and picnics in the park: festoon lights, a pink gingham picnic blanket, and your photo as a polaroid. Pick Landscape photo, Portrait photo or No photo (a drawn sunset picnic). Park dinner events open on it by themselves.",
       },
     ],
   },

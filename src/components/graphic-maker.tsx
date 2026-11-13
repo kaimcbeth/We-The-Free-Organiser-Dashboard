@@ -26,6 +26,12 @@ import {
   type XmasPhoto,
 } from "@/components/graphic-christmas";
 import {
+  drawPark,
+  isPark,
+  loadParkFonts,
+  parkFields,
+} from "@/components/graphic-park";
+import {
   cover,
   drawPoster,
   frameOf,
@@ -94,7 +100,8 @@ type Style =
   | "stripes"
   | "synthwave"
   | "synthphoto"
-  | "christmas";
+  | "christmas"
+  | "park";
 // Shown as plain numbers (Kai, 5 Nov 2026: the names were janky). In code:
 // classic, poster, teaser = "Coming soon", bigphoto = "Big photo",
 // details = "Photo + details".
@@ -108,6 +115,7 @@ const STYLES: Record<Style, string> = {
   synthwave: "7", // neon sunset + grid (New Year's Eve, 11 Nov 2026)
   synthphoto: "8", // style 7 with a photo in the sun
   christmas: "9", // retro Christmas party poster (Kai, 11 Nov 2026)
+  park: "10", // dinner in the park: festoon lights, gingham (Kai, 13 Nov 2026)
 };
 // Styles with a Warm / WTF colours choice.
 const COLOURED: Style[] = ["teaser", "bigphoto", "details", "stripes"];
@@ -436,7 +444,9 @@ export function GraphicMaker({
       ? "synthwave"
       : isChristmas(event.title)
         ? "christmas"
-        : "classic",
+        : isPark(event.title)
+          ? "park"
+          : "classic",
   );
   const [xmasPhoto, setXmasPhoto] = useState<XmasPhoto>("landscape");
   const [fonts, setFonts] = useState(0); // bumped when a style's fonts load
@@ -539,7 +549,9 @@ export function GraphicMaker({
               ? loadSynthwaveFonts()
               : style === "christmas"
                 ? loadChristmasFonts()
-                : loadPhotoStyleFonts();
+                : style === "park"
+                  ? loadParkFonts()
+                  : loadPhotoStyleFonts();
     load.then(() => live && setFonts((n) => n + 1));
     if (!mark)
       loadImage("/brand/wtf-mark.png")
@@ -582,7 +594,9 @@ export function GraphicMaker({
                   ? synthwaveFields(event, tz, recap, handle)
                   : style === "christmas"
                     ? christmasFields(event, tz, recap, handle)
-                    : detailsFields(event, tz, recap, handle),
+                    : style === "park"
+                      ? parkFields(event, tz, recap, handle)
+                      : detailsFields(event, tz, recap, handle),
     [style, event, tz, template, recap, handle],
   );
   const texts = useMemo(
@@ -601,6 +615,15 @@ export function GraphicMaker({
       drawTeaser(canvas.current, { w, h, t: texts, colours, mark });
     } else if (style === "christmas") {
       drawChristmas(canvas.current, {
+        w,
+        h,
+        t: texts,
+        mark,
+        photo: imgs[0] ?? null,
+        shape: xmasPhoto,
+      });
+    } else if (style === "park") {
+      drawPark(canvas.current, {
         w,
         h,
         t: texts,
@@ -671,7 +694,9 @@ export function GraphicMaker({
     xmasPhoto,
   ]);
 
-  const xmasNoPhoto = style === "christmas" && xmasPhoto === "none";
+  // Styles with the landscape / portrait / no photo choice ("3 format").
+  const shaped = style === "christmas" || style === "park";
+  const xmasNoPhoto = shaped && xmasPhoto === "none";
   const framed =
     imgs.length > 0 &&
     style !== "teaser" &&
@@ -948,7 +973,8 @@ export function GraphicMaker({
                 style === "stripes" ||
                 style === "synthwave" ||
                 style === "synthphoto" ||
-                style === "christmas") &&
+                style === "christmas" ||
+                style === "park") &&
                 !handle && (
                   <p className="mt-2 text-xs text-stone-500">
                     Add your community&apos;s Instagram username in the Social
@@ -956,7 +982,7 @@ export function GraphicMaker({
                   </p>
                 )}
 
-              {style === "christmas" && (
+              {shaped && (
                 <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs font-medium text-stone-500">
                   Photo
                   {(Object.keys(XMAS_PHOTO) as XmasPhoto[]).map((p) => (
