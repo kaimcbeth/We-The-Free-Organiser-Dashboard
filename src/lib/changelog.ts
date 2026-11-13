@@ -63,7 +63,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "regional_lead",
-        text: "Organiser hangouts (Resources): put together your monthly one-hour hangout from ready-made welcome, icebreaker, exercise, announcement and wrap-up blocks, with a bar that keeps it to the hour.",
+        text: "Organiser hangouts (Resources): put together your monthly one-hour hangout from ready-made welcome, icebreaker, activity, announcement and wrap-up blocks, with a bar that keeps it to the hour.",
       },
       {
         level: "regional_lead",

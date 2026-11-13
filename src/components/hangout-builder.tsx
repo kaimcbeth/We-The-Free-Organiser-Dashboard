@@ -461,7 +461,7 @@ export function HangoutBuilder({
           No hangouts planned yet. Start one with{" "}
           <span className="font-semibold text-navy">+ New hangout</span>: it
           begins with a welcome and announcements, and you add icebreakers and
-          exercises from the library below.
+          activities from the library below.
         </div>
       ) : (
         <>
@@ -552,7 +552,7 @@ export function HangoutBuilder({
                           {b.title}
                         </p>
                         <p className="truncate text-xs text-stone-500">
-                          {sec.label.replace(/s$/, "")}
+                          {sec.one}
                           {item.slides ? " · changed for this hangout" : ""}
                           {when
                             ? ` · ${usedLabel(when).replace("Used", "used")}`
@@ -813,7 +813,7 @@ export function HangoutBuilder({
         </button>
         <p className="mt-2 text-xs text-stone-500">
           Blocks used in your region&apos;s other hangouts are marked and listed
-          last, so the icebreakers and exercises stay fresh.
+          last, so the icebreakers and activities stay fresh.
           {isGod
             ? " You can edit the shared library; blocks you write here are for this region only."
             : " Blocks you write are for your region."}
@@ -1105,7 +1105,7 @@ function BlockEditor({
           >
             {SECTIONS.map((s) => (
               <option key={s.key} value={s.key}>
-                {s.label.replace(/s$/, "")}
+                {s.one}
               </option>
             ))}
           </select>

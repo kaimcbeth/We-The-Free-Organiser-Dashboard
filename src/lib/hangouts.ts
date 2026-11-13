@@ -1,6 +1,6 @@
 // Organiser hangout builder (Kai, 13 Nov 2026): Regional Support Leads plan a
 // monthly one-hour organiser hangout from blocks (welcome, icebreakers,
-// exercises, announcements, wrap-up), then present it or export slides with
+// activities (section key "exercise"), announcements, wrap-up), then present it or export slides with
 // speaker notes. Tables hangout_blocks + hangout_plans (0234).
 
 export type Section =
@@ -52,6 +52,7 @@ export const HOUR = 60;
 export const SECTIONS: {
   key: Section;
   label: string; // library tab
+  one: string; // one block of it
   kicker: string; // on the slide
   colour: string;
   chip: string; // Tailwind classes
@@ -59,6 +60,7 @@ export const SECTIONS: {
   {
     key: "welcome",
     label: "Welcome",
+    one: "Welcome",
     kicker: "WELCOME",
     colour: "#2fd9df",
     chip: "bg-cyan/25 text-navy",
@@ -66,20 +68,23 @@ export const SECTIONS: {
   {
     key: "icebreaker",
     label: "Icebreakers",
+    one: "Icebreaker",
     kicker: "ICEBREAKER",
     colour: "#ffd90f",
     chip: "bg-yellow/40 text-navy",
   },
   {
     key: "exercise",
-    label: "Exercises",
-    kicker: "EXERCISE",
+    label: "Activities",
+    one: "Activity",
+    kicker: "ACTIVITY",
     colour: "#ff47b9",
     chip: "bg-pink/25 text-navy",
   },
   {
     key: "announcements",
     label: "Announcements",
+    one: "Announcements",
     kicker: "ANNOUNCEMENTS",
     colour: "#2fd9df",
     chip: "bg-cyan/25 text-navy",
@@ -87,6 +92,7 @@ export const SECTIONS: {
   {
     key: "closing",
     label: "Wrap-up",
+    one: "Wrap-up",
     kicker: "WRAP-UP",
     colour: "#ffd90f",
     chip: "bg-yellow/40 text-navy",
@@ -246,7 +252,7 @@ export function usedLabel(iso: string) {
 }
 
 // A new plan starts with the welcome and the announcements; the RSL adds
-// icebreakers and exercises from the library.
+// icebreakers and activities from the library.
 export function starterItems(blocks: Block[]): PlanItem[] {
   const pick = (key: string) => blocks.find((b) => b.key === key);
   return ["welcome", "announcements"]

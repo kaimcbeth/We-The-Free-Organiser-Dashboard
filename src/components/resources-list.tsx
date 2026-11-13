@@ -106,7 +106,7 @@ export function ResourcesList({
           !core &&
           has(
             q,
-            "organiser hangout monthly call slides deck powerpoint icebreaker exercise announcements speaker notes present",
+            "organiser hangout monthly call slides deck powerpoint icebreaker exercise activity activities announcements speaker notes present",
           ) && (
             <a
               href="/resources/hangouts"
@@ -123,7 +123,7 @@ export function ResourcesList({
                 </span>
                 <span className="block text-sm text-stone-600">
                   Put together this month&apos;s one-hour organiser hangout from
-                  icebreakers, exercises and announcements, then present it or
+                  icebreakers, activities and announcements, then present it or
                   download the slides with speaker notes.
                 </span>
               </span>
