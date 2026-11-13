@@ -5,8 +5,8 @@
 export type IntroStep = {
   title: string;
   body: string;
-  // CSS selectors, comma separated: "Show me" scrolls to the first one on
-  // screen and makes it glow.
+  // CSS selectors, comma separated: while the step is showing, the first one
+  // on screen is scrolled into view and spotlighted.
   target?: string;
 };
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { readHeader, subscribeHeader } from "@/lib/header-height";
+
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -467,22 +469,6 @@ function firstPick(item: EquipmentItem, inventory: Map<string, Owned>) {
     0,
     (item.options ?? []).findIndex((o) => inventory.has(invKey(item, o))),
   );
-}
-
-// The height of the page's sticky header (if any), kept up to date.
-function readHeader() {
-  const h = document.querySelector("header");
-  return h && getComputedStyle(h).position === "sticky" ? h.offsetHeight : 0;
-}
-function subscribeHeader(cb: () => void) {
-  const h = document.querySelector("header");
-  const ro = h ? new ResizeObserver(cb) : null;
-  if (h) ro?.observe(h);
-  window.addEventListener("resize", cb);
-  return () => {
-    ro?.disconnect();
-    window.removeEventListener("resize", cb);
-  };
 }
 
 // The base kit's cost with the versions showing below, for new organisers.

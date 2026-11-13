@@ -59,6 +59,16 @@ export const COMING_SOON: { title: string; text: string }[] = [
 export const CHANGELOG: Release[] = [
   {
     date: "2026-11-13",
+    title: "Introductions point things out",
+    changes: [
+      {
+        level: "organiser",
+        text: "Tab introductions now stay at the top while you scroll, and each step lights up the part of the page it's talking about. No more Show me button.",
+      },
+    ],
+  },
+  {
+    date: "2026-11-13",
     title: "Organiser hangouts",
     changes: [
       {
