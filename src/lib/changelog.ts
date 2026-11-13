@@ -82,6 +82,10 @@ export const CHANGELOG: Release[] = [
         text: "Resources you haven't opened yet now have a New tag.",
       },
       {
+        level: "organiser",
+        text: "Two new suggested events for January: 🤝 First Community Event of the year (2nd Saturday) and 📣 First Outreach of the year (3rd Saturday).",
+      },
+      {
         level: "god",
         text: "0234 hangout_blocks (32 library blocks, God edits the shared library) + hangout_plans (per region, can_plan_region), hangout_suggestions, region_hangouts, hangout_region_for; 0235 resource_seen. pptxgenjs for the PowerPoint, pdf-lib for the PDF, BroadcastChannel for the notes window (/hangout-notes/<plan>).",
       },
