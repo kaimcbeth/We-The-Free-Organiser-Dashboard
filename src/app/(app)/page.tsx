@@ -366,6 +366,12 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
           </Link>
         </div>
       </div>
+      {!organiser.exampleMode && !organiser.allCommunities && (
+        // Near the top (Kai, 13 Nov 2026): was beside the Upcoming heading.
+        <div className="-mt-3">
+          <NearbyToggle km={nearbyKm} />
+        </div>
+      )}
 
       {setup &&
         !setup.dismissed &&
@@ -490,9 +496,6 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
           organiser.role === "god" || organiser.role === "regional_lead"
         }
         nearby={nearby}
-        extra={
-          organiser.exampleMode ? undefined : <NearbyToggle km={nearbyKm} />
-        }
         empty="Nothing scheduled yet."
         nextId={next?.id}
         actions={actionsFor}
