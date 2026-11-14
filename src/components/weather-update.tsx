@@ -690,6 +690,10 @@ function PublicListUpdate({
             Take it off
           </button>
         </p>
+      ) : !spot && !saved ? (
+        <p className="text-stone-500">
+          Type the new spot above to also show it on your public events list.
+        </p>
       ) : (
         <>
           <button
