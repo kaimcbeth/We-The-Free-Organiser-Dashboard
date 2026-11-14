@@ -428,15 +428,16 @@ export default async function EventCheckInPage({
       </div>
     ),
   };
+  // The tool tiles always come first (Kai, 14 Nov 2026).
   const order =
     phase === "after"
-      ? ["recap", "movie", "photos", "tools", "checkin", "notes", "actions"]
+      ? ["tools", "recap", "movie", "photos", "checkin", "notes", "actions"]
       : phase === "day"
         ? [
+            "tools",
             "live",
             "checkin",
             "coming",
-            "tools",
             "actions",
             "notes",
             "movie",
