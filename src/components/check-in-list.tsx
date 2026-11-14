@@ -767,6 +767,33 @@ function QuickAdd({
         New to activism (never done any before)
       </label>
       <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-2">
+          <select
+            value={bestContact}
+            onChange={(e) => setBestContact(e.target.value)}
+            required
+            aria-label="Best way to reach them"
+            className={`${inputClass} ${bestContact ? "" : "text-stone-500"}`}
+          >
+            <option value="">Best contact</option>
+            {BEST_CONTACT.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+          {how && (
+            <input
+              type={how.input}
+              required
+              value={contact}
+              onChange={(e) => setContact(e.target.value)}
+              placeholder={how.placeholder}
+              aria-label={how.placeholder}
+              className={inputClass}
+            />
+          )}
+        </div>
         <select
           value={foundVia}
           onChange={(e) => setFoundVia(e.target.value)}
@@ -807,33 +834,6 @@ function QuickAdd({
             className={inputClass}
           />
         )}
-        <div className="grid grid-cols-2 gap-2">
-          <select
-            value={bestContact}
-            onChange={(e) => setBestContact(e.target.value)}
-            required
-            aria-label="Best way to reach them"
-            className={`${inputClass} ${bestContact ? "" : "text-stone-500"}`}
-          >
-            <option value="">Best contact</option>
-            {BEST_CONTACT.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-          {how && (
-            <input
-              type={how.input}
-              required
-              value={contact}
-              onChange={(e) => setContact(e.target.value)}
-              placeholder={how.placeholder}
-              aria-label={how.placeholder}
-              className={inputClass}
-            />
-          )}
-        </div>
       </div>
       <div className="flex gap-2">
         <button
