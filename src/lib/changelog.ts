@@ -58,6 +58,16 @@ export const COMING_SOON: { title: string; text: string }[] = [
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-11-14",
+    title: "Clickable clash check",
+    changes: [
+      {
+        level: "organiser",
+        text: "Also on that day: each event is now a link. Your community's events open their page in the Hub; nearby communities' events open on activism.wtf.",
+      },
+    ],
+  },
+  {
     date: "2026-11-13",
     title:
       "Tidier event pages, introductions point things out, park dinner graphic",

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Clash check (Kai, 12 Nov 2026, idea 25): on an upcoming event's page, a
@@ -13,6 +14,7 @@ type Other = {
   ends_at: string | null;
   where: string | null; // other community's city, else null
   km: number | null;
+  url: string | null; // nearby community's activism.wtf listing
 };
 
 export async function ClashNote({
@@ -71,7 +73,12 @@ export async function ClashNote({
   const myEnd = end(event.starts_at, event.ends_at);
 
   const others: Other[] = [
-    ...(own.data ?? []).map((e) => ({ ...e, where: null, km: null })),
+    ...(own.data ?? []).map((e) => ({
+      ...e,
+      where: null,
+      km: null,
+      url: null,
+    })),
     ...(
       (near.data ?? []) as {
         id: string;
@@ -80,6 +87,7 @@ export async function ClashNote({
         ends_at: string | null;
         team_name: string;
         km: number;
+        source_url: string | null;
       }[]
     ).map((e) => ({
       id: e.id,
@@ -88,6 +96,7 @@ export async function ClashNote({
       ends_at: e.ends_at,
       where: e.team_name,
       km: e.km,
+      url: e.source_url,
     })),
   ]
     .filter((e) => day(e.starts_at) === thisDay)
@@ -104,7 +113,28 @@ export async function ClashNote({
             end(o.starts_at, o.ends_at) > start;
           return (
             <li key={o.id}>
-              {time(o.starts_at)} · {o.title}
+              {time(o.starts_at)} ·{" "}
+              {o.where ? (
+                o.url ? (
+                  <a
+                    href={o.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline decoration-amber-300 underline-offset-2 hover:decoration-amber-700"
+                  >
+                    {o.title}
+                  </a>
+                ) : (
+                  o.title
+                )
+              ) : (
+                <Link
+                  href={`/events/${o.id}`}
+                  className="underline decoration-amber-300 underline-offset-2 hover:decoration-amber-700"
+                >
+                  {o.title}
+                </Link>
+              )}
               {o.where
                 ? ` · ${o.where} (${o.km} km away)`
                 : " · your community"}
