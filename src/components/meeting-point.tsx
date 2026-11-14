@@ -3,6 +3,13 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { resolveMapsLink } from "@/app/map-link-actions";
+import {
+  isMapsLink,
+  isShortMapsLink,
+  spotFromCoords,
+  spotFromMapsUrl,
+} from "@/lib/map-link";
 import { Sheet } from "@/components/sheet";
 import { SaveToPlanner } from "@/components/save-to-planner";
 import type { GraphicEvent } from "@/components/graphic-maker";
@@ -32,6 +39,71 @@ const MeetingPointMap = dynamic(
 type Saved = Spot & { note: string | null; zoom: number | null };
 type EarlierSpot = Saved & { event: string; used: string };
 type Found = { name: string; lat: number; lng: number };
+
+// Two OpenStreetMap searches: Nominatim (addresses) and Photon (more
+// forgiving with names), nearest to the community first.
+async function findPlaces(q: string, near: Spot | null): Promise<Found[]> {
+  const nominatim = async () => {
+    const url =
+      "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&q=" +
+      encodeURIComponent(q) +
+      (near
+        ? `&viewbox=${near.lng - 1},${near.lat + 1},${near.lng + 1},${near.lat - 1}`
+        : "");
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    const rows = (await res.json()) as {
+      display_name: string;
+      lat: string;
+      lon: string;
+    }[];
+    return rows.map((r) => ({
+      name: r.display_name,
+      lat: Number(r.lat),
+      lng: Number(r.lon),
+    }));
+  };
+  const photon = async () => {
+    const url =
+      "https://photon.komoot.io/api/?limit=5&q=" +
+      encodeURIComponent(q) +
+      (near ? `&lat=${near.lat}&lon=${near.lng}` : "");
+    const res = await fetch(url);
+    const data = (await res.json()) as {
+      features: {
+        geometry: { coordinates: [number, number] };
+        properties: Record<string, string | undefined>;
+      }[];
+    };
+    return data.features.map((f) => {
+      const p = f.properties;
+      const street = [p.housenumber, p.street].filter(Boolean).join(" ");
+      return {
+        name: [p.name, street, p.city ?? p.district, p.state]
+          .filter(Boolean)
+          .filter((x, i, a) => a.indexOf(x) === i)
+          .join(", "),
+        lat: f.geometry.coordinates[1],
+        lng: f.geometry.coordinates[0],
+      };
+    });
+  };
+  const [a, b] = await Promise.all([
+    nominatim().catch(() => [] as Found[]),
+    photon().catch(() => [] as Found[]),
+  ]);
+  const list: Found[] = [];
+  for (const f of [...a, ...b]) {
+    if (!f.name || !Number.isFinite(f.lat)) continue;
+    if (
+      list.some(
+        (g) => Math.abs(g.lat - f.lat) < 2e-4 && Math.abs(g.lng - f.lng) < 2e-4,
+      )
+    )
+      continue;
+    list.push(f);
+  }
+  return list.slice(0, 6);
+}
 
 const MIN_ZOOM = 14;
 const MAX_ZOOM = 19;
@@ -171,8 +243,11 @@ function Maker({
       } else {
         setCentre(info?.centre ?? { lat: -33.8688, lng: 151.2093 });
         // Start at the event's address, if the map can find it.
-        if (event.address || event.venue)
-          search(event.address ?? event.venue ?? "", true);
+        const start = event.address ?? event.venue;
+        if (start)
+          findPlaces(start, info?.centre ?? null).then(
+            (l) => live && l[0] && setCentre({ lat: l[0].lat, lng: l[0].lng }),
+          );
       }
       setLoaded(true);
     });
@@ -250,34 +325,29 @@ function Maker({
     setSpot(s);
   }
 
-  async function search(q: string, quiet = false) {
+  async function search(q: string) {
     if (!q.trim()) return;
     setSearching(true);
-    try {
-      const near = centre ?? undefined;
-      const url =
-        "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&q=" +
-        encodeURIComponent(q) +
-        (near
-          ? `&viewbox=${near.lng - 1},${near.lat + 1},${near.lng + 1},${near.lat - 1}`
-          : "");
-      const res = await fetch(url, { headers: { Accept: "application/json" } });
-      const rows = (await res.json()) as {
-        display_name: string;
-        lat: string;
-        lon: string;
-      }[];
-      const list = rows.map((r) => ({
-        name: r.display_name,
-        lat: Number(r.lat),
-        lng: Number(r.lon),
-      }));
-      if (quiet) {
-        if (list[0]) setCentre({ lat: list[0].lat, lng: list[0].lng });
-      } else setFound(list);
-    } catch {
-      if (!quiet) setFound([]);
+    // A Google Maps link or "lat, lng": go straight to that spot.
+    if (isMapsLink(q) || spotFromCoords(q)) {
+      const s =
+        spotFromCoords(q) ??
+        (isShortMapsLink(q)
+          ? await resolveMapsLink(q).catch(() => null)
+          : spotFromMapsUrl(q));
+      setSearching(false);
+      if (!s) {
+        setFound([]);
+        return;
+      }
+      setCentre({ lat: s.lat, lng: s.lng });
+      pick({ lat: s.lat, lng: s.lng });
+      setFound(null);
+      if (s.name && !texts.where) set("where", s.name);
+      return;
     }
+    const shown = await findPlaces(q, centre);
+    setFound(shown);
     setSearching(false);
   }
 
@@ -357,7 +427,7 @@ function Maker({
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search for a place or address"
+          placeholder="Search, or paste a Google Maps link"
           className="min-w-0 flex-1 rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"
         />
         <button
@@ -371,7 +441,8 @@ function Maker({
         <ul className="mt-1 overflow-hidden rounded-xl bg-white ring-1 ring-black/5">
           {found.length === 0 && (
             <li className="px-3 py-2 text-sm text-stone-500">
-              Nothing found. Try fewer words, or move the map yourself.
+              Not found. Try the street address, or in Google Maps tap Share →
+              Copy link and paste it here. You can also move the map yourself.
             </li>
           )}
           {found.map((f) => (

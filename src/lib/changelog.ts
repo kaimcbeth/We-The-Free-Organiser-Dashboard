@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Meeting point: paste a Google Maps link (Share → Copy link) into the search box to drop the pin right on that place. The search also finds more shops by name now.",
+      },
+      {
+        level: "organiser",
         text: "Weather update post: when you pick New location, one tap puts the new spot on your public events list (marked New location, old place crossed out). Take it off from the same place.",
       },
       {
