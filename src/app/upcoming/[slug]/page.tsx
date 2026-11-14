@@ -14,6 +14,7 @@ type PublicEvent = {
   ends_at: string | null;
   venue: string | null;
   address: string | null;
+  moved_to?: string | null;
   description: string | null;
   image_url: string | null;
   url: string | null;
@@ -88,10 +89,25 @@ export default async function UpcomingPage({
                 {formatTimeRange(e.starts_at, e.ends_at, tz)}
               </p>
               <h2 className="mt-0.5 text-lg font-semibold">{e.title}</h2>
-              {(e.venue || e.address) && (
-                <p className="text-sm text-stone-600">
-                  {[e.venue, e.address].filter(Boolean).join(", ")}
+              {e.moved_to ? (
+                <p className="mt-1 text-sm">
+                  <span className="rounded-full bg-yellow px-2 py-0.5 text-xs font-semibold text-navy">
+                    New location
+                  </span>{" "}
+                  <span className="font-medium">{e.moved_to}</span>
+                  {(e.venue || e.address) && (
+                    <span className="text-stone-400 line-through">
+                      {" "}
+                      {[e.venue, e.address].filter(Boolean).join(", ")}
+                    </span>
+                  )}
                 </p>
+              ) : (
+                (e.venue || e.address) && (
+                  <p className="text-sm text-stone-600">
+                    {[e.venue, e.address].filter(Boolean).join(", ")}
+                  </p>
+                )
               )}
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
                 {e.url && (
@@ -110,8 +126,8 @@ export default async function UpcomingPage({
                     title: e.title,
                     starts_at: e.starts_at,
                     ends_at: e.ends_at,
-                    venue: e.venue,
-                    address: e.address,
+                    venue: e.moved_to ?? e.venue,
+                    address: e.moved_to ? null : e.address,
                     description: e.description,
                     url: e.url,
                   }}

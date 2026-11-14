@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Sheet } from "@/components/sheet";
+import { createClient } from "@/lib/supabase/client";
 import { SaveToPlanner } from "@/components/save-to-planner";
 import type { GraphicEvent } from "@/components/graphic-maker";
 import { grain, loadPosterFonts } from "@/components/graphic-poster";
@@ -551,6 +552,9 @@ function Maker({
           />
         </label>
       )}
+      {status === "moved" && event.eventId && (
+        <PublicListUpdate eventId={event.eventId} place={texts.newPlace} />
+      )}
       <div className="mt-3 flex flex-wrap gap-1.5">
         {(["rain", "heat"] as Weather[]).map((wx) => (
           <button
@@ -627,5 +631,93 @@ function Maker({
         </button>
       </div>
     </Sheet>
+  );
+}
+
+// Puts the new spot on the public events list (/upcoming/<slug>) through
+// events.moved_to (Kai, 14 Nov 2026). The hourly import leaves it alone.
+function PublicListUpdate({
+  eventId,
+  place,
+}: {
+  eventId: string;
+  place: string;
+}) {
+  const [saved, setSaved] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    let live = true;
+    createClient()
+      .from("events")
+      .select("moved_to")
+      .eq("id", eventId)
+      .maybeSingle<{ moved_to: string | null }>()
+      .then(({ data }) => live && setSaved(data?.moved_to ?? null));
+    return () => {
+      live = false;
+    };
+  }, [eventId]);
+
+  async function save(next: string | null) {
+    setBusy(true);
+    setErr("");
+    const { error } = await createClient().rpc("set_event_moved", {
+      p_event_id: eventId,
+      p_place: next,
+    });
+    setBusy(false);
+    if (error) setErr("Couldn't update the list. Try again.");
+    else setSaved(next);
+  }
+
+  const spot = place.trim();
+  const live = saved !== null && saved === spot;
+  return (
+    <div className="mt-2 text-xs text-stone-600">
+      {live ? (
+        <p>
+          <span className="font-medium text-navy">
+            ✓ The public events list shows the new spot.
+          </span>{" "}
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => save(null)}
+            className="text-stone-500 hover:text-navy hover:underline"
+          >
+            Take it off
+          </button>
+        </p>
+      ) : (
+        <>
+          <button
+            type="button"
+            disabled={busy || !spot}
+            onClick={() => save(spot)}
+            className="rounded-lg px-2 py-1 font-medium text-navy ring-1 ring-stone-300 hover:bg-stone-50 disabled:opacity-40"
+          >
+            {saved
+              ? "Update the public events list"
+              : "Show the new spot on our public events list"}
+          </button>
+          {saved && (
+            <span className="ml-2 text-stone-500">
+              It says: {saved}.{" "}
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => save(null)}
+                className="hover:text-navy hover:underline"
+              >
+                Take it off
+              </button>
+            </span>
+          )}
+        </>
+      )}
+      {err && <p className="mt-1 text-red-700">{err}</p>}
+    </div>
   );
 }
