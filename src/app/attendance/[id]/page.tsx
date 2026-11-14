@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LivePlayers } from "@/components/live-players";
-import { showLivePlayers } from "@/lib/live-window";
+import { isMovieChallenge, showLivePlayers } from "@/lib/live-window";
+import { EventDebrief } from "@/components/event-debrief";
 import { requireCore } from "@/lib/organiser";
 import { currentTz, formatEventDate, formatTimeRange } from "@/lib/time";
 import type { HelperState } from "@/app/checkin/[token]/helper-check-in";
@@ -59,6 +60,20 @@ export default async function CoreAttendancePage({
           <LivePlayers withToday={currentTz()} />
         </div>
       )}
+      {/* Movie Challenge debrief, from the day of the event (Kai, 14 Nov 2026). */}
+      {isMovieChallenge(e.title) &&
+        new Date(e.starts_at).getTime() - 12 * 3600_000 <
+          // eslint-disable-next-line react-hooks/purity
+          Date.now() && (
+          <div className="mt-6">
+            <EventDebrief
+              eventId={id}
+              tz={currentTz()}
+              live
+              linkBase="/attendance/"
+            />
+          </div>
+        )}
       <EventPhotos
         key={photos.map((p) => p.id).join()}
         teamId={organiser.team_id}

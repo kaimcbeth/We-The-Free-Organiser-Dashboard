@@ -4,6 +4,7 @@ import { LivePlayers } from "@/components/live-players";
 import { isMovieChallenge, showLivePlayers } from "@/lib/live-window";
 import { MovieDaySummary } from "@/components/movie-day-summary";
 import { EventRecap } from "@/components/event-recap";
+import { EventDebrief } from "@/components/event-debrief";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
@@ -326,6 +327,18 @@ export default async function EventCheckInPage({
         </Link>
       </div>
     ),
+    // Movie Challenge debrief (Kai, 14 Nov 2026): shout-outs, event counts,
+    // what's coming up. From the day of the event on.
+    debrief: isMovieChallenge(event.title) &&
+      !event.time_unknown &&
+      phase !== "before" && (
+        <EventDebrief
+          key="debrief"
+          eventId={event.id}
+          tz={team.timezone}
+          live={phase === "day"}
+        />
+      ),
     movie: isMovieChallenge(event.title) && phase !== "before" && (
       // After a Movie Challenge: the day in numbers, with a post to share.
       <MovieDaySummary
@@ -431,12 +444,22 @@ export default async function EventCheckInPage({
   // The tool tiles always come first (Kai, 14 Nov 2026).
   const order =
     phase === "after"
-      ? ["tools", "recap", "movie", "photos", "checkin", "notes", "actions"]
+      ? [
+          "tools",
+          "debrief",
+          "recap",
+          "movie",
+          "photos",
+          "checkin",
+          "notes",
+          "actions",
+        ]
       : phase === "day"
         ? [
             "tools",
             "live",
             "checkin",
+            "debrief",
             "coming",
             "actions",
             "notes",

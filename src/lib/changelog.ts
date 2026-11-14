@@ -59,8 +59,13 @@ export const COMING_SOON: { title: string; text: string }[] = [
 export const CHANGELOG: Release[] = [
   {
     date: "2026-11-14",
-    title: "Clickable clash check, new spot on the public list",
+    title:
+      "Movie Challenge debrief, clickable clash check, new spot on the public list",
     changes: [
+      {
+        level: "organiser",
+        text: "Movie Challenge debrief: on the day and after, the event page shows shout-outs for first-timers and milestones (5th, 10th, 25th event…), everyone's event count so far, the day's film numbers and what's coming up. It updates as people are checked in, and Copy as text gives you it ready for the group chat. Core Team see it too.",
+      },
       {
         level: "organiser",
         text: "Meeting point: paste a Google Maps link (Share → Copy link) into the search box to drop the pin right on that place. The search also finds more shops by name now.",
