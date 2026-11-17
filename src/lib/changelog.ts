@@ -58,6 +58,20 @@ export const COMING_SOON: { title: string; text: string }[] = [
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-11-18",
+    title: "Rolling views counter on the TV",
+    changes: [
+      {
+        level: "organiser",
+        text: "Movie player TV: the views worldwide number now keeps going up on its own in small, uneven jumps, and each digit rolls up to the next one like a turning block. Download the player again to get it.",
+      },
+      {
+        level: "organiser",
+        text: "Movie player: in TV camera, the camera choice now sits under Advanced options with the words, views and Instagram settings, so the panel is just the setting-up steps and Open the TV screen.",
+      },
+    ],
+  },
+  {
     date: "2026-11-17",
     title: "Laptop checker, TV camera",
     changes: [

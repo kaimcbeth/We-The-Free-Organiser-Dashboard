@@ -672,14 +672,14 @@
       <button class="link" id="tv-setup-reset">Untick everything</button>
     </details>
     <p>Before each film the viewer picks: on the TV and saved, on the TV only, or no camera. The camera only shows while they watch and goes off straight away if they press stop. Nobody who says they're under 15 is offered the camera.</p>
-    <label>Camera<select class="field" id="tv-cam"><option value="">Any camera</option></select></label>
     <details id="tv-adv">
     <summary>Advanced options</summary>
+    <label>Camera<select class="field" id="tv-cam"><option value="">Any camera</option></select></label>
     <label>On the TV while someone watches<input class="field" id="tv-headline" maxlength="80"></label>
     <label>Line under it<input class="field" id="tv-sub" maxlength="80"></label>
     <label>Between films<input class="field" id="tv-off" maxlength="80"></label>
     <label>Line under it<input class="field" id="tv-off-sub" maxlength="80"></label>
-    <label>Views of the film worldwide (ticks up slowly from this number; 0 hides it)<input class="field" id="tv-views" inputmode="numeric" maxlength="12"></label>
+    <label>Views of the film worldwide (keeps going up on its own from this number; 0 hides it)<input class="field" id="tv-views" inputmode="numeric" maxlength="12"></label>
     <label>Beside the Instagram QR code (empty hides the QR code)<input class="field" id="tv-ig-ask" maxlength="60"></label>
     <label>Instagram followers bubble, e.g. 12.4K (empty leaves it off)<input class="field" id="tv-ig-followers" maxlength="12"></label>
     <div class="row">
@@ -721,7 +721,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-17t";
+  var PLAYER_VERSION = "2026-11-18b";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-movement-hub.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
@@ -2144,8 +2144,8 @@
     replay: true,
     // Kai, 17 Nov 2026: online views of the 3-minute film (a stand-in number
     // for now, ticking up slowly) and the Instagram QR code.
-    // Kai: "views worldwide", "I still want the full 8-digit number": ticks up
-    // slowly (about 10,000 a day) from this number so it looks live.
+    // Kai: "views worldwide", "I still want the full 8-digit number": goes up
+    // from this number (VIEWS_RATE, about 47,000 a day) with rolling digits.
     views: 19180000, viewsAt: 1794834000000,
     igAsk: "Want your reaction on our socials?",
     igFollowers: "28.5K", igSet: 1 // Kai, 17 Nov 2026
@@ -2202,7 +2202,15 @@
     "#count b{color:#2fd9df}" +
     "#views{position:absolute;top:3.4vh;left:50%;transform:translateX(-50%);z-index:3;display:flex;align-items:baseline;gap:1.2vh;font-size:2.5vh;white-space:nowrap;text-shadow:0 .3vh 1.6vh rgba(0,0,0,.55)}" +
     "#views b{font-family:'Arial Black','Segoe UI Black',system-ui,sans-serif;font-weight:900;font-size:4.6vh;color:#ffd90f;letter-spacing:.01em;font-variant-numeric:tabular-nums}" +
-    "#views span{color:#fff;font-weight:700;letter-spacing:.02em}" +
+    "#views>span{color:#fff;font-weight:700;letter-spacing:.02em}" +
+    "#views-n{display:inline-flex;align-items:flex-end;line-height:1.1;margin-bottom:-.24em}" +
+    "#views-n i{font-style:normal}" +
+    "#views-n .d{position:relative;display:inline-block;width:.7em;height:1.1em;overflow:hidden;text-align:center;perspective:2.2em}" +
+    "#views-n .d span{position:absolute;inset:0;line-height:1.1em;transform-origin:50% 50% -.55em;backface-visibility:hidden}" +
+    "#views-n .d .out{animation:vOut .6s cubic-bezier(.5,0,.25,1) both}" +
+    "#views-n .d .in{animation:vIn .6s cubic-bezier(.5,0,.25,1) both}" +
+    "@keyframes vOut{to{transform:rotateX(90deg);opacity:.2}}" +
+    "@keyframes vIn{from{transform:rotateX(-90deg);opacity:.2}}" +
     "#ig{position:absolute;right:5vh;bottom:5vh;z-index:3;display:flex;align-items:flex-end;gap:1.6vh;flex-direction:row-reverse;text-align:right;text-shadow:0 .2vh 1vh rgba(0,0,0,.5)}" +
     "#ig .qr{width:10.5vh;height:10.5vh;background:#fff;border-radius:1vh;padding:.7vh;box-sizing:border-box;opacity:.95}" +
     "#ig .qr svg{width:100%;height:100%;display:block}" +
@@ -2300,7 +2308,7 @@
       settled = true;
       var n = e && e.name;
       tvMsg(n === "NotAllowedError" ? "The browser wasn't allowed to use the camera. Click the camera icon in the address bar, allow it, and try again." :
-        n === "NotFoundError" || n === "OverconstrainedError" ? "Can't find the camera. Check it's plugged in and pick it above." :
+        n === "NotFoundError" || n === "OverconstrainedError" ? "Can't find the camera. Check it's plugged in and pick it under Advanced options." :
         "The camera wouldn't start. Close any other app using it (Camera, Zoom, Teams) and try again.", true);
     });
   }
@@ -2330,15 +2338,62 @@
     replaySync(on);
     tvTime();
   }
+  // Views worldwide (Kai, 18 Nov 2026: "consistently have views added …
+  // that effect where the numbers are turning upwards and it reveals the next
+  // number, as if they were on blocks"). The number is worked out from the
+  // clock (VIEWS_RATE a second since viewsAt, so a reload never goes back),
+  // but it's shown in uneven little jumps every 0.8–3.5 s, and each digit
+  // that changes rolls upwards like a block turning over.
+  var VIEWS_RATE = 0.55; // about 47,000 a day
+  function viewsTarget() {
+    var base = Math.max(0, +tvCfg.views || 0);
+    return base ? Math.floor(base + Math.max(0, Date.now() - (+tvCfg.viewsAt || Date.now())) / 1000 * VIEWS_RATE) : 0;
+  }
+  function viewsDraw(n, animate) {
+    var d = tvWin.document, box = d.getElementById("views-n");
+    var s = n.toLocaleString("en-AU"), old = box.dataset.v || "";
+    if (!animate || old.length !== s.length || box.children.length !== s.length) {
+      box.innerHTML = s.split("").map(function (c) {
+        return /\d/.test(c) ? '<i class="d"><span>' + c + "</span></i>" : '<i class="c">' + c + "</i>";
+      }).join("");
+      box.dataset.v = s;
+      return;
+    }
+    // Right to left, each one a touch later, like an odometer carrying over.
+    for (var i = s.length - 1, k = 0; i >= 0; i--) {
+      if (s[i] !== old[i]) viewsRoll(box.children[i], s[i], k++ * 90);
+    }
+    box.dataset.v = s;
+  }
+  function viewsRoll(cell, c, delay) {
+    while (cell.children.length > 1) cell.removeChild(cell.firstElementChild);
+    var cur = cell.firstElementChild, nx = cell.ownerDocument.createElement("span");
+    nx.textContent = c;
+    nx.className = "in";
+    nx.style.animationDelay = cur.style.animationDelay = delay + "ms";
+    cur.className = "out";
+    cell.appendChild(nx);
+    setTimeout(function () {
+      if (cur.parentNode === cell) cell.removeChild(cur);
+      nx.className = ""; nx.style.animationDelay = "";
+    }, delay + 800);
+  }
+  var viewsShown = 0;
   function tvViews() {
     if (!tvWinOpen()) return;
-    var base = Math.max(0, +tvCfg.views || 0);
-    var n = base ? Math.floor(base + Math.max(0, Date.now() - (+tvCfg.viewsAt || Date.now())) / 1000 * 0.12) : 0;
-    var el = tvWin.document.getElementById("views");
-    el.hidden = !(+tvCfg.views > 0);
-    tvWin.document.getElementById("views-n").textContent = n.toLocaleString("en-AU");
+    var n = viewsTarget(), box = tvWin.document.getElementById("views-n");
+    tvWin.document.getElementById("views").hidden = !(n > 0);
+    // First draw, a new TV window or an edited number: no animation.
+    if (!box.dataset.v || n < viewsShown || n - viewsShown > 500) { viewsShown = n; viewsDraw(n, false); }
   }
-  setInterval(tvViews, 1000);
+  (function viewsTick() {
+    if (tvWinOpen()) {
+      tvViews();
+      var n = viewsTarget();
+      if (n > viewsShown) { viewsShown = n; viewsDraw(n, true); }
+    }
+    setTimeout(viewsTick, 800 + Math.random() * 2700);
+  })();
   function tvTime() {
     if (!tvAlive() || !current) return;
     var d = tvWin.document, dur = isFinite(video.duration) && video.duration ? video.duration : current.version.secs || 0;
