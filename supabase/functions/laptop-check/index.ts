@@ -91,21 +91,20 @@ THE THREE RULES (from Kai, the organiser)
 HOW TO CHECK
 - Use web search to find the model's battery life (manufacturer specs, reviews) and, if there's a link, what the listing says (price, where it ships from, condition). If the link can't be opened (e.g. Facebook Marketplace needs a login), say so in the summary and work from the model name or screenshot.
 - Read the price, postage and seller location off the screenshot if there is one.
-- Second-hand and refurbished laptops: batteries wear down. If the listing gives battery health or hours, use that. If not, judge from the original battery life and the laptop's age (one rated 8 hours or more new is usually still fine after a few years; one rated 4 hours new probably isn't), and suggest a practical check: ask the seller for a screenshot of battery health (Mac: System Settings → Battery → Battery Health, or the cycle count; Windows: the battery report, "powercfg /batteryreport") or whether the battery has been replaced; at pick-up, play a video unplugged for 10 minutes (losing about 5% or less points to 3 hours or more). Never suggest the seller run it for hours.
-- If only a model name is given, there's no price or postage to read: mark those "unknown" and say what it usually sells for second-hand or refurbished in ${country}.
+- Second-hand: if the listing gives battery health, use it. If not, judge from the rated battery life and age (8+ hours new is usually still fine; 4 hours new probably isn't). The only battery tips to give: ask for a battery health screenshot, or play a video unplugged for 10 minutes at pick-up (about 5% or less used is fine). Never suggest hours-long tests.
+- Model name only: mark price and postage "unknown" and give the usual second-hand price in ${country} in the price detail.
 - Never invent numbers. If you can't find something, mark it "unknown".
 
-EXTRA CONSIDERATIONS (Kai, 17 Nov 2026: "just extra considerations", never a reason to fail the three rules)
-Add a short note for each of these you can tell from the listing or the model's specs. Say plainly when it's good news too:
-- Headphone jack: if it has none, say they'll need an adapter (USB-C or USB to 3.5 mm, about $10). Not a dealbreaker.
-- Anti-glare (matte) screen: good for outdoor stalls in daylight; glossy screens reflect a lot.
-- Viewing angles: IPS screens look fine from the side for 2 or 3 people watching; older TN screens wash out.
-- Charger included: second-hand listings often leave it out (a replacement is about $20 to $40).
-- A normal USB (USB-A) port for the film stick; USB-C only means an adapter.
-Only mention something else (an operating system too old for a current Chrome or Edge, a cracked screen) if it really matters. At most 5 short notes.
+EXTRA NOTES (never a reason to fail the three rules)
+Only flag problems, and only ones you can tell: no headphone jack (needs a ~$10 adapter), glossy screen (hard to see outdoors), old TN screen (washes out from the side), no charger included, USB-C only (needs an adapter for the film stick), an operating system too old for current Chrome. Skip good news. At most 3 notes, each under 8 words. No notes is fine.
+
+KEEP IT SHORT (Kai, 17 Nov 2026: "way more concise")
+- summary: one sentence, under 15 words. Leave it empty if the checks say it all.
+- each check detail: under 8 words, just the fact (e.g. "A$120 + A$15 postage", "Ships from Melbourne", "About 6 hours rated").
+- No hedging, no repeating the rules back.
 
 Reply with JSON only, no other text:
-{"device": "make and model as best you can tell", "summary": "one or two plain sentences", "checks": [{"rule": "price", "result": "pass" | "fail" | "unknown", "detail": "short, e.g. A$120 plus A$15 postage = A$135"}, {"rule": "postage", "result": ..., "detail": ...}, {"rule": "battery", "result": ..., "detail": ...}], "notes": ["short note"]}
+{"device": "make and model as best you can tell", "summary": "under 15 words, or empty", "checks": [{"rule": "price", "result": "pass" | "fail" | "unknown", "detail": "under 8 words, e.g. A$120 + A$15 postage"}, {"rule": "postage", "result": ..., "detail": ...}, {"rule": "battery", "result": ..., "detail": ...}], "notes": ["short note"]}
 Australian spelling, plain words, no em or en dashes.`;
 
     // deno-lint-ignore no-explicit-any
@@ -187,7 +186,7 @@ Australian spelling, plain words, no em or en dashes.`;
       verdict,
       summary: tidy(parsed.summary),
       checks,
-      notes: (Array.isArray(parsed.notes) ? parsed.notes : []).map(tidy).filter(Boolean).slice(0, 5),
+      notes: (Array.isArray(parsed.notes) ? parsed.notes : []).map(tidy).filter(Boolean).slice(0, 3),
       country,
     });
   } catch (e) {

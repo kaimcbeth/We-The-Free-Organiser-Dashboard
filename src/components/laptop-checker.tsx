@@ -29,12 +29,12 @@ const RULE_LABEL = (country: string) => ({
 
 const VERDICT = {
   good: {
-    label: "Good for the Movie Challenge",
+    label: "Good to go",
     cls: "bg-green-50 text-green-900 ring-green-300",
     dot: "bg-green-500",
   },
   check: {
-    label: "Looks OK, but check a few things",
+    label: "Check a few things",
     cls: "bg-yellow-50 text-yellow-900 ring-yellow-300",
     dot: "bg-yellow-400",
   },
@@ -141,9 +141,7 @@ export function LaptopChecker() {
     <div className="mb-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
       <p className="font-semibold text-navy">Is this laptop OK?</p>
       <p className="mt-0.5 text-sm text-stone-600">
-        Paste a screenshot of the listing, a link to it, or type the model.
-        We&apos;ll check it&apos;s A$150 or under, posts from within the country
-        and has a battery that lasts at least 3 hours.
+        Under A$150, posts locally, 3+ hours of battery.
       </p>
       <form
         className="mt-3 space-y-2"
@@ -190,8 +188,7 @@ export function LaptopChecker() {
             >
               <span className="font-medium">Paste a screenshot</span>
               <span className="block text-xs text-stone-500">
-                Ctrl+V or ⌘V anywhere here and it checks it straight away. Or
-                drop it in, or tap to choose one
+                Or drop or choose one
               </span>
             </button>
           )}
@@ -211,11 +208,7 @@ export function LaptopChecker() {
           </button>
         </div>
       </form>
-      {busy && (
-        <p className="mt-2 text-xs text-stone-500">
-          Looking it up. This can take up to a minute.
-        </p>
-      )}
+      {busy && <p className="mt-2 text-xs text-stone-500">Up to a minute.</p>}
       {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
 
       {result && labels && (
@@ -223,18 +216,20 @@ export function LaptopChecker() {
           <div
             className={`rounded-xl px-3 py-2 ring-1 ${VERDICT[result.verdict].cls}`}
           >
-            <p className="flex items-center gap-2 text-sm font-semibold">
+            <p className="flex items-center gap-2 text-sm">
               <span
                 aria-hidden
                 className={`h-3 w-3 shrink-0 rounded-full ${VERDICT[result.verdict].dot}`}
               />
-              {VERDICT[result.verdict].label}
+              <span className="font-semibold">
+                {VERDICT[result.verdict].label}
+              </span>
+              <span className="truncate opacity-80">· {result.device}</span>
             </p>
-            <p className="text-sm">{result.device}</p>
+            {result.summary && (
+              <p className="mt-0.5 text-sm">{result.summary}</p>
+            )}
           </div>
-          {result.summary && (
-            <p className="text-sm text-stone-700">{result.summary}</p>
-          )}
           <ul className="space-y-1.5">
             {result.checks.map((c) => (
               <li key={c.rule} className="flex gap-2 text-sm">
@@ -262,20 +257,10 @@ export function LaptopChecker() {
             ))}
           </ul>
           {result.notes.length > 0 && (
-            <p className="pt-1 text-xs font-semibold text-stone-500">
-              Also worth knowing
-            </p>
-          )}
-          {result.notes.length > 0 && (
-            <ul className="list-disc space-y-0.5 pl-5 text-sm text-stone-600">
-              {result.notes.map((n) => (
-                <li key={n}>{n}</li>
-              ))}
-            </ul>
+            <p className="text-sm text-stone-600">{result.notes.join(" · ")}</p>
           )}
           <p className="text-xs text-stone-400">
-            Checked with a web search, so double-check the price and battery
-            with the seller before you buy.
+            Double-check with the seller before buying.
           </p>
         </div>
       )}
