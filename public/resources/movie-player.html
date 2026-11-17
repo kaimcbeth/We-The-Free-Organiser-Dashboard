@@ -655,7 +655,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-17a";
+  var PLAYER_VERSION = "2026-11-17b";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-movement-hub.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
@@ -2048,9 +2048,13 @@
     for (var k in TV_DEFAULTS) tvCfg[k] = saved[k] !== undefined ? saved[k] : TV_DEFAULTS[k];
   })();
   function tvSave() { try { localStorage.setItem(TV_KEY, JSON.stringify(tvCfg)); } catch (e) {} }
-  var tvWin = null, tvStream = null, tvOk = false;
-  function tvAlive() {
-    try { return !!(tvWin && !tvWin.closed && tvWin.document.getElementById("cam") && tvStream); } catch (e) { return false; }
+  var tvWin = null, tvStream = null, tvOk = false, tvAsks = 0;
+  function tvWinOpen() {
+    try { return !!(tvWin && !tvWin.closed && tvWin.document.getElementById("cam")); } catch (e) { return false; }
+  }
+  function tvAlive() { return !!tvStream && tvWinOpen(); }
+  function tvAttach() {
+    try { if (tvWinOpen() && tvStream) tvWin.document.getElementById("cam").srcObject = tvStream; } catch (e) {}
   }
   function tvMsg(text, bad) {
     $("tv-status").textContent = text || "";
@@ -2112,14 +2116,23 @@
       return;
     }
     tvMsg("Starting the camera…");
+    var settled = false, asked = ++tvAsks;
+    // Firefox and Chrome ask first; the question can hide behind other
+    // windows (Kai, 17 Nov: "stuck on starting the camera").
+    setTimeout(function () {
+      if (settled || asked !== tvAsks) return;
+      tvMsg("Waiting for the browser to allow the camera. Look for a camera icon or pop-up beside the address bar at the top of this window and click Allow. On a Mac, also check System Settings → Privacy & Security → Camera has your browser switched on.", true);
+    }, 4000);
     navigator.mediaDevices.getUserMedia({
       audio: false,
       video: { deviceId: tvCfg.device ? { exact: tvCfg.device } : undefined, width: { ideal: 1920 }, height: { ideal: 1080 } }
     }).then(function (st) {
+      settled = true;
       if (tvStream) tvStream.getTracks().forEach(function (t) { t.stop(); });
       tvStream = st;
-      try { tvWin.document.getElementById("cam").srcObject = st; } catch (e) {}
-      tvMsg("The TV camera is on. It shows the between-films screen until someone says yes.");
+      tvAttach();
+      tvMsg(tvWinOpen() ? "The TV camera is on. It shows the between-films screen until someone says yes." :
+        "Camera ready. Now open the TV screen.");
       $("tv-open").classList.add("on");
       $("tv-stop").hidden = false;
       tvSync();
@@ -2134,6 +2147,7 @@
         sel.value = tvCfg.device;
       });
     }).catch(function (e) {
+      settled = true;
       var n = e && e.name;
       tvMsg(n === "NotAllowedError" ? "The browser wasn't allowed to use the camera. Click the camera icon in the address bar, allow it, and try again." :
         n === "NotFoundError" || n === "OverconstrainedError" ? "Can't find the camera. Check it's plugged in and pick it above." :
@@ -2146,9 +2160,9 @@
     return n;
   }
   function tvSync() {
-    if (!tvAlive()) return;
+    if (!tvWinOpen()) return;
     var d = tvWin.document;
-    var on = tvOk && !!current && !stoppedNow && !problemNow && (liveState === "playing" || liveState === "paused");
+    var on = !!tvStream && tvOk && !!current && !stoppedNow && !problemNow && (liveState === "playing" || liveState === "paused");
     d.body.className = on ? "live" : "off";
     d.getElementById("cam").style.transform = tvCfg.mirror ? "scaleX(-1)" : "";
     d.getElementById("headline").textContent = tvCfg.headline;
@@ -2187,8 +2201,9 @@
   };
   $("tv-open").onclick = function () {
     tvFill();
-    if (!tvAlive()) tvMsg(tvStream ? "The TV window was closed. Open it again." : "");
     $("tvp").classList.add("on");
+    if (!tvStream) tvCamera();
+    else if (!tvWinOpen()) tvMsg("Camera ready. Now open the TV screen.");
   };
   $("tvp-close").onclick = function () { $("tvp").classList.remove("on"); render(); };
   $("tv-launch").onclick = function () {
@@ -2198,7 +2213,9 @@
     var fresh = true;
     try { fresh = !tvWin.document.getElementById("cam"); } catch (e) {}
     if (fresh) tvWrite();
-    tvCamera();
+    if (tvStream) { tvAttach(); tvMsg("The TV camera is on. It shows the between-films screen until someone says yes."); }
+    else tvCamera();
+    tvSync();
   };
   $("tv-stop").onclick = function () {
     if (tvStream) tvStream.getTracks().forEach(function (t) { t.stop(); });
