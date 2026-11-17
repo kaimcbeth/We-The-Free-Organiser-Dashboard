@@ -718,14 +718,14 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-18e";
+  var PLAYER_VERSION = "2026-11-18f";
   // Version for people (Kai, 18 Nov 2026: "x.x versions"): goes in the
   // downloaded file's name and the setup bar. Add 0.01 (the number after the
   // dot goes up by one: 3.23 → 3.24) every time PLAYER_VERSION changes; the
   // first number only goes up for a big new chapter. 1.x = the first player
   // (30–31 Oct), 2.x = languages, setup mode and the survey overhaul (2 Nov),
   // 3.x = the TV camera (17 Nov).
-  var PLAYER_NUMBER = "3.24";
+  var PLAYER_NUMBER = "3.25";
   document.getElementById("player-n").textContent = "Version " + PLAYER_NUMBER;
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-movement-hub.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
@@ -2206,7 +2206,7 @@
     "#off-sub{color:#ffd90f;font-weight:700;font-size:4.4vh;margin:2.4vh 0 0}" +
     "#count{margin-top:5vh;font-size:3.4vh;font-weight:700;background:rgba(255,255,255,.1);border-radius:99px;padding:1.4vh 3.4vh}" +
     "#count b{color:#2fd9df}" +
-    "#views{position:absolute;top:3.4vh;left:50%;transform:translateX(-50%);z-index:3;display:flex;align-items:baseline;gap:1.2vh;font-size:2.5vh;white-space:nowrap;text-shadow:0 .3vh 1.6vh rgba(0,0,0,.55)}" +
+    "#views{position:absolute;top:3.4vh;left:50%;transform:translateX(-50%);z-index:3;display:flex;align-items:baseline;gap:1.2vh;font-size:2.5vh;white-space:nowrap}" +
     "#views b{font-family:'Arial Black','Segoe UI Black',system-ui,sans-serif;font-weight:900;font-size:4.6vh;color:#ffd90f;letter-spacing:.01em;font-variant-numeric:tabular-nums}" +
     "#views>span{color:#fff;font-weight:700;letter-spacing:.02em}" +
     "#views-n{display:inline-flex;align-items:flex-end;line-height:1.1;margin-bottom:-.24em}" +
