@@ -91,7 +91,7 @@ THE THREE RULES (from Kai, the organiser)
 HOW TO CHECK
 - Use web search to find the model's battery life (manufacturer specs, reviews) and, if there's a link, what the listing says (price, where it ships from, condition). If the link can't be opened (e.g. Facebook Marketplace needs a login), say so in the summary and work from the model name or screenshot.
 - Read the price, postage and seller location off the screenshot if there is one.
-- Second-hand and refurbished laptops: batteries wear down. If the listing gives battery health or hours, use that. If not, judge from the original battery life and the laptop's age (one rated 8 hours or more new is usually still fine after a few years; one rated 4 hours new probably isn't), and say to ask the seller about battery health.
+- Second-hand and refurbished laptops: batteries wear down. If the listing gives battery health or hours, use that. If not, judge from the original battery life and the laptop's age (one rated 8 hours or more new is usually still fine after a few years; one rated 4 hours new probably isn't), and suggest a practical check: ask the seller for a screenshot of battery health (Mac: System Settings → Battery → Battery Health, or the cycle count; Windows: the battery report, "powercfg /batteryreport") or whether the battery has been replaced; at pick-up, play a video unplugged for 10 minutes (losing about 5% or less points to 3 hours or more). Never suggest the seller run it for hours.
 - If only a model name is given, there's no price or postage to read: mark those "unknown" and say what it usually sells for second-hand or refurbished in ${country}.
 - Never invent numbers. If you can't find something, mark it "unknown".
 
