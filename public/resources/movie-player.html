@@ -274,8 +274,8 @@
   #tv-open.on { color: var(--pink); opacity: 1; font-weight: 700; }
   #intro-tv { margin-top: 26px; text-align: center; width: 100%; max-width: 980px; }
   #intro-tv-q { margin: 0 0 22px; }
-  #intro.p2 .p1, #intro.p2 #intro-start, #intro.p2 #intro-next { display: none; }
-  #intro:not(.p2) #intro-tv { display: none; }
+  #intro.cam .p1, #intro.cam #intro-start, #intro.cam #intro-after { display: none; }
+  #intro:not(.cam) #intro-tv { display: none; }
   #intro-tv .intro-after { margin-top: 30px; }
   .cam-tiers { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
   .cam-tier {
@@ -721,7 +721,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-17s";
+  var PLAYER_VERSION = "2026-11-17t";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-movement-hub.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
@@ -1681,25 +1681,20 @@
     introFor = { i: i, n: n };
     applyUI();
     var tv = tvAlive() && !under15;
-    // Kai, 17 Nov 2026: two pages when the TV camera is on: 1 the warning,
-    // 2 the camera choices (all three always shown) with the "one quick
-    // question" line at the bottom.
+    // Kai, 17 Nov 2026: with the TV camera on, the camera choices come
+    // first (all three always shown), then the tapout warning with the "one
+    // quick question" line and Start the film.
     introTv = tv;
+    introTier = 0;
     $("intro-tv").hidden = !tv;
-    $("intro-start").hidden = tv;
-    $("intro-next").hidden = !tv;
-    introPage(1);
+    introPage(tv ? 1 : 2);
     $("intro").classList.add("on");
   }
   // "Before you start": encourage seeing it through, and show the Stop button.
-  var introFor = null, introTv = false;
-  function introPage(n) {
-    var after = $("intro-after");
-    if (n === 2) $("intro-tv").appendChild(after);
-    else $("intro-start").parentNode.insertBefore(after, $("intro-start"));
-    after.hidden = n === 1 && introTv;
-    $("intro").classList.toggle("p2", n === 2);
-  }
+  var introFor = null, introTv = false, introTier = 0;
+  // Page 1 = camera choices (TV camera on only), page 2 = the tapout warning.
+  function introPage(n) { $("intro").classList.toggle("cam", n === 1); }
+  function pickTier(t) { introTier = t; introPage(2); }
   // tier: 0 = no camera, 1 = on the TV only, 2 = on the TV and saved (Kai, 17 Nov 2026).
   function startFromIntro(tier) {
     var f = introFor;
@@ -1711,13 +1706,12 @@
     if (tier === 2 && recReady()) recStart();
     tvSync();
   }
-  $("intro-start").onclick = function () { startFromIntro(0); };
-  $("cam-rec").onclick = function () { startFromIntro(2); };
-  $("cam-tv").onclick = function () { startFromIntro(1); };
-  $("cam-none").onclick = function () { startFromIntro(0); };
-  $("intro-next").onclick = function () { introPage(2); };
+  $("intro-start").onclick = function () { startFromIntro(introTv ? introTier : 0); };
+  $("cam-rec").onclick = function () { pickTier(2); };
+  $("cam-tv").onclick = function () { pickTier(1); };
+  $("cam-none").onclick = function () { pickTier(0); };
   $("intro-back").onclick = function () {
-    if ($("intro").classList.contains("p2")) { introPage(1); return; }
+    if (introTv && !$("intro").classList.contains("cam")) { introPage(1); return; }
     introFor = null; $("intro").classList.remove("on");
   };
 
@@ -1949,7 +1943,7 @@
     if ($("survey").classList.contains("on")) { surveyKey(e); return; }
     if ($("name-screen").classList.contains("on")) return;
     if ($("intro").classList.contains("on")) {
-      if (e.key === "Enter") { if (!$("intro").classList.contains("p2")) $(introTv ? "intro-next" : "intro-start").click(); }
+      if (e.key === "Enter") { if (!$("intro").classList.contains("cam")) $("intro-start").click(); }
       else if (e.key === "Escape" || e.key === "Backspace") $("intro-back").click();
       return;
     }

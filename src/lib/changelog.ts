@@ -83,7 +83,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: 'Movie player: the "Video not working?" button is gone. With the TV camera on, "Before you start" is now two pages: the warning, then "Happy to be on camera?" with all three choices (the saved one only streams until a saving folder is chosen).',
+        text: 'Movie player: the "Video not working?" button is gone. With the TV camera on, viewers first pick "Happy to be on camera?" (all three choices), then see the tapout warning, "After the film, we'll ask you one quick question." and Start the film (the saved one only streams until a saving folder is chosen).',
       },
       {
         level: "organiser",
