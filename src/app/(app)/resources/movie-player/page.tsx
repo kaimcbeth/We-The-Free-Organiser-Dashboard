@@ -3,12 +3,14 @@ import { requireOrganiser } from "@/lib/organiser";
 import { MovieResults } from "@/components/movie-results";
 import { LivePlayers } from "@/components/live-players";
 import { MovieDaySummary } from "@/components/movie-day-summary";
+import { playerNumber } from "@/lib/player-version";
 
 export default async function MoviePlayerPage() {
   const { organiser } = await requireOrganiser();
   // With "All communities" this is the community the page is showing
   // (Kai, 17 Nov 2026: couldn't find the download in the RSL view).
   const teamId = organiser.exampleMode ? null : organiser.team_id;
+  const version = await playerNumber();
   return (
     <>
       <Link
@@ -30,15 +32,20 @@ export default async function MoviePlayerPage() {
 
       <section className="mt-5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
         {teamId ? (
-          <a
-            href="/resources/movie-player/download"
-            className="inline-block rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-2"
-          >
-            Download the player
-            {organiser.allCommunities
-              ? ` for ${organiser.team.name.split(",")[0]}`
-              : ""}
-          </a>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <a
+              href="/resources/movie-player/download"
+              className="inline-block rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-2"
+            >
+              Download the player
+              {organiser.allCommunities
+                ? ` for ${organiser.team.name.split(",")[0]}`
+                : ""}
+            </a>
+            {version && (
+              <span className="text-sm text-stone-500">Version {version}</span>
+            )}
+          </div>
         ) : (
           <p className="text-sm text-stone-600">
             Pick a community at the top to download its player.

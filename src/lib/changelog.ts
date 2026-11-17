@@ -75,6 +75,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Resources → Movie player shows the player's current version beside the Download button, so you can check a laptop's copy against it.",
+      },
+      {
+        level: "organiser",
         text: 'Movie player: it now has a version number (this is version 3.23). It\'s in the downloaded file\'s name ("WTF Movie Player v3.23 - Sydney.html") and beside SETUP on the player, and the "newer version" note says which version is ready.',
       },
     ],
