@@ -253,18 +253,15 @@
   #tv-setup summary::-webkit-details-marker { display: none; }
   #tv-setup summary:after { content: "▾"; color: var(--muted); }
   #tv-setup[open] summary:after { content: "▴"; }
-  #tv-setup-n { margin-left: auto; font-size: 13px; color: var(--muted); font-weight: 600; }
-  #tv-setup-n.done { color: var(--cyan); }
-  #tv-steps { list-style: none; margin: 10px 0 8px; padding: 0; counter-reset: s; }
-  #tv-steps li { counter-increment: s; display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-top: 1px solid rgba(255,255,255,.08); }
-  #tv-steps li:first-child { border-top: 0; }
-  #tv-steps input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--pink); flex: none; }
-  #tv-steps label { margin: 0; color: var(--text); font-weight: 400; font-size: 14px; line-height: 1.4; cursor: pointer; }
-  #tv-steps label b { display: block; font-size: 15px; }
-  #tv-steps label b:before { content: counter(s) ". "; color: var(--pink); }
-  #tv-steps label span { color: #aab1c8; }
-  #tv-steps li.on label b { color: var(--muted); text-decoration: line-through; }
-  #tv-steps li.on label span { display: none; }
+  #tv-steps { list-style: none; margin: 12px 0 2px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #tv-steps li { display: flex; gap: 10px; align-items: flex-start; padding: 10px; border-radius: 12px; background: rgba(255,255,255,.04); }
+  #tv-steps .ico { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,71,185,.14); color: var(--pink); }
+  #tv-steps li:nth-child(even) .ico { background: rgba(47,217,223,.14); color: var(--cyan); }
+  #tv-steps .ico svg { width: 19px; height: 19px; }
+  #tv-steps b { display: block; font-size: 14px; line-height: 1.25; }
+  #tv-steps b i { font-style: normal; color: var(--muted); font-weight: 600; margin-right: 4px; }
+  #tv-steps span { display: block; margin-top: 2px; font-size: 12.5px; line-height: 1.35; color: #aab1c8; }
+  @media (max-width: 560px) { #tv-steps { grid-template-columns: 1fr; } }
   #tv-adv { margin-top: 12px; }
   #tv-adv summary { cursor: pointer; font-size: 13px; color: var(--muted); list-style: none; display: inline-block; }
   #tv-adv summary::-webkit-details-marker { display: none; }
@@ -668,9 +665,8 @@
     <h3>TV camera</h3>
     <p>Shows the viewer's face live on a TV, with WTF words on top.</p>
     <details id="tv-setup">
-      <summary><b>Setting up</b> <span id="tv-setup-n"></span></summary>
+      <summary><b>Setting up</b></summary>
       <ol id="tv-steps"></ol>
-      <button class="link" id="tv-setup-reset">Untick everything</button>
     </details>
     <p>Before each film the viewer picks: on the TV and saved, on the TV only, or no camera. The camera only shows while they watch and goes off straight away if they press stop. Nobody who says they're under 15 is offered the camera.</p>
     <details id="tv-adv">
@@ -722,14 +718,14 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-18d";
+  var PLAYER_VERSION = "2026-11-18e";
   // Version for people (Kai, 18 Nov 2026: "x.x versions"): goes in the
   // downloaded file's name and the setup bar. Add 0.01 (the number after the
   // dot goes up by one: 3.23 → 3.24) every time PLAYER_VERSION changes; the
   // first number only goes up for a big new chapter. 1.x = the first player
   // (30–31 Oct), 2.x = languages, setup mode and the survey overhaul (2 Nov),
   // 3.x = the TV camera (17 Nov).
-  var PLAYER_NUMBER = "3.23";
+  var PLAYER_NUMBER = "3.24";
   document.getElementById("player-n").textContent = "Version " + PLAYER_NUMBER;
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-movement-hub.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
@@ -2442,51 +2438,37 @@
   // Setting up checklist (Kai, 17 Nov 2026: "setting up the camera, plugging
   // in the tv, running protection over the cable, changing the source on the
   // tv"). Ticks are kept for the day on this laptop.
+  // Setting up (Kai, 17 Nov 2026; 18 Nov: no tick boxes, short lines, an icon each).
+  var I = function (d) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + "</svg>"; };
   var TV_STEPS = [
-    ["Place the TV", "On the resource table, facing where people walk past. Plug it into power."],
-    ["Mount the camera", "Clip it on top of this laptop's screen, centred, so it sees the viewer's face. Plug its USB into the laptop and slide the privacy cover open."],
-    ["Run the HDMI cable", "From the laptop to the TV. Use the USB-C to HDMI adapter if the laptop has no HDMI port. Leave some slack at both ends so a tug doesn't pull the laptop or TV over."],
-    ["Protect the cable", "Wherever it crosses a walkway, lay a cable protector over it or tape it flat to the ground with gaffer tape along its whole length. Nothing loose people could trip on."],
-    ["Change the TV's source", "Press Input or Source on the TV remote and pick the HDMI port the cable is plugged into (HDMI 1, HDMI 2…)."],
-    ["Extend the laptop's screen", "Windows: press Win + P and choose Extend. Mac: System Settings → Displays, and make sure it isn't set to mirror. The TV should now show an empty desktop."],
-    ["Open the TV screen", "Press Open the TV screen below, allow the camera, drag the new window onto the TV and click it for full screen."],
-    ["Check the picture", "Sit where a viewer sits: your face should be in the middle of the TV. Play a test film with \"On the TV only\" to see it go live."]
+    [I('<rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20.5h8M12 16.5v4"/>'), "Place the TV", "On the resource table, facing people walking past. Plug it in."],
+    [I('<circle cx="12" cy="10" r="6"/><circle cx="12" cy="10" r="2"/><path d="M8 21h8M12 16v5"/>'), "Mount the camera", "Centred on top of this laptop. Plug it in, open the cover."],
+    [I('<path d="M5 7h14v4l-2 3H7l-2-3z"/><path d="M12 14v7M9 7V4M15 7V4"/>'), "Connect the TV", "HDMI from laptop to TV (USB-C adapter if needed). Leave slack."],
+    [I('<circle cx="10" cy="12" r="6.5"/><circle cx="10" cy="12" r="2.2"/><path d="M16.5 12H22"/>'), "Cover the cable", "Cable protector or gaffer tape wherever people walk."],
+    [I('<rect x="8" y="2.5" width="8" height="19" rx="2.5"/><circle cx="12" cy="7" r="1.4"/><path d="M10.5 12h3M10.5 15.5h3"/>'), "Pick the TV input", "Remote → Input or Source → the HDMI port you used."],
+    [I('<rect x="2" y="6" width="9" height="7" rx="1.5"/><rect x="13" y="6" width="9" height="7" rx="1.5"/><path d="M6.5 13v3M17.5 13v3M4.5 16h4M15 16h5"/>'), "Extend the screen", "Windows: Win + P → Extend. Mac: Displays, not mirrored."],
+    [I('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'), "Open the TV screen", "Button below. Drag it onto the TV, click for full screen."],
+    [I('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>'), "Test it", "Sit where viewers sit. Play a film with \"On the TV only\"."]
   ];
-  var TV_SETUP_KEY = "wtf-movie-player-tv-setup-2"; // steps changed 17 Nov: old ticks don't carry over
-  function tvSetupDone() {
-    try {
-      var v = JSON.parse(localStorage.getItem(TV_SETUP_KEY) || "{}");
-      return v.day === new Date().toDateString() && Array.isArray(v.done) ? v.done : [];
-    } catch (e) { return []; }
-  }
-  function tvSetupRender() {
-    var done = tvSetupDone(), ol = $("tv-steps");
-    ol.innerHTML = "";
+  var TV_SETUP_KEY = "wtf-movie-player-tv-setup-fold"; // folded today?
+  (function tvSetupRender() {
+    var ol = $("tv-steps");
     TV_STEPS.forEach(function (st, i) {
-      var li = document.createElement("li"), id = "tv-step-" + i, on = done.indexOf(i) >= 0;
-      li.className = on ? "on" : "";
-      li.innerHTML = '<input type="checkbox" id="' + id + '"' + (on ? " checked" : "") + '><label for="' + id + '"><b></b><span></span></label>';
-      li.querySelector("b").textContent = st[0];
-      li.querySelector("span").textContent = st[1];
-      li.querySelector("input").onchange = function () {
-        var d = tvSetupDone().filter(function (x) { return x !== i; });
-        if (this.checked) d.push(i);
-        try { localStorage.setItem(TV_SETUP_KEY, JSON.stringify({ day: new Date().toDateString(), done: d })); } catch (e) {}
-        tvSetupRender();
-      };
+      var li = document.createElement("li");
+      li.innerHTML = '<span class="ico">' + st[0] + "</span><div><b><i>" + (i + 1) + "</i></b><span></span></div>";
+      li.querySelector("b").appendChild(document.createTextNode(st[1]));
+      li.querySelector("div > span").textContent = st[2];
       ol.appendChild(li);
     });
-    var n = $("tv-setup-n");
-    n.textContent = done.length >= TV_STEPS.length ? "All done" : done.length + " of " + TV_STEPS.length + " done";
-    n.className = done.length >= TV_STEPS.length ? "done" : "";
-    return done.length;
+    $("tv-setup").addEventListener("toggle", function () {
+      try { localStorage.setItem(TV_SETUP_KEY, $("tv-setup").open ? "" : new Date().toDateString()); } catch (e) {}
+    });
+  })();
+  function tvSetupFolded() {
+    try { return localStorage.getItem(TV_SETUP_KEY) === new Date().toDateString(); } catch (e) { return false; }
   }
-  $("tv-setup-reset").onclick = function () {
-    try { localStorage.removeItem(TV_SETUP_KEY); } catch (e) {}
-    tvSetupRender();
-  };
   $("tv-open").onclick = function () {
-    $("tv-setup").open = tvSetupRender() < TV_STEPS.length;
+    $("tv-setup").open = !tvSetupFolded();
     tvFill();
     recUI();
     $("tvp").classList.add("on");
