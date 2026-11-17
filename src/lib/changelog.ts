@@ -77,6 +77,10 @@ export const CHANGELOG: Release[] = [
         level: "organiser",
         text: 'Movie player TV: between films it now loops short bits of today\'s saved reactions under "Earlier today", shows how many have watched today across all your laptops (when online), and the We The Free logo works offline.',
       },
+      {
+        level: "organiser",
+        text: 'Movie player TV: an online views counter for the film, and an Instagram QR code with "Want your reaction on our socials?" and your follower count. Change the words and numbers in TV camera.',
+      },
     ],
   },
   {
