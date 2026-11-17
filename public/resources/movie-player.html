@@ -244,14 +244,31 @@
     display: none; align-items: center; justify-content: center; padding: 20px;
   }
   #tvp.on { display: flex; }
-  #tvp .panel { max-width: 560px; width: 100%; }
+  #tvp .panel { max-width: 560px; width: 100%; max-height: calc(100vh - 40px); overflow-y: auto; }
   #tvp label { display: block; margin-top: 10px; font-size: 13px; color: var(--muted); font-weight: 600; }
   #tvp .field { width: 100%; margin-top: 4px; }
   #tvp .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
   #tv-open.on { color: var(--pink); opacity: 1; font-weight: 700; }
-  #intro-tv { margin-top: 26px; text-align: center; }
-  #intro-tv-q { font-size: 24px; font-weight: 700; margin: 0; }
-  #intro-tv .stopped-actions { margin-top: 18px; }
+  #intro-tv { margin-top: 26px; text-align: center; width: 100%; max-width: 980px; }
+  #intro-tv-q { font-size: 20px; font-weight: 600; margin: 0; color: #c9cee0; }
+  .cam-tiers { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+  .cam-tier {
+    flex: 1 1 240px; max-width: 320px; text-align: left; border: 0; border-radius: 18px; padding: 18px 22px;
+    background: var(--navy-2); color: var(--text); box-shadow: inset 0 0 0 2px rgba(255,255,255,.14);
+  }
+  .cam-tier:hover, .cam-tier:focus-visible { outline: none; box-shadow: inset 0 0 0 3px var(--pink); }
+  .cam-tier b { display: block; font-size: 20px; }
+  .cam-tier span { display: block; margin-top: 4px; font-size: 15px; color: #aab1c8; line-height: 1.35; }
+  #rec-dot {
+    position: fixed; top: 14px; left: 16px; z-index: 30; display: none; align-items: center; gap: 7px;
+    font-size: 13px; font-weight: 600; color: #ffb3b3; background: rgba(0,0,0,.45); border-radius: 99px;
+    padding: 5px 11px; pointer-events: none;
+  }
+  #rec-dot.on { display: flex; }
+  #rec-dot i { width: 9px; height: 9px; border-radius: 50%; background: #ff4d4d; animation: recblink 1.4s infinite; }
+  @keyframes recblink { 50% { opacity: .3; } }
+  #tv-rec { margin-top: 14px; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.05); font-size: 15px; }
+  #tv-rec b { color: var(--text); }
   #check-list { margin: 12px 0 0; padding: 0; list-style: none; font-size: 15px; }
   #check-list li { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.1); }
   #check-list li b { color: var(--pink); }
@@ -538,6 +555,7 @@
   </div>
 </div>
 
+<div id="rec-dot" aria-live="polite"><i></i><span id="rec-label">Recording</span></div>
 <div id="intro" role="dialog" aria-label="Before you start">
   <div class="ask">
     <h2 id="intro-title">Before you start</h2>
@@ -547,10 +565,11 @@
     <p id="intro-after" class="intro-after">After the film, we'll ask you one quick question.</p>
     <button class="btn big" id="intro-start">Start the film</button>
     <div id="intro-tv" hidden>
-      <p id="intro-tv-q">Can we show your reaction live on the TV?</p>
-      <div class="stopped-actions">
-        <button class="btn big" id="intro-tv-yes">Yes, start the film</button>
-        <button class="btn big ghost-btn" id="intro-tv-no">No thanks, start the film</button>
+      <p id="intro-tv-q">Happy to be on camera? Pick one to start the film.</p>
+      <div class="cam-tiers">
+        <button class="cam-tier" id="cam-rec"><b id="cam-rec-t">On the TV and saved</b><span id="cam-rec-s">Shown live while you watch, and the video is kept. We may share it on our socials. No sound is recorded.</span></button>
+        <button class="cam-tier" id="cam-tv"><b id="cam-tv-t">On the TV only</b><span id="cam-tv-s">Shown live while you watch. Nothing is saved.</span></button>
+        <button class="cam-tier" id="cam-none"><b id="cam-none-t">No camera</b><span id="cam-none-s">The camera stays off.</span></button>
       </div>
     </div>
     <button class="link" id="intro-back">Back</button>
@@ -613,7 +632,7 @@
   <div class="panel">
     <h3>TV camera</h3>
     <p>Shows the viewer's face live on a TV, with WTF words on top. Plug the camera and the TV into this laptop and set the screens to <b>Extend</b> (Windows: Win + P; Mac: Displays settings). Then open the TV screen, drag it onto the TV and click it for full screen.</p>
-    <p>Before each film the player asks the viewer if they're happy to be on the TV. It's only shown while they watch, and goes off straight away if they press stop.</p>
+    <p>Before each film the viewer picks: on the TV and saved, on the TV only, or no camera. The camera only shows while they watch and goes off straight away if they press stop. Nobody who says they're under 15 is offered the camera.</p>
     <label>Camera<select class="field" id="tv-cam"><option value="">Any camera</option></select></label>
     <label>On the TV while someone watches<input class="field" id="tv-headline" maxlength="80"></label>
     <label>Line under it<input class="field" id="tv-sub" maxlength="80"></label>
@@ -623,6 +642,7 @@
       <label style="margin:0"><input type="checkbox" id="tv-mirror"> Mirror the picture</label>
       <button class="link" id="tv-reset">Put the original words back</button>
     </div>
+    <div id="tv-rec"></div>
     <p class="status" id="tv-status"></p>
     <div class="actions">
       <button class="btn" id="tv-launch">Open the TV screen</button>
@@ -655,7 +675,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-17b";
+  var PLAYER_VERSION = "2026-11-17c";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-movement-hub.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
@@ -690,9 +710,14 @@
         introTitle: "开始之前",
         introText: "我们真诚地鼓励您尽量看完。但如果任何时候您觉得难以承受，都可以按下这个按钮停止观看：",
         startFilm: "开始播放",
-        tvAsk: "我们可以在电视上实时播放您观看时的反应吗？",
-        tvYes: "可以，开始播放",
-        tvNo: "不用了，开始播放",
+        camAsk: "愿意出现在镜头里吗？选择一项即可开始播放。",
+        camRec: "在电视上播放并保存",
+        camRecSub: "观看时在电视上实时播放，并保存视频。我们可能会在社交媒体上分享。不录制声音。",
+        camTv: "仅在电视上播放",
+        camTvSub: "观看时在电视上实时播放，不保存任何内容。",
+        camNone: "不使用摄像头",
+        camNoneSub: "摄像头保持关闭。",
+        recLabel: "录制中",
         stoppedTitle: "完全没关系。",
         stoppedText: "马上就会有人过来。",
         keepWatching: "其他人继续观看",
@@ -765,9 +790,14 @@
     introTitle: "Before you start",
     introText: "We really encourage you to try to see it through. But if it's ever too much, you can stop at any time with this button:",
     startFilm: "Start the film",
-    tvAsk: "Can we show your reaction live on the TV?",
-    tvYes: "Yes, start the film",
-    tvNo: "No thanks, start the film",
+    camAsk: "Happy to be on camera? Pick one to start the film.",
+    camRec: "On the TV and saved",
+    camRecSub: "Shown live while you watch, and the video is kept. We may share it on our socials. No sound is recorded.",
+    camTv: "On the TV only",
+    camTvSub: "Shown live while you watch. Nothing is saved.",
+    camNone: "No camera",
+    camNoneSub: "The camera stays off.",
+    recLabel: "Recording",
     stoppedTitle: "That's completely okay.",
     stoppedText: "Someone will be with you in a few seconds.",
     keepWatching: "Keep watching for the others",
@@ -1094,9 +1124,11 @@
     $("intro-text").textContent = t.introText;
     $("intro-after").textContent = t.introAfter || EN_UI.introAfter;
     $("intro-start").textContent = t.startFilm;
-    $("intro-tv-q").textContent = t.tvAsk;
-    $("intro-tv-yes").textContent = t.tvYes;
-    $("intro-tv-no").textContent = t.tvNo;
+    $("intro-tv-q").textContent = t.camAsk;
+    $("cam-rec-t").textContent = t.camRec; $("cam-rec-s").textContent = t.camRecSub;
+    $("cam-tv-t").textContent = t.camTv; $("cam-tv-s").textContent = t.camTvSub;
+    $("cam-none-t").textContent = t.camNone; $("cam-none-s").textContent = t.camNoneSub;
+    $("rec-label").textContent = t.recLabel;
     $("intro-back").textContent = t.back;
     $("stopped-title").textContent = t.stoppedTitle;
     $("stopped-text").textContent = t.stoppedText;
@@ -1584,8 +1616,11 @@
   $("plus").onclick = function () { moreN = moreN + 1; $("more-n").textContent = moreN; };
   $("start-more").onclick = function () { chooseCount(moreN); };
   $("count-back").onclick = closeCount;
+  var under15 = false;
   function askCount(i) {
     countFor = i;
+    // "I'm under 15" (the Children's film): never offered the camera.
+    under15 = !!state.tiles[i] && filmKey(state.tiles[i].title) === "children";
     if (!isFull()) goFull();
     $("more-row").hidden = true;
     applyUI();
@@ -1598,22 +1633,29 @@
     closeCount();
     introFor = { i: i, n: n };
     applyUI();
-    var tv = tvAlive();
+    var tv = tvAlive() && !under15;
     $("intro-tv").hidden = !tv;
     $("intro-start").hidden = tv;
+    $("cam-rec").hidden = !recReady();
     $("intro").classList.add("on");
   }
   // "Before you start": encourage seeing it through, and show the Stop button.
   var introFor = null;
-  function startFromIntro(onTv) {
+  // tier: 0 = no camera, 1 = on the TV only, 2 = on the TV and saved (Kai, 17 Nov 2026).
+  function startFromIntro(tier) {
     var f = introFor;
     introFor = null;
     $("intro").classList.remove("on");
-    if (f) { play(f.i, f.n); tvOk = !!onTv; tvSync(); }
+    if (!f) return;
+    play(f.i, f.n);
+    tvOk = tier >= 1;
+    if (tier === 2 && recReady()) recStart();
+    tvSync();
   }
-  $("intro-start").onclick = function () { startFromIntro(false); };
-  $("intro-tv-yes").onclick = function () { startFromIntro(true); };
-  $("intro-tv-no").onclick = function () { startFromIntro(false); };
+  $("intro-start").onclick = function () { startFromIntro(0); };
+  $("cam-rec").onclick = function () { startFromIntro(2); };
+  $("cam-tv").onclick = function () { startFromIntro(1); };
+  $("cam-none").onclick = function () { startFromIntro(0); };
   $("intro-back").onclick = function () { introFor = null; $("intro").classList.remove("on"); };
 
   // Walked off half way (Kai, 2 Nov): if nobody touches the laptop for a
@@ -1654,6 +1696,7 @@
   }
   function stopVideo() {
     tvOk = false;
+    recStop(false); // walked away mid-film: nothing kept
     stoppedNow = false;
     problemNow = false;
     $("problem").classList.remove("on");
@@ -1701,6 +1744,7 @@
     clearTimeout(idleTimer);
     video.pause();
     tvOk = false;
+    recStop(true); // watched to the end: save it
     tvSync();
     askSurvey(c.tile, c.version, c.viewers);
   }
@@ -2201,6 +2245,7 @@
   };
   $("tv-open").onclick = function () {
     tvFill();
+    recUI();
     $("tvp").classList.add("on");
     if (!tvStream) tvCamera();
     else if (!tvWinOpen()) tvMsg("Camera ready. Now open the TV screen.");
@@ -2230,6 +2275,126 @@
     if (tvStream) tvStream.getTracks().forEach(function (t) { t.stop(); });
   });
 
+  // ---------- Saving camera videos (Kai, 17 Nov 2026: "Lets do the folder") ----------
+  // Chrome and Edge only (File System Access). The organiser picks a folder
+  // once; it's remembered in IndexedDB. Only "On the TV and saved" films are
+  // recorded, picture only, and only kept when the film is watched to the
+  // end (a tapout or walking off throws it away).
+  var recDir = null, recOk = false, recorder = null, recChunks = [], recMeta = null, recError = "";
+  var canPickFolder = typeof window.showDirectoryPicker === "function" && typeof window.MediaRecorder === "function";
+  function idb() {
+    return new Promise(function (ok, no) {
+      var r = indexedDB.open("wtf-movie-player", 1);
+      r.onupgradeneeded = function () { r.result.createObjectStore("kv"); };
+      r.onsuccess = function () { ok(r.result); };
+      r.onerror = function () { no(r.error); };
+    });
+  }
+  function idbDo(mode, fn) {
+    return idb().then(function (db) {
+      return new Promise(function (ok, no) {
+        var tx = db.transaction("kv", mode), req = fn(tx.objectStore("kv"));
+        tx.oncomplete = function () { ok(req && req.result); };
+        tx.onerror = function () { no(tx.error); };
+      });
+    });
+  }
+  function recReady() { return !!(recDir && recOk && tvStream && canPickFolder); }
+  function savedToday() {
+    try { var v = JSON.parse(localStorage.getItem("wtf-movie-player-saved") || "{}"); return v.day === new Date().toDateString() ? v.n : 0; } catch (e) { return 0; }
+  }
+  function countSaved() {
+    try { localStorage.setItem("wtf-movie-player-saved", JSON.stringify({ day: new Date().toDateString(), n: savedToday() + 1 })); } catch (e) {}
+  }
+  function recUI() {
+    var box = $("tv-rec");
+    if (!canPickFolder) {
+      box.innerHTML = "<b>Saving videos</b> needs Chrome or Edge. In this browser the first choice (on the TV and saved) won't be offered.";
+      return;
+    }
+    if (!recDir) {
+      box.innerHTML = "<b>Saving videos</b> (for the first choice): pick a folder on this laptop once. <button class=\"link\" id=\"rec-pick\" style=\"opacity:1;color:var(--cyan)\">Choose a folder</button>";
+    } else {
+      var n = savedToday();
+      box.innerHTML = "<b>Saving videos to “" + esc(recDir.name) + "”</b>" +
+        (recOk ? (n ? " · " + n + " saved today" : "") : " · <button class=\"link\" id=\"rec-allow\" style=\"opacity:1;color:var(--pink)\">Allow saving again</button>") +
+        " · <button class=\"link\" id=\"rec-pick\">Change folder</button> · <button class=\"link\" id=\"rec-forget\">Don't save videos</button>" +
+        (recError ? "<br><span style=\"color:var(--pink)\">" + esc(recError) + "</span>" : "");
+    }
+    var pick = $("rec-pick"), allow = $("rec-allow"), forget = $("rec-forget");
+    if (pick) pick.onclick = function () {
+      window.showDirectoryPicker({ id: "wtf-movie-videos", mode: "readwrite" }).then(function (h) {
+        recDir = h; recOk = true; recError = "";
+        idbDo("readwrite", function (st) { return st.put(h, "recDir"); }).catch(function () {});
+        recUI();
+      }).catch(function () {});
+    };
+    if (allow) allow.onclick = function () {
+      recDir.requestPermission({ mode: "readwrite" }).then(function (p) { recOk = p === "granted"; recError = ""; recUI(); }).catch(function () {});
+    };
+    if (forget) forget.onclick = function () {
+      recDir = null; recOk = false;
+      idbDo("readwrite", function (st) { return st.delete("recDir"); }).catch(function () {});
+      recUI();
+    };
+  }
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  if (!canPickFolder) recUI();
+  if (canPickFolder) {
+    idbDo("readonly", function (st) { return st.get("recDir"); }).then(function (h) {
+      if (!h) return;
+      recDir = h;
+      return h.queryPermission({ mode: "readwrite" }).then(function (p) { recOk = p === "granted"; });
+    }).catch(function () {}).then(recUI);
+  }
+  function recType() {
+    var types = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm"];
+    for (var i = 0; i < types.length; i++) if (MediaRecorder.isTypeSupported(types[i])) return types[i];
+    return "";
+  }
+  function recStart() {
+    recStop(false);
+    var tracks = tvStream ? tvStream.getVideoTracks() : [];
+    if (!tracks.length) return;
+    var type = recType();
+    try {
+      recorder = new MediaRecorder(new MediaStream(tracks), type ? { mimeType: type, videoBitsPerSecond: 2500000 } : { videoBitsPerSecond: 2500000 });
+    } catch (e) { recorder = null; recError = "Couldn't start recording on this laptop."; return; }
+    recChunks = [];
+    recMeta = { film: current ? tileTitle(current.tile, "English") : "Film", lang: current && current.version.lang, at: new Date(), type: recorder.mimeType || type };
+    recorder.ondataavailable = function (e) { if (e.data && e.data.size) recChunks.push(e.data); };
+    recorder.start(1000);
+    $("rec-dot").classList.add("on");
+  }
+  function recPause(on) {
+    if (!recorder) return;
+    try { if (on && recorder.state === "recording") recorder.pause(); else if (!on && recorder.state === "paused") recorder.resume(); } catch (e) {}
+  }
+  function recStop(keep) {
+    $("rec-dot").classList.remove("on");
+    if (!recorder) return;
+    var r = recorder, meta = recMeta, chunks = recChunks;
+    recorder = null; recChunks = []; recMeta = null;
+    r.onstop = function () {
+      if (!keep || !chunks.length || !recDir) return;
+      var blob = new Blob(chunks, { type: meta.type || "video/webm" });
+      var p = function (n) { return ("0" + n).slice(-2); }, d = meta.at;
+      var name = d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + "." + p(d.getMinutes()) + "." + p(d.getSeconds()) +
+        " Laptop " + (laptop || "") + " - " + meta.film + (meta.lang && meta.lang !== "English" ? " (" + meta.lang + ")" : "") +
+        (/mp4/.test(meta.type) ? ".mp4" : ".webm");
+      name = name.replace(/[\\/:*?"<>|]/g, "-");
+      recDir.getFileHandle(name, { create: true }).then(function (fh) {
+        return fh.createWritable().then(function (w) { return w.write(blob).then(function () { return w.close(); }); });
+      }).then(function () { countSaved(); recError = ""; recUI(); })
+        .catch(function (e) {
+          recOk = false;
+          recError = "The last video couldn't be saved (" + ((e && e.name) || "error") + "). Click Allow saving again.";
+          recUI();
+        });
+    };
+    try { r.stop(); } catch (e) {}
+  }
+
   // ---------- Stop button ----------
   // A viewer can stop at any time. The film pauses, the Hub's live screen
   // alerts the organiser, and the press is recorded (how far in).
@@ -2239,6 +2404,7 @@
     if (!current || stoppedNow) return;
     stoppedNow = true;
     tvOk = false; // a tapout: off the TV for the rest of this film
+    recStop(false); // and nothing is kept
     stoppedAt = Math.round(video.currentTime * 10) / 10;
     video.pause();
     var d = isFinite(video.duration) && video.duration ? video.duration : current.version.secs || null;
@@ -2274,6 +2440,7 @@
     e.stopPropagation();
     if (!current || stoppedNow || problemNow) return;
     problemNow = true;
+    recPause(true);
     video.pause();
     clearTimeout(idleTimer);
     player.classList.remove("idle", "paused");
@@ -2283,6 +2450,7 @@
   });
   function endProblem() {
     problemNow = false;
+    recPause(false);
     $("problem").classList.remove("on");
     player.classList.remove("stopped-on");
   }

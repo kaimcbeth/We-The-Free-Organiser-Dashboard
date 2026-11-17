@@ -69,6 +69,10 @@ export const CHANGELOG: Release[] = [
         level: "organiser",
         text: 'Movie player: "TV camera" in the setup bar puts the viewer\'s face live on a TV, with "LIVE" and your words on top, to draw people in. Each viewer is asked first, and it switches off straight away if they press stop. Download the player again to get it.',
       },
+      {
+        level: "organiser",
+        text: 'Movie player: viewers now pick one of three before the film: "On the TV and saved", "On the TV only" or "No camera". Saved videos go into a folder you choose once in TV camera (Chrome or Edge), picture only, and only when the film is watched to the end.',
+      },
     ],
   },
   {
