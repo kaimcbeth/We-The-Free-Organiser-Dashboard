@@ -75,7 +75,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: 'Movie player TV: a "3 minutes · Free treat after · Just ask us" line between films (change it in TV camera), "Want to give it a shot? Ask us." while someone watches, and the screen rests (black with a faint drifting logo) after 10 minutes with no viewers, waking as soon as someone uses the laptop.',
+        text: 'Movie player TV: the line under "Watching the 3 Minute Movie Challenge" now reads "Want to give it a shot? Ask us."',
       },
       {
         level: "organiser",
