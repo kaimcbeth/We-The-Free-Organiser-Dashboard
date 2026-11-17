@@ -31,8 +31,8 @@ export async function GET(request: NextRequest) {
     }).replace(/</g, "\\u003c");
     html = html.replace("/*WTF_CONFIG*/null", config);
   }
-  // "WTF Movie Player v67 - Sydney.html" (Kai, 18 Nov 2026).
-  const number = html.match(/PLAYER_NUMBER = (\d+)/)?.[1];
+  // "WTF Movie Player v3.23 - Sydney.html" (Kai, 18 Nov 2026).
+  const number = html.match(/PLAYER_NUMBER = "?([\d.]+)"?/)?.[1];
   const base = number ? `WTF Movie Player v${number}` : "WTF Movie Player";
   const name = token ? `${base} - ${community}.html` : `${base}.html`;
   return new Response(html, {

@@ -71,7 +71,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: 'Movie player: it now has a version number (this is version 67). It\'s in the downloaded file\'s name ("WTF Movie Player v67 - Sydney.html") and beside SETUP on the player, and the "newer version" note says which version is ready.',
+        text: 'Movie player: it now has a version number (this is version 3.23). It\'s in the downloaded file\'s name ("WTF Movie Player v3.23 - Sydney.html") and beside SETUP on the player, and the "newer version" note says which version is ready.',
       },
     ],
   },

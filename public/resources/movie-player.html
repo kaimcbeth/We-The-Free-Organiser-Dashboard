@@ -722,11 +722,14 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-18c";
-  // Version number for people (Kai, 18 Nov 2026): goes in the downloaded
-  // file's name and the setup bar. Add 1 every time PLAYER_VERSION changes.
-  // Counted from the start (30 Oct): about 66 changes before this one.
-  var PLAYER_NUMBER = 67;
+  var PLAYER_VERSION = "2026-11-18d";
+  // Version for people (Kai, 18 Nov 2026: "x.x versions"): goes in the
+  // downloaded file's name and the setup bar. Add 0.01 (the number after the
+  // dot goes up by one: 3.23 → 3.24) every time PLAYER_VERSION changes; the
+  // first number only goes up for a big new chapter. 1.x = the first player
+  // (30–31 Oct), 2.x = languages, setup mode and the survey overhaul (2 Nov),
+  // 3.x = the TV camera (17 Nov).
+  var PLAYER_NUMBER = "3.23";
   document.getElementById("player-n").textContent = "Version " + PLAYER_NUMBER;
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-movement-hub.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
@@ -1587,7 +1590,7 @@
         if (!m || m[1] <= PLAYER_VERSION) return;
         var u = $("update");
         u.innerHTML = "";
-        var n = html.match(/PLAYER_NUMBER = (\d+)/);
+        var n = html.match(/PLAYER_NUMBER = "?([\d.]+)"?/);
         u.appendChild(document.createTextNode((n ? "Version " + n[1] + " of this player is ready (this is version " + PLAYER_NUMBER + ")." : "A newer version of this player is ready.") + " Download it again from the Movement Hub ("));
         var a = document.createElement("a");
         a.href = HUB + "/resources/movie-player"; a.target = "_blank"; a.rel = "noopener";
