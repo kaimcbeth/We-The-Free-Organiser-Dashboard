@@ -262,7 +262,12 @@ export function LaptopChecker() {
             ))}
           </ul>
           {result.notes.length > 0 && (
-            <ul className="list-disc space-y-0.5 pl-5 text-xs text-stone-500">
+            <p className="pt-1 text-xs font-semibold text-stone-500">
+              Also worth knowing
+            </p>
+          )}
+          {result.notes.length > 0 && (
+            <ul className="list-disc space-y-0.5 pl-5 text-sm text-stone-600">
               {result.notes.map((n) => (
                 <li key={n}>{n}</li>
               ))}

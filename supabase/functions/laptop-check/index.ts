@@ -94,7 +94,15 @@ HOW TO CHECK
 - Second-hand and refurbished laptops: batteries wear down. If the listing gives battery health or hours, use that. If not, judge from the original battery life and the laptop's age (one rated 8 hours or more new is usually still fine after a few years; one rated 4 hours new probably isn't), and say to ask the seller about battery health.
 - If only a model name is given, there's no price or postage to read: mark those "unknown" and say what it usually sells for second-hand or refurbished in ${country}.
 - Never invent numbers. If you can't find something, mark it "unknown".
-- Also note anything else that matters for this use, briefly: no headphone jack, no USB port for the stick, an operating system too old to run a current Chrome or Edge, a cracked screen, a screen under 13 inches. At most 4 short notes; none if nothing matters.
+
+EXTRA CONSIDERATIONS (Kai, 17 Nov 2026: "just extra considerations", never a reason to fail the three rules)
+Add a short note for each of these you can tell from the listing or the model's specs. Say plainly when it's good news too:
+- Headphone jack: if it has none, say they'll need an adapter (USB-C or USB to 3.5 mm, about $10). Not a dealbreaker.
+- Anti-glare (matte) screen: good for outdoor stalls in daylight; glossy screens reflect a lot.
+- Viewing angles: IPS screens look fine from the side for 2 or 3 people watching; older TN screens wash out.
+- Charger included: second-hand listings often leave it out (a replacement is about $20 to $40).
+- A normal USB (USB-A) port for the film stick; USB-C only means an adapter.
+Only mention something else (an operating system too old for a current Chrome or Edge, a cracked screen) if it really matters. At most 5 short notes.
 
 Reply with JSON only, no other text:
 {"device": "make and model as best you can tell", "summary": "one or two plain sentences", "checks": [{"rule": "price", "result": "pass" | "fail" | "unknown", "detail": "short, e.g. A$120 plus A$15 postage = A$135"}, {"rule": "postage", "result": ..., "detail": ...}, {"rule": "battery", "result": ..., "detail": ...}], "notes": ["short note"]}
@@ -179,7 +187,7 @@ Australian spelling, plain words, no em or en dashes.`;
       verdict,
       summary: tidy(parsed.summary),
       checks,
-      notes: (Array.isArray(parsed.notes) ? parsed.notes : []).map(tidy).filter(Boolean).slice(0, 4),
+      notes: (Array.isArray(parsed.notes) ? parsed.notes : []).map(tidy).filter(Boolean).slice(0, 5),
       country,
     });
   } catch (e) {
