@@ -79,6 +79,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: 'Movie player TV camera now saves videos in Firefox too: turn on "Save to Downloads" in TV camera and each "On the TV and saved" clip goes to the laptop\'s Downloads folder when the film ends.',
+      },
+      {
+        level: "organiser",
         text: 'Movie player: it now has a version number (this is version 3.23). It\'s in the downloaded file\'s name ("WTF Movie Player v3.23 - Sydney.html") and beside SETUP on the player, and the "newer version" note says which version is ready.',
       },
     ],

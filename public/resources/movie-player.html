@@ -718,14 +718,14 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-18f";
+  var PLAYER_VERSION = "2026-11-18g";
   // Version for people (Kai, 18 Nov 2026: "x.x versions"): goes in the
   // downloaded file's name and the setup bar. Add 0.01 (the number after the
   // dot goes up by one: 3.23 → 3.24) every time PLAYER_VERSION changes; the
   // first number only goes up for a big new chapter. 1.x = the first player
   // (30–31 Oct), 2.x = languages, setup mode and the survey overhaul (2 Nov),
   // 3.x = the TV camera (17 Nov).
-  var PLAYER_NUMBER = "3.25";
+  var PLAYER_NUMBER = "3.26";
   document.getElementById("player-n").textContent = "Version " + PLAYER_NUMBER;
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-movement-hub.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
@@ -2581,6 +2581,13 @@
   // end (a tapout or walking off throws it away).
   var recDir = null, recOk = false, recorder = null, recChunks = [], recMeta = null, recError = "";
   var canPickFolder = typeof window.showDirectoryPicker === "function" && typeof window.MediaRecorder === "function";
+  // Firefox fallback (Kai, 18 Nov 2026: "lets give it a shot"): no folder
+  // picking, so each kept clip is downloaded to the Downloads folder instead,
+  // and Earlier today plays them from memory for this session.
+  var canRecord = typeof window.MediaRecorder === "function";
+  var REC_DL = "wtf-movie-player-rec-downloads";
+  var recDl = false;
+  try { recDl = !canPickFolder && canRecord && localStorage.getItem(REC_DL) === "1"; } catch (e) {}
   function idb() {
     return new Promise(function (ok, no) {
       var r = indexedDB.open("wtf-movie-player", 1);
@@ -2598,7 +2605,7 @@
       });
     });
   }
-  function recReady() { return !!(recDir && recOk && tvStream && canPickFolder); }
+  function recReady() { return !!tvStream && ((canPickFolder && recDir && recOk) || (recDl && canRecord)); }
   function savedToday() {
     try { var v = JSON.parse(localStorage.getItem("wtf-movie-player-saved") || "{}"); return v.day === new Date().toDateString() ? v.n : 0; } catch (e) { return 0; }
   }
@@ -2608,7 +2615,19 @@
   function recUI() {
     var box = $("tv-rec");
     if (!canPickFolder) {
-      box.innerHTML = "<b>Saving videos</b> needs Chrome or Edge. In this browser the first choice (on the TV and saved) won't be offered.";
+      if (!canRecord) {
+        box.innerHTML = "<b>Saving videos</b> doesn't work in this browser. Viewers who pick \"On the TV and saved\" are only shown live.";
+        return;
+      }
+      box.innerHTML = recDl
+        ? "<b>Saving videos to your Downloads folder</b>" + (savedToday() ? " · " + savedToday() + " saved today" : "") +
+          " · <button class=\"link\" id=\"rec-dl-off\">Don't save videos</button>" +
+          "<br><span style=\"color:var(--muted);font-size:13px\">Each clip downloads when the film ends. Earlier today replays only last until the player is closed. Chrome or Edge can save straight to a folder you pick.</span>" +
+          (recError ? "<br><span style=\"color:var(--pink)\">" + esc(recError) + "</span>" : "")
+        : "<b>Saving videos</b> (for the first choice): this browser can't pick a folder, but it can save each clip to your Downloads folder. Until you turn it on, viewers who pick \"On the TV and saved\" are only shown live. <button class=\"link\" id=\"rec-dl-on\" style=\"opacity:1;color:var(--cyan)\">Save to Downloads</button>";
+      var on = $("rec-dl-on"), off = $("rec-dl-off");
+      if (on) on.onclick = function () { recDl = true; recError = ""; try { localStorage.setItem(REC_DL, "1"); } catch (e) {} recUI(); };
+      if (off) off.onclick = function () { recDl = false; try { localStorage.removeItem(REC_DL); } catch (e) {} recUI(); };
       return;
     }
     if (!recDir) {
@@ -2677,13 +2696,24 @@
     var r = recorder, meta = recMeta, chunks = recChunks;
     recorder = null; recChunks = []; recMeta = null;
     r.onstop = function () {
-      if (!keep || !chunks.length || !recDir) return;
+      if (!keep || !chunks.length || (!recDir && !recDl)) return;
       var blob = new Blob(chunks, { type: meta.type || "video/webm" });
       var p = function (n) { return ("0" + n).slice(-2); }, d = meta.at;
       var name = d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + "." + p(d.getMinutes()) + "." + p(d.getSeconds()) +
         " Laptop " + (laptop || "") + " - " + meta.film + (meta.lang && meta.lang !== "English" ? " (" + meta.lang + ")" : "") +
         (/mp4/.test(meta.type) ? ".mp4" : ".webm");
       name = name.replace(/[\\/:*?"<>|]/g, "-");
+      if (!recDir) { // Firefox: download it
+        try {
+          var url = URL.createObjectURL(blob), a = document.createElement("a");
+          a.href = url; a.download = name; a.style.display = "none";
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+          addClip(new File([blob], name, { type: blob.type }));
+          countSaved(); recError = ""; recUI(); tvSync();
+        } catch (e) { recError = "The last video couldn't be saved."; recUI(); }
+        return;
+      }
       recDir.getFileHandle(name, { create: true }).then(function (fh) {
         return fh.createWritable().then(function (w) { return w.write(blob).then(function () { return w.close(); }); })
           .then(function () { return fh.getFile().then(addClip).catch(function () {}); });
