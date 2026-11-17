@@ -638,9 +638,9 @@
     <label>Line under it<input class="field" id="tv-sub" maxlength="80"></label>
     <label>Between films<input class="field" id="tv-off" maxlength="80"></label>
     <label>Line under it<input class="field" id="tv-off-sub" maxlength="80"></label>
-    <label>Online views of the film (it ticks up slowly from this number; 0 hides it)<input class="field" id="tv-views" inputmode="numeric" maxlength="12"></label>
+    <label>Views of the film worldwide (e.g. 19000000 shows as 19 million; 0 hides it)<input class="field" id="tv-views" inputmode="numeric" maxlength="12"></label>
     <label>Beside the Instagram QR code (empty hides the QR code)<input class="field" id="tv-ig-ask" maxlength="60"></label>
-    <label>Instagram followers, e.g. 12.4K (empty leaves it off)<input class="field" id="tv-ig-followers" maxlength="12"></label>
+    <label>Instagram followers bubble, e.g. 12.4K (empty leaves it off)<input class="field" id="tv-ig-followers" maxlength="12"></label>
     <div class="row">
       <label style="margin:0"><input type="checkbox" id="tv-mirror"> Mirror the picture</label>
       <label style="margin:0"><input type="checkbox" id="tv-replay"> Play earlier reactions between films</label>
@@ -679,7 +679,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-17f";
+  var PLAYER_VERSION = "2026-11-17i";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-movement-hub.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
@@ -2091,15 +2091,18 @@
     replay: true,
     // Kai, 17 Nov 2026: online views of the 3-minute film (a stand-in number
     // for now, ticking up slowly) and the Instagram QR code.
-    views: 19180000, viewsAt: 1794834000000,
+    views: 19000000, viewsAt: 0, // Kai: "Lets just say 19mil views worldwide"
     igAsk: "Want your reaction on our socials?",
-    igFollowers: ""
+    igFollowers: "28.5K", igSet: 1 // Kai, 17 Nov 2026
   };
   var tvCfg = {};
   (function () {
     var saved = {};
     try { saved = JSON.parse(localStorage.getItem(TV_KEY) || "{}") || {}; } catch (e) {}
     for (var k in TV_DEFAULTS) tvCfg[k] = saved[k] !== undefined ? saved[k] : TV_DEFAULTS[k];
+    // The ticking stand-in from 2026-11-17f becomes the plain 19 million.
+    if (tvCfg.views === 19180000) tvCfg.views = 19000000;
+    if (tvCfg.igSet !== 1) { tvCfg.igFollowers = "28.5K"; tvCfg.igSet = 1; }
   })();
   function tvSave() { try { localStorage.setItem(TV_KEY, JSON.stringify(tvCfg)); } catch (e) {} }
   var tvWin = null, tvStream = null, tvOk = false, tvAsks = 0;
@@ -2115,6 +2118,7 @@
     $("tv-status").className = "status" + (bad ? " bad" : "");
   }
   var TV_CSS =
+    "[hidden]{display:none !important}" +
     "html,body{margin:0;height:100%;background:#071130;color:#fff;overflow:hidden;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;cursor:none}" +
     "#cam{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}" +
     ".big{font-family:'Arial Black','Segoe UI Black',system-ui,sans-serif;font-weight:900;line-height:1.02;text-wrap:balance;margin:0}" +
@@ -2122,37 +2126,41 @@
     "body.off #live,body.live #off{opacity:0;pointer-events:none}" +
     "body.off #cam{visibility:hidden}" +
     "#live:before{content:'';position:absolute;inset:0 0 auto;height:22vh;background:linear-gradient(rgba(7,17,48,.7),rgba(7,17,48,0))}" +
-    "#live:after{content:'';position:absolute;inset:0;box-shadow:inset 0 0 0 .8vh #ff47b9}" +
+    "#live:after{content:'';position:absolute;inset:0;box-shadow:inset 0 0 0 .45vh rgba(255,71,185,.85)}" +
     "#shade{position:absolute;inset:auto 0 0;height:48vh;background:linear-gradient(rgba(7,17,48,0),rgba(7,17,48,.82) 55%,rgba(7,17,48,.95))}" +
-    "#tag{position:absolute;top:4vh;left:4vh;display:flex;align-items:center;gap:1.2vh;background:#ff47b9;border-radius:99px;padding:1vh 2.6vh;font-size:3.2vh;letter-spacing:.08em;animation:glow 2s infinite;z-index:2}" +
+    "#tag{position:absolute;top:4vh;left:4vh;display:flex;align-items:center;gap:1vh;background:#ff47b9;border-radius:99px;padding:.7vh 2vh;font-size:2.4vh;letter-spacing:.08em;z-index:2}" +
     "#tag i{width:1.6vh;height:1.6vh;border-radius:50%;background:#fff;animation:pulse 1.4s infinite}" +
     ".logo{position:absolute;top:4vh;right:4vh;height:8vh;z-index:2}" +
     ".word{font-family:'Arial Black',system-ui,sans-serif;font-weight:900;font-size:3.4vh;letter-spacing:.06em}" +
     "#words{position:absolute;left:5vh;right:5vh;bottom:5vh}" +
-    "#headline{font-size:7.6vh;text-shadow:0 .3vh 2vh rgba(0,0,0,.45)}" +
-    "#sub{color:#ffd90f;font-weight:700;font-size:4vh;margin:1.6vh 0 0}" +
-    "#bar{height:.9vh;border-radius:99px;background:rgba(255,255,255,.2);margin-top:3vh;overflow:hidden}" +
+    "#headline{font-size:6vh;text-shadow:0 .3vh 2vh rgba(0,0,0,.45)}" +
+    "#sub{color:#ffd90f;font-weight:700;font-size:3.1vh;margin:1.2vh 0 0}" +
+    "#bar{height:.5vh;border-radius:99px;background:rgba(255,255,255,.18);margin-top:2.4vh;overflow:hidden}" +
     "#fill{height:100%;width:0;background:#ff47b9;transition:width 1s linear}" +
-    "#left{font-size:2.4vh;color:#c9cee0;margin-top:1.2vh;font-variant-numeric:tabular-nums}" +
+    "#left{font-size:1.9vh;color:rgba(201,206,224,.75);margin-top:1vh;font-variant-numeric:tabular-nums}" +
     "#off{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6vh;background:radial-gradient(60% 60% at 80% 15%,rgba(255,71,185,.35),transparent 70%),radial-gradient(50% 50% at 10% 90%,rgba(47,217,223,.22),transparent 70%),#071130}" +
     "#off .logo{position:static;height:10vh}" +
     "#off-h{font-size:10vh;margin-top:5vh}" +
     "#off-sub{color:#ffd90f;font-weight:700;font-size:4.4vh;margin:2.4vh 0 0}" +
     "#count{margin-top:5vh;font-size:3.4vh;font-weight:700;background:rgba(255,255,255,.1);border-radius:99px;padding:1.4vh 3.4vh}" +
     "#count b{color:#2fd9df}" +
-    "#views{position:absolute;top:4.6vh;left:50%;transform:translateX(-50%);z-index:3;display:flex;align-items:baseline;gap:1vh;background:rgba(7,17,48,.72);border-radius:99px;padding:1.1vh 2.8vh;font-size:2.6vh;white-space:nowrap;box-shadow:0 0 0 .25vh rgba(255,255,255,.15)}" +
-    "#views b{font-family:'Arial Black','Segoe UI Black',system-ui,sans-serif;font-weight:900;font-size:3.4vh;color:#ffd90f;font-variant-numeric:tabular-nums}" +
-    "#views span{color:#dfe3f0;font-weight:600}" +
-    "#ig{position:absolute;right:4vh;bottom:4vh;z-index:3;display:flex;align-items:center;gap:2vh;background:rgba(7,17,48,.78);border-radius:2.2vh;padding:1.6vh;box-shadow:0 0 0 .25vh rgba(255,255,255,.14)}" +
-    "#ig .qr{width:15vh;height:15vh;background:#fff;border-radius:1.2vh;padding:1vh;box-sizing:border-box}" +
+    "#views{position:absolute;top:4.9vh;left:50%;transform:translateX(-50%);z-index:3;display:flex;align-items:baseline;gap:.8vh;font-size:2vh;white-space:nowrap;opacity:.85;text-shadow:0 .2vh 1vh rgba(0,0,0,.5)}" +
+    "#views b{font-weight:800;font-size:2.3vh;color:#fff}" +
+    "#views span{color:#dfe3f0;font-weight:500}" +
+    "#ig{position:absolute;right:5vh;bottom:5vh;z-index:3;display:flex;align-items:flex-end;gap:1.6vh;flex-direction:row-reverse;text-align:right;text-shadow:0 .2vh 1vh rgba(0,0,0,.5)}" +
+    "#ig .qr{width:10.5vh;height:10.5vh;background:#fff;border-radius:1vh;padding:.7vh;box-sizing:border-box;opacity:.95}" +
     "#ig .qr svg{width:100%;height:100%;display:block}" +
-    "#ig-text{max-width:34vh}" +
+    "#ig-text{max-width:26vh}" +
+    ".qrwrap{position:relative}" +
+    "#ig-bub{position:absolute;left:50%;bottom:calc(100% + 1.5vh);transform:translateX(-50%);display:flex;align-items:center;gap:.6vh;background:linear-gradient(135deg,#ff3d6e,#ff2d95);color:#fff;border-radius:1.2vh;padding:.7vh 1.3vh;font-size:2vh;font-weight:800;white-space:nowrap;box-shadow:0 .4vh 1.4vh rgba(255,45,120,.35);text-shadow:none}" +
+    "#ig-bub:after{content:'';position:absolute;left:50%;top:100%;transform:translateX(-50%);border:1vh solid transparent;border-top-color:#ff2f8a;border-bottom:0}" +
+    "#ig-bub svg{width:2.2vh;height:2.2vh;display:block}" +
     "#ig-handle i{white-space:nowrap}" +
-    "#ig-ask{font-family:'Arial Black','Segoe UI Black',system-ui,sans-serif;font-weight:900;font-size:2.7vh;line-height:1.12;margin:0;text-wrap:balance}" +
-    "#ig-handle{margin:1.2vh 0 0;font-size:2.3vh;font-weight:700;color:#ff47b9}" +
-    "#ig-handle i{font-style:normal;color:#dfe3f0;font-weight:600}" +
-    "#words{right:calc(8vh + 15vh + 38vh) !important}" +
-    "body.replay #off-words{padding-right:calc(8vh + 15vh + 38vh)}" +
+    "#ig-ask{font-weight:700;font-size:2vh;line-height:1.2;margin:0;text-wrap:balance;color:#fff}" +
+    "#ig-handle{margin:.6vh 0 0;font-size:1.8vh;font-weight:600;color:#ff8fd2}" +
+    "#ig-handle i{font-style:normal;color:rgba(223,227,240,.8);font-weight:500}" +
+    "#words{right:calc(8vh + 10.5vh + 28vh) !important}" +
+    "body.replay #off-words{padding-right:calc(8vh + 10.5vh + 28vh)}" +
     "#off-words{display:flex;flex-direction:column;align-items:center;position:relative;z-index:1}" +
     "#off .logo{position:relative;z-index:1;margin-bottom:5vh}" +
     "body.replay #off .logo{margin:0}" +
@@ -2161,12 +2169,12 @@
     "body.replay #off:before{content:'';position:absolute;inset:0 0 auto;height:22vh;background:linear-gradient(rgba(7,17,48,.7),rgba(7,17,48,0));z-index:1}" +
     "body.replay #replay{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover}" +
     "body.replay #off-shade{display:block;position:absolute;inset:auto 0 0;height:50vh;background:linear-gradient(rgba(7,17,48,0),rgba(7,17,48,.85) 55%,rgba(7,17,48,.96))}" +
-    "body.replay #replay-tag{display:flex;position:absolute;top:4vh;left:4vh;align-items:center;gap:1.2vh;background:#2fd9df;color:#071130;border-radius:99px;padding:1vh 2.6vh;font-size:3.2vh;letter-spacing:.08em;z-index:2}" +
+    "body.replay #replay-tag{display:flex;position:absolute;top:4vh;left:4vh;align-items:center;gap:1vh;background:#2fd9df;color:#071130;border-radius:99px;padding:.7vh 2vh;font-size:2.4vh;letter-spacing:.08em;z-index:2}" +
     "body.replay #replay-tag i{width:1.6vh;height:1.6vh;border-radius:50%;background:#071130}" +
     "body.replay #off .logo{position:absolute;top:4vh;right:4vh;height:8vh}" +
     "body.replay #off-words{align-items:flex-start;padding:0 5vh 5vh}" +
-    "body.replay #off-h{font-size:7.6vh;margin:0}" +
-    "body.replay #off-sub{font-size:4vh;margin-top:1.6vh}" +
+    "body.replay #off-h{font-size:6vh;margin:0}" +
+    "body.replay #off-sub{font-size:3.1vh;margin-top:1.2vh}" +
     "body.replay #count{margin-top:3vh;font-size:2.8vh}" +
     "#hint{position:absolute;left:50%;bottom:3vh;transform:translateX(-50%);background:rgba(0,0,0,.65);border-radius:99px;padding:1.2vh 2.6vh;font-size:2.2vh;cursor:pointer;z-index:3}" +
     "@keyframes pulse{50%{opacity:.35}}@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(255,71,185,.55)}50%{box-shadow:0 0 0 1.2vh rgba(255,71,185,0)}}";
@@ -2184,8 +2192,8 @@
       '<div id="words"><p id="headline" class="big"></p><p id="sub"></p><div id="bar"><div id="fill"></div></div><div id="left"></div></div></div>' +
       '<div id="off"><video id="replay" muted playsinline></video><div id="off-shade"></div><div id="replay-tag" class="big"><i></i>EARLIER TODAY</div>' +
       tvLogo("logo") + '<div id="off-words"><p id="off-h" class="big"></p><p id="off-sub"></p><div id="count" hidden></div></div></div>' +
-      '<div id="views"><b id="views-n"></b><span>views online</span></div>' +
-      '<div id="ig"><div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h29v29H0z"/><path stroke="#071130" d="M0 0.5h7m2 0h2m1 0h1m1 0h1m1 0h1m1 0h3m1 0h7M0 1.5h1m5 0h1m2 0h1m1 0h2m1 0h5m3 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m1 0h1m1 0h3m3 0h1m2 0h2m1 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h1m4 0h5m1 0h1m2 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m1 0h5m3 0h4m2 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m1 0h1m2 0h1m1 0h3m1 0h1m2 0h1m1 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h1m1 0h1m1 0h1m3 0h1m3 0h1M0 8.5h1m1 0h5m6 0h1m3 0h1m1 0h1m2 0h5M0 9.5h1m1 0h2m1 0h1m1 0h1m2 0h4m3 0h8m3 0h1M0 10.5h1m1 0h3m1 0h1m1 0h2m3 0h4m3 0h3M1 11.5h1m2 0h1m2 0h1m2 0h2m2 0h3m6 0h1m1 0h1m1 0h1M2 12.5h2m1 0h4m1 0h3m4 0h2m6 0h2M3 13.5h2m2 0h2m2 0h3m2 0h7m1 0h1m3 0h1M0 14.5h1m2 0h1m2 0h3m1 0h8m4 0h2m1 0h2M0 15.5h2m1 0h2m2 0h2m1 0h2m1 0h1m5 0h1m1 0h4m2 0h1M2 16.5h1m1 0h1m1 0h2m1 0h2m3 0h4m2 0h1m2 0h1m1 0h2M0 17.5h1m1 0h1m2 0h1m1 0h1m1 0h2m5 0h1m1 0h3m1 0h3m1 0h1m1 0h1M0 18.5h1m2 0h2m1 0h1m1 0h1m1 0h3m2 0h2m1 0h1m1 0h2m1 0h1m2 0h1M0 19.5h1m7 0h2m2 0h1m1 0h2m3 0h2m1 0h3m2 0h1M0 20.5h1m5 0h1m1 0h3m6 0h1m2 0h5m1 0h3M8 21.5h3m2 0h2m1 0h1m1 0h1m1 0h1m3 0h5M0 22.5h7m2 0h1m3 0h3m1 0h4m1 0h1m1 0h3M0 23.5h1m5 0h1m1 0h1m4 0h1m2 0h1m2 0h2m3 0h1m3 0h1M0 24.5h1m1 0h3m1 0h1m1 0h1m2 0h2m1 0h4m2 0h5m1 0h1M0 25.5h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h1m3 0h1m2 0h1m3 0h1m1 0h4M0 26.5h1m1 0h3m1 0h1m1 0h3m1 0h2m1 0h2m5 0h6M0 27.5h1m5 0h1m2 0h4m1 0h2m2 0h1m1 0h1m2 0h1m1 0h1m1 0h1M0 28.5h7m1 0h2m3 0h2m2 0h1m1 0h1m1 0h1m1 0h4"/></svg></div><div id="ig-text"><p id="ig-ask"></p><p id="ig-handle"></p></div></div>' +
+      '<div id="views"><b id="views-n"></b><span>views worldwide</span></div>' +
+      '<div id="ig"><div class="qrwrap"><div id="ig-bub"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4.2" fill="#fff"/><path d="M3.5 21c0-4.6 3.8-7.6 8.5-7.6s8.5 3 8.5 7.6z" fill="#fff"/></svg><span id="ig-n"></span></div><div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h29v29H0z"/><path stroke="#071130" d="M0 0.5h7m2 0h2m1 0h1m1 0h1m1 0h1m1 0h3m1 0h7M0 1.5h1m5 0h1m2 0h1m1 0h2m1 0h5m3 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m1 0h1m1 0h3m3 0h1m2 0h2m1 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h1m4 0h5m1 0h1m2 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m1 0h5m3 0h4m2 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m1 0h1m2 0h1m1 0h3m1 0h1m2 0h1m1 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h1m1 0h1m1 0h1m3 0h1m3 0h1M0 8.5h1m1 0h5m6 0h1m3 0h1m1 0h1m2 0h5M0 9.5h1m1 0h2m1 0h1m1 0h1m2 0h4m3 0h8m3 0h1M0 10.5h1m1 0h3m1 0h1m1 0h2m3 0h4m3 0h3M1 11.5h1m2 0h1m2 0h1m2 0h2m2 0h3m6 0h1m1 0h1m1 0h1M2 12.5h2m1 0h4m1 0h3m4 0h2m6 0h2M3 13.5h2m2 0h2m2 0h3m2 0h7m1 0h1m3 0h1M0 14.5h1m2 0h1m2 0h3m1 0h8m4 0h2m1 0h2M0 15.5h2m1 0h2m2 0h2m1 0h2m1 0h1m5 0h1m1 0h4m2 0h1M2 16.5h1m1 0h1m1 0h2m1 0h2m3 0h4m2 0h1m2 0h1m1 0h2M0 17.5h1m1 0h1m2 0h1m1 0h1m1 0h2m5 0h1m1 0h3m1 0h3m1 0h1m1 0h1M0 18.5h1m2 0h2m1 0h1m1 0h1m1 0h3m2 0h2m1 0h1m1 0h2m1 0h1m2 0h1M0 19.5h1m7 0h2m2 0h1m1 0h2m3 0h2m1 0h3m2 0h1M0 20.5h1m5 0h1m1 0h3m6 0h1m2 0h5m1 0h3M8 21.5h3m2 0h2m1 0h1m1 0h1m1 0h1m3 0h5M0 22.5h7m2 0h1m3 0h3m1 0h4m1 0h1m1 0h3M0 23.5h1m5 0h1m1 0h1m4 0h1m2 0h1m2 0h2m3 0h1m3 0h1M0 24.5h1m1 0h3m1 0h1m1 0h1m2 0h2m1 0h4m2 0h5m1 0h1M0 25.5h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h1m3 0h1m2 0h1m3 0h1m1 0h4M0 26.5h1m1 0h3m1 0h1m1 0h3m1 0h2m1 0h2m5 0h6M0 27.5h1m5 0h1m2 0h4m1 0h2m2 0h1m1 0h1m2 0h1m1 0h1m1 0h1M0 28.5h7m1 0h2m3 0h2m2 0h1m1 0h1m1 0h1m1 0h4"/></svg></div></div><div id="ig-text"><p id="ig-ask"></p><p id="ig-handle">@activism.wtf</p></div></div>' +
       '<div id="hint">Drag this window onto the TV, then click here for full screen</div></body></html>');
     d.close();
     var full = function () {
@@ -2260,21 +2268,22 @@
     c.innerHTML = "<b>" + n + "</b> people have watched today" + (stall.laptops > 1 ? " across " + stall.laptops + " laptops" : "");
     d.getElementById("ig-ask").textContent = tvCfg.igAsk;
     d.getElementById("ig").hidden = !tvCfg.igAsk;
-    d.getElementById("ig-handle").innerHTML = "@activism.wtf" +
-      (tvCfg.igFollowers ? " <i>· " + esc(tvCfg.igFollowers) + " followers</i>" : "");
+    d.getElementById("ig-n").textContent = tvCfg.igFollowers || "";
+    d.getElementById("ig-bub").hidden = !tvCfg.igFollowers;
     tvViews();
     replaySync(on);
     tvTime();
   }
-  // About 10,000 a day from the starting number (Kai: "a mock number in the low 19 millions").
+  // A fixed number, shown as "19 million" (Kai, 17 Nov 2026).
   function tvViews() {
     if (!tvWinOpen()) return;
-    var n = Math.max(0, Math.floor((+tvCfg.views || 0) + (Date.now() - (+tvCfg.viewsAt || Date.now())) / 1000 * 0.12));
+    var n = Math.max(0, +tvCfg.views || 0);
     var el = tvWin.document.getElementById("views");
     el.hidden = !(+tvCfg.views > 0);
-    tvWin.document.getElementById("views-n").textContent = n.toLocaleString("en-AU");
+    tvWin.document.getElementById("views-n").textContent = n >= 1e6
+      ? (Math.floor(n / 1e5) / 10).toString().replace(/\.0$/, "") + " million"
+      : n.toLocaleString("en-AU");
   }
-  setInterval(tvViews, 1000);
   function tvTime() {
     if (!tvAlive() || !current) return;
     var d = tvWin.document, dur = isFinite(video.duration) && video.duration ? video.duration : current.version.secs || 0;

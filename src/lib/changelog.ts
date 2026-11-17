@@ -79,7 +79,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: 'Movie player TV: an online views counter for the film, and an Instagram QR code with "Want your reaction on our socials?" and your follower count. Change the words and numbers in TV camera.',
+        text: 'Movie player TV: "19 million views worldwide", and an Instagram QR code with "Want your reaction on our socials?" and a followers bubble. Change the words and numbers in TV camera.',
       },
     ],
   },
