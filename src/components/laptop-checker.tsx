@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 // "Is this laptop OK?" in the viewing devices purchasing guide (Kai, 17 Nov
@@ -30,15 +30,18 @@ const RULE_LABEL = (country: string) => ({
 const VERDICT = {
   good: {
     label: "Good for the Movie Challenge",
-    cls: "bg-cyan/20 text-navy ring-cyan/50",
-  },
-  not_good: {
-    label: "Not a good fit",
-    cls: "bg-pink/15 text-pink-ink ring-pink/40",
+    cls: "bg-green-50 text-green-900 ring-green-300",
+    dot: "bg-green-500",
   },
   check: {
     label: "Looks OK, but check a few things",
-    cls: "bg-amber-50 text-amber-900 ring-amber-200",
+    cls: "bg-yellow-50 text-yellow-900 ring-yellow-300",
+    dot: "bg-yellow-400",
+  },
+  not_good: {
+    label: "Not a good fit",
+    cls: "bg-orange-50 text-orange-900 ring-orange-300",
+    dot: "bg-orange-500",
   },
 };
 
@@ -65,6 +68,22 @@ export function LaptopChecker() {
   const [result, setResult] = useState<Result | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
+  // Paste a screenshot anywhere while the guide is open (Kai, 17 Nov 2026:
+  // "let me just paste in screenshot").
+  useEffect(() => {
+    function onPaste(e: ClipboardEvent) {
+      const file = [...(e.clipboardData?.files ?? [])].find((f) =>
+        f.type.startsWith("image/"),
+      );
+      if (!file) return;
+      e.preventDefault();
+      addShot(file);
+      if (!busy) check(file); // pasting starts the check straight away
+    }
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  });
+
   function addShot(file: File | null | undefined) {
     if (!file || !file.type.startsWith("image/")) return;
     if (preview) URL.revokeObjectURL(preview);
@@ -78,9 +97,10 @@ export function LaptopChecker() {
     if (fileInput.current) fileInput.current.value = "";
   }
 
-  async function check() {
+  async function check(pasted?: File) {
     const t = text.trim();
-    if (!t && !shot)
+    const file = pasted ?? shot;
+    if (!t && !file)
       return setError("Add a link, a screenshot or a model name.");
     setError("");
     setResult(null);
@@ -88,7 +108,7 @@ export function LaptopChecker() {
     const isLink = /^https?:\/\//i.test(t);
     let image: { data: string; media_type: string } | undefined;
     try {
-      if (shot) image = await shrink(shot);
+      if (file) image = await shrink(file);
     } catch {
       setBusy(false);
       return setError("Couldn't read that screenshot. Try another one.");
@@ -121,7 +141,7 @@ export function LaptopChecker() {
     <div className="mb-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
       <p className="font-semibold text-navy">Is this laptop OK?</p>
       <p className="mt-0.5 text-sm text-stone-600">
-        Paste a link to the listing, add a screenshot of it, or type the model.
+        Paste a screenshot of the listing, a link to it, or type the model.
         We&apos;ll check it&apos;s A$150 or under, posts from within the country
         and has a battery that lasts at least 3 hours.
       </p>
@@ -135,15 +155,6 @@ export function LaptopChecker() {
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          onPaste={(e) => {
-            const file = [...e.clipboardData.files].find((f) =>
-              f.type.startsWith("image/"),
-            );
-            if (file) {
-              e.preventDefault();
-              addShot(file);
-            }
-          }}
           placeholder="Link, or a model like Lenovo ThinkPad T480"
           aria-label="Link to the listing or the laptop model"
           className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"
@@ -170,9 +181,18 @@ export function LaptopChecker() {
             <button
               type="button"
               onClick={() => fileInput.current?.click()}
-              className="text-sm font-medium text-stone-600 hover:text-navy hover:underline"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                addShot(e.dataTransfer.files?.[0]);
+              }}
+              className="rounded-xl border-2 border-dashed border-stone-300 px-3 py-2 text-left text-sm text-stone-600 hover:border-navy hover:text-navy"
             >
-              Add a screenshot
+              <span className="font-medium">Paste a screenshot</span>
+              <span className="block text-xs text-stone-500">
+                Ctrl+V or ⌘V anywhere here and it checks it straight away. Or
+                drop it in, or tap to choose one
+              </span>
             </button>
           )}
           <input
@@ -203,7 +223,11 @@ export function LaptopChecker() {
           <div
             className={`rounded-xl px-3 py-2 ring-1 ${VERDICT[result.verdict].cls}`}
           >
-            <p className="text-sm font-semibold">
+            <p className="flex items-center gap-2 text-sm font-semibold">
+              <span
+                aria-hidden
+                className={`h-3 w-3 shrink-0 rounded-full ${VERDICT[result.verdict].dot}`}
+              />
               {VERDICT[result.verdict].label}
             </p>
             <p className="text-sm">{result.device}</p>
@@ -218,10 +242,10 @@ export function LaptopChecker() {
                   aria-label={c.result}
                   className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                     c.result === "pass"
-                      ? "bg-cyan/30 text-navy"
+                      ? "bg-green-500 text-white"
                       : c.result === "fail"
-                        ? "bg-pink text-navy"
-                        : "bg-stone-200 text-stone-600"
+                        ? "bg-orange-500 text-white"
+                        : "bg-yellow-400 text-yellow-950"
                   }`}
                 >
                   {c.result === "pass" ? "✓" : c.result === "fail" ? "✕" : "?"}

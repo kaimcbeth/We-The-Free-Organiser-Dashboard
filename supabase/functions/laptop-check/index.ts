@@ -74,6 +74,9 @@ Deno.serve(async (req) => {
         .gte("created_at", since);
       if ((count ?? 0) >= DAILY_LIMIT) return json({ error: "That's a lot of checks for one day. Try again tomorrow." }, 429);
     }
+    // Facebook Marketplace is local pick-up (Kai, 17 Nov 2026: "If on FB
+    // marketplace it's likely local").
+    const marketplace = /facebook\.com\/(marketplace|commerce)|fb\.com\/marketplace/i.test(link);
     const budget = country === "Australia" ? "A$150" : `A$150 (convert it to the local currency of ${country})`;
 
     const prompt = `A We The Free community in ${country} is buying laptops to play short films to the public at a street outreach stall (the "Movie Challenge"). Each laptop plays a 3 minute MP4 from a USB stick over and over for an afternoon, in a web browser, with headphones plugged in. Nothing fancy: any working laptop that can play a video is fine.
@@ -82,7 +85,7 @@ Check whether this device is good for it:
 ${link ? `- Listing link: ${link}\n` : ""}${model ? `- Model or description given: ${model}\n` : ""}${image ? "- A screenshot of the listing is attached.\n" : ""}
 THE THREE RULES (from Kai, the organiser)
 1. Price: ${budget} or under for the laptop, including postage if there is any.
-2. Postage: it must ship from within ${country} (or be picked up locally). Sellers posting from overseas are a no.
+2. Postage: it must ship from within ${country} (or be picked up locally). Sellers posting from overseas are a no. Facebook Marketplace listings are local pick-up, so they pass this rule (detail: "Facebook Marketplace, local pick-up"). That includes a screenshot that looks like Facebook Marketplace.${marketplace ? "\n   This link IS a Facebook Marketplace listing: postage passes." : ""}
 3. Battery: lasts at least 3 hours playing video on its own battery.
 
 HOW TO CHECK
@@ -159,6 +162,8 @@ Australian spelling, plain words, no em or en dashes.`;
     const checks = RULES.map((rule) => {
       // deno-lint-ignore no-explicit-any
       const c = (Array.isArray(parsed.checks) ? parsed.checks : []).find((x: any) => x?.rule === rule) ?? {};
+      if (rule === "postage" && marketplace && c.result !== "pass")
+        return { rule, result: "pass", detail: "Facebook Marketplace, local pick-up" };
       const result = c.result === "pass" || c.result === "fail" ? c.result : "unknown";
       return { rule, result, detail: tidy(c.detail) };
     });
