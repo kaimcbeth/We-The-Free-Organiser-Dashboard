@@ -273,7 +273,10 @@
   #tv-adv summary:hover { color: var(--text); }
   #tv-open.on { color: var(--pink); opacity: 1; font-weight: 700; }
   #intro-tv { margin-top: 26px; text-align: center; width: 100%; max-width: 980px; }
-  #intro-tv-q { font-size: 20px; font-weight: 600; margin: 0; color: #c9cee0; }
+  #intro-tv-q { margin: 0; }
+  #intro.p2 .p1, #intro.p2 #intro-start, #intro.p2 #intro-next { display: none; }
+  #intro:not(.p2) #intro-tv { display: none; }
+  #intro-tv .intro-after { margin-top: 30px; }
   .cam-tiers { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
   .cam-tier {
     flex: 1 1 240px; max-width: 320px; text-align: left; border: 0; border-radius: 18px; padding: 18px 22px;
@@ -541,7 +544,6 @@
     </div>
   </div>
   <button id="stop" class="stop-btn" title="I'm not comfortable watching this anymore"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="1" y="1" width="12" height="12" rx="2.5" fill="#ff5a5a"/></svg><span class="stop-label">I'm not comfortable watching this anymore</span></button>
-  <button id="help" class="help-btn">Video not working?</button>
   <div id="problem" class="stopped">
     <div>
       <h2 id="problem-title">Thanks for letting us know.</h2>
@@ -581,14 +583,14 @@
 <div id="rec-dot" aria-live="polite"><i></i><span id="rec-label">Recording</span></div>
 <div id="intro" role="dialog" aria-label="Before you start">
   <div class="ask">
-    <h2 id="intro-title">Before you start</h2>
-    <p id="intro-text" class="intro-text">We really encourage you to try to see it through. But if it's ever too much, you can stop at any time with this button:</p>
-    <div class="stop-btn sample" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="1" y="1" width="12" height="12" rx="2.5" fill="#ff5a5a"/></svg><span class="stop-label">I'm not comfortable watching this anymore</span></div>
-    <p class="intro-help"><span id="intro-help">If the video isn't playing properly (no sound, or it freezes), tap this in the bottom-left corner:</span> <span class="help-btn sample help-label">Video not working?</span></p>
+    <h2 id="intro-title" class="p1">Before you start</h2>
+    <p id="intro-text" class="intro-text p1">We really encourage you to try to see it through. But if it's ever too much, you can stop at any time with this button:</p>
+    <div class="stop-btn sample p1" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="1" y="1" width="12" height="12" rx="2.5" fill="#ff5a5a"/></svg><span class="stop-label">I'm not comfortable watching this anymore</span></div>
     <p id="intro-after" class="intro-after">After the film, we'll ask you one quick question.</p>
     <button class="btn big" id="intro-start">Start the film</button>
+    <button class="btn big" id="intro-next" hidden>Next</button>
     <div id="intro-tv" hidden>
-      <p id="intro-tv-q">Happy to be on camera? Pick one to start the film.</p>
+      <h2 id="intro-tv-q">Happy to be on camera?</h2>
       <div class="cam-tiers">
         <button class="cam-tier" id="cam-rec"><b id="cam-rec-t">On the TV and saved</b><span id="cam-rec-s">Shown live while you watch, and the video is kept. We may replay it on this screen and share it on our socials. No sound is recorded.</span></button>
         <button class="cam-tier" id="cam-tv"><b id="cam-tv-t">On the TV only</b><span id="cam-tv-s">Shown live while you watch. Nothing is saved.</span></button>
@@ -710,7 +712,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-17p";
+  var PLAYER_VERSION = "2026-11-17q";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-movement-hub.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
@@ -745,7 +747,8 @@
         introTitle: "开始之前",
         introText: "我们真诚地鼓励您尽量看完。但如果任何时候您觉得难以承受，都可以按下这个按钮停止观看：",
         startFilm: "开始播放",
-        camAsk: "愿意出现在镜头里吗？选择一项即可开始播放。",
+        camAsk: "愿意出现在镜头里吗？",
+        nextPage: "下一步",
         camRec: "在电视上播放并保存",
         camRecSub: "观看时在电视上实时播放，并保存视频。我们可能会在这块屏幕上重播，并在社交媒体上分享。不录制声音。",
         camTv: "仅在电视上播放",
@@ -825,7 +828,8 @@
     introTitle: "Before you start",
     introText: "We really encourage you to try to see it through. But if it's ever too much, you can stop at any time with this button:",
     startFilm: "Start the film",
-    camAsk: "Happy to be on camera? Pick one to start the film.",
+    camAsk: "Happy to be on camera?",
+    nextPage: "Next",
     camRec: "On the TV and saved",
     camRecSub: "Shown live while you watch, and the video is kept. We may replay it on this screen and share it on our socials. No sound is recorded.",
     camTv: "On the TV only",
@@ -1159,6 +1163,7 @@
     $("intro-text").textContent = t.introText;
     $("intro-after").textContent = t.introAfter || EN_UI.introAfter;
     $("intro-start").textContent = t.startFilm;
+    $("intro-next").textContent = t.nextPage || EN_UI.nextPage;
     $("intro-tv-q").textContent = t.camAsk;
     $("cam-rec-t").textContent = t.camRec; $("cam-rec-s").textContent = t.camRecSub;
     $("cam-tv-t").textContent = t.camTv; $("cam-tv-s").textContent = t.camTvSub;
@@ -1169,8 +1174,6 @@
     $("stopped-text").textContent = t.stoppedText;
     $("keep-watching").textContent = t.keepWatching;
     $("stopped-finish").textContent = t.finish;
-    Array.prototype.forEach.call(document.querySelectorAll(".help-label, #help"), function (el) { el.textContent = t.helpBtn || EN_UI.helpBtn; });
-    $("intro-help").textContent = t.introHelp || EN_UI.introHelp;
     $("problem-title").textContent = t.problemTitle || EN_UI.problemTitle;
     $("problem-text").textContent = t.stoppedText;
     $("problem-resume").textContent = t.resume || EN_UI.resume;
@@ -1669,13 +1672,25 @@
     introFor = { i: i, n: n };
     applyUI();
     var tv = tvAlive() && !under15;
+    // Kai, 17 Nov 2026: two pages when the TV camera is on: 1 the warning,
+    // 2 the camera choices (all three always shown) with the "one quick
+    // question" line at the bottom.
+    introTv = tv;
     $("intro-tv").hidden = !tv;
     $("intro-start").hidden = tv;
-    $("cam-rec").hidden = !recReady();
+    $("intro-next").hidden = !tv;
+    introPage(1);
     $("intro").classList.add("on");
   }
   // "Before you start": encourage seeing it through, and show the Stop button.
-  var introFor = null;
+  var introFor = null, introTv = false;
+  function introPage(n) {
+    var after = $("intro-after");
+    if (n === 2) $("intro-tv").appendChild(after);
+    else $("intro-start").parentNode.insertBefore(after, $("intro-start"));
+    after.hidden = n === 1 && introTv;
+    $("intro").classList.toggle("p2", n === 2);
+  }
   // tier: 0 = no camera, 1 = on the TV only, 2 = on the TV and saved (Kai, 17 Nov 2026).
   function startFromIntro(tier) {
     var f = introFor;
@@ -1691,7 +1706,11 @@
   $("cam-rec").onclick = function () { startFromIntro(2); };
   $("cam-tv").onclick = function () { startFromIntro(1); };
   $("cam-none").onclick = function () { startFromIntro(0); };
-  $("intro-back").onclick = function () { introFor = null; $("intro").classList.remove("on"); };
+  $("intro-next").onclick = function () { introPage(2); };
+  $("intro-back").onclick = function () {
+    if ($("intro").classList.contains("p2")) { introPage(1); return; }
+    introFor = null; $("intro").classList.remove("on");
+  };
 
   // Walked off half way (Kai, 2 Nov): if nobody touches the laptop for a
   // minute on "How many people are watching?", "Before you start" or the
@@ -1921,7 +1940,7 @@
     if ($("survey").classList.contains("on")) { surveyKey(e); return; }
     if ($("name-screen").classList.contains("on")) return;
     if ($("intro").classList.contains("on")) {
-      if (e.key === "Enter") $("intro-start").click();
+      if (e.key === "Enter") { if (!$("intro").classList.contains("p2")) $(introTv ? "intro-next" : "intro-start").click(); }
       else if (e.key === "Escape" || e.key === "Backspace") $("intro-back").click();
       return;
     }
@@ -2543,7 +2562,7 @@
       return;
     }
     if (!recDir) {
-      box.innerHTML = "<b>Saving videos</b> (for the first choice): pick a folder on this laptop once. <button class=\"link\" id=\"rec-pick\" style=\"opacity:1;color:var(--cyan)\">Choose a folder</button>";
+      box.innerHTML = "<b>Saving videos</b> (for the first choice): pick a folder on this laptop once. Until you do, viewers who pick \"On the TV and saved\" are only shown live. <button class=\"link\" id=\"rec-pick\" style=\"opacity:1;color:var(--cyan)\">Choose a folder</button>";
     } else {
       var n = savedToday();
       box.innerHTML = "<b>Saving videos to “" + esc(recDir.name) + "”</b>" +
@@ -2669,7 +2688,8 @@
   // ---------- "Video not working?" ----------
   // Pauses the film and alerts the live screen straight away (no tapout).
   var problemNow = false;
-  $("help").addEventListener("click", function (e) {
+  // Kai, 17 Nov 2026: the "Video not working?" button was taken out of the player.
+  if ($("help")) $("help").addEventListener("click", function (e) {
     e.stopPropagation();
     if (!current || stoppedNow || problemNow) return;
     problemNow = true;

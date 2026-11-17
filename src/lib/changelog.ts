@@ -83,6 +83,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: 'Movie player: the "Video not working?" button is gone. With the TV camera on, "Before you start" is now two pages: the warning, then "Happy to be on camera?" with all three choices (the saved one only streams until a saving folder is chosen).',
+      },
+      {
+        level: "organiser",
         text: 'Movie player TV: between films it now loops short bits of today\'s saved reactions under "Earlier today", shows how many have watched today across all your laptops (when online), and the We The Free logo works offline.',
       },
       {
