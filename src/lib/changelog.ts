@@ -79,7 +79,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: 'Movie player: TV camera has a "Setting up" checklist with tick boxes: placing the TV, mounting the camera, running and protecting the HDMI cable, changing the TV\'s source, extending the laptop screen, stopping sleep, opening the TV screen and checking the picture.',
+        text: 'Movie player: TV camera has a "Setting up" checklist with tick boxes: placing the TV, mounting the camera, running and protecting the HDMI cable, changing the TV\'s source, extending the laptop screen, opening the TV screen and checking the picture.',
       },
       {
         level: "organiser",
