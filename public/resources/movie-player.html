@@ -273,7 +273,7 @@
   #tv-adv summary:hover { color: var(--text); }
   #tv-open.on { color: var(--pink); opacity: 1; font-weight: 700; }
   #intro-tv { margin-top: 26px; text-align: center; width: 100%; max-width: 980px; }
-  #intro-tv-q { margin: 0; }
+  #intro-tv-q { margin: 0 0 22px; }
   #intro.p2 .p1, #intro.p2 #intro-start, #intro.p2 #intro-next { display: none; }
   #intro:not(.p2) #intro-tv { display: none; }
   #intro-tv .intro-after { margin-top: 30px; }
@@ -284,6 +284,15 @@
   }
   .cam-tier:hover, .cam-tier:focus-visible { outline: none; box-shadow: inset 0 0 0 3px var(--pink); }
   .cam-tier b { display: block; font-size: 20px; }
+  .cam-tier { text-align: center; padding: 22px 22px 20px; display: flex; flex-direction: column; align-items: center; }
+  .cam-ico { display: flex; align-items: center; justify-content: center; width: 72px; height: 72px; border-radius: 50%; margin-bottom: 14px; }
+  .cam-ico svg { width: 38px; height: 38px; }
+  #cam-rec .cam-ico { background: rgba(255,71,185,.16); color: var(--pink); box-shadow: 0 0 0 2px rgba(255,71,185,.35); }
+  #cam-tv .cam-ico { background: rgba(47,217,223,.14); color: var(--cyan); box-shadow: 0 0 0 2px rgba(47,217,223,.32); }
+  #cam-none .cam-ico { background: rgba(255,255,255,.07); color: #c9cee0; box-shadow: 0 0 0 2px rgba(255,255,255,.16); }
+  #cam-rec:hover, #cam-rec:focus-visible { box-shadow: inset 0 0 0 3px var(--pink); }
+  #cam-tv:hover, #cam-tv:focus-visible { box-shadow: inset 0 0 0 3px var(--cyan); }
+  #cam-none:hover, #cam-none:focus-visible { box-shadow: inset 0 0 0 3px #c9cee0; }
   .cam-tier span { display: block; margin-top: 4px; font-size: 15px; color: #aab1c8; line-height: 1.35; }
   #rec-dot {
     position: fixed; top: 14px; left: 16px; z-index: 30; display: none; align-items: center; gap: 7px;
@@ -592,9 +601,9 @@
     <div id="intro-tv" hidden>
       <h2 id="intro-tv-q">Happy to be on camera?</h2>
       <div class="cam-tiers">
-        <button class="cam-tier" id="cam-rec"><b id="cam-rec-t">On the TV and saved</b><span id="cam-rec-s">Shown live while you watch, and the video is kept. We may replay it on this screen and share it on our socials. No sound is recorded.</span></button>
-        <button class="cam-tier" id="cam-tv"><b id="cam-tv-t">On the TV only</b><span id="cam-tv-s">Shown live while you watch. Nothing is saved.</span></button>
-        <button class="cam-tier" id="cam-none"><b id="cam-none-t">No camera</b><span id="cam-none-s">The camera stays off.</span></button>
+        <button class="cam-tier" id="cam-rec"><i class="cam-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="M15.5 10.5 21 7.5v9l-5.5-3"/><circle cx="9" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg></i><b id="cam-rec-t">On the TV and saved</b><span id="cam-rec-s">Shown live while you watch, and the video is kept. We may replay it on this screen and share it on our socials. No sound is recorded.</span></button>
+        <button class="cam-tier" id="cam-tv"><i class="cam-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="12.5" rx="2"/><path d="M8.5 20.5h7M12 17v3.5"/><circle cx="12" cy="10.2" r="2.2"/><path d="M8.2 15.2c.6-1.6 2-2.5 3.8-2.5s3.2.9 3.8 2.5"/></svg></i><b id="cam-tv-t">On the TV only</b><span id="cam-tv-s">Shown live while you watch. Nothing is saved.</span></button>
+        <button class="cam-tier" id="cam-none"><i class="cam-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="M15.5 10.5 21 7.5v9l-5.5-3"/><path d="M3 3l18 18"/></svg></i><b id="cam-none-t">No camera</b><span id="cam-none-s">The camera stays off.</span></button>
       </div>
     </div>
     <button class="link" id="intro-back">Back</button>
@@ -712,7 +721,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-17q";
+  var PLAYER_VERSION = "2026-11-17r";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-movement-hub.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
