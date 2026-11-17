@@ -73,6 +73,10 @@ export const CHANGELOG: Release[] = [
         level: "organiser",
         text: 'Movie player: viewers now pick one of three before the film: "On the TV and saved", "On the TV only" or "No camera". Saved videos go into a folder you choose once in TV camera (Chrome or Edge), picture only, and only when the film is watched to the end.',
       },
+      {
+        level: "organiser",
+        text: 'Movie player TV: between films it now loops short bits of today\'s saved reactions under "Earlier today", shows how many have watched today across all your laptops (when online), and the We The Free logo works offline.',
+      },
     ],
   },
   {
