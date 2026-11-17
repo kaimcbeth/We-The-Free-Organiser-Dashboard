@@ -148,6 +148,9 @@ export type EquipmentItem = {
   parts?: { name: string; shop: string; url: string; price?: string }[];
   // Tips for buying it, shown in a pop-up (instead of a shop link).
   guide?: { label: string; text: string }[];
+  // A built-in check in the purchasing guide ("laptop": is this laptop OK
+  // for the Movie Challenge? Kai, 17 Nov 2026).
+  checker?: "laptop";
   // Step-by-step ordering instructions, shown numbered at the top of the
   // purchasing guide. "[text](url)" becomes a link and "**text**" bold; a
   // step can have sub-points shown as a list under it (Kai, 12 Nov 2026).
@@ -303,6 +306,7 @@ export const EQUIPMENT_GUIDE: {
         about:
           "What people watch the footage on. Usually laptops, typically two.",
         price: "<$150 each",
+        checker: "laptop",
         guide: [
           {
             label: "Priority 1",

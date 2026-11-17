@@ -1,5 +1,6 @@
 "use client";
 
+import { LaptopChecker } from "@/components/laptop-checker";
 import { readHeader, subscribeHeader } from "@/lib/header-height";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
@@ -899,6 +900,7 @@ function EquipmentRow({
                 ))}
               </ol>
             )}
+            {item.checker === "laptop" && <LaptopChecker />}
             <ul className="space-y-3">
               {item.guide.map((g) => (
                 <li
