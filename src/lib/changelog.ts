@@ -69,6 +69,10 @@ export const CHANGELOG: Release[] = [
         level: "organiser",
         text: "Movie player: in TV camera, the camera choice now sits under Advanced options with the words, views and Instagram settings, so the panel is just the setting-up steps and Open the TV screen.",
       },
+      {
+        level: "organiser",
+        text: 'Movie player: it now has a version number (this is version 67). It\'s in the downloaded file\'s name ("WTF Movie Player v67 - Sydney.html") and beside SETUP on the player, and the "newer version" note says which version is ready.',
+      },
     ],
   },
   {
