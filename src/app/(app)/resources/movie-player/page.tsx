@@ -6,10 +6,9 @@ import { MovieDaySummary } from "@/components/movie-day-summary";
 
 export default async function MoviePlayerPage() {
   const { organiser } = await requireOrganiser();
-  const teamId =
-    organiser.allCommunities || organiser.exampleMode
-      ? null
-      : organiser.team_id;
+  // With "All communities" this is the community the page is showing
+  // (Kai, 17 Nov 2026: couldn't find the download in the RSL view).
+  const teamId = organiser.exampleMode ? null : organiser.team_id;
   return (
     <>
       <Link
@@ -36,10 +35,13 @@ export default async function MoviePlayerPage() {
             className="inline-block rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-2"
           >
             Download the player
+            {organiser.allCommunities
+              ? ` for ${organiser.team.name.split(",")[0]}`
+              : ""}
           </a>
         ) : (
           <p className="text-sm text-stone-600">
-            Pick a single community at the top to download its player.
+            Pick a community at the top to download its player.
           </p>
         )}
         <ol className="mt-4 list-decimal space-y-1.5 pl-5 text-sm text-stone-700">

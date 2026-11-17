@@ -5,10 +5,9 @@ import { requireOrganiser } from "@/lib/organiser";
 // answers it collects are sent to this community when the laptop is online.
 export async function GET(request: NextRequest) {
   const { supabase, organiser } = await requireOrganiser();
-  const teamId =
-    organiser.allCommunities || organiser.exampleMode
-      ? null
-      : organiser.team_id;
+  // With "All communities" this is the community the page is showing
+  // (Kai, 17 Nov 2026: couldn't find the download in the RSL view).
+  const teamId = organiser.exampleMode ? null : organiser.team_id;
   const res = await fetch(
     new URL("/resources/movie-player.html", request.nextUrl.origin),
     { cache: "no-store" },
