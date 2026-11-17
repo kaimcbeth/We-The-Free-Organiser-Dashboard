@@ -638,7 +638,7 @@
     <label>Line under it<input class="field" id="tv-sub" maxlength="80"></label>
     <label>Between films<input class="field" id="tv-off" maxlength="80"></label>
     <label>Line under it<input class="field" id="tv-off-sub" maxlength="80"></label>
-    <label>Views of the film worldwide (e.g. 19000000 shows as 19 million; 0 hides it)<input class="field" id="tv-views" inputmode="numeric" maxlength="12"></label>
+    <label>Views of the film worldwide (ticks up slowly from this number; 0 hides it)<input class="field" id="tv-views" inputmode="numeric" maxlength="12"></label>
     <label>Beside the Instagram QR code (empty hides the QR code)<input class="field" id="tv-ig-ask" maxlength="60"></label>
     <label>Instagram followers bubble, e.g. 12.4K (empty leaves it off)<input class="field" id="tv-ig-followers" maxlength="12"></label>
     <div class="row">
@@ -679,7 +679,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-17j";
+  var PLAYER_VERSION = "2026-11-17k";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-movement-hub.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
@@ -2091,7 +2091,9 @@
     replay: true,
     // Kai, 17 Nov 2026: online views of the 3-minute film (a stand-in number
     // for now, ticking up slowly) and the Instagram QR code.
-    views: 19000000, viewsAt: 0, // Kai: "Lets just say 19mil views worldwide"
+    // Kai: "views worldwide", "I still want the full 8-digit number": ticks up
+    // slowly (about 10,000 a day) from this number so it looks live.
+    views: 19180000, viewsAt: 1794834000000,
     igAsk: "Want your reaction on our socials?",
     igFollowers: "28.5K", igSet: 1 // Kai, 17 Nov 2026
   };
@@ -2101,7 +2103,7 @@
     try { saved = JSON.parse(localStorage.getItem(TV_KEY) || "{}") || {}; } catch (e) {}
     for (var k in TV_DEFAULTS) tvCfg[k] = saved[k] !== undefined ? saved[k] : TV_DEFAULTS[k];
     // The ticking stand-in from 2026-11-17f becomes the plain 19 million.
-    if (tvCfg.views === 19180000) tvCfg.views = 19000000;
+    if (tvCfg.views === 19000000 && !tvCfg.viewsAt) { tvCfg.views = 19180000; tvCfg.viewsAt = 1794834000000; }
     if (tvCfg.igSet !== 1) { tvCfg.igFollowers = "28.5K"; tvCfg.igSet = 1; }
   })();
   function tvSave() { try { localStorage.setItem(TV_KEY, JSON.stringify(tvCfg)); } catch (e) {} }
@@ -2145,7 +2147,7 @@
     "#count{margin-top:5vh;font-size:3.4vh;font-weight:700;background:rgba(255,255,255,.1);border-radius:99px;padding:1.4vh 3.4vh}" +
     "#count b{color:#2fd9df}" +
     "#views{position:absolute;top:3.4vh;left:50%;transform:translateX(-50%);z-index:3;display:flex;align-items:baseline;gap:1.2vh;font-size:2.5vh;white-space:nowrap;text-shadow:0 .3vh 1.6vh rgba(0,0,0,.55)}" +
-    "#views b{font-family:'Arial Black','Segoe UI Black',system-ui,sans-serif;font-weight:900;font-size:4.6vh;color:#ffd90f;letter-spacing:.01em}" +
+    "#views b{font-family:'Arial Black','Segoe UI Black',system-ui,sans-serif;font-weight:900;font-size:4.6vh;color:#ffd90f;letter-spacing:.01em;font-variant-numeric:tabular-nums}" +
     "#views span{color:#fff;font-weight:700;letter-spacing:.02em}" +
     "#ig{position:absolute;right:5vh;bottom:5vh;z-index:3;display:flex;align-items:flex-end;gap:1.6vh;flex-direction:row-reverse;text-align:right;text-shadow:0 .2vh 1vh rgba(0,0,0,.5)}" +
     "#ig .qr{width:10.5vh;height:10.5vh;background:#fff;border-radius:1vh;padding:.7vh;box-sizing:border-box;opacity:.95}" +
@@ -2274,16 +2276,15 @@
     replaySync(on);
     tvTime();
   }
-  // A fixed number, shown as "19 million" (Kai, 17 Nov 2026).
   function tvViews() {
     if (!tvWinOpen()) return;
-    var n = Math.max(0, +tvCfg.views || 0);
+    var base = Math.max(0, +tvCfg.views || 0);
+    var n = base ? Math.floor(base + Math.max(0, Date.now() - (+tvCfg.viewsAt || Date.now())) / 1000 * 0.12) : 0;
     var el = tvWin.document.getElementById("views");
     el.hidden = !(+tvCfg.views > 0);
-    tvWin.document.getElementById("views-n").textContent = n >= 1e6
-      ? (Math.floor(n / 1e5) / 10).toString().replace(/\.0$/, "") + " million"
-      : n.toLocaleString("en-AU");
+    tvWin.document.getElementById("views-n").textContent = n.toLocaleString("en-AU");
   }
+  setInterval(tvViews, 1000);
   function tvTime() {
     if (!tvAlive() || !current) return;
     var d = tvWin.document, dur = isFinite(video.duration) && video.duration ? video.duration : current.version.secs || 0;
