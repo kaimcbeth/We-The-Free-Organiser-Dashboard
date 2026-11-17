@@ -237,6 +237,21 @@
     display: none; align-items: center; justify-content: center; padding: 20px;
   }
   #check.on { display: flex; }
+
+  /* TV camera: the viewer's face live on the resource table TV (Kai, 17 Nov 2026) */
+  #tvp {
+    position: fixed; inset: 0; z-index: 35; background: rgba(3, 7, 22, .8);
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  #tvp.on { display: flex; }
+  #tvp .panel { max-width: 560px; width: 100%; }
+  #tvp label { display: block; margin-top: 10px; font-size: 13px; color: var(--muted); font-weight: 600; }
+  #tvp .field { width: 100%; margin-top: 4px; }
+  #tvp .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+  #tv-open.on { color: var(--pink); opacity: 1; font-weight: 700; }
+  #intro-tv { margin-top: 26px; text-align: center; }
+  #intro-tv-q { font-size: 24px; font-weight: 700; margin: 0; }
+  #intro-tv .stopped-actions { margin-top: 18px; }
   #check-list { margin: 12px 0 0; padding: 0; list-style: none; font-size: 15px; }
   #check-list li { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.1); }
   #check-list li b { color: var(--pink); }
@@ -432,6 +447,7 @@
     <span class="setup-tag">SETUP</span>
     <button class="link" id="test-open">Test video and sound</button>
     <button class="link" id="check-open">Check films</button>
+    <button class="link" id="tv-open">TV camera</button>
     <button class="link" id="level-open" hidden>Even out volume</button>
     <span id="level-note"></span>
     <span id="unsent"></span>
@@ -530,6 +546,13 @@
     <p class="intro-help"><span id="intro-help">If the video isn't playing properly (no sound, or it freezes), tap this in the bottom-left corner:</span> <span class="help-btn sample help-label">Video not working?</span></p>
     <p id="intro-after" class="intro-after">After the film, we'll ask you one quick question.</p>
     <button class="btn big" id="intro-start">Start the film</button>
+    <div id="intro-tv" hidden>
+      <p id="intro-tv-q">Can we show your reaction live on the TV?</p>
+      <div class="stopped-actions">
+        <button class="btn big" id="intro-tv-yes">Yes, start the film</button>
+        <button class="btn big ghost-btn" id="intro-tv-no">No thanks, start the film</button>
+      </div>
+    </div>
     <button class="link" id="intro-back">Back</button>
   </div>
 </div>
@@ -586,6 +609,28 @@
     <div class="close-row"><button class="btn" id="check-close">Done</button></div>
   </div>
 </div>
+<div id="tvp" role="dialog" aria-label="TV camera">
+  <div class="panel">
+    <h3>TV camera</h3>
+    <p>Shows the viewer's face live on a TV, with WTF words on top. Plug the camera and the TV into this laptop and set the screens to <b>Extend</b> (Windows: Win + P; Mac: Displays settings). Then open the TV screen, drag it onto the TV and click it for full screen.</p>
+    <p>Before each film the player asks the viewer if they're happy to be on the TV. It's only shown while they watch, and goes off straight away if they press stop.</p>
+    <label>Camera<select class="field" id="tv-cam"><option value="">Any camera</option></select></label>
+    <label>On the TV while someone watches<input class="field" id="tv-headline" maxlength="80"></label>
+    <label>Line under it<input class="field" id="tv-sub" maxlength="80"></label>
+    <label>Between films<input class="field" id="tv-off" maxlength="80"></label>
+    <label>Line under it<input class="field" id="tv-off-sub" maxlength="80"></label>
+    <div class="row">
+      <label style="margin:0"><input type="checkbox" id="tv-mirror"> Mirror the picture</label>
+      <button class="link" id="tv-reset">Put the original words back</button>
+    </div>
+    <p class="status" id="tv-status"></p>
+    <div class="actions">
+      <button class="btn" id="tv-launch">Open the TV screen</button>
+      <button class="btn ghost-btn" id="tv-stop" hidden>Turn the TV camera off</button>
+      <button class="btn ghost-btn" id="tvp-close">Done</button>
+    </div>
+  </div>
+</div>
 <div id="test" role="dialog" aria-label="Test video and sound">
   <video id="test-video" playsinline preload="auto"></video>
   <div id="test-badge">Testing video and sound… 5</div>
@@ -610,7 +655,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-05a";
+  var PLAYER_VERSION = "2026-11-17a";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-movement-hub.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
@@ -645,6 +690,9 @@
         introTitle: "开始之前",
         introText: "我们真诚地鼓励您尽量看完。但如果任何时候您觉得难以承受，都可以按下这个按钮停止观看：",
         startFilm: "开始播放",
+        tvAsk: "我们可以在电视上实时播放您观看时的反应吗？",
+        tvYes: "可以，开始播放",
+        tvNo: "不用了，开始播放",
         stoppedTitle: "完全没关系。",
         stoppedText: "马上就会有人过来。",
         keepWatching: "其他人继续观看",
@@ -717,6 +765,9 @@
     introTitle: "Before you start",
     introText: "We really encourage you to try to see it through. But if it's ever too much, you can stop at any time with this button:",
     startFilm: "Start the film",
+    tvAsk: "Can we show your reaction live on the TV?",
+    tvYes: "Yes, start the film",
+    tvNo: "No thanks, start the film",
     stoppedTitle: "That's completely okay.",
     stoppedText: "Someone will be with you in a few seconds.",
     keepWatching: "Keep watching for the others",
@@ -1043,6 +1094,9 @@
     $("intro-text").textContent = t.introText;
     $("intro-after").textContent = t.introAfter || EN_UI.introAfter;
     $("intro-start").textContent = t.startFilm;
+    $("intro-tv-q").textContent = t.tvAsk;
+    $("intro-tv-yes").textContent = t.tvYes;
+    $("intro-tv-no").textContent = t.tvNo;
     $("intro-back").textContent = t.back;
     $("stopped-title").textContent = t.stoppedTitle;
     $("stopped-text").textContent = t.stoppedText;
@@ -1544,16 +1598,22 @@
     closeCount();
     introFor = { i: i, n: n };
     applyUI();
+    var tv = tvAlive();
+    $("intro-tv").hidden = !tv;
+    $("intro-start").hidden = tv;
     $("intro").classList.add("on");
   }
   // "Before you start": encourage seeing it through, and show the Stop button.
   var introFor = null;
-  $("intro-start").onclick = function () {
+  function startFromIntro(onTv) {
     var f = introFor;
     introFor = null;
     $("intro").classList.remove("on");
-    if (f) play(f.i, f.n);
-  };
+    if (f) { play(f.i, f.n); tvOk = !!onTv; tvSync(); }
+  }
+  $("intro-start").onclick = function () { startFromIntro(false); };
+  $("intro-tv-yes").onclick = function () { startFromIntro(true); };
+  $("intro-tv-no").onclick = function () { startFromIntro(false); };
   $("intro-back").onclick = function () { introFor = null; $("intro").classList.remove("on"); };
 
   // Walked off half way (Kai, 2 Nov): if nobody touches the laptop for a
@@ -1593,6 +1653,7 @@
     poke();
   }
   function stopVideo() {
+    tvOk = false;
     stoppedNow = false;
     problemNow = false;
     $("problem").classList.remove("on");
@@ -1608,6 +1669,7 @@
     showAll = false;
     stopVideo();
     if (liveState !== "idle" && !surveyFilm) status("idle");
+    tvSync();
     render();
     var first = document.querySelector(".choice, .tile");
     if (first && first.focus) first.focus({ preventScroll: true });
@@ -1638,6 +1700,8 @@
     player.classList.add("ended");
     clearTimeout(idleTimer);
     video.pause();
+    tvOk = false;
+    tvSync();
     askSurvey(c.tile, c.version, c.viewers);
   }
   video.addEventListener("ended", endFilm);
@@ -1925,6 +1989,7 @@
   function status(state) {
     var was = liveState;
     if (state) liveState = state;
+    tvSync();
     if (!CONFIG) return;
     if (liveState === "idle") {
       claim(false);
@@ -1961,6 +2026,193 @@
   setInterval(function () { status(); }, 15000);
   setTimeout(function () { status(); }, 800);
 
+  // ---------- TV camera (Kai, 17 Nov 2026) ----------
+  // "Live stream a webcam feed that's recording someone watching the movie
+  // challenge … to a TV on our resource table", "with an overlay". A second
+  // window (dragged onto the TV) shows this laptop's camera with WTF words on
+  // top, only while someone who said yes is watching. Stop, "Video not
+  // working?", the question and the menu all switch it to the between-films
+  // screen.
+  var TV_KEY = "wtf-movie-player-tv";
+  var TV_DEFAULTS = {
+    device: "", mirror: true,
+    headline: "Watching the 3 Minute Movie Challenge",
+    sub: "Would you watch it? Ask us.",
+    off: "Next one could be you.",
+    offSub: "Ask us about the 3 Minute Movie Challenge."
+  };
+  var tvCfg = {};
+  (function () {
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem(TV_KEY) || "{}") || {}; } catch (e) {}
+    for (var k in TV_DEFAULTS) tvCfg[k] = saved[k] !== undefined ? saved[k] : TV_DEFAULTS[k];
+  })();
+  function tvSave() { try { localStorage.setItem(TV_KEY, JSON.stringify(tvCfg)); } catch (e) {} }
+  var tvWin = null, tvStream = null, tvOk = false;
+  function tvAlive() {
+    try { return !!(tvWin && !tvWin.closed && tvWin.document.getElementById("cam") && tvStream); } catch (e) { return false; }
+  }
+  function tvMsg(text, bad) {
+    $("tv-status").textContent = text || "";
+    $("tv-status").className = "status" + (bad ? " bad" : "");
+  }
+  var TV_CSS =
+    "html,body{margin:0;height:100%;background:#071130;color:#fff;overflow:hidden;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;cursor:none}" +
+    "#cam{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}" +
+    ".big{font-family:'Arial Black','Segoe UI Black',system-ui,sans-serif;font-weight:900;line-height:1.02;text-wrap:balance;margin:0}" +
+    "#live,#off{position:absolute;inset:0;transition:opacity .6s}" +
+    "body.off #live,body.live #off{opacity:0;pointer-events:none}" +
+    "body.off #cam{visibility:hidden}" +
+    "#live:before{content:'';position:absolute;inset:0 0 auto;height:22vh;background:linear-gradient(rgba(7,17,48,.7),rgba(7,17,48,0))}" +
+    "#live:after{content:'';position:absolute;inset:0;box-shadow:inset 0 0 0 .8vh #ff47b9}" +
+    "#shade{position:absolute;inset:auto 0 0;height:48vh;background:linear-gradient(rgba(7,17,48,0),rgba(7,17,48,.82) 55%,rgba(7,17,48,.95))}" +
+    "#tag{position:absolute;top:4vh;left:4vh;display:flex;align-items:center;gap:1.2vh;background:#ff47b9;border-radius:99px;padding:1vh 2.6vh;font-size:3.2vh;letter-spacing:.08em;animation:glow 2s infinite;z-index:2}" +
+    "#tag i{width:1.6vh;height:1.6vh;border-radius:50%;background:#fff;animation:pulse 1.4s infinite}" +
+    ".logo{position:absolute;top:4vh;right:4vh;height:8vh;z-index:2}" +
+    ".word{font-family:'Arial Black',system-ui,sans-serif;font-weight:900;font-size:3.4vh;letter-spacing:.06em}" +
+    "#words{position:absolute;left:5vh;right:5vh;bottom:5vh}" +
+    "#headline{font-size:7.6vh;text-shadow:0 .3vh 2vh rgba(0,0,0,.45)}" +
+    "#sub{color:#ffd90f;font-weight:700;font-size:4vh;margin:1.6vh 0 0}" +
+    "#bar{height:.9vh;border-radius:99px;background:rgba(255,255,255,.2);margin-top:3vh;overflow:hidden}" +
+    "#fill{height:100%;width:0;background:#ff47b9;transition:width 1s linear}" +
+    "#left{font-size:2.4vh;color:#c9cee0;margin-top:1.2vh;font-variant-numeric:tabular-nums}" +
+    "#off{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6vh;background:radial-gradient(60% 60% at 80% 15%,rgba(255,71,185,.35),transparent 70%),radial-gradient(50% 50% at 10% 90%,rgba(47,217,223,.22),transparent 70%),#071130}" +
+    "#off .logo{position:static;height:10vh}" +
+    "#off-h{font-size:10vh;margin-top:5vh}" +
+    "#off-sub{color:#ffd90f;font-weight:700;font-size:4.4vh;margin:2.4vh 0 0}" +
+    "#count{margin-top:5vh;font-size:3.4vh;font-weight:700;background:rgba(255,255,255,.1);border-radius:99px;padding:1.4vh 3.4vh}" +
+    "#count b{color:#2fd9df}" +
+    "#hint{position:absolute;left:50%;bottom:3vh;transform:translateX(-50%);background:rgba(0,0,0,.65);border-radius:99px;padding:1.2vh 2.6vh;font-size:2.2vh;cursor:pointer;z-index:3}" +
+    "@keyframes pulse{50%{opacity:.35}}@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(255,71,185,.55)}50%{box-shadow:0 0 0 1.2vh rgba(255,71,185,0)}}";
+  function tvLogo(cls) {
+    // The logo comes from the Hub when online; offline it's the words.
+    return '<img class="' + cls + '" alt="We The Free" src="' + HUB + '/brand/wtf-logo.png" onerror="this.outerHTML=\'<span class=&quot;' + cls + ' word&quot;>WE THE FREE</span>\'">';
+  }
+  function tvWrite() {
+    var d = tvWin.document;
+    d.open();
+    d.write('<!doctype html><html><head><meta charset="utf-8"><title>TV camera · We The Free</title><style>' + TV_CSS +
+      '</style></head><body class="off"><video id="cam" autoplay muted playsinline></video>' +
+      '<div id="live"><div id="shade"></div><div id="tag" class="big"><i></i>LIVE</div>' + tvLogo("logo") +
+      '<div id="words"><p id="headline" class="big"></p><p id="sub"></p><div id="bar"><div id="fill"></div></div><div id="left"></div></div></div>' +
+      '<div id="off">' + tvLogo("logo") + '<p id="off-h" class="big"></p><p id="off-sub"></p><div id="count" hidden></div></div>' +
+      '<div id="hint">Drag this window onto the TV, then click here for full screen</div></body></html>');
+    d.close();
+    var full = function () {
+      var el = d.documentElement;
+      if (!d.fullscreenElement && el.requestFullscreen) el.requestFullscreen().catch(function () {});
+    };
+    d.getElementById("hint").onclick = full;
+    d.addEventListener("dblclick", full);
+    d.addEventListener("fullscreenchange", function () { d.getElementById("hint").hidden = !!d.fullscreenElement; });
+  }
+  function tvCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      tvMsg("This browser can't use a camera here. Open the player in Chrome or Edge.", true);
+      return;
+    }
+    tvMsg("Starting the camera…");
+    navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { deviceId: tvCfg.device ? { exact: tvCfg.device } : undefined, width: { ideal: 1920 }, height: { ideal: 1080 } }
+    }).then(function (st) {
+      if (tvStream) tvStream.getTracks().forEach(function (t) { t.stop(); });
+      tvStream = st;
+      try { tvWin.document.getElementById("cam").srcObject = st; } catch (e) {}
+      tvMsg("The TV camera is on. It shows the between-films screen until someone says yes.");
+      $("tv-open").classList.add("on");
+      $("tv-stop").hidden = false;
+      tvSync();
+      return navigator.mediaDevices.enumerateDevices().then(function (all) {
+        var sel = $("tv-cam");
+        sel.innerHTML = '<option value="">Any camera</option>';
+        all.filter(function (x) { return x.kind === "videoinput"; }).forEach(function (x, i) {
+          var o = document.createElement("option");
+          o.value = x.deviceId; o.textContent = x.label || "Camera " + (i + 1);
+          sel.appendChild(o);
+        });
+        sel.value = tvCfg.device;
+      });
+    }).catch(function (e) {
+      var n = e && e.name;
+      tvMsg(n === "NotAllowedError" ? "The browser wasn't allowed to use the camera. Click the camera icon in the address bar, allow it, and try again." :
+        n === "NotFoundError" || n === "OverconstrainedError" ? "Can't find the camera. Check it's plugged in and pick it above." :
+        "The camera wouldn't start. Close any other app using it (Camera, Zoom, Teams) and try again.", true);
+    });
+  }
+  function watchedToday() {
+    var today = new Date().toDateString(), n = 0;
+    answers.forEach(function (a) { if (!a.stop && a.at && new Date(a.at).toDateString() === today) n++; });
+    return n;
+  }
+  function tvSync() {
+    if (!tvAlive()) return;
+    var d = tvWin.document;
+    var on = tvOk && !!current && !stoppedNow && !problemNow && (liveState === "playing" || liveState === "paused");
+    d.body.className = on ? "live" : "off";
+    d.getElementById("cam").style.transform = tvCfg.mirror ? "scaleX(-1)" : "";
+    d.getElementById("headline").textContent = tvCfg.headline;
+    d.getElementById("sub").textContent = tvCfg.sub;
+    d.getElementById("off-h").textContent = tvCfg.off;
+    d.getElementById("off-sub").textContent = tvCfg.offSub;
+    var n = watchedToday(), c = d.getElementById("count");
+    c.hidden = n < 2;
+    c.innerHTML = "<b>" + n + "</b> people have watched today";
+    tvTime();
+  }
+  function tvTime() {
+    if (!tvAlive() || !current) return;
+    var d = tvWin.document, dur = isFinite(video.duration) && video.duration ? video.duration : current.version.secs || 0;
+    if (!dur) return;
+    d.getElementById("fill").style.width = Math.min(100, video.currentTime / dur * 100) + "%";
+    var left = Math.max(0, Math.round(dur - video.currentTime));
+    d.getElementById("left").textContent = Math.floor(left / 60) + ":" + ("0" + left % 60).slice(-2) + " to go";
+  }
+  video.addEventListener("timeupdate", tvTime);
+  function tvFill() {
+    $("tv-headline").value = tvCfg.headline;
+    $("tv-sub").value = tvCfg.sub;
+    $("tv-off").value = tvCfg.off;
+    $("tv-off-sub").value = tvCfg.offSub;
+    $("tv-mirror").checked = !!tvCfg.mirror;
+  }
+  [["tv-headline", "headline"], ["tv-sub", "sub"], ["tv-off", "off"], ["tv-off-sub", "offSub"]].forEach(function (p) {
+    $(p[0]).addEventListener("input", function () { tvCfg[p[1]] = $(p[0]).value; tvSave(); tvSync(); });
+  });
+  $("tv-mirror").onchange = function () { tvCfg.mirror = $("tv-mirror").checked; tvSave(); tvSync(); };
+  $("tv-cam").onchange = function () { tvCfg.device = $("tv-cam").value; tvSave(); if (tvAlive() || tvStream) tvCamera(); };
+  $("tv-reset").onclick = function () {
+    ["headline", "sub", "off", "offSub", "mirror"].forEach(function (k) { tvCfg[k] = TV_DEFAULTS[k]; });
+    tvSave(); tvFill(); tvSync();
+  };
+  $("tv-open").onclick = function () {
+    tvFill();
+    if (!tvAlive()) tvMsg(tvStream ? "The TV window was closed. Open it again." : "");
+    $("tvp").classList.add("on");
+  };
+  $("tvp-close").onclick = function () { $("tvp").classList.remove("on"); render(); };
+  $("tv-launch").onclick = function () {
+    // Reuses the TV window if it's still open (also after a reload of the player).
+    tvWin = window.open("", "wtf-movie-tv", "width=960,height=540");
+    if (!tvWin) { tvMsg("The browser blocked the TV window. Allow pop-ups for this file, then try again.", true); return; }
+    var fresh = true;
+    try { fresh = !tvWin.document.getElementById("cam"); } catch (e) {}
+    if (fresh) tvWrite();
+    tvCamera();
+  };
+  $("tv-stop").onclick = function () {
+    if (tvStream) tvStream.getTracks().forEach(function (t) { t.stop(); });
+    tvStream = null;
+    try { if (tvWin && !tvWin.closed) tvWin.close(); } catch (e) {}
+    tvWin = null;
+    $("tv-open").classList.remove("on");
+    $("tv-stop").hidden = true;
+    tvMsg("The TV camera is off.");
+  };
+  window.addEventListener("beforeunload", function () {
+    if (tvStream) tvStream.getTracks().forEach(function (t) { t.stop(); });
+  });
+
   // ---------- Stop button ----------
   // A viewer can stop at any time. The film pauses, the Hub's live screen
   // alerts the organiser, and the press is recorded (how far in).
@@ -1969,6 +2221,7 @@
     e.stopPropagation();
     if (!current || stoppedNow) return;
     stoppedNow = true;
+    tvOk = false; // a tapout: off the TV for the rest of this film
     stoppedAt = Math.round(video.currentTime * 10) / 10;
     video.pause();
     var d = isFinite(video.duration) && video.duration ? video.duration : current.version.secs || null;

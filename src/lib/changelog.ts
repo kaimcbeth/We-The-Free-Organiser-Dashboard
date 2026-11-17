@@ -59,11 +59,15 @@ export const COMING_SOON: { title: string; text: string }[] = [
 export const CHANGELOG: Release[] = [
   {
     date: "2026-11-17",
-    title: "Laptop checker",
+    title: "Laptop checker, TV camera",
     changes: [
       {
         level: "organiser",
         text: 'Equipment: the viewing devices purchasing guide has "Is this laptop OK?". Paste a listing link, add a screenshot or type a model, and it checks it\'s A$150 or under, posts from within your country and has a battery that lasts at least 3 hours.',
+      },
+      {
+        level: "organiser",
+        text: 'Movie player: "TV camera" in the setup bar puts the viewer\'s face live on a TV, with "LIVE" and your words on top, to draw people in. Each viewer is asked first, and it switches off straight away if they press stop. Download the player again to get it.',
       },
     ],
   },
