@@ -265,6 +265,12 @@
   #tv-steps label span { color: #aab1c8; }
   #tv-steps li.on label b { color: var(--muted); text-decoration: line-through; }
   #tv-steps li.on label span { display: none; }
+  #tv-adv { margin-top: 12px; }
+  #tv-adv summary { cursor: pointer; font-size: 13px; color: var(--muted); list-style: none; display: inline-block; }
+  #tv-adv summary::-webkit-details-marker { display: none; }
+  #tv-adv summary:after { content: " ▾"; }
+  #tv-adv[open] summary:after { content: " ▴"; }
+  #tv-adv summary:hover { color: var(--text); }
   #tv-open.on { color: var(--pink); opacity: 1; font-weight: 700; }
   #intro-tv { margin-top: 26px; text-align: center; width: 100%; max-width: 980px; }
   #intro-tv-q { font-size: 20px; font-weight: 600; margin: 0; color: #c9cee0; }
@@ -656,6 +662,8 @@
     </details>
     <p>Before each film the viewer picks: on the TV and saved, on the TV only, or no camera. The camera only shows while they watch and goes off straight away if they press stop. Nobody who says they're under 15 is offered the camera.</p>
     <label>Camera<select class="field" id="tv-cam"><option value="">Any camera</option></select></label>
+    <details id="tv-adv">
+    <summary>Advanced options</summary>
     <label>On the TV while someone watches<input class="field" id="tv-headline" maxlength="80"></label>
     <label>Line under it<input class="field" id="tv-sub" maxlength="80"></label>
     <label>Between films<input class="field" id="tv-off" maxlength="80"></label>
@@ -668,6 +676,7 @@
       <label style="margin:0"><input type="checkbox" id="tv-replay"> Play earlier reactions between films</label>
       <button class="link" id="tv-reset">Put the original words back</button>
     </div>
+    </details>
     <div id="tv-rec"></div>
     <p class="status" id="tv-status"></p>
     <div class="actions">
@@ -701,7 +710,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-17o";
+  var PLAYER_VERSION = "2026-11-17p";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-movement-hub.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
