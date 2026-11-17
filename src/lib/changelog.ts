@@ -87,6 +87,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: 'Movie player: the Start here button "I\'m under 15" now reads "Someone\'s under 15", so a group with any under-15 gets the Children\'s film.',
+      },
+      {
+        level: "organiser",
         text: 'Movie player TV: between films it now loops short bits of today\'s saved reactions under "Earlier today", shows how many have watched today across all your laptops (when online), and the We The Free logo works offline.',
       },
       {
