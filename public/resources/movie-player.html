@@ -638,12 +638,14 @@
     <label>Line under it<input class="field" id="tv-sub" maxlength="80"></label>
     <label>Between films<input class="field" id="tv-off" maxlength="80"></label>
     <label>Line under it<input class="field" id="tv-off-sub" maxlength="80"></label>
+    <label>How it works, between films (split with ·; empty leaves it off)<input class="field" id="tv-how" maxlength="90"></label>
     <label>Views of the film worldwide (ticks up slowly from this number; 0 hides it)<input class="field" id="tv-views" inputmode="numeric" maxlength="12"></label>
     <label>Beside the Instagram QR code (empty hides the QR code)<input class="field" id="tv-ig-ask" maxlength="60"></label>
     <label>Instagram followers bubble, e.g. 12.4K (empty leaves it off)<input class="field" id="tv-ig-followers" maxlength="12"></label>
     <div class="row">
       <label style="margin:0"><input type="checkbox" id="tv-mirror"> Mirror the picture</label>
       <label style="margin:0"><input type="checkbox" id="tv-replay"> Play earlier reactions between films</label>
+      <label style="margin:0"><input type="checkbox" id="tv-rest"> Rest the screen after 10 minutes with no viewers</label>
       <button class="link" id="tv-reset">Put the original words back</button>
     </div>
     <div id="tv-rec"></div>
@@ -679,7 +681,7 @@
   var CONFIG = /*WTF_CONFIG*/null;
   // Bump this whenever the player changes: laptops with an older copy see
   // "A newer version of the player is ready" when they're online.
-  var PLAYER_VERSION = "2026-11-17k";
+  var PLAYER_VERSION = "2026-11-17l";
   var HUB = (CONFIG && CONFIG.hub) || "https://wtf-movement-hub.vercel.app";
   var DEFAULT_TITLE = "3-Minute Movie Challenge";
 
@@ -2085,7 +2087,7 @@
   var TV_DEFAULTS = {
     device: "", mirror: true,
     headline: "Watching the 3 Minute Movie Challenge",
-    sub: "Would you watch it? Ask us.",
+    sub: "Want to give it a shot? Ask us.", // Kai, 17 Nov 2026
     off: "Next one could be you.",
     offSub: "Ask us about the 3 Minute Movie Challenge.",
     replay: true,
@@ -2095,7 +2097,12 @@
     // slowly (about 10,000 a day) from this number so it looks live.
     views: 19180000, viewsAt: 1794834000000,
     igAsk: "Want your reaction on our socials?",
-    igFollowers: "28.5K", igSet: 1 // Kai, 17 Nov 2026
+    igFollowers: "28.5K", igSet: 1, // Kai, 17 Nov 2026
+    // Kai, 17 Nov 2026: a "how it works" line for passers-by between films,
+    // and resting the screen (dim, drifting logo) when nobody has watched for
+    // a while, to save power and stop the picture burning in.
+    how: "3 minutes · Free treat after · Just ask us",
+    rest: true
   };
   var tvCfg = {};
   (function () {
@@ -2105,6 +2112,7 @@
     // The ticking stand-in from 2026-11-17f becomes the plain 19 million.
     if (tvCfg.views === 19000000 && !tvCfg.viewsAt) { tvCfg.views = 19180000; tvCfg.viewsAt = 1794834000000; }
     if (tvCfg.igSet !== 1) { tvCfg.igFollowers = "28.5K"; tvCfg.igSet = 1; }
+    if (tvCfg.sub === "Would you watch it? Ask us.") tvCfg.sub = TV_DEFAULTS.sub;
   })();
   function tvSave() { try { localStorage.setItem(TV_KEY, JSON.stringify(tvCfg)); } catch (e) {} }
   var tvWin = null, tvStream = null, tvOk = false, tvAsks = 0;
@@ -2178,6 +2186,16 @@
     "body.replay #off-h{font-size:6vh;margin:0}" +
     "body.replay #off-sub{font-size:3.1vh;margin-top:1.2vh}" +
     "body.replay #count{margin-top:3vh;font-size:2.8vh}" +
+    "#how{display:flex;flex-wrap:wrap;justify-content:center;gap:1.4vh;margin-top:4vh}" +
+    "#how span{border:.25vh solid rgba(255,255,255,.35);border-radius:99px;padding:1vh 2.6vh;font-size:3vh;font-weight:700}" +
+    "#how span:nth-child(3n+1){border-color:#2fd9df}#how span:nth-child(3n+2){border-color:#ff47b9}#how span:nth-child(3n){border-color:#ffd90f}" +
+    "body.replay #how{justify-content:flex-start;margin-top:2.4vh;gap:1vh}" +
+    "body.replay #how span{font-size:2.2vh;padding:.6vh 1.8vh;background:rgba(7,17,48,.5)}" +
+    "#rest{position:absolute;inset:0;z-index:5;background:#000;opacity:0;pointer-events:none;transition:opacity 2s}" +
+    "body.rest #rest{opacity:1}" +
+    "#rest-inner,#rest .rest-logo,#rest p{position:absolute}" +
+    "#rest .rest-logo{height:6vh;opacity:.32;transition:left 3s,top 3s}" +
+    "#rest p{margin:0;font-size:2.6vh;font-weight:700;color:rgba(255,255,255,.3);white-space:nowrap;transition:left 3s,top 3s}" +
     "#hint{position:absolute;left:50%;bottom:3vh;transform:translateX(-50%);background:rgba(0,0,0,.65);border-radius:99px;padding:1.2vh 2.6vh;font-size:2.2vh;cursor:pointer;z-index:3}" +
     "@keyframes pulse{50%{opacity:.35}}@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(255,71,185,.55)}50%{box-shadow:0 0 0 1.2vh rgba(255,71,185,0)}}";
   // The logo is built in (works offline; Kai, 17 Nov 2026).
@@ -2193,7 +2211,8 @@
       '<div id="live"><div id="shade"></div><div id="tag" class="big"><i></i>LIVE</div>' + tvLogo("logo") +
       '<div id="words"><p id="headline" class="big"></p><p id="sub"></p><div id="bar"><div id="fill"></div></div><div id="left"></div></div></div>' +
       '<div id="off"><video id="replay" muted playsinline></video><div id="off-shade"></div><div id="replay-tag" class="big"><i></i>EARLIER TODAY</div>' +
-      tvLogo("logo") + '<div id="off-words"><p id="off-h" class="big"></p><p id="off-sub"></p><div id="count" hidden></div></div></div>' +
+      tvLogo("logo") + '<div id="off-words"><p id="off-h" class="big"></p><p id="off-sub"></p><div id="how"></div><div id="count" hidden></div></div></div>' +
+      '<div id="rest">' + tvLogo("rest-logo") + '<p id="rest-h"></p></div>' +
       '<div id="views"><b id="views-n"></b><span>views worldwide</span></div>' +
       '<div id="ig"><div class="qrwrap"><div id="ig-bub"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4.2" fill="#fff"/><path d="M3.5 21c0-4.6 3.8-7.6 8.5-7.6s8.5 3 8.5 7.6z" fill="#fff"/></svg><span id="ig-n"></span></div><div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h29v29H0z"/><path stroke="#071130" d="M0 0.5h7m2 0h2m1 0h1m1 0h1m1 0h1m1 0h3m1 0h7M0 1.5h1m5 0h1m2 0h1m1 0h2m1 0h5m3 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m1 0h1m1 0h3m3 0h1m2 0h2m1 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h1m4 0h5m1 0h1m2 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m1 0h5m3 0h4m2 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m1 0h1m2 0h1m1 0h3m1 0h1m2 0h1m1 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h1m1 0h1m1 0h1m3 0h1m3 0h1M0 8.5h1m1 0h5m6 0h1m3 0h1m1 0h1m2 0h5M0 9.5h1m1 0h2m1 0h1m1 0h1m2 0h4m3 0h8m3 0h1M0 10.5h1m1 0h3m1 0h1m1 0h2m3 0h4m3 0h3M1 11.5h1m2 0h1m2 0h1m2 0h2m2 0h3m6 0h1m1 0h1m1 0h1M2 12.5h2m1 0h4m1 0h3m4 0h2m6 0h2M3 13.5h2m2 0h2m2 0h3m2 0h7m1 0h1m3 0h1M0 14.5h1m2 0h1m2 0h3m1 0h8m4 0h2m1 0h2M0 15.5h2m1 0h2m2 0h2m1 0h2m1 0h1m5 0h1m1 0h4m2 0h1M2 16.5h1m1 0h1m1 0h2m1 0h2m3 0h4m2 0h1m2 0h1m1 0h2M0 17.5h1m1 0h1m2 0h1m1 0h1m1 0h2m5 0h1m1 0h3m1 0h3m1 0h1m1 0h1M0 18.5h1m2 0h2m1 0h1m1 0h1m1 0h3m2 0h2m1 0h1m1 0h2m1 0h1m2 0h1M0 19.5h1m7 0h2m2 0h1m1 0h2m3 0h2m1 0h3m2 0h1M0 20.5h1m5 0h1m1 0h3m6 0h1m2 0h5m1 0h3M8 21.5h3m2 0h2m1 0h1m1 0h1m1 0h1m3 0h5M0 22.5h7m2 0h1m3 0h3m1 0h4m1 0h1m1 0h3M0 23.5h1m5 0h1m1 0h1m4 0h1m2 0h1m2 0h2m3 0h1m3 0h1M0 24.5h1m1 0h3m1 0h1m1 0h1m2 0h2m1 0h4m2 0h5m1 0h1M0 25.5h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h1m3 0h1m2 0h1m3 0h1m1 0h4M0 26.5h1m1 0h3m1 0h1m1 0h3m1 0h2m1 0h2m5 0h6M0 27.5h1m5 0h1m2 0h4m1 0h2m2 0h1m1 0h1m2 0h1m1 0h1m1 0h1M0 28.5h7m1 0h2m3 0h2m2 0h1m1 0h1m1 0h1m1 0h4"/></svg></div></div><div id="ig-text"><p id="ig-ask"></p><p id="ig-handle">@activism.wtf</p></div></div>' +
       '<div id="hint">Drag this window onto the TV, then click here for full screen</div></body></html>');
@@ -2259,7 +2278,15 @@
     if (!tvWinOpen()) return;
     var d = tvWin.document;
     var on = !!tvStream && tvOk && !!current && !stoppedNow && !problemNow && (liveState === "playing" || liveState === "paused");
-    d.body.className = on ? "live" : "off";
+    if (on) tvLastLive = Date.now();
+    var rest = !on && tvCfg.rest !== false && Date.now() - Math.max(tvLastLive, lastTouch) > TV_REST_AFTER;
+    d.body.className = on ? "live" : "off" + (rest ? " rest" : "");
+    d.getElementById("rest-h").textContent = tvCfg.off;
+    var how = d.getElementById("how");
+    how.innerHTML = "";
+    (tvCfg.how || "").split("·").map(function (x) { return x.trim(); }).filter(Boolean).forEach(function (t) {
+      var sp = d.createElement("span"); sp.textContent = t; how.appendChild(sp);
+    });
     d.getElementById("cam").style.transform = tvCfg.mirror ? "scaleX(-1)" : "";
     d.getElementById("headline").textContent = tvCfg.headline;
     d.getElementById("sub").textContent = tvCfg.sub;
@@ -2273,9 +2300,28 @@
     d.getElementById("ig-n").textContent = tvCfg.igFollowers || "";
     d.getElementById("ig-bub").hidden = !tvCfg.igFollowers;
     tvViews();
-    replaySync(on);
+    replaySync(on || rest);
     tvTime();
   }
+  // Resting screen: after 10 minutes with nobody watching (and nobody using
+  // the laptop), the TV goes black with a faint logo that moves every minute.
+  var TV_REST_AFTER = 10 * 60 * 1000, tvLastLive = Date.now(), tvResting = false;
+  function tvRestDrift() {
+    if (!tvWinOpen()) return;
+    var d = tvWin.document, logo = d.querySelector("#rest .rest-logo"), h = d.getElementById("rest-h");
+    if (!logo || !h) return;
+    var x = 8 + Math.random() * 60, y = 10 + Math.random() * 65;
+    logo.style.left = x + "vw"; logo.style.top = y + "vh";
+    h.style.left = x + "vw"; h.style.top = "calc(" + y + "vh + 8vh)";
+  }
+  setInterval(function () {
+    if (!tvWinOpen()) return;
+    var was = tvResting;
+    tvSync();
+    tvResting = tvWin.document.body.classList.contains("rest");
+    if (tvResting) tvRestDrift();
+    else if (was) tvResting = false;
+  }, 60000);
   function tvViews() {
     if (!tvWinOpen()) return;
     var base = Math.max(0, +tvCfg.views || 0);
@@ -2285,6 +2331,12 @@
     tvWin.document.getElementById("views-n").textContent = n.toLocaleString("en-AU");
   }
   setInterval(tvViews, 1000);
+  // Wake the TV straight away when someone starts using the laptop.
+  ["pointerdown", "keydown", "touchstart"].forEach(function (e) {
+    document.addEventListener(e, function () {
+      if (tvWinOpen() && tvWin.document.body.classList.contains("rest")) { lastTouch = Date.now(); tvSync(); }
+    }, true);
+  });
   function tvTime() {
     if (!tvAlive() || !current) return;
     var d = tvWin.document, dur = isFinite(video.duration) && video.duration ? video.duration : current.version.secs || 0;
@@ -2304,20 +2356,23 @@
     $("tv-ig-followers").value = tvCfg.igFollowers;
     $("tv-mirror").checked = !!tvCfg.mirror;
     $("tv-replay").checked = tvCfg.replay !== false;
+    $("tv-rest").checked = tvCfg.rest !== false;
+    $("tv-how").value = tvCfg.how;
   }
   $("tv-views").addEventListener("input", function () {
     tvCfg.views = parseInt($("tv-views").value.replace(/[^0-9]/g, ""), 10) || 0;
     tvCfg.viewsAt = Date.now();
     tvSave(); tvViews();
   });
-  [["tv-headline", "headline"], ["tv-sub", "sub"], ["tv-off", "off"], ["tv-off-sub", "offSub"], ["tv-ig-ask", "igAsk"], ["tv-ig-followers", "igFollowers"]].forEach(function (p) {
+  [["tv-headline", "headline"], ["tv-sub", "sub"], ["tv-off", "off"], ["tv-off-sub", "offSub"], ["tv-how", "how"], ["tv-ig-ask", "igAsk"], ["tv-ig-followers", "igFollowers"]].forEach(function (p) {
     $(p[0]).addEventListener("input", function () { tvCfg[p[1]] = $(p[0]).value; tvSave(); tvSync(); });
   });
   $("tv-mirror").onchange = function () { tvCfg.mirror = $("tv-mirror").checked; tvSave(); tvSync(); };
   $("tv-replay").onchange = function () { tvCfg.replay = $("tv-replay").checked; tvSave(); tvSync(); };
+  $("tv-rest").onchange = function () { tvCfg.rest = $("tv-rest").checked; tvSave(); tvSync(); };
   $("tv-cam").onchange = function () { tvCfg.device = $("tv-cam").value; tvSave(); if (tvAlive() || tvStream) tvCamera(); };
   $("tv-reset").onclick = function () {
-    ["headline", "sub", "off", "offSub", "mirror", "replay", "views", "viewsAt", "igAsk", "igFollowers"].forEach(function (k) { tvCfg[k] = TV_DEFAULTS[k]; });
+    ["headline", "sub", "off", "offSub", "how", "rest", "mirror", "replay", "views", "viewsAt", "igAsk", "igFollowers"].forEach(function (k) { tvCfg[k] = TV_DEFAULTS[k]; });
     tvSave(); tvFill(); tvSync();
   };
   $("tv-open").onclick = function () {

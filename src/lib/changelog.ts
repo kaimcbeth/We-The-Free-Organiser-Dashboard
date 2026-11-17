@@ -75,6 +75,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: 'Movie player TV: a "3 minutes · Free treat after · Just ask us" line between films (change it in TV camera), "Want to give it a shot? Ask us." while someone watches, and the screen rests (black with a faint drifting logo) after 10 minutes with no viewers, waking as soon as someone uses the laptop.',
+      },
+      {
+        level: "organiser",
         text: 'Movie player TV: between films it now loops short bits of today\'s saved reactions under "Earlier today", shows how many have watched today across all your laptops (when online), and the We The Free logo works offline.',
       },
       {
