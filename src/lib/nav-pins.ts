@@ -52,6 +52,12 @@ export const NAV_PINS: NavPin[] = [
     match: "/resources/prompts",
   },
   {
+    key: "fb-groups",
+    label: "Facebook groups",
+    href: "/facebook-groups",
+    match: "/facebook-groups",
+  },
+  {
     key: "feedback",
     label: "Feedback inbox",
     href: "/feedback-inbox",

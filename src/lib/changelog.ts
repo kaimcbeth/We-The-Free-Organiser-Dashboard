@@ -67,7 +67,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Pin things you open a lot to the top bar, like the Social Hub, Photo Hub, Equipment or Movie player. Tap the pin at the end of the tabs to choose up to 4.",
+        text: "Make the top bar your own: tap the pin at the end of the tabs to take off main tabs you don't use, and pin up to 4 things you open a lot (Social Hub, Photo Hub, Equipment, Movie player and more). Resources cards and the Photo Hub have their own pin button too.",
       },
     ],
   },

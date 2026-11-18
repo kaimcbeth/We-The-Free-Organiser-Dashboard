@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { usePathname } from "next/navigation";
 import { Sheet } from "@/components/sheet";
+import { PinIcon, usePins } from "@/components/nav-pins-context";
 import { MAX_PINS, NAV_PINS, pinsFor } from "@/lib/nav-pins";
 
 type NavLink = {
+  key?: string; // main tabs: can be taken off the top bar
   href: string;
   label: string;
   match: (p: string) => boolean;
@@ -16,23 +17,27 @@ type NavLink = {
 
 const LINKS: NavLink[] = [
   {
+    key: "events",
     href: "/",
     label: "Events",
     match: (p) =>
       p === "/" || p.startsWith("/events") || p.startsWith("/calendar"),
   },
   {
+    key: "actions",
     href: "/tasks",
     label: "Actions",
     match: (p) => p.startsWith("/tasks"),
   },
   // People lives inside Insights (Kai, 19 Nov 2026: Insights | People switch).
   {
+    key: "insights",
     href: "/insights",
     label: "Insights",
     match: (p) => p.startsWith("/insights") || p.startsWith("/people"),
   },
   {
+    key: "resources",
     href: "/resources",
     label: "Resources",
     // FB groups (God Mode) opens from Resources.
@@ -40,6 +45,7 @@ const LINKS: NavLink[] = [
       p.startsWith("/resources") || p.startsWith("/facebook-groups"),
   },
   {
+    key: "funding",
     href: "/funding",
     label: "Funding",
     match: (p) => p.startsWith("/funding"),
@@ -48,26 +54,26 @@ const LINKS: NavLink[] = [
 
 export function NavLinks({
   openTasks = 0,
-  pins = [],
-  rsl = false,
 }: {
   openTasks?: number;
   isGod?: boolean; // FB groups moved to Resources; kept for callers
-  pins?: string[]; // the person's pinned items (nav_pins)
-  rsl?: boolean; // regional lead or God: can pin RSL-only items
 }) {
   const path = usePathname();
-  const [mine, setMine] = useState(pins);
+  const ctx = usePins();
   const [editing, setEditing] = useState(false);
-  const pinned: NavLink[] = pinsFor(mine, rsl).map((p) => ({
-    href: p.href,
-    label: p.label,
-    pinned: true,
-    match: (x) => !p.match.includes("#") && x.startsWith(p.match),
-  }));
+  const pinned: NavLink[] = pinsFor(ctx?.pins ?? [], ctx?.rsl ?? false).map(
+    (p) => ({
+      href: p.href,
+      label: p.label,
+      pinned: true,
+      match: (x) => !p.match.includes("#") && x.startsWith(p.match),
+    }),
+  );
   // A pinned page lights up its own tab, not Resources.
   const onPinned = pinned.some((x) => x.match(path));
-  const links = [...LINKS, ...pinned].map((l) => ({
+  const hidden = ctx?.hidden ?? [];
+  const main = LINKS.filter((l) => !l.key || !hidden.includes(l.key));
+  const links = [...main, ...pinned].map((l) => ({
     ...l,
     active: l.match(path) && (l.pinned || !onPinned),
   }));
@@ -82,9 +88,7 @@ export function NavLinks({
             className={`border-b-2 px-2.5 pb-2.5 pt-1 text-sm font-medium sm:px-3 ${
               l.active
                 ? "border-pink text-white"
-                : l.pinned
-                  ? "border-transparent text-cyan/80 hover:text-cyan"
-                  : "border-transparent text-white/65 hover:text-white"
+                : "border-transparent text-white/65 hover:text-white"
             }`}
           >
             {l.label}
@@ -106,75 +110,54 @@ export function NavLinks({
         </button>
       </nav>
       {/* Outside the nav, which doesn't wrap its text. */}
-      {editing && (
-        <PinSheet
-          pins={mine}
-          rsl={rsl}
-          onChange={setMine}
-          onClose={() => setEditing(false)}
-        />
-      )}
+      {editing && <PinSheet onClose={() => setEditing(false)} />}
     </>
   );
 }
 
-function PinIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      aria-hidden
-    >
-      <path
-        d="M7.5 3h5l-.8 5 2.8 2.5v1H5.5v-1L8.3 8 7.5 3zM10 11.5V17"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function PinSheet({
-  pins,
-  rsl,
-  onChange,
-  onClose,
-}: {
-  pins: string[];
-  rsl: boolean;
-  onChange: (pins: string[]) => void;
-  onClose: () => void;
-}) {
-  const router = useRouter();
-  const [error, setError] = useState("");
+function PinSheet({ onClose }: { onClose: () => void }) {
+  const ctx = usePins();
+  if (!ctx) return null;
+  const { pins, hidden, rsl, toggle, toggleMain, error } = ctx;
   const options = NAV_PINS.filter((p) => !p.rsl || rsl);
-  async function toggle(key: string) {
-    const next = pins.includes(key)
-      ? pins.filter((k) => k !== key)
-      : [...pins, key];
-    if (next.length > MAX_PINS) return;
-    const before = pins;
-    onChange(next);
-    setError("");
-    const { error } = await createClient()
-      .from("nav_pins")
-      .upsert({ pins: next, updated_at: new Date().toISOString() });
-    if (error) {
-      onChange(before);
-      setError("Couldn't save. Please try again.");
-    } else router.refresh();
-  }
   const full = pins.length >= MAX_PINS;
   return (
     <Sheet title="Pin to the top bar" onClose={onClose}>
       <p className="text-sm text-stone-600">
-        Pick up to {MAX_PINS} things you open a lot. They sit after the main
-        tabs, just for you.
+        Choose what sits in your top bar. Only you see your choices. You can
+        also tap the pin on any Resources card.
       </p>
-      <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+      <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-stone-500">
+        Main tabs
+      </h3>
+      <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+        {LINKS.filter((l) => l.key).map((l) => {
+          const on = !hidden.includes(l.key!);
+          return (
+            <li key={l.key}>
+              <button
+                type="button"
+                onClick={() => toggleMain(l.key!)}
+                aria-pressed={on}
+                className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium ring-1 transition-colors ${
+                  on
+                    ? "bg-navy text-white ring-navy"
+                    : "bg-white text-navy ring-stone-200 hover:ring-navy/40"
+                }`}
+              >
+                <PinIcon
+                  className={`h-4 w-4 shrink-0 ${on ? "text-cyan" : "text-stone-400"}`}
+                />
+                {l.label}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      <h3 className="mt-5 text-xs font-semibold uppercase tracking-wide text-stone-500">
+        Pin up to {MAX_PINS} more
+      </h3>
+      <ul className="mt-2 grid gap-2 sm:grid-cols-2">
         {options.map((p) => {
           const on = pins.includes(p.key);
           return (

@@ -1,5 +1,7 @@
 "use client";
 
+import { PinToggle } from "@/components/nav-pins-context";
+
 import { fillThumbs } from "@/lib/photo-thumbs";
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -264,9 +266,12 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
 
   return (
     <section id="photos" className="mt-6">
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
-        Photo Hub
-      </h2>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+          Photo Hub
+        </h2>
+        <PinToggle k="photos" />
+      </div>
       <div className="rounded-2xl bg-white p-3 ring-1 ring-black/5">
         <p className="text-sm text-stone-600">
           Good photos from your events, or older ones. They&apos;re used on your

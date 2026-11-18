@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { RESOURCE_SECTIONS, RESOURCES_COMING_SOON } from "@/lib/resources";
 import { CommunityPhotos } from "@/components/community-photos";
+import { Pinnable } from "@/components/nav-pins-context";
 import { GuideShare } from "@/components/guide-share";
 import { FeedbackCards } from "@/components/feedback-cards";
 import { PodShareButton } from "@/components/engagement-pod";
@@ -64,43 +65,45 @@ export function ResourcesList({
           "social media hub instagram posts carousel caption repost share main page",
           ...SOCIAL_POSTS.map((p) => p.title),
         ) && (
-          <a
-            href={`${path.replace(/\/$/, "")}/social`}
-            data-resource="social"
-            className="mt-6 flex items-center gap-4 rounded-2xl bg-navy p-4 text-white shadow-sm hover:ring-2 hover:ring-pink"
-          >
-            {SOCIAL_POSTS[0] && (
-              // eslint-disable-next-line @next/next/no-img-element -- small static preview
-              <img
-                src={slideUrl(SOCIAL_POSTS[0], 1)}
-                alt=""
-                className="h-20 w-16 shrink-0 rounded-lg object-cover"
-              />
-            )}
-            <span className="min-w-0 flex-1">
-              <span className="block font-semibold">
-                <span aria-hidden className="mr-1.5">
-                  📲
+          <Pinnable k="social" dark>
+            <a
+              href={`${path.replace(/\/$/, "")}/social`}
+              data-resource="social"
+              className="mt-6 flex items-center gap-4 rounded-2xl bg-navy p-4 text-white shadow-sm hover:ring-2 hover:ring-pink"
+            >
+              {SOCIAL_POSTS[0] && (
+                // eslint-disable-next-line @next/next/no-img-element -- small static preview
+                <img
+                  src={slideUrl(SOCIAL_POSTS[0], 1)}
+                  alt=""
+                  className="h-20 w-16 shrink-0 rounded-lg object-cover"
+                />
+              )}
+              <span className="min-w-0 flex-1">
+                <span className="block font-semibold">
+                  <span aria-hidden className="mr-1.5">
+                    📲
+                  </span>
+                  Social Media Hub
+                  <NewTag k="social" />
                 </span>
-                Social Media Hub
-                <NewTag k="social" />
+                <span className="block text-sm text-white/75">
+                  Posts from the We The Free main page with captions, ready to
+                  post on your Instagram with your username on them.
+                  {SOCIAL_POSTS[0] && (
+                    <>
+                      {" "}
+                      Newest:{" "}
+                      <b className="text-white">{SOCIAL_POSTS[0].title}</b>
+                    </>
+                  )}
+                </span>
               </span>
-              <span className="block text-sm text-white/75">
-                Posts from the We The Free main page with captions, ready to
-                post on your Instagram with your username on them.
-                {SOCIAL_POSTS[0] && (
-                  <>
-                    {" "}
-                    Newest:{" "}
-                    <b className="text-white">{SOCIAL_POSTS[0].title}</b>
-                  </>
-                )}
+              <span aria-hidden className="text-xl">
+                →
               </span>
-            </span>
-            <span aria-hidden className="text-xl">
-              →
-            </span>
-          </a>
+            </a>
+          </Pinnable>
         )}
         {rsl &&
           !core &&
@@ -108,29 +111,31 @@ export function ResourcesList({
             q,
             "organiser hangout monthly call slides deck powerpoint icebreaker exercise activity activities announcements speaker notes present",
           ) && (
-            <a
-              href="/resources/hangouts"
-              data-resource="hangouts"
-              className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
-            >
-              <span>
-                <span className="block font-semibold">
-                  <span aria-hidden className="mr-1.5">
-                    🗓️
+            <Pinnable k="hangouts">
+              <a
+                href="/resources/hangouts"
+                data-resource="hangouts"
+                className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+              >
+                <span>
+                  <span className="block font-semibold">
+                    <span aria-hidden className="mr-1.5">
+                      🗓️
+                    </span>
+                    Organiser hangouts
+                    <NewTag k="hangouts" />
                   </span>
-                  Organiser hangouts
-                  <NewTag k="hangouts" />
+                  <span className="block text-sm text-stone-600">
+                    Put together this month&apos;s one-hour organiser hangout
+                    from icebreakers, activities and announcements, then present
+                    it or download the slides with speaker notes.
+                  </span>
                 </span>
-                <span className="block text-sm text-stone-600">
-                  Put together this month&apos;s one-hour organiser hangout from
-                  icebreakers, activities and announcements, then present it or
-                  download the slides with speaker notes.
+                <span aria-hidden className="text-xl">
+                  →
                 </span>
-              </span>
-              <span aria-hidden className="text-xl">
-                →
-              </span>
-            </a>
+              </a>
+            </Pinnable>
           )}
         {has(
           q,
@@ -303,146 +308,156 @@ export function ResourcesList({
           q,
           "equipment guide inventory gear buy table signs headphones splitters a-frame kit australia",
         ) && (
-          <a
-            href={`${path.replace(/\/$/, "")}/equipment`}
-            data-resource="equipment"
-            className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
-          >
-            <span>
-              <span className="flex flex-wrap items-center gap-2">
-                <span className="font-semibold">
-                  <span aria-hidden className="mr-1.5">
-                    🧰
-                  </span>
-                  Equipment guide and inventory
-                  <NewTag k="equipment" />
-                </span>
-                <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
-                  Australia
-                </span>
-              </span>
-              <span className="block text-sm text-stone-600">
-                The base kit, upgrades and where to buy them. Mark what your
-                community has, and keep track of who has each thing.
-              </span>
-            </span>
-            <span aria-hidden className="text-xl">
-              →
-            </span>
-          </a>
-        )}
-        {has(
-          q,
-          "recommended prizes treats movie challenge biscuits cookies oreo biscoff lollies chips vegan reimbursement",
-        ) && (
-          <a
-            href={`${path.replace(/\/$/, "")}/prizes`}
-            data-resource="prizes"
-            className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
-          >
-            <span>
-              <span className="flex flex-wrap items-center gap-2">
-                <span className="font-semibold">
-                  <span aria-hidden className="mr-1.5">
-                    🍪
-                  </span>
-                  Recommended prizes
-                  <NewTag k="prizes" />
-                </span>
-                <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
-                  Australia
-                </span>
-              </span>
-              <span className="block text-sm text-stone-600">
-                Vegan treats for the Movie Challenge: cost per prize against the
-                reimbursement, where to buy, and how many packs to get.
-              </span>
-            </span>
-            <span aria-hidden className="text-xl">
-              →
-            </span>
-          </a>
-        )}
-        {!core &&
-          has(
-            q,
-            "movie player challenge video film laptop offline survey impact a/b test live count",
-          ) && (
+          <Pinnable k="equipment">
             <a
-              href="/resources/movie-player"
-              data-resource="movie-player"
-              className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
-            >
-              <span>
-                <span className="block font-semibold">
-                  <span aria-hidden className="mr-1.5">
-                    🎬
-                  </span>
-                  Movie player
-                  <NewTag k="movie-player" />
-                </span>
-                <span className="block text-sm text-stone-600">
-                  Play the Movie Challenge films on laptops with no internet,
-                  with a quick impact question after each. See the live count
-                  and which film has the most impact.
-                </span>
-              </span>
-              <span aria-hidden className="text-xl">
-                →
-              </span>
-            </a>
-          )}
-        {!path.startsWith("/attendance") &&
-          has(
-            q,
-            "group chat discussion prompts questions whatsapp community",
-          ) && (
-            <a
-              href="/resources/prompts"
-              className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
-            >
-              <span>
-                <span className="block font-semibold">
-                  <span aria-hidden className="mr-1.5">
-                    💬
-                  </span>
-                  Group chat discussion prompts
-                </span>
-                <span className="block text-sm text-stone-600">
-                  {DISCUSSION_PROMPTS.length} questions to post in your
-                  community chat between events. Pick one, copy it, mark it
-                  posted.
-                </span>
-              </span>
-              <span aria-hidden className="text-xl">
-                →
-              </span>
-            </a>
-          )}
-        {!core &&
-          has(q, "facebook fb groups promote local vegan community") && (
-            <a
-              href="/facebook-groups"
+              href={`${path.replace(/\/$/, "")}/equipment`}
+              data-resource="equipment"
               className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
             >
               <span>
                 <span className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold">
                     <span aria-hidden className="mr-1.5">
-                      👥
+                      🧰
                     </span>
-                    Facebook groups
+                    Equipment guide and inventory
+                    <NewTag k="equipment" />
+                  </span>
+                  <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
+                    Australia
                   </span>
                 </span>
                 <span className="block text-sm text-stone-600">
-                  Local vegan Facebook groups to share your events in, with Open
-                  all to post in every group near you.
+                  The base kit, upgrades and where to buy them. Mark what your
+                  community has, and keep track of who has each thing.
                 </span>
               </span>
               <span aria-hidden className="text-xl">
                 →
               </span>
             </a>
+          </Pinnable>
+        )}
+        {has(
+          q,
+          "recommended prizes treats movie challenge biscuits cookies oreo biscoff lollies chips vegan reimbursement",
+        ) && (
+          <Pinnable k="prizes">
+            <a
+              href={`${path.replace(/\/$/, "")}/prizes`}
+              data-resource="prizes"
+              className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+            >
+              <span>
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold">
+                    <span aria-hidden className="mr-1.5">
+                      🍪
+                    </span>
+                    Recommended prizes
+                    <NewTag k="prizes" />
+                  </span>
+                  <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
+                    Australia
+                  </span>
+                </span>
+                <span className="block text-sm text-stone-600">
+                  Vegan treats for the Movie Challenge: cost per prize against
+                  the reimbursement, where to buy, and how many packs to get.
+                </span>
+              </span>
+              <span aria-hidden className="text-xl">
+                →
+              </span>
+            </a>
+          </Pinnable>
+        )}
+        {!core &&
+          has(
+            q,
+            "movie player challenge video film laptop offline survey impact a/b test live count",
+          ) && (
+            <Pinnable k="movie-player">
+              <a
+                href="/resources/movie-player"
+                data-resource="movie-player"
+                className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+              >
+                <span>
+                  <span className="block font-semibold">
+                    <span aria-hidden className="mr-1.5">
+                      🎬
+                    </span>
+                    Movie player
+                    <NewTag k="movie-player" />
+                  </span>
+                  <span className="block text-sm text-stone-600">
+                    Play the Movie Challenge films on laptops with no internet,
+                    with a quick impact question after each. See the live count
+                    and which film has the most impact.
+                  </span>
+                </span>
+                <span aria-hidden className="text-xl">
+                  →
+                </span>
+              </a>
+            </Pinnable>
+          )}
+        {!path.startsWith("/attendance") &&
+          has(
+            q,
+            "group chat discussion prompts questions whatsapp community",
+          ) && (
+            <Pinnable k="prompts">
+              <a
+                href="/resources/prompts"
+                className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+              >
+                <span>
+                  <span className="block font-semibold">
+                    <span aria-hidden className="mr-1.5">
+                      💬
+                    </span>
+                    Group chat discussion prompts
+                  </span>
+                  <span className="block text-sm text-stone-600">
+                    {DISCUSSION_PROMPTS.length} questions to post in your
+                    community chat between events. Pick one, copy it, mark it
+                    posted.
+                  </span>
+                </span>
+                <span aria-hidden className="text-xl">
+                  →
+                </span>
+              </a>
+            </Pinnable>
+          )}
+        {!core &&
+          has(q, "facebook fb groups promote local vegan community") && (
+            <Pinnable k="fb-groups">
+              <a
+                href="/facebook-groups"
+                className="mt-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+              >
+                <span>
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold">
+                      <span aria-hidden className="mr-1.5">
+                        👥
+                      </span>
+                      Facebook groups
+                    </span>
+                  </span>
+                  <span className="block text-sm text-stone-600">
+                    Local vegan Facebook groups to share your events in, with
+                    Open all to post in every group near you.
+                  </span>
+                </span>
+                <span aria-hidden className="text-xl">
+                  →
+                </span>
+              </a>
+            </Pinnable>
           )}
         {teamId && !q && (
           <div id="photo-hub" className="scroll-mt-24">
