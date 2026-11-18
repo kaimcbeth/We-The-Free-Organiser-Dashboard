@@ -9,6 +9,8 @@ import {
   splitSign,
   sourceFromFile,
   tileName,
+  boardGroups,
+  type Boards,
   type Layout,
   type Paper,
   type SignSize,
@@ -172,6 +174,7 @@ export function SignSplitter() {
         paper,
         mode,
         source.designs,
+        !!source.fixedSize,
       );
       const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
       const a = document.createElement("a");
@@ -308,6 +311,7 @@ export function SignSplitter() {
             />
           </div>
           <Preview
+            boards={source?.fixedSize ? boardGroups(layout) : null}
             layout={layout}
             image={source?.previews[[...picked][0] ?? 0] ?? null}
           />
@@ -329,7 +333,7 @@ export function SignSplitter() {
         The PDF starts with a guide showing where each sheet goes and ends with
         these steps, so you can follow along while you put it together.
       </p>
-      <SignSteps />
+      <SignSteps banner={!!source?.fixedSize} />
     </div>
   );
 }
@@ -361,35 +365,66 @@ function Choice({
 function Preview({
   layout: l,
   image,
+  boards,
 }: {
   layout: Layout;
   image: string | null;
+  boards: Boards | null;
 }) {
   return (
-    <div
-      className="relative w-full max-w-md overflow-hidden rounded-lg bg-stone-200"
-      style={{ aspectRatio: `${l.signW} / ${l.signH}` }}
-    >
-      {image && (
-        // eslint-disable-next-line @next/next/no-img-element -- local preview
-        <img src={image} alt="" className="absolute inset-0 h-full w-full" />
-      )}
+    <>
       <div
-        className="absolute inset-0 grid"
-        style={{
-          gridTemplateColumns: `repeat(${l.cols}, 1fr)`,
-          gridTemplateRows: `repeat(${l.rows}, 1fr)`,
-        }}
+        className="relative w-full max-w-md overflow-hidden rounded-lg bg-stone-200"
+        style={{ aspectRatio: `${l.signW} / ${l.signH}` }}
       >
-        {Array.from({ length: l.cols * l.rows }, (_, i) => (
-          <span
-            key={i}
-            className="flex items-center justify-center border border-dashed border-white/80 text-sm font-bold text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]"
+        {image && (
+          // eslint-disable-next-line @next/next/no-img-element -- local preview
+          <img src={image} alt="" className="absolute inset-0 h-full w-full" />
+        )}
+        <div
+          className="absolute inset-0 grid"
+          style={{
+            gridTemplateColumns: `repeat(${l.cols}, 1fr)`,
+            gridTemplateRows: `repeat(${l.rows}, 1fr)`,
+          }}
+        >
+          {Array.from({ length: l.cols * l.rows }, (_, i) => (
+            <span
+              key={i}
+              className="flex items-center justify-center border border-dashed border-white/80 text-sm font-bold text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]"
+            >
+              {tileName(Math.floor(i / l.cols), i % l.cols)}
+            </span>
+          ))}
+        </div>
+        {boards && (
+          <div
+            className="pointer-events-none absolute inset-0 grid"
+            style={{
+              gridTemplateColumns: boards.cols.map((n) => `${n}fr`).join(" "),
+              gridTemplateRows: boards.rows.map((n) => `${n}fr`).join(" "),
+            }}
           >
-            {tileName(Math.floor(i / l.cols), i % l.cols)}
-          </span>
-        ))}
+            {Array.from({ length: boards.count }, (_, i) => (
+              <span
+                key={i}
+                className="relative m-0.5 rounded-sm border-[3px] border-yellow"
+              >
+                <span className="absolute top-0.5 left-1.5 text-[11px] font-bold text-yellow [text-shadow:0_1px_2px_rgba(0,0,0,0.7)]">
+                  Board {i + 1}
+                </span>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+      {boards && (
+        <p className="text-xs text-stone-600">
+          Backing boards are A2 at most, so this banner goes on{" "}
+          <b>{boards.count} A2 boards</b> (outlined in yellow). Tape and back
+          each piece on its own, then line the boards up along the table.
+        </p>
+      )}
+    </>
   );
 }

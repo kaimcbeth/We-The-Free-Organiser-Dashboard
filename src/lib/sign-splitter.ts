@@ -34,6 +34,7 @@ const PT = 72 / 25.4; // points per mm
 // Rendered from the SignSteps component (src/components/sign-steps.tsx);
 // re-render it when the steps change.
 const HOW_TO = "/resources/signs/how-to.png";
+const HOW_TO_BANNER = "/resources/signs/how-to-banner.png"; // <SignSteps printable banner />
 
 export type Layout = {
   paperW: number; // sheet size, mm
@@ -113,6 +114,49 @@ export function layouts(W: number, H: number, paper: Paper) {
 const ROWS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 export const tileName = (r: number, c: number) => `${ROWS[r] ?? "?"}${c + 1}`;
 
+// Backing boards come no bigger than A2, so a banner is backed in pieces:
+// groups of whole sheets that each fit on an A2 board (either way round).
+export const BOARD = [594, 420] as const; // A2, mm
+export type Boards = {
+  cols: number[]; // sheets per board, across
+  rows: number[]; // sheets per board, down
+  count: number;
+};
+const split = (n: number, most: number) => {
+  const parts = Math.ceil(n / most);
+  const base = Math.floor(n / parts);
+  return Array.from({ length: parts }, (_, i) =>
+    i < n - base * parts ? base + 1 : base,
+  );
+};
+export function boardGroups(l: Layout): Boards {
+  const iw = l.paperW - 2 * MARGIN;
+  const ih = l.paperH - 2 * MARGIN;
+  const fits = (n: number, step: number, max: number) =>
+    n * (step - OVERLAP) + OVERLAP <= max;
+  let best: Boards | null = null;
+  for (const [bw, bh] of [BOARD, [BOARD[1], BOARD[0]]]) {
+    let gc = 1;
+    while (gc < l.cols && fits(gc + 1, iw, bw)) gc++;
+    let gr = 1;
+    while (gr < l.rows && fits(gr + 1, ih, bh)) gr++;
+    const cols = split(l.cols, gc);
+    const rows = split(l.rows, gr);
+    const b = { cols, rows, count: cols.length * rows.length };
+    if (!best || b.count < best.count) best = b;
+  }
+  return best!;
+}
+// Which board a sheet is on (1-based, across then down).
+export function boardOf(b: Boards, r: number, c: number) {
+  const at = (sizes: number[], i: number) => {
+    let k = 0;
+    while (i >= sizes[k]) i -= sizes[k++];
+    return k;
+  };
+  return at(b.rows, r) * b.cols.length + at(b.cols, c) + 1;
+}
+
 // Where each sheet's printed area sits on the sign (mm from top-left).
 function tileRect(l: Layout, r: number, c: number) {
   const iw = l.paperW - 2 * MARGIN;
@@ -145,6 +189,7 @@ export async function splitSign(
   paper: Paper,
   mode: "exact" | "fit",
   names: string[] = [],
+  boards = false, // a banner: backed in A2 pieces
 ): Promise<Uint8Array> {
   const out = await PDFDocument.create();
   const font = await out.embedFont(StandardFonts.Helvetica);
@@ -201,7 +246,53 @@ export async function splitSign(
           color: rgb(1, 1, 1),
         });
       }
-    const title = `${name}: ${Math.round(l.signW)} × ${Math.round(l.signH)} mm on ${l.cols * l.rows} ${paper} sheets (${l.paperW > l.paperH ? "landscape" : "portrait"})`;
+    const bg = boards ? boardGroups(l) : null;
+    if (bg) {
+      // Thick yellow outline around each A2 board's sheets.
+      let y0 = 0;
+      let r0 = 0;
+      bg.rows.forEach((nr, bi) => {
+        let x0 = 0;
+        let c0 = 0;
+        const y1 =
+          r0 + nr === l.rows
+            ? l.signH
+            : tileRect(l, r0 + nr - 1, 0).y +
+              tileRect(l, 0, 0).ih -
+              OVERLAP / 2;
+        bg.cols.forEach((nc, bj) => {
+          const x1 =
+            c0 + nc === l.cols
+              ? l.signW
+              : tileRect(l, 0, c0 + nc - 1).x +
+                tileRect(l, 0, 0).iw -
+                OVERLAP / 2;
+          const a = toG(x0, y1);
+          const b = toG(x1, y0);
+          gp.drawRectangle({
+            x: a.x + 1.5,
+            y: a.y + 1.5,
+            width: b.x - a.x - 3,
+            height: b.y - a.y - 3,
+            borderColor: rgb(1, 0.85, 0.06),
+            borderWidth: 3,
+          });
+          const label = `Board ${bi * bg.cols.length + bj + 1}`;
+          gp.drawText(label, {
+            x: a.x + 6,
+            y: a.y + 6,
+            size: 9,
+            font: bold,
+            color: rgb(1, 0.85, 0.06),
+          });
+          x0 = x1;
+          c0 += nc;
+        });
+        y0 = y1;
+        r0 += nr;
+      });
+    }
+    const title = `${name}: ${Math.round(l.signW)} × ${Math.round(l.signH)} mm on ${l.cols * l.rows} ${paper} sheets (${l.paperW > l.paperH ? "landscape" : "portrait"})${bg ? `, ${bg.count} A2 boards` : ""}`;
     gp.drawText(title, {
       x: 20 * PT,
       y: 210 * PT - 18 * PT,
@@ -209,7 +300,9 @@ export async function splitSign(
       font: bold,
     });
     gp.drawText(
-      "Print at Actual size (100%), not Fit to page. Lay the sheets out like this grid; each sheet's name is on its bottom edge. Step-by-step pictures are on the last page.",
+      bg
+        ? "Print at Actual size (100%), not Fit to page. Lay the sheets out like this grid; each sheet's name is on its bottom edge. Backing boards are A2 at most, so join and back the sheets in the yellow pieces, one board each, then line the boards up along the table. Step-by-step pictures are on the last page."
+        : "Print at Actual size (100%), not Fit to page. Lay the sheets out like this grid; each sheet's name is on its bottom edge. Step-by-step pictures are on the last page.",
       {
         x: 20 * PT,
         y: 210 * PT - 28 * PT,
@@ -269,7 +362,7 @@ export async function splitSign(
           tick(page, pw - MARGIN + 1, y, pw - 0.5, y);
         }
         page.drawText(
-          `${tileName(r, c)}  ·  row ${ROWS[r]} of ${l.rows}, sheet ${c + 1} of ${l.cols}  ·  ${name}`,
+          `${tileName(r, c)}${bg ? `  ·  Board ${boardOf(bg, r, c)}` : ""}  ·  row ${ROWS[r]} of ${l.rows}, sheet ${c + 1} of ${l.cols}  ·  ${name}`,
           { x: MARGIN * PT + 14, y: 3.8 * PT, size: 6, font, color: grey },
         );
       }
@@ -277,7 +370,9 @@ export async function splitSign(
 
   // Last page: the step-by-step pictures (same as on the sign splitter page).
   try {
-    const png = await (await fetch(HOW_TO)).arrayBuffer();
+    const png = await (
+      await fetch(boards ? HOW_TO_BANNER : HOW_TO)
+    ).arrayBuffer();
     const img = await out.embedPng(png);
     const pw = 297 * PT;
     const ph = 210 * PT;

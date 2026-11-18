@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Table banners in the sign splitter: backing boards are A2 at most, so the preview and the PDF now outline which sheets go on each A2 board (yellow), and the steps show taping and backing it in A2 pieces, then lining the boards up along the table.",
+      },
+      {
+        level: "organiser",
         text: "Sign splitter: a table banner for the Kings roll-up table (1400 × 710 mm, the Best table in the equipment guide), with two Free snack layouts. The 6ft one is now called Table banner (6ft table).",
       },
       {

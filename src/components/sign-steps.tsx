@@ -44,7 +44,31 @@ export const SIGN_STEPS: { title: string; text: string; Pic: Pic }[] = [
   },
 ];
 
-export function SignSteps({ printable = false }: { printable?: boolean }) {
+// A table banner is too big for one backing board (A2 at most), so its last
+// two steps tape and back it in A2 pieces.
+const BANNER_STEPS: typeof SIGN_STEPS = [
+  {
+    title: "Tape it in A2 pieces",
+    text: "Backing boards are A2 at most, so tape the sheets in the yellow pieces from page 1, not as one long banner.",
+    Pic: PiecesPic,
+  },
+  {
+    title: "Back each piece",
+    text: "Glue each piece onto its own A2 board. Where two boards meet, cut that sheet on its tick marks so the picture meets edge to edge. Then line the boards up along the table.",
+    Pic: BoardsPic,
+  },
+];
+
+export function SignSteps({
+  printable = false,
+  banner = false,
+}: {
+  printable?: boolean;
+  banner?: boolean;
+}) {
+  const steps = banner
+    ? [...SIGN_STEPS.slice(0, 4), ...BANNER_STEPS]
+    : SIGN_STEPS;
   return (
     <section className="space-y-3" data-sign-steps>
       <h2
@@ -55,7 +79,7 @@ export function SignSteps({ printable = false }: { printable?: boolean }) {
         How to put it together
       </h2>
       <ol className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {SIGN_STEPS.map(({ title, text, Pic }, i) => (
+        {steps.map(({ title, text, Pic }, i) => (
           <li
             key={title}
             className="overflow-hidden rounded-xl bg-white ring-1 ring-black/10"
@@ -530,6 +554,124 @@ function BackPic() {
         stroke={PAPER}
         strokeOpacity={0.12}
       />
+    </Frame>
+  );
+}
+
+function PiecesPic() {
+  const back = "#e7e5e4";
+  const sheet = (x: number, y: number) => (
+    <rect
+      key={`${x}-${y}`}
+      x={x}
+      y={y}
+      width={24}
+      height={34}
+      fill={back}
+      stroke={LINE}
+      strokeWidth={0.6}
+    />
+  );
+  // Two A2 pieces of two sheets each, with a gap between them.
+  const piece = (x: number) => (
+    <g key={x}>
+      {sheet(x, 24)}
+      {sheet(x + 22, 24)}
+      <rect
+        x={x + 18.5}
+        y={28}
+        width={8}
+        height={26}
+        fill={YELLOW}
+        opacity={0.9}
+      />
+      <rect
+        x={x - 3}
+        y={21}
+        width={52}
+        height={40}
+        rx={2}
+        fill="none"
+        stroke={YELLOW}
+        strokeWidth={1.6}
+      />
+    </g>
+  );
+  return (
+    <Frame>
+      {piece(24)}
+      {piece(88)}
+      <text x={47} y={74} fontSize={7} textAnchor="middle" fill={LINE}>
+        piece 1
+      </text>
+      <text x={111} y={74} fontSize={7} textAnchor="middle" fill={LINE}>
+        piece 2
+      </text>
+      <text
+        x={80}
+        y={92}
+        fontSize={7.5}
+        fontWeight={700}
+        textAnchor="middle"
+        fill={NAVY}
+      >
+        each piece up to A2
+      </text>
+    </Frame>
+  );
+}
+
+function BoardsPic() {
+  // Boards side by side along the front of a table.
+  return (
+    <Frame>
+      {/* table top and legs */}
+      <rect x={10} y={20} width={140} height={5} rx={1.5} fill="#9ca3af" />
+      <rect x={16} y={25} width={3} height={64} fill="#9ca3af" />
+      <rect x={141} y={25} width={3} height={64} fill="#9ca3af" />
+      {[0, 1, 2].map((i) => (
+        <g key={i}>
+          <rect x={22 + i * 39} y={30} width={38} height={44} fill="#c9a26b" />
+          <rect x={23 + i * 39} y={31} width={36} height={42} fill={NAVY} />
+        </g>
+      ))}
+      <text
+        x={80}
+        y={50}
+        fontSize={11}
+        fontWeight={800}
+        textAnchor="middle"
+        fill={PINK}
+      >
+        YOUR
+      </text>
+      <text
+        x={80}
+        y={64}
+        fontSize={11}
+        fontWeight={800}
+        textAnchor="middle"
+        fill={YELLOW}
+      >
+        BANNER
+      </text>
+      {/* edge-to-edge joins */}
+      {[60, 99].map((x) => (
+        <g key={x}>
+          <line
+            x1={x}
+            y1={28}
+            x2={x}
+            y2={76}
+            stroke={CYAN}
+            strokeWidth={1.2}
+            strokeDasharray="2 2"
+          />
+        </g>
+      ))}
+      <text x={80} y={88} fontSize={7} textAnchor="middle" fill={LINE}>
+        A2 boards, edge to edge
+      </text>
     </Frame>
   );
 }
