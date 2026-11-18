@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Sign splitter: sheets are numbered 1, 2, 3… (they were A1, B2…, which looked like paper sizes).",
+      },
+      {
+        level: "organiser",
         text: "Table banners in the sign splitter: backing boards are A2 at most, so the preview and the PDF now outline which sheets go on each A2 board (yellow), and the steps show taping and backing it in A2 pieces, then lining the boards up along the table.",
       },
       {

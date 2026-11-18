@@ -111,8 +111,9 @@ export function layouts(W: number, H: number, paper: Paper) {
   };
 }
 
-const ROWS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-export const tileName = (r: number, c: number) => `${ROWS[r] ?? "?"}${c + 1}`;
+// Sheets are numbered 1, 2, 3… across then down (not A1/B2, which read like paper sizes).
+export const tileName = (r: number, c: number, cols: number) =>
+  `${r * cols + c + 1}`;
 
 // Backing boards come no bigger than A2, so a banner is backed in pieces:
 // groups of whole sheets that each fit on an A2 board (either way round).
@@ -237,7 +238,7 @@ export async function splitSign(
           borderWidth: 1,
           borderDashArray: [4, 3],
         });
-        const label = tileName(r, c);
+        const label = tileName(r, c, l.cols);
         gp.drawText(label, {
           x: (a.x + b.x) / 2 - bold.widthOfTextAtSize(label, 14) / 2,
           y: (a.y + b.y) / 2 - 5,
@@ -362,7 +363,7 @@ export async function splitSign(
           tick(page, pw - MARGIN + 1, y, pw - 0.5, y);
         }
         page.drawText(
-          `${tileName(r, c)}${bg ? `  ·  Board ${boardOf(bg, r, c)}` : ""}  ·  row ${ROWS[r]} of ${l.rows}, sheet ${c + 1} of ${l.cols}  ·  ${name}`,
+          `Sheet ${tileName(r, c, l.cols)} of ${l.cols * l.rows}${bg ? `  ·  Board ${boardOf(bg, r, c)}` : ""}  ·  row ${r + 1}, column ${c + 1}  ·  ${name}`,
           { x: MARGIN * PT + 14, y: 3.8 * PT, size: 6, font, color: grey },
         );
       }

@@ -390,7 +390,7 @@ function Preview({
               key={i}
               className="flex items-center justify-center border border-dashed border-white/80 text-sm font-bold text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]"
             >
-              {tileName(Math.floor(i / l.cols), i % l.cols)}
+              {tileName(Math.floor(i / l.cols), i % l.cols, l.cols)}
             </span>
           ))}
         </div>

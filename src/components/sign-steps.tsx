@@ -19,7 +19,7 @@ export const SIGN_STEPS: { title: string; text: string; Pic: Pic }[] = [
   },
   {
     title: "Lay them out",
-    text: "Each sheet's name (A1, A2…) is on its bottom edge. Lay them out like the guide on page 1.",
+    text: "Each sheet's number (Sheet 1, Sheet 2…) is on its bottom edge. Lay them out like the guide on page 1.",
     Pic: LayoutPic,
   },
   {
@@ -262,8 +262,7 @@ function LayoutPic() {
             textAnchor="middle"
             fill={NAVY}
           >
-            {"AB"[r]}
-            {c + 1}
+            {r * 3 + c + 1}
           </text>
         </g>,
       );
@@ -368,19 +367,19 @@ function TrimPic() {
 }
 
 function OverlapPic() {
-  // A1 on the left with its tick marks; A2 (left edge trimmed) laid over it.
+  // Sheet 1 on the left with its tick marks; sheet 2 (left edge trimmed) laid over it.
   const y = 18;
   const h = 64;
   const w = 64;
   const m = 5;
   const ov = 10;
   const ax = 24;
-  const tickX = ax + w - m - ov; // where A2's picture starts
-  const bx = tickX - m; // A2's sheet x (its trimmed edge sits on the tick)
+  const tickX = ax + w - m - ov; // where sheet 2's picture starts
+  const bx = tickX - m; // sheet 2's x (its trimmed edge sits on the tick)
   return (
     <Frame>
       <Sheet x={ax} y={y} w={w} h={h} m={m} fill={PINK} />
-      {/* A1's tick marks, in its top and bottom margins */}
+      {/* Sheet 1's tick marks, in its top and bottom margins */}
       <line
         x1={tickX}
         y1={y + 0.5}
@@ -423,7 +422,7 @@ function OverlapPic() {
         fill={NAVY}
         textAnchor="middle"
       >
-        A1
+        1
       </text>
       <text
         x={bx + 38}
@@ -433,7 +432,7 @@ function OverlapPic() {
         fill={NAVY}
         textAnchor="middle"
       >
-        A2
+        2
       </text>
       <path
         d={`M ${bx + 52} ${y + h + 10} h -14`}
