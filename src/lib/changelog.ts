@@ -63,11 +63,11 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "DIY signs and banners now cost in colour printing and backing card: table banner ~$30 (Kings roll-up table) to ~$42 (6ft table), handheld signs ~$16 each. The sign splitter shows a What to buy list with the cost, and says thin, plain 80 gsm paper is fine because the card does the stiffening.",
+        text: "DIY signs and banners now cost in colour printing and backing card: table banner ~$21 (Kings roll-up table) to ~$29 (6ft table), handheld signs ~$16 each. The sign splitter shows a What to buy list with the cost, and says thin, plain 80 gsm paper is fine because the card does the stiffening.",
       },
       {
         level: "organiser",
-        text: "Table banners: a Backing to buy box in the sign splitter with how many sheets of black A2 card to get (Liviano 300gsm, $4 each at Officeworks), the total, and a link to buy it.",
+        text: "Table banners: a Backing to buy box in the sign splitter with how many sheets of black A2 card to get (Liviano 180gsm, $2.20 each at Officeworks: thin is fine because the table holds it up), the total, and a link to buy it.",
       },
       {
         level: "organiser",

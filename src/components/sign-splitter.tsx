@@ -429,10 +429,10 @@ function Preview({
 
 // The backing card Kai recommends for table banners (Officeworks, 18 Nov 2026).
 const BACKING = {
-  name: "Liviano A2 Colour Card 300gsm, black",
+  name: "Liviano A2 Colour Card 180gsm, black",
   shop: "Officeworks",
-  url: "https://www.officeworks.com.au/shop/officeworks/p/liviano-a2-colour-card-300gsm-black-ja0420300",
-  price: 4,
+  url: "https://www.officeworks.com.au/shop/officeworks/p/liviano-a2-colour-card-180gsm-black-ja0419890",
+  price: 2.2,
 };
 
 // Officeworks self-serve colour prints on 80 gsm paper (checked 18 Nov 2026).
@@ -489,8 +489,8 @@ function ShoppingList({
         backed in the pieces outlined in yellow.
         {boards.halves > 0 &&
           " Pieces marked (half) only need half a card: cut one card in half and use it for both pieces with that board number."}{" "}
-        300 gsm card rolls up for carrying, and black hides any gaps between
-        pieces.
+        Thin 180 gsm card is enough because the table holds it up. It rolls up
+        for carrying, and black hides any gaps between pieces.
       </p>
       <a
         href={BACKING.url}
