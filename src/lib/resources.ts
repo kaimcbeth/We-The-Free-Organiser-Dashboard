@@ -243,8 +243,8 @@ export const EQUIPMENT_GUIDE: {
           {
             label: "DIY",
             about:
-              "Print the sign on 8 portrait A3 sheets and stick them onto thick cardboard backing.",
-            price: "~$5 each",
+              "Colour-print the sign on 8 portrait A3 sheets (thin, plain 80 gsm paper is fine: about $8 at Officeworks self-serve) and glue them onto backing: 2 sheets of black A2 card ($4 each) or thick cardboard.",
+            price: "~$16 each",
             instructions: "/resources/signs",
           },
           {
@@ -322,8 +322,8 @@ export const EQUIPMENT_GUIDE: {
           {
             label: "DIY",
             about:
-              "Make your own: print the banner design on A3 sheets, tape them together and back them with black A2 card (Liviano 300gsm, $4 a sheet at Officeworks; the sign splitter tells you how many). There's one for a 6ft table and one for the Kings roll-up table.",
-            price: "~$25",
+              "Make your own: colour-print the banner on A3 sheets (thin, plain 80 gsm paper is fine, about $1 a sheet at Officeworks self-serve), tape them together and back them with black A2 card (Liviano 300gsm, $4 a sheet). About $30 for the Kings roll-up table or $42 for a 6ft table, prints and card included; the sign splitter works out exactly what to buy.",
+            price: "~$30–$42",
             instructions: "/resources/signs?sign=table-banner",
           },
           {

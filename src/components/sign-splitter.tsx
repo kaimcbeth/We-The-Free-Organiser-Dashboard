@@ -286,6 +286,12 @@ export function SignSplitter() {
             </button>
           ))}
         </div>
+        <p className="text-xs text-stone-600">
+          <b>Thin, plain paper is fine.</b> Print in colour on everyday 80 gsm
+          paper (Officeworks self-serve: ${PRINT_PRICE.A3.toFixed(2)} an A3, $
+          {PRINT_PRICE.A4.toFixed(2)} an A4). The backing card is what makes it
+          stiff, so you don&apos;t need thick or photo paper.
+        </p>
       </section>
 
       {opts && layout && (
@@ -416,7 +422,7 @@ function Preview({
           </div>
         )}
       </div>
-      {boards && <BackingToBuy boards={boards} />}
+      <ShoppingList layout={l} boards={boards} />
     </>
   );
 }
@@ -429,25 +435,60 @@ const BACKING = {
   price: 4,
 };
 
-function BackingToBuy({ boards }: { boards: Boards }) {
+// Officeworks self-serve colour prints on 80 gsm paper (checked 18 Nov 2026).
+const PRINT_PRICE: Record<Paper, number> = { A3: 0.98, A4: 0.49 };
+const money = (n: number) => `$${n % 1 ? n.toFixed(2) : n.toFixed(0)}`;
+
+function ShoppingList({
+  layout: l,
+  boards,
+}: {
+  layout: Layout;
+  boards: Boards | null;
+}) {
+  const paper: Paper = Math.min(l.paperW, l.paperH) >= 290 ? "A3" : "A4";
+  const sheets = l.cols * l.rows;
+  const print = sheets * PRINT_PRICE[paper];
+  if (!boards)
+    return (
+      <p className="text-xs text-stone-600">
+        Printing: {sheets} {paper} colour prints, about {money(print)} at
+        Officeworks self-serve.
+      </p>
+    );
   const n = boards.buy;
+  const backing = n * BACKING.price;
   return (
     <div className="rounded-xl bg-yellow/25 p-4 ring-1 ring-yellow">
       <p className="text-xs font-bold tracking-wide text-navy uppercase">
-        Backing to buy
+        What to buy · about {money(Math.ceil(print + backing))}
       </p>
-      <p className="mt-1 text-lg font-bold text-navy">
-        {n} × {BACKING.name}
-      </p>
-      <p className="text-sm text-stone-700">
-        ${BACKING.price} each at {BACKING.shop} · about ${n * BACKING.price} in
-        total
-      </p>
+      <ul className="mt-2 space-y-2">
+        <li>
+          <p className="font-bold text-navy">
+            {sheets} × {paper} colour prints on plain 80 gsm paper
+          </p>
+          <p className="text-sm text-stone-700">
+            {money(PRINT_PRICE[paper])} each at Officeworks self-serve · about{" "}
+            {money(Math.round(print * 100) / 100)}. Thin paper is fine: the card
+            backs it.
+          </p>
+        </li>
+        <li>
+          <p className="font-bold text-navy">
+            {n} × {BACKING.name}
+          </p>
+          <p className="text-sm text-stone-700">
+            {money(BACKING.price)} each at {BACKING.shop} · about{" "}
+            {money(backing)}
+          </p>
+        </li>
+      </ul>
       <p className="mt-2 text-xs text-stone-600">
-        Each sheet is A2 (594 × 420 mm), the biggest it comes, so the banner is
+        Each card is A2 (594 × 420 mm), the biggest it comes, so the banner is
         backed in the {boards.count} pieces outlined in yellow.
         {boards.halves > 0 &&
-          ` ${boards.halves === 1 ? "One piece only needs" : `${boards.halves} pieces marked (half) only need`} half a sheet, so cut one sheet in half for ${boards.halves === 1 ? "it" : "them"}.`}{" "}
+          ` ${boards.halves === 1 ? "One piece only needs" : `${boards.halves} pieces marked (half) only need`} half a card, so cut one in half for ${boards.halves === 1 ? "it" : "them"}.`}{" "}
         300 gsm card rolls up for carrying, and black hides any gaps between
         pieces.
       </p>
@@ -457,7 +498,7 @@ function BackingToBuy({ boards }: { boards: Boards }) {
         rel="noreferrer"
         className="mt-3 inline-block rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-2"
       >
-        Open at {BACKING.shop} ↗
+        Open the card at {BACKING.shop} ↗
       </a>
     </div>
   );
