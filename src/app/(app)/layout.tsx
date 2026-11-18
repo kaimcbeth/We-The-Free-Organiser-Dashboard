@@ -16,6 +16,7 @@ import { signPhotos } from "@/lib/photos";
 import { Avatar } from "@/components/avatar";
 import { NavLinks } from "./nav-links";
 import { EventsViewSwitch } from "./events-view-switch";
+import { InsightsViewSwitch } from "./insights-view-switch";
 import { AllCommunitiesNotice } from "./all-communities-notice";
 import { OrganiserTour } from "./organiser-tour";
 import { loadTaskSetup } from "@/lib/task-setup";
@@ -28,6 +29,12 @@ import {
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const { supabase, user, organiser } = await requireOrganiser();
+  // Things this person pinned to the top bar (0244).
+  const { data: navPins } = await supabase
+    .from("nav_pins")
+    .select("pins")
+    .eq("user_id", user.id)
+    .maybeSingle<{ pins: string[] }>();
 
   // The organiser's own member profile (for their photo), if they have one.
   const { data: me } = await supabase
@@ -193,6 +200,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
           <NavLinks
             openTasks={openTasks ?? 0}
             isGod={organiser.role === "god"}
+            pins={navPins?.pins ?? []}
+            rsl={organiser.role === "god" || organiser.role === "regional_lead"}
           />
         </header>
         <StaffBar
@@ -232,6 +241,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-5">
           <SectionIntroCard />
           <EventsViewSwitch />
+          <InsightsViewSwitch />
           {children}
         </main>
       </div>

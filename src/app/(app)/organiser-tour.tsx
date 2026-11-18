@@ -89,21 +89,12 @@ export function OrganiserTour({
     },
     {
       section: 0,
-      icon: "🧑‍🤝‍🧑",
-      tone: "bg-pink",
-      title: "People",
-      href: "/people",
-      target: "nav-people",
-      body: "Everyone in your community, who's coming often and who's new, with WhatsApp and Messenger buttons to reach out. Give people roles here to build your crew.",
-    },
-    {
-      section: 0,
       icon: "📊",
       tone: "bg-cyan",
       title: "Insights",
       href: "/insights",
       target: "nav-insights",
-      body: "Charts of how your community is growing, and who might need a friendly message.",
+      body: "Charts of how your community is growing and who might need a friendly message. Switch to People for everyone in your community, with WhatsApp and Messenger buttons and roles to build your crew.",
     },
     {
       section: 0,

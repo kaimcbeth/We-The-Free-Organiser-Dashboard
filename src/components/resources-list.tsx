@@ -444,7 +444,11 @@ export function ResourcesList({
               </span>
             </a>
           )}
-        {teamId && !q && <CommunityPhotos teamId={teamId} />}
+        {teamId && !q && (
+          <div id="photo-hub" className="scroll-mt-24">
+            <CommunityPhotos teamId={teamId} />
+          </div>
+        )}
         {soon.length > 0 && (
           <section className="mt-6">
             <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">

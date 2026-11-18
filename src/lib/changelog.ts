@@ -59,6 +59,20 @@ export const COMING_SOON: { title: string; text: string }[] = [
 export const CHANGELOG: Release[] = [
   {
     date: "2026-11-19",
+    title: "People moves into Insights; pin your own tabs",
+    changes: [
+      {
+        level: "organiser",
+        text: "People is now inside Insights: use the Insights | People switch at the top. One less tab in the top bar.",
+      },
+      {
+        level: "organiser",
+        text: "Pin things you open a lot to the top bar, like the Social Hub, Photo Hub, Equipment or Movie player. Tap the pin at the end of the tabs to choose up to 4.",
+      },
+    ],
+  },
+  {
+    date: "2026-11-19",
     title: "Events introduction: open attendance, see a recap",
     changes: [
       {
