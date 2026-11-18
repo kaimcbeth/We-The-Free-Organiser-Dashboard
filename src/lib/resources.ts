@@ -243,7 +243,7 @@ export const EQUIPMENT_GUIDE: {
           {
             label: "DIY",
             about:
-              "Two sizes, printed on thin, plain 80 gsm paper at Officeworks self-serve and glued onto 5 mm foam board (or a piece of cardboard box). A2 (594 × 420 mm): 2 A3 prints (~$2) on black A2 foam board (~$5 each in a 5-pack), about $7. A1 (841 × 594 mm, same size as the Best signs): 4 A3 prints (~$4) on one A1 foam board ($12), about $16. Not every Officeworks stocks the A1 board, so check your store has it before you go.",
+              "Two sizes, printed on thin, plain 80 gsm paper at Officeworks self-serve and glued onto 5 mm foam board (or a piece of cardboard box). A2 (594 × 420 mm): 2 A3 prints (~$2) on [black A2 foam board](https://www.officeworks.com.au/shop/officeworks/p/a2-foam-board-5mm-black-5-pack-ljpcfba2b5) (~$5 each in a 5-pack), about $7. A1 (841 × 594 mm, same size as the Best signs): 4 A3 prints (~$4) on one [A1 foam board](https://www.officeworks.com.au/shop/officeworks/p/a1-foam-board-5mm-black-ljpcfba1bk) ($12), about $16. Not every Officeworks stocks the A1 board, so check your store has it before you go.",
             price: "~$7 each",
             instructions: "/resources/signs",
           },

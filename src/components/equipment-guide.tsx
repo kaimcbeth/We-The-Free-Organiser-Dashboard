@@ -702,7 +702,9 @@ function EquipmentRow({
               {hoverAbout ? (
                 <HoverDetails
                   open={photoHover}
-                  text={[item.about, opt?.about].filter(Boolean).join(" ")}
+                  text={plainLinks(
+                    [item.about, opt?.about].filter(Boolean).join(" "),
+                  )}
                 >
                   {name}
                 </HoverDetails>
@@ -964,7 +966,7 @@ function EquipmentRow({
               <p className="mt-1 text-sm text-stone-600">
                 {/* Product name left off (Kai, 11 Nov); the photo and shop
                     link still go to it. */}
-                {opt.about}
+                <StepText text={opt.about} />
               </p>
             )}
             {diyOpen && opt?.instructions !== undefined && (
@@ -972,7 +974,9 @@ function EquipmentRow({
                 title={`Making ${item.name.toLowerCase()} (${opt.label})`}
                 onClose={() => setDiyOpen(false)}
               >
-                <p className="text-stone-700">{opt.about}</p>
+                <p className="text-stone-700">
+                  <StepText text={opt.about} />
+                </p>
                 {opt.instructions ? (
                   <a
                     href={opt.instructions}
@@ -1137,6 +1141,11 @@ function HoverDetails({
       </span>
     </span>
   );
+}
+
+// "[text](url)" → "text" where links can't be clicked (hover pop-ups).
+function plainLinks(text: string) {
+  return text.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
 }
 
 // "[text](url)" in a purchasing guide step becomes a link.
