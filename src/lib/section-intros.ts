@@ -78,15 +78,7 @@ export const SECTION_INTROS: SectionIntro[] = [
       {
         title: "Most of the work is done for you",
         body: "Look for the buttons on each card: Write post writes the words, Get graphic makes the image, Open all opens every local Facebook group, and the police form fills itself in.",
-      },
-      {
-        title: "Hand actions to your crew",
-        body: "Tap Delegate on any action and pick who'll do it, just this once or every time. They get a notification and see it on their own page.",
-        target: tour("delegate-button"),
-      },
-      {
-        title: "Keep it tidy",
-        body: "Tap ▼ beside a title to fold a card. Move for later puts an action off without losing it. The bell at the top tells you when something is due.",
+        target: `${tour("task-tools")}, ${tour("task-group")}`,
       },
     ],
   },

@@ -485,7 +485,10 @@ export function TaskCard({
           {extra && !done && <div className="mt-3">{extra}</div>}
 
           {!done && (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div
+              data-tour="task-tools"
+              className="mt-3 flex flex-wrap items-center gap-2"
+            >
               {task.kind === "take_attendance" && task.eventId && (
                 <a
                   href={`/events/${task.eventId}`}
