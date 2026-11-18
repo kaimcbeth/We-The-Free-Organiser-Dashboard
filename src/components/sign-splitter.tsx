@@ -442,6 +442,8 @@ const BACKING = {
 // Handheld (A2) signs: 5 mm foam board stays stiff (Kai, 18 Nov 2026).
 const FOAM_BOARD =
   "https://www.officeworks.com.au/shop/officeworks/p/a2-foam-board-5mm-black-5-pack-ljpcfba2b5";
+const FOAM_BOARD_A1 =
+  "https://www.officeworks.com.au/shop/officeworks/p/a1-foam-board-5mm-black-ljpcfba1bk";
 
 // Officeworks self-serve colour prints on 80 gsm paper (checked 18 Nov 2026).
 const PRINT_PRICE: Record<Paper, number> = { A3: 0.98, A4: 0.49 };
@@ -463,21 +465,37 @@ function ShoppingList({
         Printing: {sheets} {paper} colour prints, about {money(print)} at
         Officeworks self-serve.
         {Math.max(l.signW, l.signH) <= 594 &&
-          Math.min(l.signW, l.signH) <= 420 && (
-            <>
-              {" "}
-              Backing: one sheet of black A2 foam board (5 mm, about $5 each{" "}
-              <a
-                href={FOAM_BOARD}
-                target="_blank"
-                rel="noreferrer"
-                className="underline"
-              >
-                in a 5-pack at Officeworks
-              </a>
-              ) or a piece of cardboard box.
-            </>
-          )}
+        Math.min(l.signW, l.signH) <= 420 ? (
+          <>
+            {" "}
+            Backing: one sheet of black A2 foam board (5 mm, about $5 each{" "}
+            <a
+              href={FOAM_BOARD}
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
+              in a 5-pack at Officeworks
+            </a>
+            ) or a piece of cardboard box.
+          </>
+        ) : Math.max(l.signW, l.signH) <= 841 &&
+          Math.min(l.signW, l.signH) <= 594 ? (
+          <>
+            {" "}
+            Backing: one A1 foam board (5 mm, about $12 at{" "}
+            <a
+              href={FOAM_BOARD_A1}
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
+              Officeworks
+            </a>
+            ), one piece so there&apos;s no join, or a big piece of cardboard
+            box.
+          </>
+        ) : null}
       </p>
     );
   const n = boards.buy;

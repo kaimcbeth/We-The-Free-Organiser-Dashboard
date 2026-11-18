@@ -243,7 +243,7 @@ export const EQUIPMENT_GUIDE: {
           {
             label: "DIY",
             about:
-              "An A2 sign (594 × 420 mm), small enough to stay stiff. Colour-print it on 2 A3 sheets (thin, plain 80 gsm paper is fine: about $2 at Officeworks self-serve) and glue them onto a sheet of black A2 foam board (5 mm, about $5 each in a 5-pack at Officeworks) or a piece of cardboard box.",
+              "Two sizes, printed on thin, plain 80 gsm paper at Officeworks self-serve and glued onto 5 mm foam board (or a piece of cardboard box). A2 (594 × 420 mm): 2 A3 prints (~$2) on black A2 foam board (~$5 each in a 5-pack), about $7. A1 (841 × 594 mm, same size as the Best signs): 4 A3 prints (~$4) on one A1 foam board ($12), about $16.",
             price: "~$7 each",
             instructions: "/resources/signs",
           },

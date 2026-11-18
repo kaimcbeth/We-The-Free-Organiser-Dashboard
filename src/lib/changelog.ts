@@ -63,7 +63,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "DIY handheld signs are now A2 (594 × 420 mm), small enough to stay stiff: 2 A3 prints on a sheet of black 5 mm foam board (or a cardboard box), about $7 each. The sign splitter starts on A2.",
+        text: "DIY handheld signs come in two sizes on 5 mm foam board (or a cardboard box): A2 (2 A3 prints, about $7) or A1 (4 A3 prints on one A1 board, about $16). The sign splitter starts on A2 and says what backing to buy.",
       },
       {
         level: "organiser",
