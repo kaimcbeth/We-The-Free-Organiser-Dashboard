@@ -416,17 +416,49 @@ function Preview({
           </div>
         )}
       </div>
-      {boards && (
-        <p className="text-xs text-stone-600">
-          Backing boards are A2 at most, so this banner is backed in{" "}
-          {boards.count} pieces (outlined in yellow).{" "}
-          <b>Boards to buy: {boards.buy} A2</b>
-          {boards.halves > 0 &&
-            ` (${boards.halves === 1 ? "1 piece only needs" : `${boards.halves} pieces only need`} half a board, so cut one in half)`}
-          . Tape and back each piece on its own, then line them up along the
-          table.
-        </p>
-      )}
+      {boards && <BackingToBuy boards={boards} />}
     </>
+  );
+}
+
+// The backing card Kai recommends for table banners (Officeworks, 18 Nov 2026).
+const BACKING = {
+  name: "Liviano A2 Colour Card 300gsm, black",
+  shop: "Officeworks",
+  url: "https://www.officeworks.com.au/shop/officeworks/p/liviano-a2-colour-card-300gsm-black-ja0420300",
+  price: 4,
+};
+
+function BackingToBuy({ boards }: { boards: Boards }) {
+  const n = boards.buy;
+  return (
+    <div className="rounded-xl bg-yellow/25 p-4 ring-1 ring-yellow">
+      <p className="text-xs font-bold tracking-wide text-navy uppercase">
+        Backing to buy
+      </p>
+      <p className="mt-1 text-lg font-bold text-navy">
+        {n} × {BACKING.name}
+      </p>
+      <p className="text-sm text-stone-700">
+        ${BACKING.price} each at {BACKING.shop} · about ${n * BACKING.price} in
+        total
+      </p>
+      <p className="mt-2 text-xs text-stone-600">
+        Each sheet is A2 (594 × 420 mm), the biggest it comes, so the banner is
+        backed in the {boards.count} pieces outlined in yellow.
+        {boards.halves > 0 &&
+          ` ${boards.halves === 1 ? "One piece only needs" : `${boards.halves} pieces marked (half) only need`} half a sheet, so cut one sheet in half for ${boards.halves === 1 ? "it" : "them"}.`}{" "}
+        300 gsm card rolls up for carrying, and black hides any gaps between
+        pieces.
+      </p>
+      <a
+        href={BACKING.url}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-3 inline-block rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-2"
+      >
+        Open at {BACKING.shop} ↗
+      </a>
+    </div>
   );
 }
