@@ -76,7 +76,6 @@ export function SignSplitter() {
   // DIY signs are A2 (Kai, 18 Nov 2026: bigger ones flop on card).
   const [chosenSize, setSize] = useState<SignSize>("A2");
   const [paper, setPaper] = useState<Paper>("A3");
-  const [mode, setMode] = useState<"exact" | "fit">("fit");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -150,6 +149,10 @@ export function SignSplitter() {
   }
 
   const size: SignSize = source?.fixedSize ? "design" : chosenSize;
+  // One sheet option only (Kai, 18 Nov 2026): table banners print at exact
+  // size (whole boards, no cutting); signs slightly smaller (fewer sheets,
+  // sits on its board with a thin border).
+  const mode: "exact" | "fit" = source?.fixedSize ? "exact" : "fit";
   const first = source?.sizes[[...picked][0] ?? 0] ?? source?.sizes[0];
   const [W, H] = first ? signSize(first.w, first.h, size) : [0, 0];
   const opts = first ? layouts(W, H, paper) : null;
@@ -286,7 +289,7 @@ export function SignSplitter() {
               onClick={() => setPaper(p)}
               className={chip(paper === p)}
             >
-              {p} paper
+              {p} paper{p === "A3" ? " (recommended)" : ""}
             </button>
           ))}
         </div>
@@ -302,22 +305,13 @@ export function SignSplitter() {
       {opts && layout && (
         <section className="space-y-2">
           <h2 className="text-sm font-semibold">Sheets</h2>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {opts.fit && (
-              <Choice
-                on={mode === "fit"}
-                onClick={() => setMode("fit")}
-                title={`${opts.fit.cols * opts.fit.rows} sheets, slightly smaller`}
-                text={`${sizeLabel(opts.fit.signW, opts.fit.signH)} (${Math.round(opts.fit.scale * 100)}%), leaving room for the printer's edge`}
-              />
-            )}
-            <Choice
-              on={mode === "exact" || !opts.fit}
-              onClick={() => setMode("exact")}
-              title={`${opts.exact.cols * opts.exact.rows} sheets, exact size`}
-              text={sizeLabel(opts.exact.signW, opts.exact.signH)}
-            />
-          </div>
+          <p className="text-sm text-stone-700">
+            {layout.cols * layout.rows} sheets ·{" "}
+            {sizeLabel(layout.signW, layout.signH)}
+            {layout.scale < 0.995
+              ? ` (${Math.round(layout.scale * 100)}%, leaving room for the printer's edge)`
+              : ""}
+          </p>
           <Preview
             boards={source?.fixedSize ? boardGroups(layout) : null}
             layout={layout}
@@ -343,29 +337,6 @@ export function SignSplitter() {
       </p>
       <SignSteps banner={!!source?.fixedSize} />
     </div>
-  );
-}
-
-function Choice({
-  on,
-  onClick,
-  title,
-  text,
-}: {
-  on: boolean;
-  onClick: () => void;
-  title: string;
-  text: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-xl bg-white p-3 text-left ring-2 ${on ? "ring-pink" : "ring-black/5 hover:ring-black/15"}`}
-    >
-      <span className="block text-sm font-semibold">{title}</span>
-      <span className="block text-xs text-stone-500">{text}</span>
-    </button>
   );
 }
 
@@ -460,46 +431,59 @@ function ShoppingList({
   const paper: Paper = Math.min(l.paperW, l.paperH) >= 290 ? "A3" : "A4";
   const sheets = l.cols * l.rows;
   const print = sheets * PRINT_PRICE[paper];
-  if (!boards)
+  if (!boards) {
+    const a2 =
+      Math.max(l.signW, l.signH) <= 594 && Math.min(l.signW, l.signH) <= 420;
+    const board = a2
+      ? {
+          name: "Black A2 foam board, 5 mm",
+          price: 5,
+          where: "about $5 each in a 5-pack at Officeworks",
+          url: FOAM_BOARD,
+          note: "",
+        }
+      : {
+          name: "A1 foam board, 5 mm",
+          price: 12,
+          where: "$12 at Officeworks",
+          url: FOAM_BOARD_A1,
+          note: " One piece, so there's no join. Not every Officeworks stocks the A1 board, so check your store has it before you go.",
+        };
     return (
-      <p className="text-xs text-stone-600">
-        Printing: {sheets} {paper} colour prints, about {money(print)} at
-        Officeworks self-serve.
-        {Math.max(l.signW, l.signH) <= 594 &&
-        Math.min(l.signW, l.signH) <= 420 ? (
-          <>
-            {" "}
-            Backing: one sheet of black A2 foam board (5 mm, about $5 each{" "}
-            <a
-              href={FOAM_BOARD}
-              target="_blank"
-              rel="noreferrer"
-              className="underline"
-            >
-              in a 5-pack at Officeworks
-            </a>
-            ) or a piece of cardboard box.
-          </>
-        ) : Math.max(l.signW, l.signH) <= 841 &&
-          Math.min(l.signW, l.signH) <= 594 ? (
-          <>
-            {" "}
-            Backing: one A1 foam board (5 mm, about $12 at{" "}
-            <a
-              href={FOAM_BOARD_A1}
-              target="_blank"
-              rel="noreferrer"
-              className="underline"
-            >
-              Officeworks
-            </a>
-            ), one piece so there&apos;s no join, or a big piece of cardboard
-            box. Not every Officeworks stocks the A1 board, so check your store
-            has it before you go.
-          </>
-        ) : null}
-      </p>
+      <div className="rounded-xl bg-yellow/25 p-4 ring-1 ring-yellow">
+        <p className="text-xs font-bold tracking-wide text-navy uppercase">
+          What to buy · about {money(Math.ceil(print + board.price))} a sign
+        </p>
+        <ul className="mt-2 space-y-2">
+          <li>
+            <p className="font-bold text-navy">
+              {sheets} × {paper} colour prints on plain 80 gsm paper
+            </p>
+            <p className="text-sm text-stone-700">
+              {money(PRINT_PRICE[paper])} each at Officeworks self-serve · about{" "}
+              {money(Math.round(print * 100) / 100)}. Thin paper is fine: the
+              board backs it.
+            </p>
+          </li>
+          <li>
+            <p className="font-bold text-navy">1 × {board.name}</p>
+            <p className="text-sm text-stone-700">{board.where}</p>
+          </li>
+        </ul>
+        <p className="mt-2 text-xs text-stone-600">
+          Or back it with a piece of cardboard box for free.{board.note}
+        </p>
+        <a
+          href={board.url}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-3 inline-block rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-2"
+        >
+          Open the board at Officeworks ↗
+        </a>
+      </div>
     );
+  }
   const n = boards.buy;
   const backing = n * BACKING.price;
   return (

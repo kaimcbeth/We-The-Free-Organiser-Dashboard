@@ -63,11 +63,15 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Sign splitter: one sheet layout each, no choosing: table banners print at exact size (Kings: 12 sheets on 6 whole boards, no cutting), signs slightly smaller so they sit on their board. Handheld signs get a What to buy box with the cost per sign (prints + foam board). Sizes are just A2 and A1, and A3 paper is marked recommended.",
+      },
+      {
+        level: "organiser",
         text: "DIY handheld signs come in two sizes on 5 mm foam board (or a cardboard box): A2 (2 A3 prints, about $7) or A1 (4 A3 prints on one A1 board, about $16). The sign splitter starts on A2 and says what backing to buy.",
       },
       {
         level: "organiser",
-        text: "DIY signs and banners now cost in colour printing and backing card: table banner ~$21 (Kings roll-up table) to ~$29 (6ft table), handheld signs ~$16 each. The sign splitter shows a What to buy list with the cost, and says thin, plain 80 gsm paper is fine because the card does the stiffening.",
+        text: "DIY signs and banners now cost in colour printing and backing card: table banner ~$25 (Kings roll-up table) to ~$29 (6ft table), handheld signs ~$16 each. The sign splitter shows a What to buy list with the cost, and says thin, plain 80 gsm paper is fine because the card does the stiffening.",
       },
       {
         level: "organiser",
