@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "DIY handheld sign costs are now for double-sided signs, like the Best ones: about $9 for A2 and $20 for A1 (the PDF printed twice, one for each side of the foam board).",
+      },
+      {
+        level: "organiser",
         text: "Sign splitter: one sheet layout each, no choosing: table banners print at exact size (Kings: 12 sheets on 6 whole boards, no cutting), signs slightly smaller so they sit on their board. Handheld signs get a What to buy box with the cost per sign (prints + foam board). Sizes are just A2 and A1, and A3 paper is marked recommended.",
       },
       {

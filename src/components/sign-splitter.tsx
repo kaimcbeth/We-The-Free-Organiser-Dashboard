@@ -449,20 +449,26 @@ function ShoppingList({
           url: FOAM_BOARD_A1,
           note: " One piece, so there's no join. Not every Officeworks stocks the A1 board, so check your store has it before you go.",
         };
+    // Double-sided, like the Best signs (Kai, 18 Nov 2026): one print of the
+    // PDF for each face, same board.
+    const both = sheets * 2;
+    const prints = print * 2;
     return (
       <div className="rounded-xl bg-yellow/25 p-4 ring-1 ring-yellow">
         <p className="text-xs font-bold tracking-wide text-navy uppercase">
-          What to buy · about {money(Math.ceil(print + board.price))} a sign
+          What to buy · about {money(Math.ceil(prints + board.price))} a
+          double-sided sign
         </p>
         <ul className="mt-2 space-y-2">
           <li>
             <p className="font-bold text-navy">
-              {sheets} × {paper} colour prints on plain 80 gsm paper
+              {both} × {paper} colour prints on plain 80 gsm paper
             </p>
             <p className="text-sm text-stone-700">
               {money(PRINT_PRICE[paper])} each at Officeworks self-serve · about{" "}
-              {money(Math.round(print * 100) / 100)}. Thin paper is fine: the
-              board backs it.
+              {money(Math.round(prints * 100) / 100)}. That&apos;s the PDF
+              printed twice, one for each side ({sheets} for one side only).
+              Thin paper is fine: the board backs it.
             </p>
           </li>
           <li>
