@@ -123,6 +123,7 @@ export type Boards = {
   rows: number[]; // sheets per board, down
   count: number; // pieces
   halves: number; // pieces small enough for half a board (A3 size)
+  half: boolean[]; // per piece (across then down): only needs half a board
   buy: number; // A2 boards to buy: half pieces share a board
 };
 const split = (n: number, most: number) => {
@@ -148,16 +149,17 @@ export function boardGroups(l: Layout): Boards {
     // A piece that fits half an A2 board (297 × 420, either way) can share
     // a cut-in-half board with another one.
     const span = (n: number, step: number) => n * (step - OVERLAP) + OVERLAP;
-    let halves = 0;
-    for (const nc of cols)
-      for (const nr of rows) {
+    const half: boolean[] = [];
+    for (const nr of rows)
+      for (const nc of cols) {
         const w = span(nc, iw);
         const h = span(nr, ih);
-        if ((w <= 297 && h <= 420) || (w <= 420 && h <= 297)) halves++;
+        half.push((w <= 297 && h <= 420) || (w <= 420 && h <= 297));
       }
+    const halves = half.filter(Boolean).length;
     const count = cols.length * rows.length;
     const buy = count - halves + Math.ceil(halves / 2);
-    const b = { cols, rows, count, halves, buy };
+    const b = { cols, rows, count, halves, half, buy };
     if (
       !best ||
       b.buy < best.buy ||
@@ -297,7 +299,8 @@ export async function splitSign(
             borderColor: rgb(1, 0.85, 0.06),
             borderWidth: 3,
           });
-          const label = `Board ${bi * bg.cols.length + bj + 1}`;
+          const pi = bi * bg.cols.length + bj;
+          const label = `Board ${pi + 1}${bg.half[pi] ? " (half)" : ""}`;
           gp.drawText(label, {
             x: a.x + 6,
             y: a.y + 6,

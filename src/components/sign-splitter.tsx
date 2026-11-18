@@ -409,6 +409,7 @@ function Preview({
               >
                 <span className="absolute top-0.5 left-1.5 text-[11px] font-bold text-yellow [text-shadow:0_1px_2px_rgba(0,0,0,0.7)]">
                   Board {i + 1}
+                  {boards.half[i] ? " (half)" : ""}
                 </span>
               </span>
             ))}
