@@ -22,11 +22,7 @@ import { AllCommunitiesNotice } from "./all-communities-notice";
 import { OrganiserTour } from "./organiser-tour";
 import { loadTaskSetup } from "@/lib/task-setup";
 import { NotificationBell } from "@/components/notification-bell";
-import {
-  IntroProvider,
-  IntroButton,
-  SectionIntroCard,
-} from "@/components/section-intro";
+import { IntroProvider, SectionIntroCard } from "@/components/section-intro";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const { supabase, user, organiser } = await requireOrganiser();
@@ -174,7 +170,6 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
                   }
                   timezone={organiser.team?.timezone ?? "Australia/Sydney"}
                 />
-                <IntroButton />
                 <NotificationBell
                   supabase={supabase}
                   userId={user.id}

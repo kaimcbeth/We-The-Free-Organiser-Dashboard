@@ -185,6 +185,7 @@ type Summary = {
   working: string[];
   better: string[];
   ideas: string[];
+  message?: string; // the whole thing as one chat message (Kai, 19 Nov 2026)
 };
 
 // "Summarise" (Kai, 7 Nov 2026): the writing assistant groups the answers
@@ -203,15 +204,26 @@ function Responses({
   const [summary, setSummary] = useState<Summary | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  async function copyMessage() {
+    if (!summary?.message) return;
+    try {
+      await navigator.clipboard.writeText(summary.message);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError("Couldn't copy. Select the message and copy it instead.");
+    }
+  }
 
   async function summarise() {
     setBusy(true);
     setError("");
     const { data, error: e } = await createClient().functions.invoke(
-      "write-copy",
+      "feedback-summary",
       {
         body: {
-          purpose: "feedback_summary",
           teamId,
           responses: list.map((r) => ({
             rating: r.rating,
@@ -259,7 +271,28 @@ function Responses({
           {summary.overall && <p>{summary.overall}</p>}
           {section("Working well", summary.working)}
           {section("Could be better", summary.better)}
-          {section("Things to try", summary.ideas)}
+          {section("Ideas to try", summary.ideas)}
+          {summary.message && (
+            <div className="rounded-xl bg-white p-3 text-navy">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-semibold tracking-wide text-stone-500 uppercase">
+                  Ready for the community chat
+                </p>
+                <button
+                  type="button"
+                  onClick={copyMessage}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
+                    copied
+                      ? "bg-cyan text-navy"
+                      : "bg-pink text-navy hover:bg-pink-strong"
+                  }`}
+                >
+                  {copied ? "Copied" : "Copy"}
+                </button>
+              </div>
+              <p className="mt-2 whitespace-pre-line">{summary.message}</p>
+            </div>
+          )}
           <button
             type="button"
             onClick={summarise}

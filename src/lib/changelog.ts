@@ -63,6 +63,14 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Member feedback summaries now read like a friendly message, with no scores or counts, and come with a ready-to-paste version for the community chat (Copy button).",
+      },
+      {
+        level: "organiser",
+        text: "Fixed: the search box's words were invisible (white on white).",
+      },
+      {
+        level: "organiser",
         text: "People is now inside Insights: use the Insights | People switch at the top. One less tab in the top bar.",
       },
       {
