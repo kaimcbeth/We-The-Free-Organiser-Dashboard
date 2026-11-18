@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'Table banner steps now end with "Tape the boards together": face down in order, strong tape down every join, a hair\'s gap so it folds for carrying.',
+      },
+      {
+        level: "organiser",
         text: "DIY handheld sign costs are now for double-sided signs, like the Best ones: about $9 for A2 and $20 for A1 (the PDF printed twice, one for each side of the foam board).",
       },
       {

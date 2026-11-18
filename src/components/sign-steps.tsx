@@ -45,7 +45,7 @@ export const SIGN_STEPS: { title: string; text: string; Pic: Pic }[] = [
 ];
 
 // A table banner is too big for one backing board (A2 at most), so its last
-// two steps tape and back it in A2 pieces.
+// steps tape and back it in A2 pieces, then tape the boards into one banner.
 const BANNER_STEPS: typeof SIGN_STEPS = [
   {
     title: "Tape it in A2 pieces",
@@ -54,8 +54,13 @@ const BANNER_STEPS: typeof SIGN_STEPS = [
   },
   {
     title: "Back each piece",
-    text: "Glue each piece onto its own A2 board. Where two boards meet, cut that sheet on its tick marks so the picture meets edge to edge. Then line the boards up along the table.",
+    text: "Glue each piece onto its own A2 board. Where two boards meet, cut that sheet on its tick marks so the picture meets edge to edge.",
     Pic: BoardsPic,
+  },
+  {
+    title: "Tape the boards together",
+    text: "Lay the boards face down (mirrored, so Board 1 goes top right). Tape every join with gaffer or duct tape, leaving a hair's gap so it folds for carrying.",
+    Pic: JoinPic,
   },
 ];
 
@@ -670,6 +675,66 @@ function BoardsPic() {
       ))}
       <text x={80} y={88} fontSize={7} textAnchor="middle" fill={LINE}>
         A2 boards, edge to edge
+      </text>
+    </Frame>
+  );
+}
+
+function JoinPic() {
+  // The backs of the boards (2 rows of 3), taped along every join. Seen
+  // from the back, so the numbers run right to left.
+  const back = "#c9a26b";
+  return (
+    <Frame>
+      {[0, 1].map((r) =>
+        [0, 1, 2].map((c) => (
+          <g key={`${r}${c}`}>
+            <rect
+              x={22 + c * 39.5}
+              y={12 + r * 34.5}
+              width={38}
+              height={33}
+              rx={1}
+              fill={back}
+              stroke="#a27f4f"
+              strokeWidth={0.6}
+            />
+            <text
+              x={41 + c * 39.5}
+              y={33 + r * 34.5}
+              fontSize={9}
+              fontWeight={800}
+              textAnchor="middle"
+              fill={PAPER}
+              opacity={0.85}
+            >
+              {r * 3 + 3 - c}
+            </text>
+          </g>
+        )),
+      )}
+      {/* tape along every join */}
+      {[60.75, 100.25].map((x) => (
+        <rect
+          key={x}
+          x={x - 4}
+          y={9}
+          width={8}
+          height={74}
+          fill="#4b5563"
+          opacity={0.92}
+        />
+      ))}
+      <rect
+        x={19}
+        y={41.75}
+        width={122}
+        height={8}
+        fill="#4b5563"
+        opacity={0.92}
+      />
+      <text x={80} y={93} fontSize={7} textAnchor="middle" fill={LINE}>
+        the back: tape every join
       </text>
     </Frame>
   );
