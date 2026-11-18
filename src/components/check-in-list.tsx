@@ -69,6 +69,8 @@ export function CheckInList({
   onMarkNotNew,
   linkToken,
   likely = {},
+  onRename,
+  profileHref,
 }: {
   initialPeople: CheckInPerson[];
   initialCheckedIn: string[];
@@ -86,6 +88,13 @@ export function CheckInList({
   linkToken?: string; // helper check-in link (no login)
   onMarkNotNew?: (person: CheckInPerson) => Promise<boolean>; // tap "First event" to say they've been before
   likely?: Record<string, number>; // how likely each person is to come (higher = more likely)
+  // Fix a name from the list (Kai, 19 Nov 2026). No pencil without it.
+  onRename?: (
+    person: CheckInPerson,
+    first: string,
+    last: string,
+  ) => Promise<boolean>;
+  profileHref?: (id: string) => string; // "Full profile" link in the editor
 }) {
   // People marked "been before" on this screen, on top of those already known.
   const [markedNotNew, setMarkedNotNew] = useState<Set<string>>(new Set());
@@ -101,6 +110,7 @@ export function CheckInList({
   const [onlyHere, setOnlyHere] = useState(false);
   const [error, setError] = useState("");
   const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<string | null>(null);
   const [celebrate, setCelebrate] = useState<{
     name: string;
     n: number;
@@ -108,6 +118,23 @@ export function CheckInList({
   const hasLikely = Object.values(likely).some((v) => v >= LIKELY_MIN);
   const [order, setOrder] = useState<"likely" | "az">("likely");
   const chooseOrder = setOrder;
+
+  async function rename(p: CheckInPerson, first: string, last: string) {
+    if (!onRename) return false;
+    const ok = await onRename(p, first, last).catch(() => false);
+    if (!ok) return false;
+    setPeople((list) =>
+      list
+        .map((x) =>
+          x.id === p.id
+            ? { ...x, first_name: first, last_name: last || null }
+            : x,
+        )
+        .sort(byName),
+    );
+    setEditing(null);
+    return true;
+  }
 
   // Their outreach count including this event, if they're checked in to it.
   const milestoneFor = (id: string) => {
@@ -605,10 +632,24 @@ export function CheckInList({
               {g.items.map((p) => {
                 const here = checkedIn.has(p.id);
                 const isNew = here && !returning.has(p.id);
+                if (editing === p.id)
+                  return (
+                    <li
+                      key={p.id}
+                      className="border-b border-black/5 bg-stone-50 last:border-0"
+                    >
+                      <NameEditor
+                        person={p}
+                        profileHref={profileHref?.(p.id)}
+                        onCancel={() => setEditing(null)}
+                        onSave={(first, last) => rename(p, first, last)}
+                      />
+                    </li>
+                  );
                 return (
                   <li
                     key={p.id}
-                    className={`flex items-center border-b border-black/5 transition-colors last:border-0 ${
+                    className={`group flex items-center border-b border-black/5 transition-colors last:border-0 ${
                       here ? "bg-cyan/15" : "hover:bg-stone-50"
                     }`}
                   >
@@ -656,6 +697,29 @@ export function CheckInList({
                         </span>
                       )}
                     </button>
+                    {onRename && !p.id.startsWith(TMP) && (
+                      <button
+                        type="button"
+                        onClick={() => setEditing(p.id)}
+                        aria-label={`Edit ${fullName(p)}`}
+                        title="Edit name"
+                        className="mr-1 shrink-0 rounded-lg p-2 text-stone-400 hover:bg-black/5 hover:text-navy focus:text-navy sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100"
+                      >
+                        <svg
+                          viewBox="0 0 20 20"
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          aria-hidden
+                        >
+                          <path
+                            d="M13.5 3.5l3 3L7 16H4v-3l9.5-9.5z"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                    )}
                     {isNew &&
                       (onMarkNotNew ? (
                         <button
@@ -692,6 +756,88 @@ export function CheckInList({
         ))
       )}
     </div>
+  );
+}
+
+// Fix someone's name right in the list.
+function NameEditor({
+  person,
+  profileHref,
+  onCancel,
+  onSave,
+}: {
+  person: CheckInPerson;
+  profileHref?: string;
+  onCancel: () => void;
+  onSave: (first: string, last: string) => Promise<boolean>;
+}) {
+  const [first, setFirst] = useState(person.first_name);
+  const [last, setLast] = useState(person.last_name ?? "");
+  const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState(false);
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    if (!first.trim()) return;
+    setSaving(true);
+    setFailed(false);
+    const ok = await onSave(first.trim(), last.trim());
+    setSaving(false);
+    if (!ok) setFailed(true);
+  }
+  return (
+    <form
+      onSubmit={save}
+      onKeyDown={(e) => e.key === "Escape" && onCancel()}
+      className="space-y-2 p-3"
+    >
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          autoFocus
+          value={first}
+          onChange={(e) => setFirst(e.target.value)}
+          placeholder="First name"
+          aria-label="First name"
+          required
+          className="rounded-xl border border-stone-300 bg-white px-3 py-2"
+        />
+        <input
+          value={last}
+          onChange={(e) => setLast(e.target.value)}
+          placeholder="Last name"
+          aria-label="Last name"
+          className="rounded-xl border border-stone-300 bg-white px-3 py-2"
+        />
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="submit"
+          disabled={saving || !first.trim()}
+          className="rounded-xl bg-pink px-3.5 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong disabled:opacity-50"
+        >
+          {saving ? "Saving…" : "Save"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="rounded-xl px-3 py-1.5 text-sm font-medium text-stone-600 hover:bg-black/5"
+        >
+          Cancel
+        </button>
+        {failed && (
+          <span className="text-sm text-red-700">
+            Couldn&apos;t save. Please try again.
+          </span>
+        )}
+        {profileHref && (
+          <a
+            href={profileHref}
+            className="ml-auto text-sm text-stone-500 hover:text-navy hover:underline"
+          >
+            Full profile
+          </a>
+        )}
+      </div>
+    </form>
   );
 }
 

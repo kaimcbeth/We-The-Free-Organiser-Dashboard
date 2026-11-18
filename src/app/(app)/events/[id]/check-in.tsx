@@ -118,6 +118,19 @@ export function CheckIn({
     };
   }, [supabase, teamId, eventId]);
 
+  const onRename = useCallback(
+    async (p: Person, first: string, last: string) => {
+      const { data, error } = await supabase.rpc("core_rename_person", {
+        p_event_id: eventId,
+        p_person_id: p.id,
+        p_first: first,
+        p_last: last,
+      });
+      return !error && data === true;
+    },
+    [supabase, eventId],
+  );
+
   return (
     <CheckInList
       initialPeople={initialPeople}
@@ -132,6 +145,8 @@ export function CheckIn({
       outreachBefore={outreachBefore}
       onMarkNotNew={onMarkNotNew}
       likely={likely}
+      onRename={onRename}
+      profileHref={(id) => `/people/${id}`}
       toolbarExtra={
         <>
           <button

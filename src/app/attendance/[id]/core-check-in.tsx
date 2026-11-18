@@ -51,6 +51,19 @@ export function CoreCheckIn({
     [supabase, eventId],
   );
 
+  const onRename = useCallback(
+    async (p: CheckInPerson, first: string, last: string) => {
+      const { data, error } = await supabase.rpc("core_rename_person", {
+        p_event_id: eventId,
+        p_person_id: p.id,
+        p_first: first,
+        p_last: last,
+      });
+      return !error && data === true;
+    },
+    [supabase, eventId],
+  );
+
   const poll = useCallback(async () => {
     const { data, error } = await supabase.rpc("core_checkin_state", {
       p_event_id: eventId,
@@ -73,6 +86,7 @@ export function CoreCheckIn({
       outreachBefore={state.outreach_before ?? {}}
       onMarkNotNew={onMarkNotNew}
       likely={state.likely ?? {}}
+      onRename={onRename}
     />
   );
 }

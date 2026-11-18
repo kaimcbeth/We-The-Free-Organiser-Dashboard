@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Spelt a name wrong at check-in? Tap the pencil beside the person to fix their first or last name straight from the list. Organisers also get a link to their full profile.",
+      },
+      {
+        level: "organiser",
         text: 'The Events introduction\'s attendance step has an "Open attendance" button that takes you straight to the next event\'s check-in list, and the "After each event" step shows an example recap card.',
       },
     ],
