@@ -147,20 +147,35 @@ function Spotlight({
   useEffect(() => {
     let frame = 0;
     let el: HTMLElement | null = null;
-    let first = true;
+    let found: boolean | null = null;
+    // Keep bringing it into view for the first moments: on a fresh page the
+    // router's own scroll (or late content) can cancel the first try.
+    const start = performance.now();
+    let lastScroll = -Infinity;
+    let settled = false;
+    // The person scrolling themselves wins.
+    const stop = () => (settled = true);
+    const opts = { passive: true, once: true } as const;
+    window.addEventListener("wheel", stop, opts);
+    window.addEventListener("touchstart", stop, opts);
     const tick = () => {
       if (!el || !el.isConnected) el = findTarget(target);
       const b = box.current;
-      if (first) {
-        first = false;
+      const now = performance.now();
+      if (!!el !== found && (el || now - start > 1500)) {
+        found = !!el;
         onMissing(el ? null : target);
-        // Bring it into view just under the card.
-        if (el) {
-          const r = el.getBoundingClientRect();
-          const top =
-            (cardRef.current?.getBoundingClientRect().bottom ?? 0) + 24;
-          if (r.top < top || r.bottom > window.innerHeight - 16)
-            window.scrollBy({ top: r.top - top, behavior: "smooth" });
+      }
+      if (el && !settled && now - start < 2500) {
+        const r = el.getBoundingClientRect();
+        const top = (cardRef.current?.getBoundingClientRect().bottom ?? 0) + 24;
+        const away =
+          r.top < top - 4 ||
+          (r.top > top + 4 && r.bottom > window.innerHeight - 16);
+        if (!away && now - lastScroll > 700) settled = true;
+        else if (away && now - lastScroll > 700) {
+          lastScroll = now;
+          window.scrollBy({ top: r.top - top, behavior: "smooth" });
         }
       }
       if (b) {
@@ -177,7 +192,11 @@ function Spotlight({
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("wheel", stop);
+      window.removeEventListener("touchstart", stop);
+    };
   }, [target, cardRef, onMissing]);
   return (
     <div

@@ -57,11 +57,6 @@ export const SECTION_INTROS: SectionIntro[] = [
         body: "A recap card shows who came and who was new. Each Monday a Newcomers card lists last week's first-timers, so your regulars can welcome them.",
         example: "recap",
       },
-      {
-        title: "Reminders and sharing",
-        body: "Reminders sets up emails or texts before events. Share gives you a link and QR code with all your upcoming events, for anyone.",
-        target: tour("reminders-link"),
-      },
     ],
   },
   {
