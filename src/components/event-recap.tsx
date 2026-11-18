@@ -44,7 +44,6 @@ export function EventRecap({
   }, [eventId]);
 
   if (!recap || closing) return null;
-  const firsts = recap.first_timers.length;
   const films = !hideFilms && recap.watched > 0;
 
   async function close() {
@@ -54,6 +53,61 @@ export function EventRecap({
       .insert({ event_id: eventId });
     router.refresh();
   }
+  return (
+    <RecapCard
+      recap={recap}
+      title={title}
+      when={when}
+      href={`/events/${eventId}`}
+      films={films}
+      onClose={dismissible ? close : undefined}
+    />
+  );
+}
+
+// An example for the Events introduction (Kai, 19 Nov 2026: "Show example
+// of recap card"). Made-up names, nothing loaded.
+export function ExampleRecap() {
+  return (
+    <RecapCard
+      example
+      recap={{
+        attended: 14,
+        first_timers: [
+          { id: "1", first_name: "Maya", last_name: "R" },
+          { id: "2", first_name: "Tom", last_name: "B" },
+          { id: "3", first_name: "Priya", last_name: "S" },
+        ],
+        watched: 0,
+        answered: 0,
+        impact: null,
+        tapouts: 0,
+      }}
+      title="Plant-Based Community Potluck"
+      when="Sun 22 Nov"
+      films={false}
+    />
+  );
+}
+
+function RecapCard({
+  recap,
+  title,
+  when,
+  href,
+  films,
+  onClose,
+  example = false,
+}: {
+  recap: Recap;
+  title: string;
+  when: string;
+  href?: string;
+  films: boolean;
+  onClose?: () => void;
+  example?: boolean;
+}) {
+  const firsts = recap.first_timers.length;
   const stat = (n: string, label: string) => (
     <div className="rounded-xl bg-stone-50 px-3 py-2">
       <p className="text-2xl font-bold tabular-nums text-navy">{n}</p>
@@ -63,10 +117,10 @@ export function EventRecap({
 
   return (
     <section className="relative rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-      {dismissible && (
+      {onClose && (
         <button
           type="button"
-          onClick={close}
+          onClick={onClose}
           aria-label="Close this recap"
           title="Close"
           className="absolute right-2 top-2 rounded-full px-2 py-0.5 text-lg leading-none text-stone-400 hover:bg-stone-100 hover:text-stone-700"
@@ -76,10 +130,15 @@ export function EventRecap({
       )}
       <p className="text-xs font-semibold uppercase tracking-wide text-pink-ink">
         Event recap
+        {example && (
+          <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-semibold text-stone-500">
+            Example
+          </span>
+        )}
       </p>
       <h2 className="mt-0.5 pr-6 text-lg font-semibold leading-snug tracking-tight">
-        {dismissible ? (
-          <a href={`/events/${eventId}`} className="hover:underline">
+        {onClose && href ? (
+          <a href={href} className="hover:underline">
             {title}
           </a>
         ) : (
@@ -91,10 +150,7 @@ export function EventRecap({
       {recap.attended === 0 && !films ? (
         <p className="mt-2 text-sm text-stone-600">
           No one was checked in.{" "}
-          <a
-            href={`/events/${eventId}`}
-            className="font-medium text-pink-ink hover:underline"
-          >
+          <a href={href} className="font-medium text-pink-ink hover:underline">
             Add who came
           </a>{" "}
           to see the newcomers here.

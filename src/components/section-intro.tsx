@@ -9,9 +9,14 @@ import {
   useSyncExternalStore,
 } from "react";
 import { readHeader, subscribeHeader } from "@/lib/header-height";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { ExampleRecap } from "@/components/event-recap";
 import { createClient } from "@/lib/supabase/client";
-import { introForPath, type SectionIntro } from "@/lib/section-intros";
+import {
+  introForPath,
+  type IntroStep,
+  type SectionIntro,
+} from "@/lib/section-intros";
 
 // Section introductions (Kai, 7 Nov 2026): a card at the top of each tab
 // that you step through in place. It never takes over the screen; it goes
@@ -255,6 +260,11 @@ function Card({
             <p className="mt-1 text-sm leading-snug text-white/80">
               {step.body}
             </p>
+            {step.example === "recap" && (
+              <div className="mt-3 text-navy [&_section]:shadow-none">
+                <ExampleRecap />
+              </div>
+            )}
             {!!step.target && missing === step.target && (
               <p className="mt-1 text-xs text-white/50">
                 Nothing to show here yet.
@@ -271,6 +281,7 @@ function Card({
                   />
                 ))}
               </div>
+              {step.open && <OpenEvent open={step.open} />}
               {i > 0 && (
                 <button
                   type="button"
@@ -292,5 +303,26 @@ function Card({
         </div>
       </section>
     </>
+  );
+}
+
+// "Open attendance": the event the step points at, at its check-in list.
+function OpenEvent({ open }: { open: NonNullable<IntroStep["open"]> }) {
+  const router = useRouter();
+  const go = () => {
+    const box = findTarget(open.from);
+    const link = box?.querySelector<HTMLAnchorElement>('a[href^="/events/"]');
+    if (!link) return;
+    const path = new URL(link.href).pathname;
+    router.push(`${path}#${open.hash}`);
+  };
+  return (
+    <button
+      type="button"
+      onClick={go}
+      className="rounded-lg px-2 py-1 text-sm font-medium text-white/80 underline-offset-2 hover:bg-white/10 hover:text-white hover:underline"
+    >
+      {open.label}
+    </button>
   );
 }

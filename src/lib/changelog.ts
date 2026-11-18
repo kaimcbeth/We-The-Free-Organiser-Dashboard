@@ -58,6 +58,16 @@ export const COMING_SOON: { title: string; text: string }[] = [
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-11-19",
+    title: "Events introduction: open attendance, see a recap",
+    changes: [
+      {
+        level: "organiser",
+        text: 'The Events introduction\'s attendance step has an "Open attendance" button that takes you straight to the next event\'s check-in list, and the "After each event" step shows an example recap card.',
+      },
+    ],
+  },
+  {
     date: "2026-11-18",
     title: "Picture steps for DIY signs",
     changes: [

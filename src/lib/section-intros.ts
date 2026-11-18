@@ -8,6 +8,11 @@ export type IntroStep = {
   // CSS selectors, comma separated: while the step is showing, the first one
   // on screen is scrolled into view and spotlighted.
   target?: string;
+  // A button that opens the event under these selectors (its first
+  // /events/<id> link), at this part of the event page.
+  open?: { label: string; from: string; hash: string };
+  // A made-up example shown inside the card.
+  example?: "recap";
 };
 
 export type SectionIntro = {
@@ -41,10 +46,16 @@ export const SECTION_INTROS: SectionIntro[] = [
         title: "Attendance in 60 seconds",
         body: "On the day, open the event and tap names as people arrive. Busy running it? A member can scan the Helper QR on the event page and check people in for you.",
         target: `${tour("today-event")}, ${tour("next-event")}`,
+        open: {
+          label: "Open attendance",
+          from: `${tour("today-event")}, ${tour("next-event")}`,
+          hash: "check-in",
+        },
       },
       {
         title: "After each event",
         body: "A recap card shows who came and who was new. Each Monday a Newcomers card lists last week's first-timers, so your regulars can welcome them.",
+        example: "recap",
       },
       {
         title: "Reminders and sharing",
