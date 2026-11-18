@@ -322,7 +322,7 @@ export const EQUIPMENT_GUIDE: {
           {
             label: "DIY",
             about:
-              "Make your own: print the banner design on A3 sheets and tape them together.",
+              "Make your own: print the banner design on A3 sheets and tape them together. There's one for a 6ft table and one for the Kings roll-up table.",
             price: "~$25",
             instructions: "/resources/signs?sign=table-banner",
           },

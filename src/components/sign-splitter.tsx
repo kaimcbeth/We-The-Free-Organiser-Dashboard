@@ -30,11 +30,24 @@ const BUILT_IN = [
   {
     // Kai's Canva design for the front of a 6ft table (1830 × 750 mm).
     id: "table-banner",
-    label: "Table banner",
+    label: "Table banner (6ft table)",
     file: "/resources/signs/table-banner.pdf",
     designs: ["Table banner"],
     previews: ["/resources/signs/table-banner.png"],
     fixedSize: true, // printed as designed (fits the table)
+  },
+  {
+    // Kai's "FREE SNACK" design for the front of the Kings roll-up table
+    // (the Best table in the equipment guide; 1400 × 710 mm). Two layouts.
+    id: "table-banner-kings",
+    label: "Table banner (Kings roll-up table)",
+    file: "/resources/signs/table-banner-kings.pdf",
+    designs: ["Free snack", "Free snack (more space)"],
+    previews: [
+      "/resources/signs/table-banner-kings-1.png",
+      "/resources/signs/table-banner-kings-2.png",
+    ],
+    fixedSize: true,
   },
 ] as {
   id: string;
@@ -95,6 +108,7 @@ export function SignSplitter() {
     if (b.fixedSize) {
       setSource((s) => s && { ...s, fixedSize: true });
       setSize("design");
+      setPicked(new Set([0])); // a table takes one banner: start with the first
     }
   }
 
@@ -120,7 +134,7 @@ export function SignSplitter() {
           h: p.getHeight() * MM,
         })),
       });
-      setPicked(new Set(pages.map((_, i) => i)));
+      setPicked(new Set(b.fixedSize ? [0] : pages.map((_, i) => i)));
     })();
   }, []);
 
