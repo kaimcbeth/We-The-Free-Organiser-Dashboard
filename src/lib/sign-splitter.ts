@@ -124,6 +124,8 @@ export type Boards = {
   count: number; // pieces
   halves: number; // pieces small enough for half a board (A3 size)
   half: boolean[]; // per piece (across then down): only needs half a board
+  label: number[]; // per piece: board number; full boards first, then each
+  // pair of half pieces shares one number (one board cut in half)
   buy: number; // A2 boards to buy: half pieces share a board
 };
 const split = (n: number, most: number) => {
@@ -159,7 +161,11 @@ export function boardGroups(l: Layout): Boards {
     const halves = half.filter(Boolean).length;
     const count = cols.length * rows.length;
     const buy = count - halves + Math.ceil(halves / 2);
-    const b = { cols, rows, count, halves, half, buy };
+    const full = count - halves;
+    let nf = 0;
+    let nh = 0;
+    const label = half.map((h) => (h ? full + 1 + Math.floor(nh++ / 2) : ++nf));
+    const b = { cols, rows, count, halves, half, label, buy };
     if (
       !best ||
       b.buy < best.buy ||
@@ -176,7 +182,7 @@ export function boardOf(b: Boards, r: number, c: number) {
     while (i >= sizes[k]) i -= sizes[k++];
     return k;
   };
-  return at(b.rows, r) * b.cols.length + at(b.cols, c) + 1;
+  return b.label[at(b.rows, r) * b.cols.length + at(b.cols, c)];
 }
 
 // Where each sheet's printed area sits on the sign (mm from top-left).
@@ -300,7 +306,7 @@ export async function splitSign(
             borderWidth: 3,
           });
           const pi = bi * bg.cols.length + bj;
-          const label = `Board ${pi + 1}${bg.half[pi] ? " (half)" : ""}`;
+          const label = `Board ${bg.label[pi]}${bg.half[pi] ? " (half)" : ""}`;
           gp.drawText(label, {
             x: a.x + 6,
             y: a.y + 6,

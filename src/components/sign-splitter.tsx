@@ -414,7 +414,7 @@ function Preview({
                 className="relative m-0.5 rounded-sm border-[3px] border-yellow"
               >
                 <span className="absolute top-0.5 left-1.5 text-[11px] font-bold text-yellow [text-shadow:0_1px_2px_rgba(0,0,0,0.7)]">
-                  Board {i + 1}
+                  Board {boards.label[i]}
                   {boards.half[i] ? " (half)" : ""}
                 </span>
               </span>
@@ -486,9 +486,9 @@ function ShoppingList({
       </ul>
       <p className="mt-2 text-xs text-stone-600">
         Each card is A2 (594 × 420 mm), the biggest it comes, so the banner is
-        backed in the {boards.count} pieces outlined in yellow.
+        backed in the pieces outlined in yellow.
         {boards.halves > 0 &&
-          ` ${boards.halves === 1 ? "One piece only needs" : `${boards.halves} pieces marked (half) only need`} half a card, so cut one in half for ${boards.halves === 1 ? "it" : "them"}.`}{" "}
+          " Pieces marked (half) only need half a card: cut one card in half and use it for both pieces with that board number."}{" "}
         300 gsm card rolls up for carrying, and black hides any gaps between
         pieces.
       </p>
