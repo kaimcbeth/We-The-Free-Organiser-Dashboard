@@ -67,7 +67,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Sign splitter: a table banner for the Kings roll-up table (1400 × 710 mm, the Best table in the equipment guide), with two Free snack layouts. The 6ft one is now called Table banner (6ft table).",
+        text: "Sign splitter: a table banner for the Kings roll-up table (1400 × 710 mm, the Best table in the equipment guide), with the Free snack design. The 6ft one is now called Table banner (6ft table).",
       },
       {
         level: "organiser",

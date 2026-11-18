@@ -40,15 +40,12 @@ const BUILT_IN = [
   },
   {
     // Kai's "FREE SNACK" design for the front of the Kings roll-up table
-    // (the Best table in the equipment guide; 1400 × 710 mm). Two layouts.
+    // (the Best table in the equipment guide; 1400 × 710 mm).
     id: "table-banner-kings",
     label: "Table banner (Kings roll-up table)",
     file: "/resources/signs/table-banner-kings.pdf",
-    designs: ["Free snack", "Free snack (more space)"],
-    previews: [
-      "/resources/signs/table-banner-kings-1.png",
-      "/resources/signs/table-banner-kings-2.png",
-    ],
+    designs: ["Free snack"],
+    previews: ["/resources/signs/table-banner-kings-1.png"],
     fixedSize: true,
   },
 ] as {
