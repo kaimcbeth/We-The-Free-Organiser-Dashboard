@@ -258,7 +258,7 @@ export function SignSplitter() {
         <section className="space-y-2">
           <h2 className="text-sm font-semibold">Printed size</h2>
           <div className="flex flex-wrap gap-1.5">
-            {(["A2", "A1", "A0", "design"] as SignSize[]).map((s) => (
+            {(["A2", "A1"] as SignSize[]).map((s) => (
               <button
                 key={s}
                 type="button"
