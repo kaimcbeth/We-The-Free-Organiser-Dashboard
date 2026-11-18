@@ -31,6 +31,9 @@ export type SignSize = keyof typeof SIGN_SIZES | "design";
 const MARGIN = 6; // unprintable edge, mm
 const OVERLAP = 10; // each sheet overlaps the next, mm
 const PT = 72 / 25.4; // points per mm
+// Rendered from the SignSteps component (src/components/sign-steps.tsx);
+// re-render it when the steps change.
+const HOW_TO = "/resources/signs/how-to.png";
 
 export type Layout = {
   paperW: number; // sheet size, mm
@@ -206,7 +209,7 @@ export async function splitSign(
       font: bold,
     });
     gp.drawText(
-      "Print at Actual size (100%), not Fit to page. Lay the sheets out like the grid. Overlap each sheet about 1 cm onto the next, lining up the small tick marks, and tape on the back.",
+      "Print at Actual size (100%), not Fit to page. Lay the sheets out like this grid; each sheet's name is on its bottom edge. Step-by-step pictures are on the last page.",
       {
         x: 20 * PT,
         y: 210 * PT - 28 * PT,
@@ -267,9 +270,27 @@ export async function splitSign(
         }
         page.drawText(
           `${tileName(r, c)}  ·  row ${ROWS[r]} of ${l.rows}, sheet ${c + 1} of ${l.cols}  ·  ${name}`,
-          { x: MARGIN * PT + 14, y: 1.8 * PT, size: 6, font, color: grey },
+          { x: MARGIN * PT + 14, y: 3.8 * PT, size: 6, font, color: grey },
         );
       }
+  }
+
+  // Last page: the step-by-step pictures (same as on the sign splitter page).
+  try {
+    const png = await (await fetch(HOW_TO)).arrayBuffer();
+    const img = await out.embedPng(png);
+    const pw = 297 * PT;
+    const ph = 210 * PT;
+    const page = out.addPage([pw, ph]);
+    const k = Math.min((pw - 24 * PT) / img.width, (ph - 24 * PT) / img.height);
+    page.drawImage(img, {
+      x: (pw - img.width * k) / 2,
+      y: (ph - img.height * k) / 2,
+      width: img.width * k,
+      height: img.height * k,
+    });
+  } catch {
+    // No pictures (offline?): the guide page still has the short version.
   }
   return out.save();
 }

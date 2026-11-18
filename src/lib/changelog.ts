@@ -59,6 +59,16 @@ export const COMING_SOON: { title: string; text: string }[] = [
 export const CHANGELOG: Release[] = [
   {
     date: "2026-11-18",
+    title: "Picture steps for DIY signs",
+    changes: [
+      {
+        level: "organiser",
+        text: "Sign splitter: six picture steps for putting a DIY sign or table banner together (print at actual size, lay out, trim the white edges, overlap to the ticks, tape the back, back it). They're on the page and on the last page of the PDF. Each sheet's name is now printed further from the edge so printers don't cut it off.",
+      },
+    ],
+  },
+  {
+    date: "2026-11-18",
     title: "Rolling views counter on the TV",
     changes: [
       {

@@ -13,6 +13,7 @@ import {
   type Paper,
   type SignSize,
 } from "@/lib/sign-splitter";
+import { SignSteps } from "@/components/sign-steps";
 
 // Signs ready to go (files in public/resources/signs).
 const BUILT_IN = [
@@ -311,10 +312,10 @@ export function SignSplitter() {
       </button>
       {error && <p className="text-sm text-red-700">{error}</p>}
       <p className="text-xs text-stone-500">
-        The PDF starts with a guide showing where each sheet goes. Print at
-        Actual size (100%), overlap the sheets about 1 cm, line up the tick
-        marks and tape them on the back.
+        The PDF starts with a guide showing where each sheet goes and ends with
+        these steps, so you can follow along while you put it together.
       </p>
+      <SignSteps />
     </div>
   );
 }
