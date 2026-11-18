@@ -479,7 +479,7 @@ function ShoppingList({
           rel="noreferrer"
           className="mt-3 inline-block rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-2"
         >
-          Open the board at Officeworks ↗
+          Buy the board at Officeworks ↗
         </a>
       </div>
     );
@@ -526,7 +526,7 @@ function ShoppingList({
         rel="noreferrer"
         className="mt-3 inline-block rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-2"
       >
-        Open the card at {BACKING.shop} ↗
+        Buy the card at {BACKING.shop} ↗
       </a>
     </div>
   );
