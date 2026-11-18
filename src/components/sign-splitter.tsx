@@ -293,8 +293,9 @@ export function SignSplitter() {
         <p className="text-xs text-stone-600">
           <b>Thin, plain paper is fine.</b> Print in colour on everyday 80 gsm
           paper (Officeworks self-serve: ${PRINT_PRICE.A3.toFixed(2)} an A3, $
-          {PRINT_PRICE.A4.toFixed(2)} an A4). The backing card is what makes it
-          stiff, so you don&apos;t need thick or photo paper.
+          {PRINT_PRICE.A4.toFixed(2)} an A4). The backing board (or card, for
+          table banners) is what makes it stiff, so you don&apos;t need thick or
+          photo paper.
         </p>
       </section>
 

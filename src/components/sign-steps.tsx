@@ -39,7 +39,7 @@ export const SIGN_STEPS: { title: string; text: string; Pic: Pic }[] = [
   },
   {
     title: "Back it",
-    text: "Glue it onto A2 foam board or thick cardboard for a sign, or clip or tape it to the front of the table for a banner.",
+    text: "Glue it onto 5 mm foam board or thick cardboard for a sign, or clip or tape it to the front of the table for a banner.",
     Pic: BackPic,
   },
 ];
