@@ -494,7 +494,8 @@ function ShoppingList({
               Officeworks
             </a>
             ), one piece so there&apos;s no join, or a big piece of cardboard
-            box.
+            box. Not every Officeworks stocks the A1 board, so check your store
+            has it before you go.
           </>
         ) : null}
       </p>
