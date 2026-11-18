@@ -243,8 +243,8 @@ export const EQUIPMENT_GUIDE: {
           {
             label: "DIY",
             about:
-              "Colour-print the sign on 8 portrait A3 sheets (thin, plain 80 gsm paper is fine: about $8 at Officeworks self-serve) and glue them onto backing: 2 sheets of black A2 card ($4 each) or thick cardboard.",
-            price: "~$16 each",
+              "An A2 sign (594 × 420 mm), small enough to stay stiff. Colour-print it on 2 A3 sheets (thin, plain 80 gsm paper is fine: about $2 at Officeworks self-serve) and glue them onto a sheet of black A2 foam board (5 mm, about $5 each in a 5-pack at Officeworks) or a piece of cardboard box.",
+            price: "~$7 each",
             instructions: "/resources/signs",
           },
           {

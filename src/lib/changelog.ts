@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "DIY handheld signs are now A2 (594 × 420 mm), small enough to stay stiff: 2 A3 prints on a sheet of black 5 mm foam board (or a cardboard box), about $7 each. The sign splitter starts on A2.",
+      },
+      {
+        level: "organiser",
         text: "DIY signs and banners now cost in colour printing and backing card: table banner ~$21 (Kings roll-up table) to ~$29 (6ft table), handheld signs ~$16 each. The sign splitter shows a What to buy list with the cost, and says thin, plain 80 gsm paper is fine because the card does the stiffening.",
       },
       {

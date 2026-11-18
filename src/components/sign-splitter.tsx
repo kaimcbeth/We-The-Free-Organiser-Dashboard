@@ -73,7 +73,8 @@ const sizeLabel = (w: number, h: number) =>
 export function SignSplitter() {
   const [source, setSource] = useState<Source | null>(null);
   const [picked, setPicked] = useState<Set<number>>(new Set([0]));
-  const [size, setSize] = useState<SignSize>("design");
+  // DIY signs are A2 (Kai, 18 Nov 2026: bigger ones flop on card).
+  const [chosenSize, setSize] = useState<SignSize>("A2");
   const [paper, setPaper] = useState<Paper>("A3");
   const [mode, setMode] = useState<"exact" | "fit">("fit");
   const [busy, setBusy] = useState(false);
@@ -106,7 +107,6 @@ export function SignSplitter() {
     await load(await PDFDocument.load(bytes), b.label, b.designs, b.previews);
     if (b.fixedSize) {
       setSource((s) => s && { ...s, fixedSize: true });
-      setSize("design");
       setPicked(new Set([0])); // a table takes one banner: start with the first
     }
   }
@@ -117,7 +117,6 @@ export function SignSplitter() {
     void (async () => {
       const wanted = new URLSearchParams(window.location.search).get("sign");
       const b = BUILT_IN.find((x) => x.id === wanted) ?? BUILT_IN[0];
-      if (b.fixedSize) setSize("design");
       const { PDFDocument } = await import("pdf-lib");
       const bytes = await (await fetch(b.file)).arrayBuffer();
       const doc = await PDFDocument.load(bytes);
@@ -150,6 +149,7 @@ export function SignSplitter() {
     }
   }
 
+  const size: SignSize = source?.fixedSize ? "design" : chosenSize;
   const first = source?.sizes[[...picked][0] ?? 0] ?? source?.sizes[0];
   const [W, H] = first ? signSize(first.w, first.h, size) : [0, 0];
   const opts = first ? layouts(W, H, paper) : null;
@@ -258,14 +258,18 @@ export function SignSplitter() {
         <section className="space-y-2">
           <h2 className="text-sm font-semibold">Printed size</h2>
           <div className="flex flex-wrap gap-1.5">
-            {(["design", "A0", "A1", "A2"] as SignSize[]).map((s) => (
+            {(["A2", "A1", "A0", "design"] as SignSize[]).map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => setSize(s)}
                 className={chip(size === s)}
               >
-                {s === "design" ? "As designed" : s}
+                {s === "design"
+                  ? "As designed"
+                  : s === "A2"
+                    ? "A2 (recommended)"
+                    : s}
               </button>
             ))}
           </div>
@@ -435,6 +439,10 @@ const BACKING = {
   price: 2.2,
 };
 
+// Handheld (A2) signs: 5 mm foam board stays stiff (Kai, 18 Nov 2026).
+const FOAM_BOARD =
+  "https://www.officeworks.com.au/shop/officeworks/p/a2-foam-board-5mm-black-5-pack-ljpcfba2b5";
+
 // Officeworks self-serve colour prints on 80 gsm paper (checked 18 Nov 2026).
 const PRINT_PRICE: Record<Paper, number> = { A3: 0.98, A4: 0.49 };
 const money = (n: number) => `$${n % 1 ? n.toFixed(2) : n.toFixed(0)}`;
@@ -454,6 +462,22 @@ function ShoppingList({
       <p className="text-xs text-stone-600">
         Printing: {sheets} {paper} colour prints, about {money(print)} at
         Officeworks self-serve.
+        {Math.max(l.signW, l.signH) <= 594 &&
+          Math.min(l.signW, l.signH) <= 420 && (
+            <>
+              {" "}
+              Backing: one sheet of black A2 foam board (5 mm, about $5 each{" "}
+              <a
+                href={FOAM_BOARD}
+                target="_blank"
+                rel="noreferrer"
+                className="underline"
+              >
+                in a 5-pack at Officeworks
+              </a>
+              ) or a piece of cardboard box.
+            </>
+          )}
       </p>
     );
   const n = boards.buy;
