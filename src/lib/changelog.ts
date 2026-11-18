@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Table banners: the sign splitter now says how many A2 boards to buy. Small end pieces only need half a board, so two of them share one cut in half (the Kings table banner on 10 A3 sheets: 5 boards).",
+      },
+      {
+        level: "organiser",
         text: "Sign splitter: sheets are numbered 1, 2, 3… (they were A1, B2…, which looked like paper sizes).",
       },
       {

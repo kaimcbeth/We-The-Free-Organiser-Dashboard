@@ -121,7 +121,9 @@ export const BOARD = [594, 420] as const; // A2, mm
 export type Boards = {
   cols: number[]; // sheets per board, across
   rows: number[]; // sheets per board, down
-  count: number;
+  count: number; // pieces
+  halves: number; // pieces small enough for half a board (A3 size)
+  buy: number; // A2 boards to buy: half pieces share a board
 };
 const split = (n: number, most: number) => {
   const parts = Math.ceil(n / most);
@@ -143,8 +145,25 @@ export function boardGroups(l: Layout): Boards {
     while (gr < l.rows && fits(gr + 1, ih, bh)) gr++;
     const cols = split(l.cols, gc);
     const rows = split(l.rows, gr);
-    const b = { cols, rows, count: cols.length * rows.length };
-    if (!best || b.count < best.count) best = b;
+    // A piece that fits half an A2 board (297 × 420, either way) can share
+    // a cut-in-half board with another one.
+    const span = (n: number, step: number) => n * (step - OVERLAP) + OVERLAP;
+    let halves = 0;
+    for (const nc of cols)
+      for (const nr of rows) {
+        const w = span(nc, iw);
+        const h = span(nr, ih);
+        if ((w <= 297 && h <= 420) || (w <= 420 && h <= 297)) halves++;
+      }
+    const count = cols.length * rows.length;
+    const buy = count - halves + Math.ceil(halves / 2);
+    const b = { cols, rows, count, halves, buy };
+    if (
+      !best ||
+      b.buy < best.buy ||
+      (b.buy === best.buy && b.count < best.count)
+    )
+      best = b;
   }
   return best!;
 }

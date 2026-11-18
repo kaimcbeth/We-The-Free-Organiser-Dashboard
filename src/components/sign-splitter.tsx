@@ -417,9 +417,13 @@ function Preview({
       </div>
       {boards && (
         <p className="text-xs text-stone-600">
-          Backing boards are A2 at most, so this banner goes on{" "}
-          <b>{boards.count} A2 boards</b> (outlined in yellow). Tape and back
-          each piece on its own, then line the boards up along the table.
+          Backing boards are A2 at most, so this banner is backed in{" "}
+          {boards.count} pieces (outlined in yellow).{" "}
+          <b>Boards to buy: {boards.buy} A2</b>
+          {boards.halves > 0 &&
+            ` (${boards.halves === 1 ? "1 piece only needs" : `${boards.halves} pieces only need`} half a board, so cut one in half)`}
+          . Tape and back each piece on its own, then line them up along the
+          table.
         </p>
       )}
     </>
