@@ -463,6 +463,22 @@ export function CarouselMaker({
               )}
             </div>
           )}
+          {(() => {
+            const ep = editing ? byId.get(editing) : null;
+            if (!ep) return null;
+            const i = chosen.findIndex((c) => c.id === ep.id);
+            return (
+              <CropPanel
+                photo={ep}
+                pos={pos[ep.id] ?? CENTRE}
+                onPos={(np) => setOne(ep.id, np)}
+                onClose={() => setEditing(null)}
+                branded={branded}
+                overlay={i === 0 && cover ? titleLayer : null}
+                aspect={W / slideH}
+              />
+            );
+          })()}
           <p className="mt-4 text-xs font-medium text-stone-500">
             Preview · drag a photo to move it, double-click to zoom and crop
           </p>
@@ -894,6 +910,84 @@ export function PhotoPicker({
             )}
           </button>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// Double-click a slide (Kai, 19 Nov 2026: "double click to zoom/crop doesn't"
+// work; the panel had never been drawn): a bigger copy to drag, with a zoom
+// slider. Its own overlay, since the maker may already sit inside a Sheet.
+function CropPanel({
+  photo,
+  pos,
+  onPos,
+  onClose,
+  branded,
+  overlay,
+  aspect,
+}: {
+  photo: EventPhoto;
+  pos: Pos;
+  onPos: (p: Pos) => void;
+  onClose: () => void;
+  branded: boolean;
+  overlay: string | null;
+  aspect: number;
+}) {
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [onClose]);
+  const z = pos.z ?? 1;
+  return (
+    <div
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-navy/60 p-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="w-full max-w-sm rounded-2xl bg-white p-4 shadow-xl">
+        <div className="mb-2 flex items-baseline justify-between">
+          <p className="font-semibold text-navy">Zoom and crop</p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-sm text-stone-500 hover:text-navy"
+          >
+            Done
+          </button>
+        </div>
+        <SlideFrame
+          photo={photo}
+          pos={pos}
+          onPos={onPos}
+          className="rounded-xl"
+          branded={branded}
+          overlay={overlay}
+          aspect={aspect}
+        />
+        <label className="mt-3 flex items-center gap-3 text-sm text-stone-600">
+          Zoom
+          <input
+            type="range"
+            min={1}
+            max={3}
+            step={0.05}
+            value={z}
+            onChange={(e) => onPos({ ...pos, z: Number(e.target.value) })}
+            className="flex-1 accent-pink"
+          />
+        </label>
+        <div className="mt-2 flex items-center justify-between text-xs text-stone-500">
+          <span>Drag the photo to choose what shows.</span>
+          <button
+            type="button"
+            onClick={() => onPos(CENTRE)}
+            className="hover:text-navy hover:underline"
+          >
+            Reset
+          </button>
+        </div>
       </div>
     </div>
   );

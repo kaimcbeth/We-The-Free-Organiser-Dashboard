@@ -63,7 +63,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "Insights: a Newcomers list near the top (everyone whose first event was in the last 30 days), and one Milestones list (just reached and coming up). Find wins now usually opens straight away: wins are found ahead of time and kept for 3 days; Search again looks for new ones.",
+        text: "Insights: a Newcomers list near the top (everyone whose first event was in the last 30 days), and one Milestones list (just reached and coming up). The event title on a carousel's first photo is smaller and quieter, and double-clicking a carousel photo now opens zoom and crop. Find wins now usually opens straight away: wins are found ahead of time and kept for 3 days; Search again looks for new ones.",
       },
       {
         level: "organiser",

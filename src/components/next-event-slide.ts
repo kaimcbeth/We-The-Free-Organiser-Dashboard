@@ -275,29 +275,29 @@ export function drawCoverTitle(
         ctx,
         t.toUpperCase(),
         (s) => `${s}px ${DISPLAY}`,
-        r(104),
-        r(44),
-        max,
-        3,
+        r(60),
+        r(34),
+        max * 0.8,
+        2,
         1.05,
-        h * 0.3,
+        h * 0.15,
       )
     : { size: 0, lines: [] as string[] };
-  const textH = fit.lines.length * fit.size * 1.05 + (d ? r(58) : 0);
+  const textH = fit.lines.length * fit.size * 1.05 + (d ? r(44) : 0);
   const bottom = h - (branded ? r(150) : r(72));
-  const fadeTop = Math.max(0, bottom - textH - r(260));
+  const fadeTop = Math.max(0, bottom - textH - r(180));
   const g = ctx.createLinearGradient(0, fadeTop, 0, h);
   g.addColorStop(0, "rgba(7,17,48,0)");
-  g.addColorStop(0.45, "rgba(7,17,48,0.55)");
-  g.addColorStop(1, "rgba(7,17,48,0.9)");
+  g.addColorStop(0.5, "rgba(7,17,48,0.35)");
+  g.addColorStop(1, "rgba(7,17,48,0.7)");
   ctx.fillStyle = g;
   ctx.fillRect(0, fadeTop, w, h - fadeTop);
 
   let y = bottom - fit.lines.length * fit.size * 1.05;
   if (d) {
-    ctx.font = `${r(34)}px ${BOLD}`;
+    ctx.font = `${r(24)}px ${BOLD}`;
     ctx.fillStyle = YELLOW;
-    spaced(ctx, d.toUpperCase(), x, y - r(22), r(4));
+    spaced(ctx, d.toUpperCase(), x, y - r(16), r(3));
   }
   ctx.font = `${fit.size}px ${DISPLAY}`;
   ctx.fillStyle = "#ffffff";
