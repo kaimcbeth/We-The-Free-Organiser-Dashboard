@@ -6,7 +6,9 @@ import { PHOTO_TAGS, type EventPhoto } from "@/lib/event-photos";
 import { createClient } from "@/lib/supabase/client";
 import { Option } from "@/components/copy-maker";
 import {
+  drawCoverTitle,
   drawNextEvent,
+  loadCoverEvent,
   loadNextEvent,
   loadNextEventFonts,
   type NextEvent,
@@ -54,6 +56,7 @@ async function renderSlide(
   mark: HTMLImageElement | null, // null: no logo or website (Kai, 1 Nov 2026)
   pos: Pos,
   H: number,
+  cover?: { title: string; date: string } | null, // words on the first photo
 ): Promise<Blob> {
   const canvas = document.createElement("canvas");
   canvas.width = W;
@@ -65,6 +68,7 @@ async function renderSlide(
   const pw = photo.naturalWidth * s;
   const ph = photo.naturalHeight * s;
   ctx.drawImage(photo, (W - pw) * pos.x, (H - ph) * pos.y, pw, ph);
+  if (cover) drawCoverTitle(ctx, W, H, cover.title, cover.date, !!mark);
 
   if (mark) {
     // Logo bubble, top right.
@@ -154,6 +158,36 @@ export function CarouselMaker({
       live = false;
     };
   }, [fromEvent]);
+  // Event title on the first photo (Kai, 19 Nov 2026), editable; empty
+  // fields are left off.
+  const [coverEvent, setCoverEvent] = useState<{
+    id: string;
+    title: string;
+    date: string;
+  } | null>(null);
+  const [edited, setEdited] = useState<{ title?: string; date?: string }>({});
+  const [withTitle, setWithTitle] = useState(true);
+  const [titleLayer, setTitleLayer] = useState<string | null>(null);
+  useEffect(() => {
+    if (!fromEvent) return;
+    let live = true;
+    loadCoverEvent(createClient(), fromEvent)
+      .then((c) => {
+        if (live && c) setCoverEvent({ id: fromEvent, ...c });
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [fromEvent]);
+  const coverBase =
+    coverEvent && coverEvent.id === fromEvent ? coverEvent : null;
+  const coverTitle = edited.title ?? coverBase?.title ?? "";
+  const coverDate = edited.date ?? coverBase?.date ?? "";
+  const cover =
+    withTitle && (coverTitle.trim() || coverDate.trim())
+      ? { title: coverTitle, date: coverDate }
+      : null;
   // None of the chosen photos is from an event: no last slide.
   const next = fromEvent ? found : null;
   const setOne = (id: string, p: Pos) => {
@@ -186,6 +220,32 @@ export function CarouselMaker({
     small.getContext("2d")!.drawImage(full, 0, 0, small.width, small.height);
     return small;
   }
+
+  // The title as a clear layer over the first preview, drawn the same way as
+  // the real slide.
+  useEffect(() => {
+    if (!cover) return;
+    let live = true;
+    loadNextEventFonts()
+      .then(() => {
+        const c = document.createElement("canvas");
+        c.width = W;
+        c.height = slideH;
+        drawCoverTitle(
+          c.getContext("2d")!,
+          W,
+          slideH,
+          cover.title,
+          cover.date,
+          branded,
+        );
+        if (live) setTitleLayer(c.toDataURL("image/png"));
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [cover?.title, cover?.date, slideH, branded, !!cover]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!next || !withNext) return;
@@ -227,6 +287,7 @@ export function CarouselMaker({
 
   async function build(): Promise<File[]> {
     const mark = branded ? await loadImage("/brand/wtf-mark.png") : null;
+    if (cover) await loadNextEventFonts();
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     const files: File[] = [];
     for (let i = 0; i < chosen.length; i++) {
@@ -237,6 +298,7 @@ export function CarouselMaker({
         mark,
         pos[chosen[i].id] ?? CENTRE,
         slideH,
+        i === 0 ? cover : null,
       );
       files.push(
         new File([blob], `${slug}-${String(i + 1).padStart(2, "0")}.jpg`, {
@@ -362,6 +424,45 @@ export function CarouselMaker({
               No WTF logo
             </label>
           </div>
+          {coverBase && (
+            <div className="mt-3 rounded-xl bg-white p-2.5 ring-1 ring-black/5">
+              <label className="flex items-center gap-2 text-sm font-medium text-navy">
+                <input
+                  type="checkbox"
+                  checked={withTitle}
+                  onChange={(e) => {
+                    setWithTitle(e.target.checked);
+                    setMade(null);
+                  }}
+                />
+                Event title on the first photo
+              </label>
+              {withTitle && (
+                <div className="mt-2 grid gap-2 sm:grid-cols-[2fr_1fr]">
+                  <input
+                    value={coverTitle}
+                    onChange={(e) => {
+                      setEdited((x) => ({ ...x, title: e.target.value }));
+                      setMade(null);
+                    }}
+                    placeholder="Title"
+                    aria-label="Title"
+                    className="rounded-lg px-2.5 py-1.5 text-sm ring-1 ring-stone-300"
+                  />
+                  <input
+                    value={coverDate}
+                    onChange={(e) => {
+                      setEdited((x) => ({ ...x, date: e.target.value }));
+                      setMade(null);
+                    }}
+                    placeholder="Date (optional)"
+                    aria-label="Date"
+                    className="rounded-lg px-2.5 py-1.5 text-sm ring-1 ring-stone-300"
+                  />
+                </div>
+              )}
+            </div>
+          )}
           <p className="mt-4 text-xs font-medium text-stone-500">
             Preview · drag a photo to move it, double-click to zoom and crop
           </p>
@@ -376,6 +477,7 @@ export function CarouselMaker({
                   className="rounded-lg shadow"
                   small
                   branded={branded}
+                  overlay={i === 0 && cover ? titleLayer : null}
                   aspect={W / slideH}
                   onRatio={(r) =>
                     setRatios((all) =>
@@ -809,7 +911,9 @@ function SlideFrame({
   branded = true,
   aspect,
   onRatio,
+  overlay = null,
 }: {
+  overlay?: string | null; // a clear image laid over the photo (title)
   branded?: boolean;
   aspect: number; // width / height of the slide
   onRatio?: (r: number) => void; // the photo's own shape, once loaded
@@ -873,6 +977,14 @@ function SlideFrame({
         }}
         className="pointer-events-none h-full w-full object-cover"
       />
+      {overlay && (
+        // eslint-disable-next-line @next/next/no-img-element -- drawn layer
+        <img
+          src={overlay}
+          alt=""
+          className="pointer-events-none absolute inset-0 h-full w-full"
+        />
+      )}
       {branded && (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element -- static logo */}

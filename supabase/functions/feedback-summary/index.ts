@@ -84,7 +84,7 @@ Rules:
 - Turn criticism into something kind and constructive; never single anyone out for doing something wrong.
 - Call people in the community members, never volunteers. Australian spelling. No em or en dashes. At most 3 emoji in the whole thing, only where they fit.
 
-Answer with the summary tool, filled in like this:
+Always answer by calling the summary tool (never plain text), filled in like this:
 {"overall": "1-2 sentences on how people are finding it, in chat language", "working": ["one natural sentence", ...], "better": ["one natural sentence", ...], "ideas": ["something the community could try, phrased as an idea, not a promise", ...], "message": "the whole thing as one chat message: a short thank-you opener, what's going well, what we heard could be better, a couple of ideas we're thinking about, and an invitation to share more. Short paragraphs, no headings, no bullet symbols other than simple line breaks, under 170 words."}
 "working" and "better" 1-4 items each, each under 25 words. "ideas" at most 3.`;
 
@@ -112,7 +112,7 @@ Answer with the summary tool, filled in like this:
             },
           },
         ],
-        tool_choice: { type: "tool", name: "summary" },
+        tool_choice: { type: "auto" },
       }),
     });
     if (!res.ok) {
@@ -127,7 +127,12 @@ Answer with the summary tool, filled in like this:
       let s = used;
       if (!s) {
         const match = raw.match(/\{[\s\S]*\}/);
-        s = JSON.parse(match ? match[0] : raw);
+        try {
+          s = JSON.parse(match ? match[0] : raw);
+        } catch {
+          // Plain words instead of the tool: show them as the chat message.
+          if (raw.trim().length > 40) s = { overall: "", working: [], better: [], ideas: [], message: raw.trim() };
+        }
       }
       if (!s) throw new Error("empty");
       const tidy = (v: unknown) =>

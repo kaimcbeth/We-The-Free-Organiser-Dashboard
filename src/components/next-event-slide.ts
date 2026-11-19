@@ -219,3 +219,91 @@ export function drawNextEvent(
   ctx.fillStyle = "rgba(255,255,255,0.75)";
   if (foot) ctx.fillText(foot, x, h - r(70), max);
 }
+
+// The event the carousel's photos are from, for the title on the first
+// photo (Kai, 19 Nov 2026: "an event title on event photo carousels on the
+// first photo").
+export type CoverEvent = { title: string; date: string };
+export async function loadCoverEvent(
+  supabase: SupabaseClient,
+  eventId: string,
+): Promise<CoverEvent | null> {
+  const { data: ev } = await supabase
+    .from("events")
+    .select("title, starts_at, team:teams(name, timezone)")
+    .eq("id", eventId)
+    .maybeSingle<{
+      title: string;
+      starts_at: string;
+      team: { name: string; timezone: string } | null;
+    }>();
+  if (!ev) return null;
+  const tz = ev.team?.timezone ?? "Australia/Sydney";
+  return {
+    title: shortTitle(ev.title, ev.team?.name ?? null),
+    date: fmt(ev.starts_at, tz, {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    }).replace(",", ""),
+  };
+}
+
+// Title (and a small date line above it) over a dark fade at the bottom of
+// the first photo. Drawn straight onto the slide, or onto a clear canvas for
+// the preview. `branded`: leave room for www.activism.wtf under it.
+export function drawCoverTitle(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  title: string,
+  date: string,
+  branded: boolean,
+) {
+  const t = title.trim();
+  const d = date.trim();
+  if (!t && !d) return;
+  const k = Math.min(1, h / 1350);
+  const r = (n: number) => Math.round(n * k);
+  const x = 68;
+  const max = w - 2 * x;
+  ctx.save();
+  ctx.shadowColor = "transparent";
+  ctx.textBaseline = "alphabetic";
+  const fit = t
+    ? fitLines(
+        ctx,
+        t.toUpperCase(),
+        (s) => `${s}px ${DISPLAY}`,
+        r(104),
+        r(44),
+        max,
+        3,
+        1.05,
+        h * 0.3,
+      )
+    : { size: 0, lines: [] as string[] };
+  const textH = fit.lines.length * fit.size * 1.05 + (d ? r(58) : 0);
+  const bottom = h - (branded ? r(150) : r(72));
+  const fadeTop = Math.max(0, bottom - textH - r(260));
+  const g = ctx.createLinearGradient(0, fadeTop, 0, h);
+  g.addColorStop(0, "rgba(7,17,48,0)");
+  g.addColorStop(0.45, "rgba(7,17,48,0.55)");
+  g.addColorStop(1, "rgba(7,17,48,0.9)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, fadeTop, w, h - fadeTop);
+
+  let y = bottom - fit.lines.length * fit.size * 1.05;
+  if (d) {
+    ctx.font = `${r(34)}px ${BOLD}`;
+    ctx.fillStyle = YELLOW;
+    spaced(ctx, d.toUpperCase(), x, y - r(22), r(4));
+  }
+  ctx.font = `${fit.size}px ${DISPLAY}`;
+  ctx.fillStyle = "#ffffff";
+  for (const l of fit.lines) {
+    y += fit.size * 1.05;
+    ctx.fillText(l, x - 4, y);
+  }
+  ctx.restore();
+}

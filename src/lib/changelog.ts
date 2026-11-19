@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Event photo carousels now put the event's name and date on the first photo. Change the words or untick it in the carousel maker.",
+      },
+      {
+        level: "organiser",
         text: "The throwback photo action only comes up when your Photo Hub has a photo from at least 4 weeks ago to share (not ones marked not for promo). No photos, no action.",
       },
       {
