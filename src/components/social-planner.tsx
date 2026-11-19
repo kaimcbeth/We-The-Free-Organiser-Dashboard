@@ -1,6 +1,6 @@
 "use client";
 
-import { strToU8, zipSync } from "fflate";
+import { saveFiles } from "@/lib/save-files";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -871,63 +871,16 @@ function PostEditor({
       });
   }
 
-  // Download (Kai, 6 Nov): one image as itself (caption copied); several as
-  // a zip with the caption in a text file.
+  // Download: every image as its own photo, caption copied (no zip since
+  // Kai, 19 Nov 2026).
   async function download() {
     setBusy(true);
     try {
-      const { files, base } = ready ?? (await getFiles());
-      let blob: Blob;
-      let name: string;
-      // Phones: each slide as its own photo, not a zip (Kai, 19 Nov 2026:
-      // Instagram's picker can't see inside a zip). They land in the
-      // gallery's Download album.
-      const phone = /Android|iPhone|iPad/i.test(navigator.userAgent);
-      if (phone && files.length > 1) {
-        if (caption)
-          await navigator.clipboard.writeText(caption).catch(() => {});
-        for (const f of files) {
-          const a = document.createElement("a");
-          a.href = URL.createObjectURL(f);
-          a.download = f.name;
-          a.click();
-          setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
-          await new Promise((r) => setTimeout(r, 400));
-        }
-        setDone(
-          `${files.length} photos saved${caption ? " · caption copied" : ""}`,
-        );
-        setTimeout(() => setDone(""), 4000);
-        return;
-      }
-      if (files.length === 1) {
-        // One image: download it and copy the caption, ready to paste.
-        blob = files[0];
-        name = files[0].name;
-        if (caption)
-          await navigator.clipboard.writeText(caption).catch(() => {});
-      } else {
-        const entries: Record<string, Uint8Array> = {};
-        for (const f of files)
-          entries[f.name] = new Uint8Array(await f.arrayBuffer());
-        if (caption) entries["caption.txt"] = strToU8(caption);
-        caps.forEach((c, n) => {
-          entries[`caption-${String(n + 1).padStart(2, "0")}.txt`] = strToU8(c);
-        });
-        blob = new Blob([zipSync(entries, { level: 0 }) as BlobPart], {
-          type: "application/zip",
-        });
-        name = `${base}.zip`;
-      }
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = name;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+      const { files } = ready ?? (await getFiles());
+      if (caption) await navigator.clipboard.writeText(caption).catch(() => {});
+      await saveFiles(files);
       setDone(
-        files.length === 1 && caption
-          ? "Downloaded · caption copied"
-          : "Downloaded",
+        `${files.length === 1 ? "Saved" : `${files.length} photos saved`}${caption ? " · caption copied" : ""}`,
       );
       setTimeout(() => setDone(""), 3000);
     } catch {

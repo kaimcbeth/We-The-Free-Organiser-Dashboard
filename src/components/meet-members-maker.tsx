@@ -2,7 +2,7 @@
 
 import { SaveToPlanner } from "@/components/save-to-planner";
 import { useEffect, useRef, useState } from "react";
-import { zipSync } from "fflate";
+import { saveFiles } from "@/lib/save-files";
 import { Sheet } from "@/components/sheet";
 import { loadPosterFonts } from "@/components/graphic-poster";
 import {
@@ -349,18 +349,8 @@ export function MeetMembersMaker({
     setNote("");
     try {
       const files = made ?? (await build());
-      setBusy("Zipping…");
-      const entries: Record<string, Uint8Array> = {};
-      for (const f of files)
-        entries[f.name] = new Uint8Array(await f.arrayBuffer());
-      const zip = zipSync(entries, { level: 0 });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(
-        new Blob([zip as BlobPart], { type: "application/zip" }),
-      );
-      a.download = `${fileBase}.zip`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+      setBusy("Saving…");
+      await saveFiles(files);
     } catch {
       setNote("Something went wrong making the slides. Try again?");
     } finally {

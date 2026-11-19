@@ -2,7 +2,7 @@
 
 import { SaveToPlanner } from "@/components/save-to-planner";
 import { useEffect, useState } from "react";
-import { zipSync } from "fflate";
+import { saveFiles } from "@/lib/save-files";
 import { createClient } from "@/lib/supabase/client";
 import { inputClass } from "@/components/form";
 import { Sheet } from "@/components/sheet";
@@ -304,23 +304,7 @@ export function PostCard({
   async function download(given?: File[]) {
     setBusy("download");
     const f = given ?? (await files());
-    if (f.length === 1) {
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(f[0]);
-      a.download = f[0].name;
-      a.click();
-      setBusy("");
-      return;
-    }
-    const entries: Record<string, Uint8Array> = {};
-    for (const x of f) entries[x.name] = new Uint8Array(await x.arrayBuffer());
-    const zip = zipSync(entries, { level: 0 });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(
-      new Blob([zip as BlobPart], { type: "application/zip" }),
-    );
-    a.download = `${post.slug}.zip`;
-    a.click();
+    await saveFiles(f);
     setBusy("");
   }
 

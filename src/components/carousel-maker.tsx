@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { zipSync } from "fflate";
+import { saveFiles } from "@/lib/save-files";
 import { PHOTO_TAGS, type EventPhoto } from "@/lib/event-photos";
 import { createClient } from "@/lib/supabase/client";
 import { Option } from "@/components/copy-maker";
@@ -362,18 +362,8 @@ export function CarouselMaker({
     setNote("");
     try {
       const files = given ?? made ?? (await build());
-      setBusy("Zipping…");
-      const entries: Record<string, Uint8Array> = {};
-      for (const f of files)
-        entries[f.name] = new Uint8Array(await f.arrayBuffer());
-      const zip = zipSync(entries, { level: 0 });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(
-        new Blob([zip as BlobPart], { type: "application/zip" }),
-      );
-      a.download = `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-carousel.zip`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+      setBusy("Saving…");
+      await saveFiles(files);
     } catch {
       setNote("Something went wrong making the slides. Try again?");
     } finally {
