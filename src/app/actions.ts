@@ -72,6 +72,48 @@ export async function createEvent(
   redirect(`/events/${data.id}`);
 }
 
+// Quick add from the Photo Hub's event search (Kai, 19 Nov 2026: "add event
+// quickly from here (if it didn't get launched on activism.wtf)"). Time is
+// optional: without one the event is time_unknown at 12:00 local, like the
+// Facebook history.
+export async function quickAddEvent(
+  teamId: string,
+  title: string,
+  date: string,
+  time: string,
+): Promise<
+  { id: string; title: string; startsAt: string } | { error: string }
+> {
+  const { supabase } = await requireCore();
+  const t = title.trim().slice(0, 200);
+  if (!t || !/^\d{4}-\d{2}-\d{2}$/.test(date))
+    return { error: "Add a name and a date." };
+  const { data: team } = await supabase
+    .from("teams")
+    .select("timezone")
+    .eq("id", teamId)
+    .maybeSingle();
+  const tz = team?.timezone ?? "Australia/Sydney";
+  const known = /^\d{2}:\d{2}$/.test(time);
+  const startsAt = zonedToUtcIso(date, known ? time : "12:00", tz);
+  const { data, error } = await supabase
+    .from("events")
+    .insert({
+      team_id: teamId,
+      title: t,
+      starts_at: startsAt,
+      source: "manual",
+      time_unknown: !known,
+    })
+    .select("id")
+    .single();
+  if (error?.code === "42501")
+    return { error: "Only organisers can add events. Ask one of them." };
+  if (error || !data) return { error: "Couldn't add the event. Try again?" };
+  revalidatePath("/");
+  return { id: data.id as string, title: t, startsAt };
+}
+
 // Add a person from the People page. Organisers only enter a name;
 // members add their own details when they connect their account.
 export async function createPerson(

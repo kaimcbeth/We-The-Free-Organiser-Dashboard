@@ -91,7 +91,14 @@ export function EventPicker({
   small = false,
   keepValue = true,
   className = "",
+  onCreate,
 }: {
+  // Adds an event that isn't listed; returns the new one, or an error to show.
+  onCreate?: (
+    title: string,
+    date: string,
+    time: string,
+  ) => Promise<PickEvent | string>;
   events: PickEvent[];
   value: string | null;
   onChange: (id: string | null) => void;
@@ -106,6 +113,10 @@ export function EventPicker({
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [hi, setHi] = useState(0);
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState({ title: "", date: "", time: "" });
+  const [addNote, setAddNote] = useState("");
+  const [saving, setSaving] = useState(false);
   const [box, setBox] = useState<{
     left: number;
     width: number;
@@ -166,6 +177,35 @@ export function EventPicker({
     return () => document.removeEventListener("pointerdown", away);
   }, [open]);
 
+  function startAdding() {
+    // Words typed into the search start the name, unless they look like a date.
+    const words = q.trim();
+    setForm({
+      title: /\d/.test(words) ? "" : words,
+      date: "",
+      time: "",
+    });
+    setAddNote("");
+    setAdding(true);
+  }
+
+  async function add() {
+    if (!onCreate) return;
+    if (!form.title.trim() || !form.date) {
+      setAddNote("Add a name and a date.");
+      return;
+    }
+    setSaving(true);
+    const out = await onCreate(form.title.trim(), form.date, form.time);
+    setSaving(false);
+    if (typeof out === "string") {
+      setAddNote(out);
+      return;
+    }
+    setAdding(false);
+    choose(out.id);
+  }
+
   function choose(id: string | null) {
     onChange(id);
     setOpen(false);
@@ -182,6 +222,7 @@ export function EventPicker({
         onClick={() => {
           setOpen((o) => !o);
           setQ("");
+          setAdding(false);
           setHi(0);
         }}
         aria-haspopup="listbox"
@@ -253,6 +294,74 @@ export function EventPicker({
               </li>
             )}
           </ul>
+          {onCreate &&
+            (adding ? (
+              <div className="border-t border-black/5 p-2.5">
+                <p className="text-xs font-semibold text-navy">
+                  Add an event that isn&apos;t listed
+                </p>
+                <input
+                  autoFocus
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") add();
+                    if (e.key === "Escape") setAdding(false);
+                  }}
+                  placeholder="Event name"
+                  aria-label="Event name"
+                  className="mt-1.5 w-full rounded-lg px-2.5 py-1.5 text-sm ring-1 ring-stone-300"
+                />
+                <div className="mt-1.5 flex gap-1.5">
+                  <input
+                    type="date"
+                    value={form.date}
+                    onChange={(e) => setForm({ ...form, date: e.target.value })}
+                    aria-label="Date"
+                    className="min-w-0 flex-1 rounded-lg px-2 py-1.5 text-sm ring-1 ring-stone-300"
+                  />
+                  <input
+                    type="time"
+                    value={form.time}
+                    onChange={(e) => setForm({ ...form, time: e.target.value })}
+                    aria-label="Start time (optional)"
+                    title="Start time (optional)"
+                    className="w-28 rounded-lg px-2 py-1.5 text-sm ring-1 ring-stone-300"
+                  />
+                </div>
+                <p className="mt-1 text-[11px] text-stone-500">
+                  Start time is optional.
+                </p>
+                {addNote && (
+                  <p className="mt-1 text-xs text-red-700">{addNote}</p>
+                )}
+                <div className="mt-2 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={add}
+                    disabled={saving}
+                    className="rounded-lg bg-pink px-3 py-1.5 text-sm font-semibold text-navy disabled:opacity-50"
+                  >
+                    {saving ? "Adding…" : "Add and pick it"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAdding(false)}
+                    className="text-xs text-stone-500 hover:text-navy"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={startAdding}
+                className="border-t border-black/5 px-3 py-2 text-left text-sm font-medium text-stone-500 hover:bg-stone-50 hover:text-navy"
+              >
+                + Add an event that isn&apos;t listed
+              </button>
+            ))}
         </div>
       )}
     </>

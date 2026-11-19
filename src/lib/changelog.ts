@@ -63,7 +63,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "Picking an event in the Photo Hub (when uploading, on a photo, or Attach to event) is now a search box: type a name or a date like 18 October 2025 and the best match comes first.",
+        text: 'Picking an event in the Photo Hub (when uploading, on a photo, or Attach to event) is now a search box: type a name or a date like 18 October 2025 and the best match comes first. Not there because it never went up on activism.wtf? "+ Add an event that isn\'t listed" at the bottom adds it (name, date, time optional) and picks it.',
       },
       {
         level: "organiser",

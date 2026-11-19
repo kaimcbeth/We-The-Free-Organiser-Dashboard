@@ -105,11 +105,17 @@ export function PhotoTile({
   kinds,
   graphic = false,
   events,
+  onCreateEvent,
   years,
 }: {
   // Photo Hub: which event it's from, and its month (Kai, 2 Nov 2026: there
   // was no way to take a photo off an event or change its date).
   events?: PickEvent[];
+  onCreateEvent?: (
+    title: string,
+    date: string,
+    time: string,
+  ) => Promise<PickEvent | string>;
   years?: number[];
   kinds?: string[]; // event kinds to choose from (Photo Hub)
   graphic?: boolean; // "Make graphic" in the menu (Photo Hub)
@@ -315,6 +321,7 @@ export function PhotoTile({
               events={events}
               value={p.eventId ?? null}
               onChange={(id) => onChange({ eventId: id })}
+              onCreate={onCreateEvent}
               placeholder="Not attached to an event"
               noneLabel="Not attached to an event"
               currentLabel={p.eventTitle ?? undefined}
@@ -564,6 +571,7 @@ export function BulkBar({
   canRemove = false,
   kinds,
   events,
+  onCreateEvent,
   onAttach,
   teamId,
   years,
@@ -573,6 +581,11 @@ export function BulkBar({
   kinds?: string[]; // event kinds to set (Photo Hub)
   // Photo Hub: move the selected photos onto an event listing.
   events?: PickEvent[];
+  onCreateEvent?: (
+    title: string,
+    date: string,
+    time: string,
+  ) => Promise<PickEvent | string>;
   onAttach?: (eventId: string) => void;
   photos: EventPhoto[]; // the selected ones
   total: number; // how many could be selected
@@ -643,6 +656,7 @@ export function BulkBar({
                 events={events}
                 value={null}
                 onChange={(id) => onAttach(id ?? "-")}
+                onCreate={onCreateEvent}
                 placeholder="Attach to event…"
                 noneLabel="Not attached to an event"
                 keepValue={false}

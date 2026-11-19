@@ -1,5 +1,6 @@
 "use client";
 
+import { quickAddEvent } from "@/app/actions";
 import {
   EventPicker,
   eventSearchText,
@@ -98,6 +99,29 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
   const [kind, setKind] = useState(""); // for the next upload
   const [uploadEvent, setUploadEvent] = useState(""); // event for the next upload
   const [events, setEvents] = useState<PickEvent[]>([]);
+  // Quick add from the event search: saved, put first in the list, picked.
+  async function addEvent(
+    title: string,
+    date: string,
+    time: string,
+  ): Promise<PickEvent | string> {
+    const out = await quickAddEvent(teamId, title, date, time);
+    if ("error" in out) return out.error;
+    const d = new Date(out.startsAt);
+    const ev = {
+      id: out.id,
+      label: `${d.toLocaleDateString("en-AU", {
+        day: "numeric",
+        month: "short",
+        ...(d.getFullYear() !== new Date().getFullYear()
+          ? { year: "numeric" as const }
+          : {}),
+      })}: ${out.title}`,
+      search: eventSearchText(out.title, out.startsAt),
+    };
+    setEvents((all) => [ev, ...all]);
+    return ev;
+  }
   const [moved, setMoved] = useState(""); // after attaching to an event
   const [dupSets, setDupSets] = useState<string[][] | null>(null); // Find duplicates
   const [dupNote, setDupNote] = useState(""); // progress / result
@@ -293,6 +317,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
           events={events}
           value={uploadEvent || null}
           onChange={(id) => setUploadEvent(id ?? "")}
+          onCreate={addEvent}
           noneLabel="No event"
           className="mt-3 w-full max-w-md"
         />
@@ -570,6 +595,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                       canRemove
                       kinds={kinds}
                       events={events}
+                      onCreateEvent={addEvent}
                       years={years}
                       graphic
                       selected={sel?.has(p.id)}
@@ -637,6 +663,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
             canRemove
             kinds={kinds}
             events={events}
+            onCreateEvent={addEvent}
             teamId={teamId}
             onAttach={async (eventId) => {
               const ids = [...sel];
