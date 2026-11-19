@@ -1,5 +1,6 @@
 "use client";
 
+import { EventPicker, type PickEvent } from "@/components/event-picker";
 import { PhotoGraphic } from "@/components/photo-graphic";
 import { useEffect, useRef, useState } from "react";
 import { PhotoCrop, resetCrop } from "@/components/photo-crop";
@@ -108,7 +109,7 @@ export function PhotoTile({
 }: {
   // Photo Hub: which event it's from, and its month (Kai, 2 Nov 2026: there
   // was no way to take a photo off an event or change its date).
-  events?: { id: string; label: string }[];
+  events?: PickEvent[];
   years?: number[];
   kinds?: string[]; // event kinds to choose from (Photo Hub)
   graphic?: boolean; // "Make graphic" in the menu (Photo Hub)
@@ -310,22 +311,16 @@ export function PhotoTile({
             </select>
           )}
           {events && (
-            <select
-              value={p.eventId ?? ""}
-              onChange={(e) => onChange({ eventId: e.target.value || null })}
-              aria-label="Event"
-              className={`mx-1 mb-1 w-[calc(100%-0.5rem)] rounded-lg bg-white px-1.5 py-1 text-xs ring-1 ring-black/10 ${p.eventId ? "text-navy" : "text-stone-400"}`}
-            >
-              <option value="">Not attached to an event</option>
-              {p.eventId && !events.some((ev) => ev.id === p.eventId) && (
-                <option value={p.eventId}>{p.eventTitle ?? "Its event"}</option>
-              )}
-              {events.map((ev) => (
-                <option key={ev.id} value={ev.id}>
-                  {ev.label}
-                </option>
-              ))}
-            </select>
+            <EventPicker
+              events={events}
+              value={p.eventId ?? null}
+              onChange={(id) => onChange({ eventId: id })}
+              placeholder="Not attached to an event"
+              noneLabel="Not attached to an event"
+              currentLabel={p.eventTitle ?? undefined}
+              small
+              className="mx-1 mb-1 w-[calc(100%-0.5rem)]"
+            />
           )}
           {years && (
             <div className="mx-1 mb-1 flex gap-1">
@@ -577,7 +572,7 @@ export function BulkBar({
   years?: number[]; // Photo Hub: set a hand date (year, then month)
   kinds?: string[]; // event kinds to set (Photo Hub)
   // Photo Hub: move the selected photos onto an event listing.
-  events?: { id: string; label: string }[];
+  events?: PickEvent[];
   onAttach?: (eventId: string) => void;
   photos: EventPhoto[]; // the selected ones
   total: number; // how many could be selected
@@ -644,21 +639,17 @@ export function BulkBar({
           </div>
           <div className="flex flex-wrap gap-1.5">
             {events && events.length > 0 && onAttach && (
-              <select
-                value=""
+              <EventPicker
+                events={events}
+                value={null}
+                onChange={(id) => onAttach(id ?? "-")}
+                placeholder="Attach to event…"
+                noneLabel="Not attached to an event"
+                keepValue={false}
                 disabled={n === 0}
-                onChange={(e) => e.target.value && onAttach(e.target.value)}
-                aria-label="Attach to event"
-                className={`${chip} max-w-56 bg-white text-stone-700 ring-stone-300`}
-              >
-                <option value="">Attach to event…</option>
-                <option value="-">Not attached to an event</option>
-                {events.map((ev) => (
-                  <option key={ev.id} value={ev.id}>
-                    {ev.label}
-                  </option>
-                ))}
-              </select>
+                small
+                className={`${chip} max-w-56 !rounded-full !text-stone-700 ring-stone-300`}
+              />
             )}
             {years && years.length > 0 && (
               <>

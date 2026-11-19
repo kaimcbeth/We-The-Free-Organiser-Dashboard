@@ -8,6 +8,65 @@ import { distance, hashBlob, loadHashes, SAME_PHOTO } from "@/lib/photo-hash";
 
 const MAX = 2000; // longest side, px
 
+// Zip files of photos are opened here and their photos uploaded one by one
+// (Kai, 19 Nov 2026: "upload compressed file archives to the photo hub and
+// it can extract them"). Mac "__MACOSX" / "._" leftovers are skipped.
+const PHOTO_EXT = /\.(jpe?g|png|webp|gif|avif|bmp|heic|heif)$/i;
+const OTHER_ARCHIVE = /\.(rar|7z|tar|gz|tgz)$/i;
+const isZip = (f: File) => /\.zip$/i.test(f.name) || /zip/.test(f.type);
+const MIME: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  gif: "image/gif",
+  avif: "image/avif",
+  bmp: "image/bmp",
+  heic: "image/heic",
+  heif: "image/heif",
+};
+
+export async function expandArchives(
+  files: File[],
+  onStatus?: (s: string) => void,
+): Promise<{ photos: File[]; skipped: number }> {
+  const photos: File[] = [];
+  let skipped = 0;
+  for (const f of files) {
+    if (isZip(f)) {
+      onStatus?.(`Opening ${f.name}…`);
+      const { unzipSync } = await import("fflate");
+      const data = new Uint8Array(await f.arrayBuffer());
+      const entries = unzipSync(data, {
+        filter: (e) => {
+          const parts = e.name.split("/");
+          const base = parts[parts.length - 1];
+          return (
+            !parts.some((p) => p === "__MACOSX" || p.startsWith(".")) &&
+            PHOTO_EXT.test(base)
+          );
+        },
+      });
+      for (const [name, bytes] of Object.entries(entries).sort(([a], [b]) =>
+        a.localeCompare(b, undefined, { numeric: true }),
+      )) {
+        const base = name.split("/").pop()!;
+        const ext = base.split(".").pop()!.toLowerCase();
+        photos.push(
+          new File([bytes as BlobPart], base, {
+            type: MIME[ext] ?? "image/jpeg",
+          }),
+        );
+      }
+    } else if (f.type.startsWith("image/") || PHOTO_EXT.test(f.name)) {
+      photos.push(f);
+    } else {
+      skipped++;
+    }
+  }
+  return { photos, skipped };
+}
+
 // Shrinks a photo on the phone before it's uploaded (fast on mobile data).
 export async function shrink(file: File, max = MAX) {
   const bitmap = await createImageBitmap(file);
@@ -91,11 +150,19 @@ export function PhotoUploader({
       e.preventDefault();
       depth = 0;
       setDragging(false);
-      const files = [...(e.dataTransfer?.files ?? [])].filter((f) =>
-        f.type.startsWith("image/"),
+      const files = [...(e.dataTransfer?.files ?? [])].filter(
+        (f) =>
+          f.type.startsWith("image/") || isZip(f) || PHOTO_EXT.test(f.name),
       );
       if (files.length) uploadRef.current(files);
-      else setStatus("Only photos can be added here.");
+      else
+        setStatus(
+          [...(e.dataTransfer?.files ?? [])].some((f) =>
+            OTHER_ARCHIVE.test(f.name),
+          )
+            ? "Only .zip archives can be opened here. Make it a zip and try again."
+            : "Only photos or a zip of photos can be added here.",
+        );
     };
     window.addEventListener("dragenter", enter);
     window.addEventListener("dragover", over);
@@ -111,7 +178,20 @@ export function PhotoUploader({
 
   async function upload(files: FileList | File[]) {
     const supabase = createClient();
-    const list = [...files];
+    let list: File[];
+    let skipped = 0;
+    try {
+      const out = await expandArchives([...files], setStatus);
+      list = out.photos;
+      skipped = out.skipped;
+    } catch {
+      setStatus("Couldn't open that zip. Is it a normal .zip file?");
+      return;
+    }
+    if (!list.length) {
+      setStatus("No photos found in that.");
+      return;
+    }
     let done = 0;
     let failed = 0;
     let dupes = 0; // look like a photo already in the hub
@@ -157,6 +237,9 @@ export function PhotoUploader({
         : `${done} photo${done === 1 ? "" : "s"} added ✓`) +
         (dupes
           ? ` ${dupes} look${dupes === 1 ? "s" : ""} like ${dupes === 1 ? "a photo" : "photos"} already in the Photo Hub: tidy up with Find duplicates.`
+          : "") +
+        (skipped
+          ? ` ${skipped} file${skipped === 1 ? " wasn't a photo" : "s weren't photos"} and ${skipped === 1 ? "was" : "were"} left out.`
           : ""),
     );
     router.refresh();
@@ -182,7 +265,7 @@ export function PhotoUploader({
       <input
         ref={input}
         type="file"
-        accept="image/*"
+        accept="image/*,.zip,application/zip"
         multiple
         hidden
         onChange={(e) => {

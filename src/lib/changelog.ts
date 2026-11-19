@@ -63,6 +63,14 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Picking an event in the Photo Hub (when uploading, on a photo, or Attach to event) is now a search box: type a name or a date like 18 October 2025 and the best match comes first.",
+      },
+      {
+        level: "organiser",
+        text: "Upload a .zip of photos to the Photo Hub (button or drag and drop) and its photos are taken out and added one by one.",
+      },
+      {
+        level: "organiser",
         text: "Event photo carousels now put the event's name and date on the first photo. Change the words or untick it in the carousel maker.",
       },
       {

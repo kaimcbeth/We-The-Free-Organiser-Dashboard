@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  EventPicker,
+  eventSearchText,
+  type PickEvent,
+} from "@/components/event-picker";
 import { PinToggle } from "@/components/nav-pins-context";
 
 import { fillThumbs } from "@/lib/photo-thumbs";
@@ -92,7 +97,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
   const [kinds, setKinds] = useState<string[]>([]); // from the event listings
   const [kind, setKind] = useState(""); // for the next upload
   const [uploadEvent, setUploadEvent] = useState(""); // event for the next upload
-  const [events, setEvents] = useState<{ id: string; label: string }[]>([]);
+  const [events, setEvents] = useState<PickEvent[]>([]);
   const [moved, setMoved] = useState(""); // after attaching to an event
   const [dupSets, setDupSets] = useState<string[][] | null>(null); // Find duplicates
   const [dupNote, setDupNote] = useState(""); // progress / result
@@ -111,7 +116,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
       .eq("team_id", teamId)
       .lte("starts_at", new Date(Date.now() + 31 * 864e5).toISOString())
       .order("starts_at", { ascending: false })
-      .limit(500)
+      .limit(1000)
       .then(({ data }) => {
         if (live)
           setEvents(
@@ -122,7 +127,14 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                 month: "short",
                 ...(d.getFullYear() !== thisYear ? { year: "numeric" } : {}),
               });
-              return { id: e.id as string, label: `${date}: ${e.title}` };
+              return {
+                id: e.id as string,
+                label: `${date}: ${e.title}`,
+                search: eventSearchText(
+                  e.title as string,
+                  e.starts_at as string,
+                ),
+              };
             }),
           );
       });
@@ -277,19 +289,13 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
           Good photos from your events, or older ones. They&apos;re used on your
           promo graphics too.
         </p>
-        <select
-          value={uploadEvent}
-          onChange={(e) => setUploadEvent(e.target.value)}
-          aria-label="Event"
-          className={`mt-3 w-full max-w-md rounded-lg bg-white px-2 py-1.5 text-sm ring-1 ring-black/10 ${uploadEvent ? "" : "text-stone-400"}`}
-        >
-          <option value="">Event (optional)</option>
-          {events.map((ev) => (
-            <option key={ev.id} value={ev.id}>
-              {ev.label}
-            </option>
-          ))}
-        </select>
+        <EventPicker
+          events={events}
+          value={uploadEvent || null}
+          onChange={(id) => setUploadEvent(id ?? "")}
+          noneLabel="No event"
+          className="mt-3 w-full max-w-md"
+        />
         <div className="mt-2 flex flex-wrap items-center gap-2">
           {!uploadEvent && (
             <>
@@ -371,7 +377,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
             eventId={uploadEvent || null}
             droppable
             dropLabel="Drop photos to add them to the Photo Hub"
-            dropHint="They'll get the event, date, type and tags picked above."
+            dropHint="Photos or a .zip of photos. They'll get the event, date, type and tags picked above."
 
             extra={
               uploadEvent
