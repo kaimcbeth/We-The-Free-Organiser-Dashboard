@@ -858,13 +858,27 @@ export function PhotoPicker({
   onToggle: (id: string) => void;
   onMove: (from: number, to: number) => void;
 }) {
+  // Live reorder (Kai, 19 Nov 2026: "Need a better way of reordering photos"):
+  // while dragging, the other photos shuffle out of the way so you see the
+  // order you'll get; the dragged one stays as a faded gap where it'll land.
   const [from, setFrom] = useState<number | null>(null);
   const [over, setOver] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false); // moved past a tap
   const start = useRef<{ x: number; y: number; moved: boolean } | null>(null);
+  const last = useRef<number | null>(null); // stops flip-flopping between two
   const byId = new Map(photos.map((p) => [p.id, p]));
   const chosen = order.map((id) => byId.get(id)).filter((p) => !!p);
   const rest = photos.filter((p) => !order.includes(p.id));
+  const shown =
+    dragging && from !== null && over !== null && over !== from
+      ? (() => {
+          const n = [...chosen];
+          const [x] = n.splice(from, 1);
+          n.splice(over, 0, x);
+          return n;
+        })()
+      : chosen;
+  const dragId = from !== null ? chosen[from]?.id : null;
 
   const indexAt = (x: number, y: number) => {
     for (const el of document.elementsFromPoint(x, y)) {
@@ -878,16 +892,17 @@ export function PhotoPicker({
     setOver(null);
     setDragging(false);
     start.current = null;
+    last.current = null;
   };
 
   return (
     <div>
       <p className="text-xs font-medium text-stone-500">
-        Tap to add or take out, drag to reorder (up to {max}). {chosen.length}{" "}
-        chosen.
+        Tap to add or take out, hold and drag to reorder (up to {max}).{" "}
+        {chosen.length} chosen.
       </p>
       <div className="mt-1.5 grid grid-cols-5 gap-1.5 sm:grid-cols-6">
-        {chosen.map((p, i) => (
+        {shown.map((p, i) => (
           <div
             key={p.id}
             data-slide={i}
@@ -906,11 +921,18 @@ export function PhotoPicker({
               if (
                 !st.moved &&
                 Math.hypot(e.clientX - st.x, e.clientY - st.y) > 6
-              )
+              ) {
                 st.moved = true;
+                setDragging(true);
+              }
               if (!st.moved) return;
               const at = indexAt(e.clientX, e.clientY);
-              if (at !== null) setOver(at);
+              if (at === null || at === over) return;
+              // Hovering the tile that just moved out of the way: wait until
+              // the pointer leaves it, so two tiles don't swap back and forth.
+              if (at === last.current) return;
+              last.current = over;
+              setOver(at);
             }}
             onPointerUp={() => {
               const st = start.current;
@@ -921,12 +943,10 @@ export function PhotoPicker({
             }}
             onPointerCancel={end}
             style={{ touchAction: "none" }}
-            className={`relative aspect-square cursor-grab select-none overflow-hidden rounded-lg ring-2 transition active:cursor-grabbing ${
-              from === i && dragging
-                ? "opacity-40 ring-pink"
-                : over === i && from !== null && from !== i
-                  ? "scale-105 ring-navy"
-                  : "ring-pink"
+            className={`relative aspect-square cursor-grab select-none overflow-hidden rounded-lg ring-2 transition-all duration-150 active:cursor-grabbing ${
+              dragging && p.id === dragId
+                ? "scale-95 opacity-50 ring-navy ring-offset-2"
+                : "ring-pink"
             }`}
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
