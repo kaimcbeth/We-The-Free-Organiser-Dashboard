@@ -172,7 +172,7 @@ export function Pinnable({
   return (
     <div className={`relative h-full ${className}`}>
       {children}
-      <PinToggle k={k} dark={dark} className="absolute right-10 top-1.5" />
+      <PinToggle k={k} dark={dark} className="absolute right-9 top-2" />
     </div>
   );
 }

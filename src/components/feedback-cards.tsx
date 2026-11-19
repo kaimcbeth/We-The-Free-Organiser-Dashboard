@@ -5,9 +5,8 @@ import Link from "next/link";
 import { Sheet } from "@/components/sheet";
 import { createClient } from "@/lib/supabase/client";
 import { OpenFeedback } from "@/app/me/open-feedback";
+import { RESOURCE_CARD, ResourceCardBody } from "@/components/resource-card";
 
-const card =
-  "rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5";
 const small =
   "rounded-lg px-3 py-1.5 text-sm font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50";
 
@@ -62,22 +61,13 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
         <button
           type="button"
           onClick={() => setLinkOpen(true)}
-          className={`flex h-full w-full items-center justify-between text-left hover:ring-pink ${card}`}
+          className={RESOURCE_CARD}
         >
-          <span>
-            <span className="block font-semibold">
-              <span aria-hidden className="mr-1.5">
-                📣
-              </span>
-              Member feedback form
-            </span>
-            <span className="block text-sm text-stone-600">
-              A link for members to send you feedback, any time.
-            </span>
-          </span>
-          <span aria-hidden className="text-xl">
-            →
-          </span>
+          <ResourceCardBody
+            emoji="📣"
+            title="Member feedback form"
+            about="A link for members to send you feedback."
+          />
         </button>
       )}
       {linkOpen && (
@@ -109,22 +99,13 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`flex h-full w-full items-center justify-between text-left hover:ring-pink ${card}`}
+        className={RESOURCE_CARD}
       >
-        <span>
-          <span className="block font-semibold">
-            <span aria-hidden className="mr-1.5">
-              📢
-            </span>
-            Feedback for We The Free Global Support
-          </span>
-          <span className="block text-sm text-stone-600">
-            Tell us how organising is going.
-          </span>
-        </span>
-        <span aria-hidden className="text-xl">
-          →
-        </span>
+        <ResourceCardBody
+          emoji="📢"
+          title="Feedback for We The Free Global Support"
+          about="Tell us how organising is going."
+        />
       </button>
       {open && (
         <Sheet

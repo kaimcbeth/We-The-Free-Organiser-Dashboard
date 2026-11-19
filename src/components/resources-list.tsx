@@ -11,6 +11,7 @@ import { PodShareButton } from "@/components/engagement-pod";
 import { SOCIAL_POSTS, slideUrl } from "@/lib/social-posts";
 import { DISCUSSION_PROMPTS } from "@/lib/discussion-prompts";
 import { NewTag, SeenProvider } from "@/components/new-tag";
+import { RESOURCE_CARD, ResourceCardBody } from "@/components/resource-card";
 
 const has = (q: string, ...text: (string | undefined)[]) =>
   !q || text.some((t) => t?.toLowerCase().includes(q));
@@ -115,23 +116,15 @@ export function ResourcesList({
                 <a
                   href="/resources/hangouts"
                   data-resource="hangouts"
-                  className="flex h-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+                  className={RESOURCE_CARD}
                 >
-                  <span>
-                    <span className="block font-semibold">
-                      <span aria-hidden className="mr-1.5">
-                        🗓️
-                      </span>
-                      Organiser hangouts
-                      <NewTag k="hangouts" />
-                    </span>
-                    <span className="block text-sm text-stone-600">
-                      Build this month&apos;s hangout and present it.
-                    </span>
-                  </span>
-                  <span aria-hidden className="text-xl">
-                    →
-                  </span>
+                  <ResourceCardBody
+                    emoji="🗓️"
+                    title="Organiser hangouts"
+                    newKey="hangouts"
+                    about="Build this month's hangout and present it."
+                    pinned
+                  />
                 </a>
               </Pinnable>
             )}
@@ -139,28 +132,16 @@ export function ResourcesList({
             q,
             "outreach guide conversation questions objections ibc qr newcomer",
           ) && (
-            <div className="relative h-full rounded-2xl bg-white text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink">
-              <a
-                href="/guide"
-                className="flex items-center justify-between px-4 pb-8 pt-3"
-              >
-                <span>
-                  <span className="block font-semibold">
-                    <span aria-hidden className="mr-1.5">
-                      💬
-                    </span>
-                    Outreach guide
-                  </span>
-                  <span className="block text-sm text-stone-600">
-                    The conversation questions, for between chats.
-                  </span>
-                </span>
-                <span aria-hidden className="text-xl">
-                  →
-                </span>
+            <div className={`relative ${RESOURCE_CARD}`}>
+              <a href="/guide" className="block">
+                <ResourceCardBody
+                  emoji="💬"
+                  title="Outreach guide"
+                  about="The conversation questions, for between chats."
+                />
               </a>
               {teamSlug && (
-                <span className="absolute bottom-2.5 left-4">
+                <span className="mt-1">
                   <GuideShare
                     slug={teamSlug}
                     label="Show QR code for newcomers"
@@ -179,47 +160,27 @@ export function ResourcesList({
               data-resource="ibc"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+              className={RESOURCE_CARD}
             >
-              <span>
-                <span className="block font-semibold">
-                  <span aria-hidden className="mr-1.5">
-                    🎓
-                  </span>
-                  IBC Masterclass
-                  <NewTag k="ibc" />
-                </span>
-                <span className="block text-sm text-stone-600">
-                  The full Inspiring Behaviour Change handout.
-                </span>
-              </span>
-              <span aria-hidden className="text-xl">
-                ↗
-              </span>
+              <ResourceCardBody
+                emoji="🎓"
+                title="IBC Masterclass"
+                newKey="ibc"
+                about="The full Inspiring Behaviour Change handout."
+                external
+              />
             </a>
           )}
           {has(
             q,
             "welcome mission values onboarding new members first event",
           ) && (
-            <a
-              href="/me/welcome"
-              className="flex h-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
-            >
-              <span>
-                <span className="block font-semibold">
-                  <span aria-hidden className="mr-1.5">
-                    👋
-                  </span>
-                  Welcome to We The Free
-                </span>
-                <span className="block text-sm text-stone-600">
-                  What new members see when they join.
-                </span>
-              </span>
-              <span aria-hidden className="text-xl">
-                →
-              </span>
+            <a href="/me/welcome" className={RESOURCE_CARD}>
+              <ResourceCardBody
+                emoji="👋"
+                title="Welcome to We The Free"
+                about="What new members see when they join."
+              />
             </a>
           )}
           {!core &&
@@ -236,23 +197,14 @@ export function ResourcesList({
                 <PodShareButton
                   teamId={teamId}
                   canEditChat={!core}
-                  className="flex h-full w-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-left text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+                  className={RESOURCE_CARD}
                 >
-                  <span>
-                    <span className="block font-semibold">
-                      <span aria-hidden className="mr-1.5">
-                        🙌
-                      </span>
-                      Engagement pod
-                      <NewTag k="engagement-pod" />
-                    </span>
-                    <span className="block text-sm text-stone-600">
-                      Get the pod to like and comment on a post.
-                    </span>
-                  </span>
-                  <span aria-hidden className="text-xl">
-                    →
-                  </span>
+                  <ResourceCardBody
+                    emoji="🙌"
+                    title="Engagement pod"
+                    newKey="engagement-pod"
+                    about="Get the pod to like and comment on a post."
+                  />
                 </PodShareButton>
               </div>
             )}
@@ -264,31 +216,17 @@ export function ResourcesList({
                 data-resource={r.file}
                 target="_blank"
                 rel="noopener"
-                className="block h-full rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-black/5 hover:ring-pink"
+                className={RESOURCE_CARD}
               >
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-semibold">
-                    {r.emoji && (
-                      <span aria-hidden className="mr-1.5">
-                        {r.emoji}
-                      </span>
-                    )}
-                    {r.title}
-                    <NewTag k={r.file} />
-                  </h3>
-                  {r.area && (
-                    <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
-                      {r.area}
-                    </span>
-                  )}
-                  <span aria-hidden className="ml-auto text-stone-400">
-                    ↗
-                  </span>
-                </div>
-                <p className="text-sm text-stone-600">{r.about}</p>
-                {r.tip && (
-                  <p className="mt-1 text-xs text-stone-500">{r.tip}</p>
-                )}
+                <ResourceCardBody
+                  emoji={r.emoji}
+                  title={r.title}
+                  newKey={r.file}
+                  tag={r.area}
+                  about={r.about}
+                  tip={r.tip}
+                  external
+                />
               </a>
             )),
           )}
@@ -300,28 +238,16 @@ export function ResourcesList({
               <a
                 href={`${path.replace(/\/$/, "")}/equipment`}
                 data-resource="equipment"
-                className="flex h-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+                className={RESOURCE_CARD}
               >
-                <span>
-                  <span className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold">
-                      <span aria-hidden className="mr-1.5">
-                        🧰
-                      </span>
-                      Equipment guide and inventory
-                      <NewTag k="equipment" />
-                    </span>
-                    <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
-                      Australia
-                    </span>
-                  </span>
-                  <span className="block text-sm text-stone-600">
-                    Your kit, upgrades and where to buy them.
-                  </span>
-                </span>
-                <span aria-hidden className="text-xl">
-                  →
-                </span>
+                <ResourceCardBody
+                  emoji="🧰"
+                  title="Equipment guide and inventory"
+                  newKey="equipment"
+                  tag="Australia"
+                  about="Your kit, upgrades and where to buy them."
+                  pinned
+                />
               </a>
             </Pinnable>
           )}
@@ -333,28 +259,16 @@ export function ResourcesList({
               <a
                 href={`${path.replace(/\/$/, "")}/prizes`}
                 data-resource="prizes"
-                className="flex h-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+                className={RESOURCE_CARD}
               >
-                <span>
-                  <span className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold">
-                      <span aria-hidden className="mr-1.5">
-                        🍪
-                      </span>
-                      Recommended prizes
-                      <NewTag k="prizes" />
-                    </span>
-                    <span className="rounded-full bg-cyan/25 px-2 py-0.5 text-xs font-semibold text-navy">
-                      Australia
-                    </span>
-                  </span>
-                  <span className="block text-sm text-stone-600">
-                    Vegan treats for the Movie Challenge.
-                  </span>
-                </span>
-                <span aria-hidden className="text-xl">
-                  →
-                </span>
+                <ResourceCardBody
+                  emoji="🍪"
+                  title="Recommended prizes"
+                  newKey="prizes"
+                  tag="Australia"
+                  about="Vegan treats for the Movie Challenge."
+                  pinned
+                />
               </a>
             </Pinnable>
           )}
@@ -367,23 +281,15 @@ export function ResourcesList({
                 <a
                   href="/resources/movie-player"
                   data-resource="movie-player"
-                  className="flex h-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
+                  className={RESOURCE_CARD}
                 >
-                  <span>
-                    <span className="block font-semibold">
-                      <span aria-hidden className="mr-1.5">
-                        🎬
-                      </span>
-                      Movie player
-                      <NewTag k="movie-player" />
-                    </span>
-                    <span className="block text-sm text-stone-600">
-                      Play the films offline and see their impact.
-                    </span>
-                  </span>
-                  <span aria-hidden className="text-xl">
-                    →
-                  </span>
+                  <ResourceCardBody
+                    emoji="🎬"
+                    title="Movie player"
+                    newKey="movie-player"
+                    about="Play the films offline and see their impact."
+                    pinned
+                  />
                 </a>
               </Pinnable>
             )}
@@ -393,51 +299,26 @@ export function ResourcesList({
               "group chat discussion prompts questions whatsapp community",
             ) && (
               <Pinnable k="prompts">
-                <a
-                  href="/resources/prompts"
-                  className="flex h-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
-                >
-                  <span>
-                    <span className="block font-semibold">
-                      <span aria-hidden className="mr-1.5">
-                        💬
-                      </span>
-                      Group chat discussion prompts
-                    </span>
-                    <span className="block text-sm text-stone-600">
-                      {DISCUSSION_PROMPTS.length} questions for your community
-                      chat.
-                    </span>
-                  </span>
-                  <span aria-hidden className="text-xl">
-                    →
-                  </span>
+                <a href="/resources/prompts" className={RESOURCE_CARD}>
+                  <ResourceCardBody
+                    emoji="💬"
+                    title="Group chat discussion prompts"
+                    about={`${DISCUSSION_PROMPTS.length} questions for your community chat.`}
+                    pinned
+                  />
                 </a>
               </Pinnable>
             )}
           {!core &&
             has(q, "facebook fb groups promote local vegan community") && (
               <Pinnable k="fb-groups">
-                <a
-                  href="/facebook-groups"
-                  className="flex h-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5 hover:ring-pink"
-                >
-                  <span>
-                    <span className="flex flex-wrap items-center gap-2">
-                      <span className="font-semibold">
-                        <span aria-hidden className="mr-1.5">
-                          👥
-                        </span>
-                        Facebook groups
-                      </span>
-                    </span>
-                    <span className="block text-sm text-stone-600">
-                      Local vegan groups to share your events in.
-                    </span>
-                  </span>
-                  <span aria-hidden className="text-xl">
-                    →
-                  </span>
+                <a href="/facebook-groups" className={RESOURCE_CARD}>
+                  <ResourceCardBody
+                    emoji="👥"
+                    title="Facebook groups"
+                    about="Local vegan groups to share your events in."
+                    pinned
+                  />
                 </a>
               </Pinnable>
             )}
