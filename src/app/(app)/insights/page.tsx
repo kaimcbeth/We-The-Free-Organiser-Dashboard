@@ -74,24 +74,28 @@ export default async function InsightsPage() {
             value={thisMonth.events}
             was={lastMonth?.events}
             label="events"
+            icon="events"
           />
           <Stat
             href={`/insights/month/${thisMonth.key}#events`}
             value={thisMonth.checkIns}
             was={lastMonth?.checkIns}
             label="check-ins"
+            icon="checkins"
           />
           <Stat
             href={`/insights/month/${thisMonth.key}#people`}
             value={thisMonth.people}
             was={lastMonth?.people}
             label="people"
+            icon="people"
           />
           <Stat
             href={`/insights/month/${thisMonth.key}#first-timers`}
             value={thisMonth.firstTimers}
             was={lastMonth?.firstTimers}
             label="first-timers"
+            icon="new"
             accent
           />
         </div>
@@ -274,17 +278,70 @@ export default async function InsightsPage() {
   );
 }
 
+// Icons on the month's stat cards (Kai, 19 Nov 2026: "Add some visual icons").
+type StatIconName = "events" | "checkins" | "people" | "new";
+
+const STAT_TINT: Record<StatIconName, string> = {
+  events: "bg-cyan/20 text-cyan-700",
+  checkins: "bg-pink/15 text-pink",
+  people: "bg-yellow/40 text-navy",
+  new: "bg-pink/20 text-pink",
+};
+
+function StatIcon({ name }: { name: StatIconName }) {
+  const common = {
+    width: 18,
+    height: 18,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+  if (name === "events")
+    return (
+      <svg {...common}>
+        <rect x="3" y="5" width="18" height="16" rx="2" />
+        <path d="M16 3v4M8 3v4M3 10h18" />
+      </svg>
+    );
+  if (name === "checkins")
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="9" />
+        <path d="m8 12 3 3 5-6" />
+      </svg>
+    );
+  if (name === "people")
+    return (
+      <svg {...common}>
+        <circle cx="9" cy="8" r="3.5" />
+        <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+        <path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6" />
+      </svg>
+    );
+  return (
+    <svg {...common}>
+      <path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z" />
+      <path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" />
+    </svg>
+  );
+}
+
 function Stat({
   href,
   value,
   was,
   label,
+  icon,
   accent,
 }: {
   href: string;
   value: number;
   was?: number; // last month, for the change line
   label: string;
+  icon: StatIconName;
   accent?: boolean;
 }) {
   const diff = was === undefined ? 0 : value - was;
@@ -297,11 +354,21 @@ function Stat({
           : "bg-white shadow-sm ring-1 ring-black/5 hover:ring-pink/60"
       }`}
     >
-      <p
-        className={`text-3xl font-semibold tabular-nums ${accent ? "text-pink" : ""}`}
-      >
-        {value}
-      </p>
+      <div className="flex items-start justify-between gap-2">
+        <p
+          className={`text-3xl font-semibold tabular-nums ${accent ? "text-pink" : ""}`}
+        >
+          {value}
+        </p>
+        <span
+          aria-hidden
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+            accent ? "bg-pink/20 text-pink" : STAT_TINT[icon]
+          }`}
+        >
+          <StatIcon name={icon} />
+        </span>
+      </div>
       <p
         className={`flex items-center justify-between text-sm ${accent ? "text-white/75" : "text-stone-500"}`}
       >

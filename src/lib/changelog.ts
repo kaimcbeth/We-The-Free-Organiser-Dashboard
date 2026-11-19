@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Insights: the month's numbers (events, check-ins, people, first-timers) now each have a little icon.",
+      },
+      {
+        level: "organiser",
         text: "Search the Photo Hub: type an event, type, tag, note or month (e.g. potluck October 2025) and only matching photos show.",
       },
       {
