@@ -50,10 +50,6 @@ export const COMING_SOON: { title: string; text: string }[] = [
     title: "Text message reminders",
     text: "Day-before reminders by text message too (email, phone notifications and the in-app bell already work).",
   },
-  {
-    title: "Write post: social media copy",
-    text: "Posts written in your community's voice for Instagram, Facebook groups, WhatsApp and stories. The button's there already; it switches on once the writing assistant is connected.",
-  },
 ];
 
 export const CHANGELOG: Release[] = [
