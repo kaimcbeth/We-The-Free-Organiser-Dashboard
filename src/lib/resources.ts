@@ -323,7 +323,7 @@ export const EQUIPMENT_GUIDE: {
             label: "DIY",
             about:
               "Make your own: colour-print the banner on A3 sheets (thin, plain 80 gsm paper is fine, about $1 a sheet at Officeworks self-serve), tape them together and back them with black A2 card (Liviano 180gsm, $2.20 a sheet). About $25 for the Kings roll-up table or $29 for a 6ft table, prints and card included; the sign splitter works out exactly what to buy.",
-            price: "~$25–$29",
+            price: "~$25",
             instructions: "/resources/signs?sign=table-banner",
           },
           {
