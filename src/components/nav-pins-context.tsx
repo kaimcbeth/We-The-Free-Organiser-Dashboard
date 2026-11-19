@@ -9,6 +9,8 @@ import { MAX_PINS, NAV_PINS } from "@/lib/nav-pins";
 type Pins = {
   pins: string[];
   hidden: string[]; // main tabs this person took off (events, actions…)
+  order: string[]; // tab keys in the order they dragged them (0247)
+  reorder: (keys: string[]) => Promise<void>;
   rsl: boolean;
   error: string;
   toggle: (key: string) => Promise<void>;
@@ -20,32 +22,45 @@ const PinsContext = createContext<Pins | null>(null);
 export function PinsProvider({
   initial,
   initialHidden = [],
+  initialOrder = [],
   rsl,
   children,
 }: {
   initial: string[];
   initialHidden?: string[];
+  initialOrder?: string[];
   rsl: boolean;
   children: React.ReactNode;
 }) {
   const [pins, setPins] = useState(initial);
   const [hidden, setHidden] = useState(initialHidden);
+  const [order, setOrder] = useState(initialOrder);
   const [error, setError] = useState("");
-  async function save(nextPins: string[], nextHidden: string[]) {
-    const before = [pins, hidden];
+  async function save(
+    nextPins: string[],
+    nextHidden: string[],
+    nextOrder: string[] = order,
+  ) {
+    const before = [pins, hidden, order];
     setPins(nextPins);
     setHidden(nextHidden);
+    setOrder(nextOrder);
     setError("");
     const { error } = await createClient().from("nav_pins").upsert({
       pins: nextPins,
       hidden: nextHidden,
+      tab_order: nextOrder,
       updated_at: new Date().toISOString(),
     });
     if (error) {
       setPins(before[0]);
       setHidden(before[1]);
+      setOrder(before[2]);
       setError("Couldn't save. Please try again.");
     }
+  }
+  async function reorder(keys: string[]) {
+    await save(pins, hidden, keys);
   }
   async function toggle(key: string) {
     const next = pins.includes(key)
@@ -65,7 +80,7 @@ export function PinsProvider({
   }
   return (
     <PinsContext.Provider
-      value={{ pins, hidden, rsl, error, toggle, toggleMain }}
+      value={{ pins, hidden, order, reorder, rsl, error, toggle, toggleMain }}
     >
       {children}
     </PinsContext.Provider>

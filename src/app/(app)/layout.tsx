@@ -29,9 +29,9 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   // Things this person pinned to the top bar (0244).
   const { data: navPins } = await supabase
     .from("nav_pins")
-    .select("pins, hidden")
+    .select("pins, hidden, tab_order")
     .eq("user_id", user.id)
-    .maybeSingle<{ pins: string[]; hidden: string[] }>();
+    .maybeSingle<{ pins: string[]; hidden: string[]; tab_order: string[] }>();
 
   // The organiser's own member profile (for their photo), if they have one.
   const { data: me } = await supabase
@@ -92,6 +92,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     <PinsProvider
       initial={navPins?.pins ?? []}
       initialHidden={navPins?.hidden ?? []}
+      initialOrder={navPins?.tab_order ?? []}
       rsl={organiser.role === "god" || organiser.role === "regional_lead"}
     >
       <IntroProvider

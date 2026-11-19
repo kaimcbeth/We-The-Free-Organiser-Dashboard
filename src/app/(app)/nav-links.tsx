@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Sheet } from "@/components/sheet";
 import { PinIcon, usePins } from "@/components/nav-pins-context";
@@ -61,8 +61,15 @@ export function NavLinks({
   const path = usePathname();
   const ctx = usePins();
   const [editing, setEditing] = useState(false);
+  // Drag a tab to move it (Kai, 19 Nov 2026); `preview` is the order while
+  // dragging, saved on drop.
+  const [dragKey, setDragKey] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string[] | null>(null);
+  // The tab we last moved past, so hovering it again doesn't flip back.
+  const lastOver = useRef<string | null>(null);
   const pinned: NavLink[] = pinsFor(ctx?.pins ?? [], ctx?.rsl ?? false).map(
     (p) => ({
+      key: p.key,
       href: p.href,
       label: p.label,
       pinned: true,
@@ -73,10 +80,35 @@ export function NavLinks({
   const onPinned = pinned.some((x) => x.match(path));
   const hidden = ctx?.hidden ?? [];
   const main = LINKS.filter((l) => !l.key || !hidden.includes(l.key));
-  const links = [...main, ...pinned].map((l) => ({
-    ...l,
-    active: l.match(path) && (l.pinned || !onPinned),
-  }));
+  const saved = preview ?? ctx?.order ?? [];
+  const rank = (k: string | undefined, i: number) => {
+    const at = k ? saved.indexOf(k) : -1;
+    return at >= 0 ? at : 1000 + i;
+  };
+  const links = [...main, ...pinned]
+    .map((l, i) => ({
+      ...l,
+      rank: rank(l.key, i),
+      active: l.match(path) && (l.pinned || !onPinned),
+    }))
+    .sort((a, b) => a.rank - b.rank);
+  const keys = links.map((l) => l.key!).filter(Boolean);
+  const moveOver = (target: string) => {
+    if (!dragKey || dragKey === target || lastOver.current === target) return;
+    lastOver.current = target;
+    const next = keys.filter((k) => k !== dragKey);
+    const to = keys.indexOf(target);
+    const from = keys.indexOf(dragKey);
+    // Dragging right puts it after the target, left before it.
+    next.splice(next.indexOf(target) + (from < to ? 1 : 0), 0, dragKey);
+    if (next.join() !== keys.join()) setPreview(next);
+  };
+  const endDrag = () => {
+    if (preview && ctx && preview.join() !== (ctx.order ?? []).join())
+      void ctx.reorder(preview);
+    setDragKey(null);
+    setPreview(null);
+  };
   return (
     <>
       <nav className="mx-auto flex max-w-2xl items-center gap-1 overflow-x-auto whitespace-nowrap px-4 pt-2 [scrollbar-width:none]">
@@ -84,8 +116,27 @@ export function NavLinks({
           <Link
             key={l.href}
             href={l.href}
+            draggable={!!ctx && !!l.key}
+            onDragStart={(e) => {
+              if (!l.key) return;
+              e.dataTransfer.effectAllowed = "move";
+              e.dataTransfer.setData("text/plain", l.label);
+              lastOver.current = null;
+              setDragKey(l.key);
+            }}
+            onDragOver={(e) => {
+              if (!dragKey || !l.key) return;
+              e.preventDefault();
+              moveOver(l.key);
+            }}
+            onDrop={(e) => {
+              if (dragKey) e.preventDefault();
+            }}
+            onDragEnd={endDrag}
             data-tour={`nav-${l.label.toLowerCase().replace(/\W+/g, "-")}`}
             className={`border-b-2 px-2.5 pb-2.5 pt-1 text-sm font-medium sm:px-3 ${
+              dragKey === l.key ? "opacity-40" : ""
+            } ${
               l.active
                 ? "border-pink text-white"
                 : "border-transparent text-white/65 hover:text-white"
@@ -125,7 +176,8 @@ function PinSheet({ onClose }: { onClose: () => void }) {
     <Sheet title="Pin to the top bar" onClose={onClose}>
       <p className="text-sm text-stone-600">
         Choose what sits in your top bar. Only you see your choices. You can
-        also tap the pin on any Resources card.
+        also tap the pin on any Resources card, and drag the tabs in the top bar
+        to put them in any order.
       </p>
       <ul className="mt-4 grid gap-2 sm:grid-cols-2">
         {LINKS.filter((l) => l.key).map((l) => {

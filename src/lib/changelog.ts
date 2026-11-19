@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Drag the tabs in the top bar to put them in your own order (on a computer).",
+      },
+      {
+        level: "organiser",
         text: "Resources: cards now sit two across with shorter descriptions, so everything fits on one screen.",
       },
       {
