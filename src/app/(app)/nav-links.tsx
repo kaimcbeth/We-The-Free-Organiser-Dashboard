@@ -127,10 +127,7 @@ function PinSheet({ onClose }: { onClose: () => void }) {
         Choose what sits in your top bar. Only you see your choices. You can
         also tap the pin on any Resources card.
       </p>
-      <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-stone-500">
-        Main tabs
-      </h3>
-      <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+      <ul className="mt-4 grid gap-2 sm:grid-cols-2">
         {LINKS.filter((l) => l.key).map((l) => {
           const on = !hidden.includes(l.key!);
           return (
@@ -153,11 +150,6 @@ function PinSheet({ onClose }: { onClose: () => void }) {
             </li>
           );
         })}
-      </ul>
-      <h3 className="mt-5 text-xs font-semibold uppercase tracking-wide text-stone-500">
-        Pin up to {MAX_PINS} more
-      </h3>
-      <ul className="mt-2 grid gap-2 sm:grid-cols-2">
         {options.map((p) => {
           const on = pins.includes(p.key);
           return (
@@ -185,7 +177,7 @@ function PinSheet({ onClose }: { onClose: () => void }) {
       <p className="mt-3 text-xs text-stone-500">
         {full
           ? `That's ${MAX_PINS}. Unpin one to pin something else.`
-          : `${pins.length} of ${MAX_PINS} pinned.`}
+          : `${pins.length} of ${MAX_PINS} extra pins used.`}
       </p>
       {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
     </Sheet>
