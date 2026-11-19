@@ -6,14 +6,16 @@ import { Sheet } from "@/components/sheet";
 import { createClient } from "@/lib/supabase/client";
 import { OpenFeedback } from "@/app/me/open-feedback";
 
-const card = "rounded-2xl bg-white p-4 text-navy shadow-sm ring-1 ring-black/5";
+const card =
+  "rounded-2xl bg-white px-4 py-3 text-navy shadow-sm ring-1 ring-black/5";
 const small =
-  "rounded-lg px-2.5 py-1 text-xs font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50";
+  "rounded-lg px-3 py-1.5 text-sm font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50";
 
 // Resources: organisers' own feedback for their Regional Support Lead, and the
 // link members use to give the organisers feedback (copy or share it).
 export function FeedbackCards({ teamId }: { teamId: string | null }) {
   const [open, setOpen] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
   const [link, setLink] = useState("");
   const [copied, setCopied] = useState(false);
 
@@ -57,17 +59,38 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
   return (
     <>
       {teamId && link && (
-        <div className={`h-full ${card}`}>
-          <p className="font-semibold">
-            <span aria-hidden className="mr-1.5">
-              📣
+        <button
+          type="button"
+          onClick={() => setLinkOpen(true)}
+          className={`flex h-full w-full items-center justify-between text-left hover:ring-pink ${card}`}
+        >
+          <span>
+            <span className="block font-semibold">
+              <span aria-hidden className="mr-1.5">
+                📣
+              </span>
+              Member feedback form
             </span>
-            Member feedback form
-          </p>
+            <span className="block text-sm text-stone-600">
+              A link for members to send you feedback, any time.
+            </span>
+          </span>
+          <span aria-hidden className="text-xl">
+            →
+          </span>
+        </button>
+      )}
+      {linkOpen && (
+        <Sheet title="Member feedback form" onClose={() => setLinkOpen(false)}>
           <p className="text-sm text-stone-600">
-            A link for members to send you feedback, any time.
+            Share this link with your members. They can give the organisers
+            feedback any time, with or without their name. You&apos;ll get a
+            notification for each one.
           </p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
+          <p className="mt-3 break-all rounded-lg bg-stone-100 px-3 py-2 text-xs text-stone-700">
+            {link}
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <button type="button" onClick={copy} className={small}>
               {copied ? "Copied" : "Copy link"}
             </button>
@@ -76,12 +99,12 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
             </button>
             <Link
               href="/feedback-inbox"
-              className="ml-auto text-xs font-medium text-stone-500 hover:text-navy hover:underline"
+              className="ml-auto text-sm font-medium text-stone-500 hover:text-navy hover:underline"
             >
               What they&apos;ve said →
             </Link>
           </div>
-        </div>
+        </Sheet>
       )}
       <button
         type="button"
