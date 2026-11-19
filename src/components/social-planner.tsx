@@ -879,6 +879,27 @@ function PostEditor({
       const { files, base } = ready ?? (await getFiles());
       let blob: Blob;
       let name: string;
+      // Phones: each slide as its own photo, not a zip (Kai, 19 Nov 2026:
+      // Instagram's picker can't see inside a zip). They land in the
+      // gallery's Download album.
+      const phone = /Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (phone && files.length > 1) {
+        if (caption)
+          await navigator.clipboard.writeText(caption).catch(() => {});
+        for (const f of files) {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(f);
+          a.download = f.name;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+          await new Promise((r) => setTimeout(r, 400));
+        }
+        setDone(
+          `${files.length} photos saved${caption ? " · caption copied" : ""}`,
+        );
+        setTimeout(() => setDone(""), 4000);
+        return;
+      }
       if (files.length === 1) {
         // One image: download it and copy the caption, ready to paste.
         blob = files[0];
