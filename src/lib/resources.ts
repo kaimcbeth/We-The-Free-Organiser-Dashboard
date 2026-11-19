@@ -23,16 +23,14 @@ export const RESOURCE_SECTIONS: { title: string; items: Resource[] }[] = [
         title: "Notice of legal protections",
         emoji: "⚖️",
         area: "NSW",
-        about:
-          "For police who come by: explains the right to peaceful protest, the limits on move-on directions (LEPRA s 200) and the test for “offensive” conduct.",
+        about: "For police: your right to peaceful protest.",
         file: "/resources/notice-of-legal-protections-nsw.pdf",
         members: "Legal",
       },
       {
         title: "Incident report form",
         emoji: "📝",
-        about:
-          "Something happened at an event (harassment, an injury, trouble with the public or police)? Report it here so it can be followed up.",
+        about: "Report harassment, injuries or trouble at an event.",
         file: INCIDENT_FORM_URL,
         members: "Incidents",
       },
@@ -44,8 +42,7 @@ export const RESOURCE_SECTIONS: { title: string; items: Resource[] }[] = [
       {
         title: "Team fundraising guide",
         emoji: "💰",
-        about:
-          "How your community can raise money: WTF equipment grants, funding platforms, grant applications and crowdfunding tips.",
+        about: "Grants, funding platforms and crowdfunding tips.",
         file: "/resources/team-fundraising-guide-2025.pdf",
         tip: "December 2025 · PDF",
         organisersOnly: true,

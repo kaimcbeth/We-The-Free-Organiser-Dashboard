@@ -57,7 +57,7 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
   return (
     <>
       {teamId && link && (
-        <div className={`mt-3 ${card}`}>
+        <div className={`h-full ${card}`}>
           <p className="font-semibold">
             <span aria-hidden className="mr-1.5">
               📣
@@ -65,8 +65,7 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
             Member feedback form
           </p>
           <p className="text-sm text-stone-600">
-            A link for members to give the organisers feedback, any time. One
-            box, name optional. You&apos;ll get a notification for each one.
+            A link for members to send you feedback, any time.
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <button type="button" onClick={copy} className={small}>
@@ -87,7 +86,7 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`mt-3 flex w-full items-center justify-between text-left hover:ring-pink ${card}`}
+        className={`flex h-full w-full items-center justify-between text-left hover:ring-pink ${card}`}
       >
         <span>
           <span className="block font-semibold">
@@ -97,8 +96,7 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
             Feedback for We The Free Global Support
           </span>
           <span className="block text-sm text-stone-600">
-            How organising is going, what you need, ideas. With your name or
-            anonymously.
+            Tell us how organising is going.
           </span>
         </span>
         <span aria-hidden className="text-xl">

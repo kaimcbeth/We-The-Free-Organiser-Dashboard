@@ -146,14 +146,16 @@ export function PinToggle({
 export function Pinnable({
   k,
   dark = false,
+  className = "",
   children,
 }: {
   k: string;
   dark?: boolean;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative">
+    <div className={`relative h-full ${className}`}>
       {children}
       <PinToggle k={k} dark={dark} className="absolute right-10 top-1.5" />
     </div>
