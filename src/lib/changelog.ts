@@ -12,27 +12,27 @@ export type Release = { date: string; title: string; changes: Change[] };
 export const COMING_SOON: { title: string; text: string }[] = [
   {
     title: "Dealing with trolls and harassment at events",
-    text: "A guide for handling hecklers, trolls and harassment at events: how to stay calm, keep volunteers and the public safe, when to step in or walk away, and when to call for help.",
+    text: "A guide for handling hecklers, trolls and harassment at events: how to stay calm, keep members and the public safe, when to step in or walk away, and when to call for help.",
   },
   {
-    title: "Fuller volunteer feedback form",
-    text: "More questions for volunteers (training, events, how supported they feel), with results you can compare over time.",
+    title: "Fuller member feedback form",
+    text: "More questions for members (training, events, how supported they feel), with results you can compare over time.",
   },
   {
     title: "Fuller briefing and debrief guides",
-    text: "Much more detailed guides for running the volunteer briefing before outreach and the debrief after.",
+    text: "Much more detailed guides for running the member briefing before outreach and the debrief after.",
   },
   {
     title: "More in Resources & Training",
     text: "Our theory of change and a code of conduct.",
   },
   {
-    title: "Nearby communities: shared volunteers",
-    text: "Link communities that share volunteers (like Sydney and Parramatta) so the same person can be checked in at either, with one history across both and no duplicates.",
+    title: "Nearby communities: shared members",
+    text: "Link communities that share members (like Sydney and Parramatta) so the same person can be checked in at either, with one history across both and no duplicates.",
   },
   {
     title: "Outreach training framework",
-    text: "A step-by-step training path for new outreach volunteers, in Resources & Training.",
+    text: "A step-by-step training path for new outreach members, in Resources & Training.",
   },
   {
     title: "Equipment set-up and pack-down",
@@ -41,14 +41,6 @@ export const COMING_SOON: { title: string; text: string }[] = [
   {
     title: "Planning guides for community events",
     text: "Step-by-step guides for running socials, dinners, co-working and other community events.",
-  },
-  {
-    title: "Volunteer accounts",
-    text: "Volunteers log in to see their own events and history, say which events they're coming to, and choose how they hear from you.",
-  },
-  {
-    title: "Text message reminders",
-    text: "Day-before reminders by text message too (email, phone notifications and the in-app bell already work).",
   },
 ];
 
