@@ -142,21 +142,22 @@ export const SECTION_INTROS: SectionIntro[] = [
       {
         title: "Everything in one place",
         body: "Guides, forms and tools for running your community. Use the search box if you know what you're after.",
-        target: 'input[type="search"]',
+        target: 'main input[type="search"]',
       },
       {
         title: "Social Media Hub",
         body: "Plan your posts on a calendar, make a graphic and caption for any event, or grab a ready-made post with your community's @handle on it.",
-        target: 'a[href$="/resources/social"]',
+        target: 'main a[href$="/resources/social"]',
       },
       {
         title: "Photo Hub",
         body: "All your community's photos together. Drag them in, or make a QR code so people can add photos from their phones at the event.",
+        target: "main #photo-hub",
       },
       {
         title: "For event days",
         body: "The Movie Challenge player, recommended prizes, the equipment guide and the sign splitter (print any sign on A3 sheets).",
-        target: 'a[href$="/resources/equipment"]',
+        target: 'main a[href$="/resources/equipment"]',
       },
       {
         title: "Hear from your members",
