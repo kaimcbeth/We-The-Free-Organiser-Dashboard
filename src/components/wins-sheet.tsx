@@ -3,12 +3,25 @@
 // "Find wins" on the share-a-win actions (Kai, 11 Nov 2026): searches the web
 // for recent wins for animals in the community's country and writes 3 ready-to-send
 // messages with the source link. teamId → the community's member chat;
-// regionId → an RSL's organiser chat. Runs write-copy purpose "wins".
+// regionId → an RSL's organiser chat. Runs the find-wins Edge Function, which
+// keeps each country's wins for 3 days and warms them ahead (Kai, 19 Nov 2026:
+// "taking too long"), so it usually opens instantly; Search again is fresh.
 
 import { useState } from "react";
 import { Sheet } from "@/components/sheet";
 import { Option } from "@/components/copy-maker";
 import { createClient } from "@/lib/supabase/client";
+
+// "just now", "3 hours ago", "yesterday", "2 days ago".
+function foundAgo(iso: string) {
+  const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 10) return "just now";
+  if (m < 60) return `${m} minutes ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return h === 1 ? "an hour ago" : `${h} hours ago`;
+  const d = Math.round(h / 24);
+  return d === 1 ? "yesterday" : `${d} days ago`;
+}
 
 type Win = {
   headline: string;
@@ -35,6 +48,7 @@ export function WinsSheet({
   const [wins, setWins] = useState<Win[] | null>(null);
   const [options, setOptions] = useState<string[]>([]);
   const [round, setRound] = useState(0);
+  const [foundAt, setFoundAt] = useState<string | null>(null);
   const [chat, setChat] = useState<string | null>(null);
   // Wins marked "Not our vibe": url → feedback row id (for Undo).
   const [nope, setNope] = useState<Record<string, string>>({});
@@ -65,15 +79,13 @@ export function WinsSheet({
     if (id) await createClient().from("win_feedback").delete().eq("id", id);
   }
 
-  async function find() {
+  async function find(fresh = false) {
     setError("");
     setBusy(true);
     const { data: d, error: e } = await createClient().functions.invoke(
-      "write-copy",
+      "find-wins",
       {
-        body: teamId
-          ? { purpose: "wins", teamId, note }
-          : { purpose: "wins", regionId, note },
+        body: teamId ? { teamId, note, fresh } : { regionId, note, fresh },
       },
     );
     setBusy(false);
@@ -87,6 +99,7 @@ export function WinsSheet({
       return setError(msg ?? "Couldn't find wins right now. Try again.");
     setWins(d.wins ?? []);
     setOptions(d.options ?? []);
+    setFoundAt(d.foundAt ?? null);
     setRound((r) => r + 1);
   }
 
@@ -112,8 +125,9 @@ export function WinsSheet({
           <div className="space-y-3">
             <p className="text-sm text-stone-600">
               Recent good news for animals in your country, found on the web
-              just now. Check the link, pick a message, tweak it and post it in
-              your {forOrganisers ? "organiser" : "community"} chat.
+              {foundAt ? ` ${foundAgo(foundAt)}` : ""}. Check the link, pick a
+              message, tweak it and post it in your{" "}
+              {forOrganisers ? "organiser" : "community"} chat.
             </p>
             {chat && (
               <a
@@ -127,7 +141,7 @@ export function WinsSheet({
             )}
             {busy && (
               <p className="rounded-xl bg-stone-100 p-3 text-sm text-stone-600">
-                Searching for recent wins… this can take up to a minute.
+                Searching the web for new wins… this takes about a minute.
               </p>
             )}
             {error && <p className="text-sm text-red-700">{error}</p>}
@@ -211,7 +225,7 @@ export function WinsSheet({
                 </label>
                 <button
                   type="button"
-                  onClick={find}
+                  onClick={() => find(true)}
                   className="w-full rounded-xl bg-pink px-4 py-2.5 font-semibold text-navy hover:bg-pink-strong"
                 >
                   Search again

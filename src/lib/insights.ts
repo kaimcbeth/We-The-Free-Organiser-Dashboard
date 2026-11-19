@@ -193,6 +193,9 @@ export function computeInsights(
 
   const regulars: PersonInsight[] = [];
   const oneTimers: PersonInsight[] = [];
+  // First check-in ever in the last 30 days (Kai, 19 Nov 2026: newcomers near
+  // the top of Insights).
+  const newcomers: PersonInsight[] = [];
   const drifted: PersonInsight[] = [];
   const milestoneSoon: PersonInsight[] = [];
   const milestoneRecent: PersonInsight[] = [];
@@ -216,6 +219,21 @@ export function computeInsights(
       daysAgo(b.lastSeen) > RULES.oneTimerMinAgeDays
     ) {
       oneTimers.push({ ...b, detail: `Came once, ${ago(b.lastSeen)}` });
+    }
+
+    if (
+      !p.attended_before_app &&
+      b.firstSeen &&
+      daysAgo(b.firstSeen) <= 30 &&
+      Date.parse(b.firstSeen) <= now
+    ) {
+      newcomers.push({
+        ...b,
+        detail:
+          list.length === 1
+            ? `First came ${ago(b.firstSeen)}`
+            : `First came ${ago(b.firstSeen)}, ${list.length} events since`,
+      });
     }
 
     // Was a regular in the 3 months before going quiet, and nothing since.
@@ -262,6 +280,9 @@ export function computeInsights(
     (b.lastSeen ?? "").localeCompare(a.lastSeen ?? "");
   regulars.sort((a, b) => b.events - a.events || a.name.localeCompare(b.name));
   oneTimers.sort(byLastSeen);
+  newcomers.sort((a, b) =>
+    (b.firstSeen ?? "").localeCompare(a.firstSeen ?? ""),
+  );
   drifted.sort(byLastSeen);
   milestoneSoon.sort((a, b) => b.outreach - a.outreach);
 
@@ -317,6 +338,7 @@ export function computeInsights(
   return {
     everyone,
     regulars,
+    newcomers,
     oneTimers,
     drifted,
     milestoneSoon,

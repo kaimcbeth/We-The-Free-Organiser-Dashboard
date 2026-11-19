@@ -20,6 +20,8 @@ const day = (iso: string | null) =>
 const LISTS: Record<string, string> = {
   everyone: "Everyone",
   regulars: "Regulars",
+  newcomers: "Newcomers",
+  milestones: "Milestones",
   "one-timers": "Came once",
   drifted: "Drifted off",
   "milestones-soon": "Milestones coming up",
@@ -82,6 +84,8 @@ export async function GET(request: NextRequest) {
   } else {
     const people: PersonInsight[] = {
       regulars: r.regulars,
+      newcomers: r.newcomers,
+      milestones: [...r.milestoneRecent, ...r.milestoneSoon],
       "one-timers": r.oneTimers,
       drifted: r.drifted,
       "milestones-soon": r.milestoneSoon,

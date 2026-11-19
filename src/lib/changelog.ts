@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Insights: a Newcomers list near the top (everyone whose first event was in the last 30 days), and one Milestones list (just reached and coming up). Find wins now usually opens straight away: wins are found ahead of time and kept for 3 days; Search again looks for new ones.",
+      },
+      {
+        level: "organiser",
         text: 'Moved away: tap "Moved away" beside someone in Quiet members (or switch it on in their profile) and they\'re left off every message list and reach-out list. Their history stays. The quiet members button now says Connect with them.',
       },
       {

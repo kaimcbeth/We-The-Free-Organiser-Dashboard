@@ -101,6 +101,16 @@ export default async function InsightsPage() {
         </div>
       </section>
 
+      <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+        <PeopleSection
+          title="Newcomers"
+          hint="First came in the last 30 days, newest first. Worth a welcome message."
+          list={r.newcomers}
+          list_id="newcomers"
+          empty="No newcomers in the last 30 days."
+        />
+      </div>
+
       <GrowthChart
         weeks={charts.weeks}
         months={charts.months}
@@ -137,18 +147,11 @@ export default async function InsightsPage() {
             empty="No one has drifted off."
           />
           <PeopleSection
-            title="Milestones coming up"
-            hint={`Next outreach event will be their ${RULES.milestoneEvery}th, 20th, 30th…`}
-            list={r.milestoneSoon}
-            list_id="milestones-soon"
-            empty="No one is one outreach event away from a milestone right now."
-          />
-          <PeopleSection
-            title="Recent milestones"
-            hint="Reached in the last 30 days"
-            list={r.milestoneRecent}
-            list_id="milestones-recent"
-            empty="No milestones in the last 30 days."
+            title="Milestones"
+            hint={`Reached in the last 30 days, or one outreach event away (${RULES.milestoneEvery}th, 20th, 30th…)`}
+            list={[...r.milestoneRecent, ...r.milestoneSoon]}
+            list_id="milestones"
+            empty="No milestones just reached or coming up."
           />
           <PeopleSection
             title="Regulars"
