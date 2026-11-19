@@ -51,6 +51,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Equipment guide: a $99 32\" TV (BIG W) as an upgrade, to show people's reactions live on the stall with the movie player's TV camera.",
+      },
+      {
+        level: "organiser",
         text: "Equipment guide: the Purchasing guide button on DIY signs and the DIY table banner now opens the sign splitter straight away, and the kit backpack sits right after the headphone splitters.",
       },
       {

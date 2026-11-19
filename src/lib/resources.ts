@@ -461,6 +461,16 @@ export const EQUIPMENT_GUIDE: {
         price: "$5 each",
       },
       {
+        key: "reaction_tv",
+        noSuggest: true,
+        name: "TV for live reactions",
+        about:
+          "A 32\" TV on the stall showing people's reactions live with the movie player's TV camera (setup bar → TV camera). Add a webcam and an HDMI cable (plus a USB-C to HDMI adapter if the laptop needs one).",
+        shop: "BIG W",
+        url: "https://www.bigw.com.au/product/eko-32-hd-tv-with-tizen/p/6007830",
+        price: "$99",
+      },
+      {
         key: "disinfectant_spray",
         noSuggest: true,
         name: "Disinfectant spray",
