@@ -18,6 +18,7 @@ import { DeletePerson } from "./delete-person";
 import { MergePerson } from "./merge-person";
 import { AttendedBefore } from "./attended-before";
 import { NoMessages } from "./no-messages";
+import { MovedAway } from "./moved-away";
 import { NewToActivism } from "./new-to-activism";
 import { OriginEditor } from "@/components/origin-editor";
 import { BuddyPicker, BuddySwitch, NewcomerPicker } from "./buddy-controls";
@@ -54,6 +55,7 @@ type Person = {
   new_to_activism: boolean;
   is_buddy: boolean;
   no_messages: boolean;
+  moved_away_at: string | null;
   started_on: string | null;
   found_via: string | null;
   best_contact: string | null;
@@ -84,7 +86,7 @@ export default async function PersonPage({
   const { data: person } = await supabase
     .from("people")
     .select(
-      "id, team_id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, new_to_activism, is_buddy, no_messages, started_on, found_via, found_via_person_id, found_via_note, best_contact, contact_handle, birth_month, birth_day",
+      "id, team_id, first_name, last_name, suburb, email, phone, user_id, pending_role, pending_team_id, facebook_url, linked_at, consent_marketing, added_via, created_at, starting_outreach_count, photo_updated_at, attended_before_app, new_to_activism, is_buddy, no_messages, moved_away_at, started_on, found_via, found_via_person_id, found_via_note, best_contact, contact_handle, birth_month, birth_day",
     )
     .eq("id", id)
     .or(
@@ -434,6 +436,7 @@ export default async function PersonPage({
           day={person.birth_day}
         />
         <NoMessages personId={person.id} initial={person.no_messages} />
+        <MovedAway personId={person.id} initial={!!person.moved_away_at} />
         {lastMessaged && (
           <p className="text-sm text-stone-500">
             Last personal message{" "}

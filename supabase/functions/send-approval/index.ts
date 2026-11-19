@@ -10,11 +10,15 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...cors, "Content-Type": "application/json" },
+  });
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -29,8 +33,10 @@ Deno.serve(async (req) => {
     } = await asUser.auth.getUser();
     if (!user?.email) return json({ error: "Please log in again." }, 401);
 
-    const { eventId, pdfBase64, subject, body, test, filename } = await req.json();
-    if (!eventId || !pdfBase64 || !subject || !body) return json({ error: "Something's missing." }, 400);
+    const { eventId, pdfBase64, subject, body, test, filename } =
+      await req.json();
+    if (!eventId || !pdfBase64 || !subject || !body)
+      return json({ error: "Something's missing." }, 400);
 
     const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: event } = await admin
@@ -51,20 +57,32 @@ Deno.serve(async (req) => {
     const allowed =
       !!me &&
       (me.access === "god" ||
-        ((me.access === "organiser" || me.access === "core_team") && me.team_id === event.team_id) ||
-        (me.access === "regional_lead" && me.region_id && me.region_id === region));
-    if (!allowed) return json({ error: "You can't send this for that community." }, 403);
+        ((me.access === "organiser" || me.access === "core_team") &&
+          me.team_id === event.team_id) ||
+        (me.access === "regional_lead" &&
+          me.region_id &&
+          me.region_id === region));
+    if (!allowed)
+      return json({ error: "You can't send this for that community." }, 403);
 
     const { data: authority } = await admin
       .from("approval_authorities")
       .select("email, cc")
       .eq("team_id", event.team_id)
       .maybeSingle();
-    if (!authority && !test) return json({ error: "No police or council address is set up for this community yet." }, 400);
+    if (!authority && !test)
+      return json(
+        {
+          error:
+            "No police or council address is set up for this community yet.",
+        },
+        400,
+      );
 
     const smtpUser = Deno.env.get("SMTP_USER");
     const smtpPass = Deno.env.get("SMTP_PASS");
-    if (!smtpUser || !smtpPass) return json({ error: "Email sending isn't set up yet." }, 500);
+    if (!smtpUser || !smtpPass)
+      return json({ error: "Email sending isn't set up yet." }, 500);
     const nodemailer = (await import("npm:nodemailer@6.9.16")).default;
     const mailer = nodemailer.createTransport({
       host: Deno.env.get("SMTP_HOST") ?? "smtp.gmail.com",
@@ -75,7 +93,9 @@ Deno.serve(async (req) => {
 
     const to = test ? user.email : authority!.email;
     const cc = test ? [] : [user.email, ...(authority!.cc ?? [])];
-    const name = (filename as string | undefined)?.replace(/[^\w .-]/g, "") || "Notice.pdf";
+    const name =
+      (filename as string | undefined)?.replace(/[^\w .-]/g, "") ||
+      "Notice.pdf";
     await mailer.sendMail({
       from: Deno.env.get("SMTP_FROM") ?? `We The Free <${smtpUser}>`,
       to,
@@ -83,13 +103,22 @@ Deno.serve(async (req) => {
       replyTo: user.email,
       subject: test ? `[TEST] ${subject}` : subject,
       text: body,
-      attachments: [{ filename: name, content: pdfBase64, encoding: "base64", contentType: "application/pdf" }],
+      attachments: [
+        {
+          filename: name,
+          content: pdfBase64,
+          encoding: "base64",
+          contentType: "application/pdf",
+        },
+      ],
     });
 
     // Keep a copy and a record.
     const path = `${event.team_id}/${event.id}/${Date.now()}${test ? "-test" : ""}.pdf`;
     const bytes = Uint8Array.from(atob(pdfBase64), (c) => c.charCodeAt(0));
-    await admin.storage.from("approvals").upload(path, bytes, { contentType: "application/pdf" });
+    await admin.storage
+      .from("approvals")
+      .upload(path, bytes, { contentType: "application/pdf" });
     await admin.from("approval_submissions").insert({
       team_id: event.team_id,
       event_id: event.id,
@@ -110,7 +139,11 @@ Deno.serve(async (req) => {
       if (task)
         await admin
           .from("tasks")
-          .update({ done_at: new Date().toISOString(), done_by: user.id, dismissed_at: null })
+          .update({
+            done_at: new Date().toISOString(),
+            done_by: user.id,
+            dismissed_at: null,
+          })
           .eq("id", task.id);
       else
         await admin.from("tasks").insert({

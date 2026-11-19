@@ -17,10 +17,14 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...cors, "Content-Type": "application/json" },
+  });
 
 const MENTAL_HEALTH = "https://activism.wtf/mental-health";
 const INCIDENT_FORM =
@@ -28,10 +32,14 @@ const INCIDENT_FORM =
 const DAILY_LIMIT = 40; // generations per community per day
 
 const PLATFORMS: Record<string, string> = {
-  instagram: "Instagram caption: 40-120 words, short paragraphs, up to 3 relevant hashtags at the very end (optional).",
-  facebook: "Post for local Facebook groups: 40-100 words, friendly and community-minded, never salesy, no hashtags, include the event link if given.",
-  whatsapp: "WhatsApp message to the community chat: 15-60 words, casual, like a friend messaging the group, no hashtags.",
-  story: "Instagram/Facebook story text overlay: under 15 words, punchy, no hashtags.",
+  instagram:
+    "Instagram caption: 40-120 words, short paragraphs, up to 3 relevant hashtags at the very end (optional).",
+  facebook:
+    "Post for local Facebook groups: 40-100 words, friendly and community-minded, never salesy, no hashtags, include the event link if given.",
+  whatsapp:
+    "WhatsApp message to the community chat: 15-60 words, casual, like a friend messaging the group, no hashtags.",
+  story:
+    "Instagram/Facebook story text overlay: under 15 words, punchy, no hashtags.",
 };
 
 const RULES = `Write like a real member of this community, not a brand or marketer.
@@ -51,7 +59,9 @@ Deno.serve(async (req) => {
   try {
     const url = Deno.env.get("SUPABASE_URL")!;
     const asUser = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
+      global: {
+        headers: { Authorization: req.headers.get("Authorization") ?? "" },
+      },
     });
     const {
       data: { user },
@@ -59,33 +69,58 @@ Deno.serve(async (req) => {
     if (!user) return json({ error: "Please log in again." }, 401);
 
     const key = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!key) return json({ error: "The writing assistant isn't set up yet." }, 500);
+    if (!key)
+      return json({ error: "The writing assistant isn't set up yet." }, 500);
 
     const body = await req.json();
-    if (body?.purpose === "feedback_summary") return await feedbackSummary(user.id, key, body);
-    if (body?.purpose === "wins") return await winsCopy(asUser, user.id, key, body);
-    if (body?.purpose === "feedback") return await feedbackCopy(asUser, user.id, key, body);
-    if (body?.purpose === "incident") return await feedbackCopy(asUser, user.id, key, body, "incident");
-    if (body?.purpose === "mental_health") return await feedbackCopy(asUser, user.id, key, body, "mental_health");
-    if (body?.purpose === "prompt") return await feedbackCopy(asUser, user.id, key, body, "prompt");
-    if (body?.purpose === "carousel") return await carouselCopy(asUser, user.id, key, body);
-    if (body?.purpose === "general") return await carouselCopy(asUser, user.id, key, body, "general");
+    if (body?.purpose === "feedback_summary")
+      return await feedbackSummary(user.id, key, body);
+    if (body?.purpose === "wins")
+      return await winsCopy(asUser, user.id, key, body);
+    if (body?.purpose === "feedback")
+      return await feedbackCopy(asUser, user.id, key, body);
+    if (body?.purpose === "incident")
+      return await feedbackCopy(asUser, user.id, key, body, "incident");
+    if (body?.purpose === "mental_health")
+      return await feedbackCopy(asUser, user.id, key, body, "mental_health");
+    if (body?.purpose === "prompt")
+      return await feedbackCopy(asUser, user.id, key, body, "prompt");
+    if (body?.purpose === "carousel")
+      return await carouselCopy(asUser, user.id, key, body);
+    if (body?.purpose === "general")
+      return await carouselCopy(asUser, user.id, key, body, "general");
     const { eventId, platforms, note } = body;
-    const target = Math.min(100, Math.max(1, Math.round(Number(body?.target) || 20)));
-    const wanted = ((platforms as string[]) ?? []).filter((p) => p in PLATFORMS);
-    if (!eventId || wanted.length === 0) return json({ error: "Pick at least one place to post." }, 400);
+    const target = Math.min(
+      100,
+      Math.max(1, Math.round(Number(body?.target) || 20)),
+    );
+    const wanted = ((platforms as string[]) ?? []).filter(
+      (p) => p in PLATFORMS,
+    );
+    if (!eventId || wanted.length === 0)
+      return json({ error: "Pick at least one place to post." }, 400);
 
     // Reading the event as the user checks they can see it.
     const { data: event } = await asUser
       .from("events")
-      .select("id, team_id, title, starts_at, ends_at, venue, address, description, source_url, facebook_url, event_type:event_types(name, counts_as_outreach), team:teams(name, timezone)")
+      .select(
+        "id, team_id, title, starts_at, ends_at, venue, address, description, source_url, facebook_url, event_type:event_types(name, counts_as_outreach), team:teams(name, timezone)",
+      )
       .eq("id", eventId)
       .maybeSingle();
     if (!event) return json({ error: "Couldn't find that event." }, 404);
 
     const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const { data: me } = await admin.from("organisers").select("access, team_id, region_id").eq("id", user.id).maybeSingle();
-    if (!me) return json({ error: "Only organisers and the Core Team can use this." }, 403);
+    const { data: me } = await admin
+      .from("organisers")
+      .select("access, team_id, region_id")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (!me)
+      return json(
+        { error: "Only organisers and the Core Team can use this." },
+        403,
+      );
 
     const since = new Date(Date.now() - 864e5).toISOString();
     const { count } = await admin
@@ -93,24 +128,43 @@ Deno.serve(async (req) => {
       .select("id", { count: "exact", head: true })
       .eq("team_id", event.team_id)
       .gte("created_at", since);
-    if ((count ?? 0) >= DAILY_LIMIT) return json({ error: "That's a lot of writing for one day. Try again tomorrow." }, 429);
+    if ((count ?? 0) >= DAILY_LIMIT)
+      return json(
+        { error: "That's a lot of writing for one day. Try again tomorrow." },
+        429,
+      );
 
     // deno-lint-ignore no-explicit-any
     const ev = event as any;
     const tz = ev.team?.timezone ?? "Australia/Sydney";
-    const community = (ev.team?.name ?? "").replace(/, (Australia|New Zealand)$/, "");
-    const fmt = (iso: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-AU", { timeZone: tz, ...o }).format(new Date(iso));
+    const community = (ev.team?.name ?? "").replace(
+      /, (Australia|New Zealand)$/,
+      "",
+    );
+    const fmt = (iso: string, o: Intl.DateTimeFormatOptions) =>
+      new Intl.DateTimeFormat("en-AU", { timeZone: tz, ...o }).format(
+        new Date(iso),
+      );
     const when = (e: { starts_at: string; ends_at: string | null }) =>
       `${fmt(e.starts_at, { weekday: "long", day: "numeric", month: "long" })}, ${fmt(e.starts_at, { hour: "numeric", minute: "2-digit" })}${e.ends_at ? ` to ${fmt(e.ends_at, { hour: "numeric", minute: "2-digit" })}` : ""}`;
     const past = Date.parse(ev.starts_at) < Date.now();
     // "(this Sunday)", "(tomorrow)" etc. when it's within the next week.
     const relDay = (iso: string) => {
-      const day = (d: Date) => fmt(d.toISOString(), { year: "numeric", month: "2-digit", day: "2-digit" });
+      const day = (d: Date) =>
+        fmt(d.toISOString(), {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        });
       const target = day(new Date(iso));
       for (let i = 0; i < 7; i++) {
         const d = new Date(Date.now() + i * 86400000);
         if (day(d) === target)
-          return i === 0 ? " (today)" : i === 1 ? " (tomorrow)" : ` (this ${fmt(iso, { weekday: "long" })})`;
+          return i === 0
+            ? " (today)"
+            : i === 1
+              ? " (tomorrow)"
+              : ` (this ${fmt(iso, { weekday: "long" })})`;
       }
       return "";
     };
@@ -119,15 +173,24 @@ Deno.serve(async (req) => {
       `Community: We The Free ${community}`,
       `Event: ${ev.title}${ev.event_type?.name ? ` (${ev.event_type.name})` : ""}`,
       `When: ${when(ev)}${relDay(ev.starts_at)}`,
-      ev.venue || ev.address ? `Where: ${[ev.venue, ev.address].filter(Boolean).join(", ")}` : "",
-      ev.description ? `About the event (from our website): ${String(ev.description).slice(0, 800)}` : "",
+      ev.venue || ev.address
+        ? `Where: ${[ev.venue, ev.address].filter(Boolean).join(", ")}`
+        : "",
+      ev.description
+        ? `About the event (from our website): ${String(ev.description).slice(0, 800)}`
+        : "",
       ev.source_url ? `Event link: ${ev.source_url}` : "",
-      ev.facebook_url ? `Facebook event link (use this one for Facebook and WhatsApp): ${ev.facebook_url}` : "",
+      ev.facebook_url
+        ? `Facebook event link (use this one for Facebook and WhatsApp): ${ev.facebook_url}`
+        : "",
     ];
 
     if (past) {
       // How it went (numbers only, no names).
-      const { data: att } = await admin.from("attendance").select("person_id").eq("event_id", ev.id);
+      const { data: att } = await admin
+        .from("attendance")
+        .select("person_id")
+        .eq("event_id", ev.id);
       const ids = (att ?? []).map((a) => a.person_id);
       let firsts = 0;
       if (ids.length) {
@@ -137,10 +200,18 @@ Deno.serve(async (req) => {
           .in("person_id", ids)
           .lt("event.starts_at", ev.starts_at);
         const before = new Set((earlier ?? []).map((r) => r.person_id));
-        const { data: ppl } = await admin.from("people").select("id, attended_before_app").in("id", ids);
-        firsts = (ppl ?? []).filter((p) => !before.has(p.id) && !p.attended_before_app).length;
+        const { data: ppl } = await admin
+          .from("people")
+          .select("id, attended_before_app")
+          .in("id", ids);
+        firsts = (ppl ?? []).filter(
+          (p) => !before.has(p.id) && !p.attended_before_app,
+        ).length;
       }
-      if (ids.length) facts.push(`Members who came: ${ids.length}${firsts ? ` (${firsts} for the first time)` : ""}`);
+      if (ids.length)
+        facts.push(
+          `Members who came: ${ids.length}${firsts ? ` (${firsts} for the first time)` : ""}`,
+        );
       // The call to action: the next event or two.
       const { data: next } = await admin
         .from("events")
@@ -152,7 +223,10 @@ Deno.serve(async (req) => {
       if (next?.length)
         facts.push(
           `Upcoming events to invite people to (end with a clear, friendly call to action for these):\n${next
-            .map((n) => `- ${n.title}, ${when(n)}${n.venue ? `, ${n.venue}` : ""}${n.source_url ? ` (${n.source_url})` : ""}`)
+            .map(
+              (n) =>
+                `- ${n.title}, ${when(n)}${n.venue ? `, ${n.venue}` : ""}${n.source_url ? ` (${n.source_url})` : ""}`,
+            )
             .join("\n")}`,
         );
     }
@@ -161,7 +235,11 @@ Deno.serve(async (req) => {
     // so no names are invented or left out. WhatsApp only: it's the private
     // community chat, not a public post.
     let signUp = "";
-    if (!past && ev.event_type?.counts_as_outreach && wanted.includes("whatsapp")) {
+    if (
+      !past &&
+      ev.event_type?.counts_as_outreach &&
+      wanted.includes("whatsapp")
+    ) {
       const { data: going } = await admin
         .from("event_rsvps")
         .select("updated_at, person:people(first_name, last_name)")
@@ -169,22 +247,36 @@ Deno.serve(async (req) => {
         .eq("status", "going")
         .order("updated_at");
       // deno-lint-ignore no-explicit-any
-      const ppl = (going ?? []).map((g: any) => g.person).filter(Boolean) as { first_name: string; last_name: string | null }[];
+      const ppl = (going ?? []).map((g: any) => g.person).filter(Boolean) as {
+        first_name: string;
+        last_name: string | null;
+      }[];
       const firstCount = new Map<string, number>();
-      for (const p of ppl) firstCount.set(p.first_name.trim().toLowerCase(), (firstCount.get(p.first_name.trim().toLowerCase()) ?? 0) + 1);
+      for (const p of ppl)
+        firstCount.set(
+          p.first_name.trim().toLowerCase(),
+          (firstCount.get(p.first_name.trim().toLowerCase()) ?? 0) + 1,
+        );
       // Two Ryans: add a last initial so people can tell them apart.
       const names = ppl.map((p) => {
         const f = p.first_name.trim();
-        const dup = (firstCount.get(f.toLowerCase()) ?? 0) > 1 && p.last_name?.trim();
+        const dup =
+          (firstCount.get(f.toLowerCase()) ?? 0) > 1 && p.last_name?.trim();
         return dup ? `${f} ${p.last_name!.trim()[0].toUpperCase()}` : f;
       });
       const slots = Math.max(target, names.length + 2);
-      signUp = Array.from({ length: slots }, (_, i) => `${i + 1}. ${names[i] ?? "__________"}`).join("\n");
+      signUp = Array.from(
+        { length: slots },
+        (_, i) => `${i + 1}. ${names[i] ?? "__________"}`,
+      ).join("\n");
       facts.push(
         `WhatsApp only: this is a sign-up call-out. Ask people to lock in whether they're coming, and say we're aiming for ${target} people. ${names.length ? `${names.length} ${names.length === 1 ? "has" : "have"} said they're coming so far.` : "Nobody has said they're coming yet."} End by asking them to add their name to the list below. Don't write the list or any names: it's added after your message.`,
       );
     }
-    if (note && String(note).trim()) facts.push(`From the organiser (use this, it's the heart of the post): ${String(note).slice(0, 600)}`);
+    if (note && String(note).trim())
+      facts.push(
+        `From the organiser (use this, it's the heart of the post): ${String(note).slice(0, 600)}`,
+      );
 
     const { data: voice } = await admin
       .from("voice_examples")
@@ -207,7 +299,11 @@ Reply with JSON only, no other text, shaped like {${wanted.map((p) => `"${p}": [
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      headers: {
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
       body: JSON.stringify({
         model: Deno.env.get("ANTHROPIC_MODEL") ?? "claude-sonnet-5-5",
         max_tokens: 2500,
@@ -217,10 +313,17 @@ Reply with JSON only, no other text, shaped like {${wanted.map((p) => `"${p}": [
     });
     if (!res.ok) {
       console.error(res.status, await res.text());
-      return json({ error: "The writing assistant didn't answer. Try again in a moment." }, 502);
+      return json(
+        {
+          error: "The writing assistant didn't answer. Try again in a moment.",
+        },
+        502,
+      );
     }
     const out = await res.json();
-    const text: string = (out.content ?? []).map((c: { text?: string }) => c.text ?? "").join("");
+    const text: string = (out.content ?? [])
+      .map((c: { text?: string }) => c.text ?? "")
+      .join("");
     const match = text.match(/\{[\s\S]*\}/);
     let options: Record<string, string[]> = {};
     try {
@@ -230,10 +333,19 @@ Reply with JSON only, no other text, shaped like {${wanted.map((p) => `"${p}": [
     }
     // Belt and braces: no dashes as punctuation.
     for (const p of Object.keys(options))
-      options[p] = (options[p] ?? []).map((s) => String(s).replace(/\s*[—–]\s*/g, ", ").trim()).slice(0, 3);
-    if (signUp && options.whatsapp) options.whatsapp = options.whatsapp.map((s) => `${s}\n\n${signUp}`);
+      options[p] = (options[p] ?? [])
+        .map((s) =>
+          String(s)
+            .replace(/\s*[—–]\s*/g, ", ")
+            .trim(),
+        )
+        .slice(0, 3);
+    if (signUp && options.whatsapp)
+      options.whatsapp = options.whatsapp.map((s) => `${s}\n\n${signUp}`);
 
-    await admin.from("copy_generations").insert({ team_id: ev.team_id, event_id: ev.id, user_id: user.id });
+    await admin
+      .from("copy_generations")
+      .insert({ team_id: ev.team_id, event_id: ev.id, user_id: user.id });
     return json({ options, past });
   } catch (e) {
     console.error(e);
@@ -246,21 +358,61 @@ Reply with JSON only, no other text, shaped like {${wanted.map((p) => `"${p}": [
 // that the incident report form exists, link fixed to WTF's form) and
 // "prompt" (a post for a group chat discussion question, no link).
 // deno-lint-ignore no-explicit-any
-async function feedbackCopy(asUser: any, userId: string, key: string, body: any, mode: "feedback" | "incident" | "prompt" | "mental_health" = "feedback") {
+async function feedbackCopy(
+  asUser: any,
+  userId: string,
+  key: string,
+  body: any,
+  mode: "feedback" | "incident" | "prompt" | "mental_health" = "feedback",
+) {
   const { teamId, note } = body ?? {};
   const incident = mode === "incident";
-  const question = mode === "prompt" ? String(body?.question ?? "").trim().slice(0, 300) : "";
-  if (mode === "prompt" && !question) return json({ error: "Missing the question." }, 400);
+  const question =
+    mode === "prompt"
+      ? String(body?.question ?? "")
+          .trim()
+          .slice(0, 300)
+      : "";
+  if (mode === "prompt" && !question)
+    return json({ error: "Missing the question." }, 400);
   const mental = mode === "mental_health";
-  const link = incident ? INCIDENT_FORM : mental ? MENTAL_HEALTH : mode === "prompt" ? "" : body?.link;
-  if (!teamId || typeof link !== "string" || (mode === "feedback" && !link.includes("/feedback/")))
+  const link = incident
+    ? INCIDENT_FORM
+    : mental
+      ? MENTAL_HEALTH
+      : mode === "prompt"
+        ? ""
+        : body?.link;
+  if (
+    !teamId ||
+    typeof link !== "string" ||
+    (mode === "feedback" && !link.includes("/feedback/"))
+  )
     return json({ error: "Missing the form link." }, 400);
   const url = Deno.env.get("SUPABASE_URL")!;
   const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-  const { data: me } = await admin.from("organisers").select("access, team_id").eq("id", userId).maybeSingle();
-  if (!me || !(me.access === "god" || me.access === "regional_lead" || me.team_id === teamId))
-    return json({ error: "Only organisers and the Core Team can use this." }, 403);
-  const { data: team } = await asUser.from("teams").select("id, name").eq("id", teamId).maybeSingle();
+  const { data: me } = await admin
+    .from("organisers")
+    .select("access, team_id")
+    .eq("id", userId)
+    .maybeSingle();
+  if (
+    !me ||
+    !(
+      me.access === "god" ||
+      me.access === "regional_lead" ||
+      me.team_id === teamId
+    )
+  )
+    return json(
+      { error: "Only organisers and the Core Team can use this." },
+      403,
+    );
+  const { data: team } = await asUser
+    .from("teams")
+    .select("id, name")
+    .eq("id", teamId)
+    .maybeSingle();
   if (!team) return json({ error: "Couldn't find that community." }, 404);
 
   const since = new Date(Date.now() - 864e5).toISOString();
@@ -269,7 +421,11 @@ async function feedbackCopy(asUser: any, userId: string, key: string, body: any,
     .select("id", { count: "exact", head: true })
     .eq("team_id", teamId)
     .gte("created_at", since);
-  if ((count ?? 0) >= DAILY_LIMIT) return json({ error: "That's a lot of writing for one day. Try again tomorrow." }, 429);
+  if ((count ?? 0) >= DAILY_LIMIT)
+    return json(
+      { error: "That's a lot of writing for one day. Try again tomorrow." },
+      429,
+    );
 
   const { data: voice } = await admin
     .from("voice_examples")
@@ -281,16 +437,18 @@ async function feedbackCopy(asUser: any, userId: string, key: string, body: any,
   const ask = question
     ? `Write a WhatsApp message to the We The Free ${community} member group chat posting this discussion question to get people chatting between events: "${question}". Keep the question itself clear (you can phrase it naturally), invite everyone to share, and keep it light and welcoming so newer people feel they can answer too.`
     : mental
-    ? `Write a WhatsApp message to the We The Free ${community} member group chat gently sharing We The Free's mental health resources for activists. Warm and caring, not preachy or alarming: burnout, grief and compassion fatigue are common for people who care about animals, and it's okay to look after yourself. Mention one or two of what's there: a free 24/7 support line run by counsellors who are animal advocates themselves, a free online course on sustainable advocacy and avoiding burnout (code WTF), support groups, therapists who understand animal advocacy, and meditation apps. Invite people to reach out to an organiser or each other too. Include this exact link on its own line: ${link}`
-    : incident
-    ? `Write a WhatsApp message to the We The Free ${community} member group chat letting everyone know about our incident report form. It's a calm, low-key heads-up (nothing has happened): if anything ever goes wrong at an event, like harassment, someone getting hurt, or trouble with the public or police, they can report it with this form so it gets followed up properly. Make clear it's there to look after everyone and they can also talk to an organiser. Include this exact link on its own line: ${link}`
-    : null;
-  const prompt = ask ? `${ask}
+      ? `Write a WhatsApp message to the We The Free ${community} member group chat gently sharing We The Free's mental health resources for activists. Warm and caring, not preachy or alarming: burnout, grief and compassion fatigue are common for people who care about animals, and it's okay to look after yourself. Mention one or two of what's there: a free 24/7 support line run by counsellors who are animal advocates themselves, a free online course on sustainable advocacy and avoiding burnout (code WTF), support groups, therapists who understand animal advocacy, and meditation apps. Invite people to reach out to an organiser or each other too. Include this exact link on its own line: ${link}`
+      : incident
+        ? `Write a WhatsApp message to the We The Free ${community} member group chat letting everyone know about our incident report form. It's a calm, low-key heads-up (nothing has happened): if anything ever goes wrong at an event, like harassment, someone getting hurt, or trouble with the public or police, they can report it with this form so it gets followed up properly. Make clear it's there to look after everyone and they can also talk to an organiser. Include this exact link on its own line: ${link}`
+        : null;
+  const prompt = ask
+    ? `${ask}
 ${note && String(note).trim() ? `\nFrom the organiser (work this in): ${String(note).slice(0, 600)}\n` : ""}
 ${voice?.length ? `VOICE EXAMPLES (past posts by this community; match this voice)\n${voice.map((v: { body: string }, i: number) => `--- Example ${i + 1}\n${v.body}`).join("\n")}` : "No voice examples: use a friendly, down-to-earth grassroots voice."}
 
 WRITE 3 different options, each 25-70 words, casual, like a friend messaging the group, no hashtags.
-Reply with JSON only, no other text, shaped like {"whatsapp": ["...", "...", "..."]}.` : `Write a WhatsApp message to the We The Free ${community} member group chat asking members to fill in a short feedback form about how being part of the community is going. The form is 3 quick questions (how they're finding it, what's working, what would make it better) and their name is optional. Make clear every answer gets read and it helps make things better. Include this exact link on its own line: ${link}
+Reply with JSON only, no other text, shaped like {"whatsapp": ["...", "...", "..."]}.`
+    : `Write a WhatsApp message to the We The Free ${community} member group chat asking members to fill in a short feedback form about how being part of the community is going. The form is 3 quick questions (how they're finding it, what's working, what would make it better) and their name is optional. Make clear every answer gets read and it helps make things better. Include this exact link on its own line: ${link}
 ${note && String(note).trim() ? `\nFrom the organiser (work this in): ${String(note).slice(0, 600)}\n` : ""}
 ${voice?.length ? `VOICE EXAMPLES (past posts by this community; match this voice)\n${voice.map((v: { body: string }, i: number) => `--- Example ${i + 1}\n${v.body}`).join("\n")}` : "No voice examples: use a friendly, down-to-earth grassroots voice."}
 
@@ -299,7 +457,11 @@ Reply with JSON only, no other text, shaped like {"whatsapp": ["...", "...", "..
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+    headers: {
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
     body: JSON.stringify({
       model: Deno.env.get("ANTHROPIC_MODEL") ?? "claude-sonnet-5-5",
       max_tokens: 1200,
@@ -309,10 +471,15 @@ Reply with JSON only, no other text, shaped like {"whatsapp": ["...", "...", "..
   });
   if (!res.ok) {
     console.error(res.status, await res.text());
-    return json({ error: "The writing assistant didn't answer. Try again in a moment." }, 502);
+    return json(
+      { error: "The writing assistant didn't answer. Try again in a moment." },
+      502,
+    );
   }
   const out = await res.json();
-  const text: string = (out.content ?? []).map((c: { text?: string }) => c.text ?? "").join("");
+  const text: string = (out.content ?? [])
+    .map((c: { text?: string }) => c.text ?? "")
+    .join("");
   const match = text.match(/\{[\s\S]*\}/);
   let options: string[] = [];
   try {
@@ -322,10 +489,16 @@ Reply with JSON only, no other text, shaped like {"whatsapp": ["...", "...", "..
   }
   // No dashes as punctuation, and make sure the link is there.
   options = options
-    .map((s) => String(s).replace(/\s*[—–]\s*/g, ", ").trim())
+    .map((s) =>
+      String(s)
+        .replace(/\s*[—–]\s*/g, ", ")
+        .trim(),
+    )
     .map((s) => (!link || s.includes(link) ? s : `${s}\n${link}`))
     .slice(0, 3);
-  await admin.from("copy_generations").insert({ team_id: teamId, event_id: null, user_id: userId });
+  await admin
+    .from("copy_generations")
+    .insert({ team_id: teamId, event_id: null, user_id: userId });
   return json({ options });
 }
 
@@ -335,18 +508,43 @@ Reply with JSON only, no other text, shaped like {"whatsapp": ["...", "...", "..
 // deno-lint-ignore no-explicit-any
 // Also any post at all from the Social Media Hub's "Make a post" ({ purpose:
 // "general" }, Kai 6 Nov 2026): the organiser's note is what it's about.
-async function carouselCopy(asUser: any, userId: string, key: string, body: any, mode: "carousel" | "general" = "carousel") {
+async function carouselCopy(
+  asUser: any,
+  userId: string,
+  key: string,
+  body: any,
+  mode: "carousel" | "general" = "carousel",
+) {
   const { teamId, platforms, note, context, eventId } = body ?? {};
   const wanted = ((platforms as string[]) ?? []).filter((p) => p in PLATFORMS);
-  if (!teamId || wanted.length === 0) return json({ error: "Pick at least one place to post." }, 400);
+  if (!teamId || wanted.length === 0)
+    return json({ error: "Pick at least one place to post." }, 400);
   if (mode === "general" && !(note && String(note).trim()))
     return json({ error: "Say what the post is about first." }, 400);
   const url = Deno.env.get("SUPABASE_URL")!;
   const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-  const { data: me } = await admin.from("organisers").select("access, team_id").eq("id", userId).maybeSingle();
-  if (!me || !(me.access === "god" || me.access === "regional_lead" || me.team_id === teamId))
-    return json({ error: "Only organisers and the Core Team can use this." }, 403);
-  const { data: team } = await asUser.from("teams").select("id, name, timezone").eq("id", teamId).maybeSingle();
+  const { data: me } = await admin
+    .from("organisers")
+    .select("access, team_id")
+    .eq("id", userId)
+    .maybeSingle();
+  if (
+    !me ||
+    !(
+      me.access === "god" ||
+      me.access === "regional_lead" ||
+      me.team_id === teamId
+    )
+  )
+    return json(
+      { error: "Only organisers and the Core Team can use this." },
+      403,
+    );
+  const { data: team } = await asUser
+    .from("teams")
+    .select("id, name, timezone")
+    .eq("id", teamId)
+    .maybeSingle();
   if (!team) return json({ error: "Couldn't find that community." }, 404);
 
   const since = new Date(Date.now() - 864e5).toISOString();
@@ -355,18 +553,36 @@ async function carouselCopy(asUser: any, userId: string, key: string, body: any,
     .select("id", { count: "exact", head: true })
     .eq("team_id", teamId)
     .gte("created_at", since);
-  if ((count ?? 0) >= DAILY_LIMIT) return json({ error: "That's a lot of writing for one day. Try again tomorrow." }, 429);
+  if ((count ?? 0) >= DAILY_LIMIT)
+    return json(
+      { error: "That's a lot of writing for one day. Try again tomorrow." },
+      429,
+    );
 
   const tz = team.timezone ?? "Australia/Sydney";
-  const fmt = (iso: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-AU", { timeZone: tz, ...o }).format(new Date(iso));
-  const when = (e: { starts_at: string }) => `${fmt(e.starts_at, { weekday: "long", day: "numeric", month: "long" })}, ${fmt(e.starts_at, { hour: "numeric", minute: "2-digit" })}`;
+  const fmt = (iso: string, o: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat("en-AU", { timeZone: tz, ...o }).format(
+      new Date(iso),
+    );
+  const when = (e: { starts_at: string }) =>
+    `${fmt(e.starts_at, { weekday: "long", day: "numeric", month: "long" })}, ${fmt(e.starts_at, { hour: "numeric", minute: "2-digit" })}`;
   const community = String(team.name).replace(/, (Australia|New Zealand)$/, "");
   const facts: string[] = [`Community: We The Free ${community}`];
   if (eventId) {
-    const { data: ev } = await asUser.from("events").select("title, starts_at, venue").eq("id", eventId).maybeSingle();
-    if (ev) facts.push(`The photos are from: ${ev.title}, ${when(ev)}${ev.venue ? `, ${ev.venue}` : ""}`);
+    const { data: ev } = await asUser
+      .from("events")
+      .select("title, starts_at, venue")
+      .eq("id", eventId)
+      .maybeSingle();
+    if (ev)
+      facts.push(
+        `The photos are from: ${ev.title}, ${when(ev)}${ev.venue ? `, ${ev.venue}` : ""}`,
+      );
   }
-  if (context && String(context).trim()) facts.push(`What the photos show (from their tags and notes): ${String(context).slice(0, 800)}`);
+  if (context && String(context).trim())
+    facts.push(
+      `What the photos show (from their tags and notes): ${String(context).slice(0, 800)}`,
+    );
   const { data: next } = await admin
     .from("events")
     .select("title, starts_at, venue, source_url")
@@ -377,10 +593,16 @@ async function carouselCopy(asUser: any, userId: string, key: string, body: any,
   if (next?.length)
     facts.push(
       `${mode === "general" ? "Upcoming events (only if they fit what the post is about)" : "Upcoming events to invite people to (end with a clear, friendly call to action for these)"}:\n${next
-        .map((n) => `- ${n.title}, ${when(n)}${n.venue ? `, ${n.venue}` : ""}${n.source_url ? ` (${n.source_url})` : ""}`)
+        .map(
+          (n) =>
+            `- ${n.title}, ${when(n)}${n.venue ? `, ${n.venue}` : ""}${n.source_url ? ` (${n.source_url})` : ""}`,
+        )
         .join("\n")}`,
     );
-  if (note && String(note).trim()) facts.push(`From the organiser (use this, it's the heart of the post): ${String(note).slice(0, 600)}`);
+  if (note && String(note).trim())
+    facts.push(
+      `From the organiser (use this, it's the heart of the post): ${String(note).slice(0, 600)}`,
+    );
 
   const { data: voice } = await admin
     .from("voice_examples")
@@ -389,9 +611,11 @@ async function carouselCopy(asUser: any, userId: string, key: string, body: any,
     .order("created_at", { ascending: false })
     .limit(10);
 
-  const prompt = `${mode === "general"
-    ? "Write a social media post for our community about what the organiser describes below. Mention upcoming events only if it fits naturally."
-    : "Write a post to go with a carousel of photos from our community (the photos go with it, so don't describe each one). Share the feeling of what we've been up to and invite people along."}
+  const prompt = `${
+    mode === "general"
+      ? "Write a social media post for our community about what the organiser describes below. Mention upcoming events only if it fits naturally."
+      : "Write a post to go with a carousel of photos from our community (the photos go with it, so don't describe each one). Share the feeling of what we've been up to and invite people along."
+  }
 
 FACTS
 ${facts.join("\n")}
@@ -405,7 +629,11 @@ Reply with JSON only, no other text, shaped like {${wanted.map((p) => `"${p}": [
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+    headers: {
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
     body: JSON.stringify({
       model: Deno.env.get("ANTHROPIC_MODEL") ?? "claude-sonnet-5-5",
       max_tokens: 2500,
@@ -415,10 +643,15 @@ Reply with JSON only, no other text, shaped like {${wanted.map((p) => `"${p}": [
   });
   if (!res.ok) {
     console.error(res.status, await res.text());
-    return json({ error: "The writing assistant didn't answer. Try again in a moment." }, 502);
+    return json(
+      { error: "The writing assistant didn't answer. Try again in a moment." },
+      502,
+    );
   }
   const out = await res.json();
-  const text: string = (out.content ?? []).map((c: { text?: string }) => c.text ?? "").join("");
+  const text: string = (out.content ?? [])
+    .map((c: { text?: string }) => c.text ?? "")
+    .join("");
   const match = text.match(/\{[\s\S]*\}/);
   let options: Record<string, string[]> = {};
   try {
@@ -427,35 +660,73 @@ Reply with JSON only, no other text, shaped like {${wanted.map((p) => `"${p}": [
     return json({ error: "That didn't come out right. Try again." }, 502);
   }
   for (const p of Object.keys(options))
-    options[p] = (options[p] ?? []).map((s) => String(s).replace(/\s*[—–]\s*/g, ", ").trim()).slice(0, 3);
-  await admin.from("copy_generations").insert({ team_id: teamId, event_id: eventId ?? null, user_id: userId });
+    options[p] = (options[p] ?? [])
+      .map((s) =>
+        String(s)
+          .replace(/\s*[—–]\s*/g, ", ")
+          .trim(),
+      )
+      .slice(0, 3);
+  await admin
+    .from("copy_generations")
+    .insert({ team_id: teamId, event_id: eventId ?? null, user_id: userId });
   return json({ options });
 }
-
 
 // A short summary of the member feedback responses (Kai, 7 Nov 2026: "Can we
 // have a summary of responses to feedback survey"). The app sends the
 // responses the organiser can already read; we check they run that community.
 async function feedbackSummary(userId: string, key: string, body: any) {
   const { teamId } = body ?? {};
-  const responses = Array.isArray(body?.responses) ? body.responses.slice(0, 200) : [];
-  if (!teamId || responses.length === 0) return json({ error: "No responses to summarise yet." }, 400);
+  const responses = Array.isArray(body?.responses)
+    ? body.responses.slice(0, 200)
+    : [];
+  if (!teamId || responses.length === 0)
+    return json({ error: "No responses to summarise yet." }, 400);
   const url = Deno.env.get("SUPABASE_URL")!;
   const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-  const { data: me } = await admin.from("organisers").select("access, team_id, organiser_team_id").eq("id", userId).maybeSingle();
-  if (!me || !(me.access === "god" || me.access === "regional_lead" || me.team_id === teamId || me.organiser_team_id === teamId))
+  const { data: me } = await admin
+    .from("organisers")
+    .select("access, team_id, organiser_team_id")
+    .eq("id", userId)
+    .maybeSingle();
+  if (
+    !me ||
+    !(
+      me.access === "god" ||
+      me.access === "regional_lead" ||
+      me.team_id === teamId ||
+      me.organiser_team_id === teamId
+    )
+  )
     return json({ error: "Only organisers can use this." }, 403);
   const since = new Date(Date.now() - 864e5).toISOString();
-  const { count } = await admin.from("copy_generations").select("id", { count: "exact", head: true }).eq("team_id", teamId).gte("created_at", since);
-  if ((count ?? 0) >= DAILY_LIMIT) return json({ error: "That's a lot of writing for one day. Try again tomorrow." }, 429);
+  const { count } = await admin
+    .from("copy_generations")
+    .select("id", { count: "exact", head: true })
+    .eq("team_id", teamId)
+    .gte("created_at", since);
+  if ((count ?? 0) >= DAILY_LIMIT)
+    return json(
+      { error: "That's a lot of writing for one day. Try again tomorrow." },
+      429,
+    );
 
-  const clip = (v: unknown) => String(v ?? "").trim().slice(0, 2000);
+  const clip = (v: unknown) =>
+    String(v ?? "")
+      .trim()
+      .slice(0, 2000);
   const text = responses
     .map((r: any, i: number) =>
-      [`--- Response ${i + 1}${r.rating ? ` (rating ${r.rating}/5: ${clip(r.label)})` : ""}`,
+      [
+        `--- Response ${i + 1}${r.rating ? ` (rating ${r.rating}/5: ${clip(r.label)})` : ""}`,
         r.message ? `Message: ${clip(r.message)}` : "",
         r.going_well ? `Working well: ${clip(r.going_well)}` : "",
-        r.better ? `Make it better: ${clip(r.better)}` : ""].filter(Boolean).join("\n"))
+        r.better ? `Make it better: ${clip(r.better)}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    )
     .join("\n");
   const prompt = `These are anonymous-or-named answers from members of a We The Free community (grassroots animal rights group) to a short feedback form: how they're finding it (1-5), what's working well, what would make it better.
 
@@ -469,7 +740,11 @@ Each list 1-5 items, each item under 30 words. "ideas" at most 3.`;
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+    headers: {
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
     body: JSON.stringify({
       model: Deno.env.get("ANTHROPIC_MODEL") ?? "claude-sonnet-5-5",
       max_tokens: 1200,
@@ -478,36 +753,74 @@ Each list 1-5 items, each item under 30 words. "ideas" at most 3.`;
   });
   if (!res.ok) {
     console.error(res.status, await res.text());
-    return json({ error: "The writing assistant didn't answer. Try again in a moment." }, 502);
+    return json(
+      { error: "The writing assistant didn't answer. Try again in a moment." },
+      502,
+    );
   }
   const out = await res.json();
-  const raw: string = (out.content ?? []).map((c: { text?: string }) => c.text ?? "").join("");
+  const raw: string = (out.content ?? [])
+    .map((c: { text?: string }) => c.text ?? "")
+    .join("");
   const match = raw.match(/\{[\s\S]*\}/);
   try {
     const s = JSON.parse(match ? match[0] : raw);
-    const tidy = (v: unknown) => String(v ?? "").replace(/\s*[—–]\s*/g, ", ").trim();
-    const list = (v: unknown) => (Array.isArray(v) ? v.map(tidy).filter(Boolean).slice(0, 5) : []);
-    await admin.from("copy_generations").insert({ team_id: teamId, event_id: null, user_id: userId });
-    return json({ summary: { overall: tidy(s.overall), working: list(s.working), better: list(s.better), ideas: list(s.ideas).slice(0, 3) } });
+    const tidy = (v: unknown) =>
+      String(v ?? "")
+        .replace(/\s*[—–]\s*/g, ", ")
+        .trim();
+    const list = (v: unknown) =>
+      Array.isArray(v) ? v.map(tidy).filter(Boolean).slice(0, 5) : [];
+    await admin
+      .from("copy_generations")
+      .insert({ team_id: teamId, event_id: null, user_id: userId });
+    return json({
+      summary: {
+        overall: tidy(s.overall),
+        working: list(s.working),
+        better: list(s.better),
+        ideas: list(s.ideas).slice(0, 3),
+      },
+    });
   } catch {
     return json({ error: "That didn't come out right. Try again." }, 502);
   }
 }
 
-
 // Recent wins for animals, found on the web, and 3 messages sharing them
 // (Kai, 11 Nov 2026: "a recurring action for sharing wins in the animal
 // rights space"). Every link must be one the search actually returned.
 const COUNTRY_CODES: Record<string, string> = {
-  australia: "AU", "new zealand": "NZ", "united kingdom": "GB", uk: "GB", england: "GB", scotland: "GB",
-  wales: "GB", ireland: "IE", "united states": "US", usa: "US", canada: "CA", japan: "JP", india: "IN",
-  germany: "DE", france: "FR", netherlands: "NL", spain: "ES", italy: "IT", brazil: "BR", mexico: "MX",
-  singapore: "SG", "south africa": "ZA", philippines: "PH", indonesia: "ID",
+  australia: "AU",
+  "new zealand": "NZ",
+  "united kingdom": "GB",
+  uk: "GB",
+  england: "GB",
+  scotland: "GB",
+  wales: "GB",
+  ireland: "IE",
+  "united states": "US",
+  usa: "US",
+  canada: "CA",
+  japan: "JP",
+  india: "IN",
+  germany: "DE",
+  france: "FR",
+  netherlands: "NL",
+  spain: "ES",
+  italy: "IT",
+  brazil: "BR",
+  mexico: "MX",
+  singapore: "SG",
+  "south africa": "ZA",
+  philippines: "PH",
+  indonesia: "ID",
 };
 // deno-lint-ignore no-explicit-any
 async function winsCopy(asUser: any, userId: string, key: string, body: any) {
   const { teamId, regionId, note } = body ?? {};
-  if (!teamId && !regionId) return json({ error: "Pick a community first." }, 400);
+  if (!teamId && !regionId)
+    return json({ error: "Pick a community first." }, 400);
   const url = Deno.env.get("SUPABASE_URL")!;
   const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { data: me } = await admin
@@ -516,9 +829,21 @@ async function winsCopy(asUser: any, userId: string, key: string, body: any) {
     .eq("id", userId)
     .maybeSingle();
   const forOrganisers = !teamId;
-  const ok = !!me && (me.access === "god" || me.access === "regional_lead" ||
-    (!forOrganisers && (me.team_id === teamId || me.organiser_team_id === teamId)));
-  if (!ok) return json({ error: forOrganisers ? "Only Regional Support Leads can use this." : "Only organisers and the Core Team can use this." }, 403);
+  const ok =
+    !!me &&
+    (me.access === "god" ||
+      me.access === "regional_lead" ||
+      (!forOrganisers &&
+        (me.team_id === teamId || me.organiser_team_id === teamId)));
+  if (!ok)
+    return json(
+      {
+        error: forOrganisers
+          ? "Only Regional Support Leads can use this."
+          : "Only organisers and the Core Team can use this.",
+      },
+      403,
+    );
 
   // Where they are: the community's country, or the region's name.
   let place = "";
@@ -526,22 +851,44 @@ async function winsCopy(asUser: any, userId: string, key: string, body: any) {
   let tz = "Australia/Sydney";
   let country = "";
   if (teamId) {
-    const { data: team } = await asUser.from("teams").select("id, name, timezone").eq("id", teamId).maybeSingle();
+    const { data: team } = await asUser
+      .from("teams")
+      .select("id, name, timezone")
+      .eq("id", teamId)
+      .maybeSingle();
     if (!team) return json({ error: "Couldn't find that community." }, 404);
-    const [city, ...rest] = String(team.name).split(",").map((x: string) => x.trim());
+    const [city, ...rest] = String(team.name)
+      .split(",")
+      .map((x: string) => x.trim());
     community = city;
     country = rest.join(", ");
     place = country ? `${city}, ${country}` : city;
     tz = team.timezone ?? tz;
     const since = new Date(Date.now() - 864e5).toISOString();
-    const { count } = await admin.from("copy_generations").select("id", { count: "exact", head: true }).eq("team_id", teamId).gte("created_at", since);
-    if ((count ?? 0) >= DAILY_LIMIT) return json({ error: "That's a lot of writing for one day. Try again tomorrow." }, 429);
+    const { count } = await admin
+      .from("copy_generations")
+      .select("id", { count: "exact", head: true })
+      .eq("team_id", teamId)
+      .gte("created_at", since);
+    if ((count ?? 0) >= DAILY_LIMIT)
+      return json(
+        { error: "That's a lot of writing for one day. Try again tomorrow." },
+        429,
+      );
   } else {
-    const { data: region } = await admin.from("regions").select("name, extra_countries").eq("id", regionId).maybeSingle();
+    const { data: region } = await admin
+      .from("regions")
+      .select("name, extra_countries")
+      .eq("id", regionId)
+      .maybeSingle();
     if (!region) return json({ error: "Couldn't find that region." }, 404);
     place = [region.name, ...(region.extra_countries ?? [])].join(" + ");
     // Oceania's teams are mostly Australian; localise to its biggest country.
-    const { data: teams } = await admin.from("teams").select("name, timezone").eq("region_id", regionId).limit(200);
+    const { data: teams } = await admin
+      .from("teams")
+      .select("name, timezone")
+      .eq("region_id", regionId)
+      .limit(200);
     const counts = new Map<string, number>();
     for (const t of teams ?? []) {
       const c = String(t.name).split(",").slice(1).join(",").trim();
@@ -551,7 +898,12 @@ async function winsCopy(asUser: any, userId: string, key: string, body: any) {
     tz = (teams ?? [])[0]?.timezone ?? tz;
   }
   const code = COUNTRY_CODES[country.toLowerCase()];
-  const today = new Intl.DateTimeFormat("en-AU", { timeZone: tz, day: "numeric", month: "long", year: "numeric" }).format(new Date());
+  const today = new Intl.DateTimeFormat("en-AU", {
+    timeZone: tz,
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
 
   // What organisers marked "Not our vibe" (everyone's, newest first): shown as
   // examples to avoid, and those links are never offered again.
@@ -560,8 +912,15 @@ async function winsCopy(asUser: any, userId: string, key: string, body: any) {
     .select("headline, url")
     .order("created_at", { ascending: false })
     .limit(40);
-  const blocked = new Set((nope ?? []).map((n) => String(n.url ?? "").replace(/\/$/, "")).filter(Boolean));
-  const avoid = (nope ?? []).slice(0, 25).map((n) => `- ${n.headline}`).join("\n");
+  const blocked = new Set(
+    (nope ?? [])
+      .map((n) => String(n.url ?? "").replace(/\/$/, ""))
+      .filter(Boolean),
+  );
+  const avoid = (nope ?? [])
+    .slice(0, 25)
+    .map((n) => `- ${n.headline}`)
+    .join("\n");
 
   const audience = forOrganisers
     ? `the WhatsApp group chat for We The Free organisers across ${place}. Upbeat, a reminder that the movement is winning.`
@@ -599,8 +958,13 @@ Reply with JSON only, no other text, shaped like:
 {"wins": [{"headline": "short, under 15 words", "where": "place", "when": "e.g. 28 Oct", "kind": "win" or "progress", "url": "https://...", "source": "site name"}], "messages": ["...", "...", "..."]}
 List 3 to 8 wins, newest first. If you only find 1 or 2, that's fine: never pad with other countries.`;
 
-  const tool: Record<string, unknown> = { type: "web_search_20250305", name: "web_search", max_uses: 6 };
-  if (code) tool.user_location = { type: "approximate", country: code, timezone: tz };
+  const tool: Record<string, unknown> = {
+    type: "web_search_20250305",
+    name: "web_search",
+    max_uses: 6,
+  };
+  if (code)
+    tool.user_location = { type: "approximate", country: code, timezone: tz };
   // deno-lint-ignore no-explicit-any
   const messages: any[] = [{ role: "user", content: prompt }];
   // deno-lint-ignore no-explicit-any
@@ -608,7 +972,11 @@ List 3 to 8 wins, newest first. If you only find 1 or 2, that's fine: never pad 
   for (let turn = 0; turn < 3; turn++) {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      headers: {
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
       body: JSON.stringify({
         model: Deno.env.get("ANTHROPIC_MODEL") ?? "claude-sonnet-5-5",
         max_tokens: 4000,
@@ -620,8 +988,20 @@ List 3 to 8 wins, newest first. If you only find 1 or 2, that's fine: never pad 
     if (!res.ok) {
       const t = await res.text();
       console.error(res.status, t);
-      if (/web.?search/i.test(t)) return json({ error: "Web search isn't switched on for the writing assistant yet." }, 502);
-      return json({ error: "The writing assistant didn't answer. Try again in a moment." }, 502);
+      if (/web.?search/i.test(t))
+        return json(
+          {
+            error:
+              "Web search isn't switched on for the writing assistant yet.",
+          },
+          502,
+        );
+      return json(
+        {
+          error: "The writing assistant didn't answer. Try again in a moment.",
+        },
+        502,
+      );
     }
     const out = await res.json();
     blocks = blocks.concat(out.content ?? []);
@@ -634,20 +1014,32 @@ List 3 to 8 wins, newest first. If you only find 1 or 2, that's fine: never pad 
   const seen = new Set<string>();
   for (const b of blocks)
     if (b.type === "web_search_tool_result" && Array.isArray(b.content))
-      for (const r of b.content) if (r?.url) seen.add(String(r.url).replace(/\/$/, ""));
-  const clean = (u: string) => String(u).trim().replace(/[).,]+$/, "").replace(/\/$/, "");
+      for (const r of b.content)
+        if (r?.url) seen.add(String(r.url).replace(/\/$/, ""));
+  const clean = (u: string) =>
+    String(u)
+      .trim()
+      .replace(/[).,]+$/, "")
+      .replace(/\/$/, "");
   const real = (u: string) => seen.has(clean(u)) && !blocked.has(clean(u));
 
-  const text = blocks.filter((b) => b.type === "text").map((b) => b.text ?? "").join("");
+  const text = blocks
+    .filter((b) => b.type === "text")
+    .map((b) => b.text ?? "")
+    .join("");
   // The JSON is at the end; any words before it (while searching) are skipped.
-  const start = text.indexOf('{"wins"') >= 0 ? text.indexOf('{"wins"') : text.indexOf("{");
+  const start =
+    text.indexOf('{"wins"') >= 0 ? text.indexOf('{"wins"') : text.indexOf("{");
   let parsed: { wins?: unknown[]; messages?: unknown[] } = {};
   try {
     parsed = JSON.parse(text.slice(start, text.lastIndexOf("}") + 1));
   } catch {
     return json({ error: "That didn't come out right. Try again." }, 502);
   }
-  const tidy = (v: unknown) => String(v ?? "").replace(/\s*[—–]\s*/g, ", ").trim();
+  const tidy = (v: unknown) =>
+    String(v ?? "")
+      .replace(/\s*[—–]\s*/g, ", ")
+      .trim();
   const wins = (Array.isArray(parsed.wins) ? parsed.wins : [])
     // deno-lint-ignore no-explicit-any
     .map((w: any) => ({
@@ -669,7 +1061,13 @@ List 3 to 8 wins, newest first. If you only find 1 or 2, that's fine: never pad 
     })
     .slice(0, 3);
   if (!options.length && !wins.length)
-    return json({ error: "Couldn't find any recent wins right now. Try again in a bit." }, 502);
-  if (teamId) await admin.from("copy_generations").insert({ team_id: teamId, event_id: null, user_id: userId });
+    return json(
+      { error: "Couldn't find any recent wins right now. Try again in a bit." },
+      502,
+    );
+  if (teamId)
+    await admin
+      .from("copy_generations")
+      .insert({ team_id: teamId, event_id: null, user_id: userId });
   return json({ options, wins });
 }

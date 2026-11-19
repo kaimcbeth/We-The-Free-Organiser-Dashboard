@@ -14,7 +14,10 @@ export type IcsEvent = {
 
 // Lines starting with a space or tab continue the previous line.
 function unfold(text: string): string[] {
-  return text.replace(/\r\n/g, "\n").replace(/\n[ \t]/g, "").split("\n");
+  return text
+    .replace(/\r\n/g, "\n")
+    .replace(/\n[ \t]/g, "")
+    .split("\n");
 }
 
 function unescapeText(v: string): string {
@@ -39,11 +42,26 @@ function tzOffsetMs(instant: number, timeZone: string): number {
     second: "2-digit",
   }).formatToParts(new Date(instant));
   const get = (t: string) => Number(parts.find((p) => p.type === t)?.value);
-  const asUtc = Date.UTC(get("year"), get("month") - 1, get("day"), get("hour"), get("minute"), get("second"));
+  const asUtc = Date.UTC(
+    get("year"),
+    get("month") - 1,
+    get("day"),
+    get("hour"),
+    get("minute"),
+    get("second"),
+  );
   return asUtc - Math.floor(instant / 1000) * 1000;
 }
 
-function zonedToUtc(y: number, mo: number, d: number, h: number, mi: number, s: number, tz: string): string {
+function zonedToUtc(
+  y: number,
+  mo: number,
+  d: number,
+  h: number,
+  mi: number,
+  s: number,
+  tz: string,
+): string {
   const guess = Date.UTC(y, mo - 1, d, h, mi, s);
   let instant = guess - tzOffsetMs(guess, tz);
   instant = guess - tzOffsetMs(instant, tz);
@@ -51,8 +69,14 @@ function zonedToUtc(y: number, mo: number, d: number, h: number, mi: number, s: 
 }
 
 // DTSTART;TZID=Australia/Sydney:20260822T133000 | ...:20260822T033000Z | ;VALUE=DATE:20260822
-export function parseIcsDate(params: string, value: string, fallbackTz: string): string | null {
-  const m = value.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/);
+export function parseIcsDate(
+  params: string,
+  value: string,
+  fallbackTz: string,
+): string | null {
+  const m = value.match(
+    /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/,
+  );
   if (!m) return null;
   const [, y, mo, d, h = "00", mi = "00", s = "00", z] = m;
   if (z) return new Date(Date.UTC(+y, +mo - 1, +d, +h, +mi, +s)).toISOString();
@@ -68,7 +92,10 @@ function venueFromStructured(params: string | undefined): string | null {
   return v || null;
 }
 
-export function parseIcs(text: string, fallbackTz = "Australia/Sydney"): IcsEvent[] {
+export function parseIcs(
+  text: string,
+  fallbackTz = "Australia/Sydney",
+): IcsEvent[] {
   const events: IcsEvent[] = [];
   let cur: Record<string, { params: string; value: string }> | null = null;
 
@@ -79,16 +106,26 @@ export function parseIcs(text: string, fallbackTz = "Australia/Sydney"): IcsEven
     }
     if (line === "END:VEVENT") {
       if (cur) {
-        const startsAt = cur.DTSTART ? parseIcsDate(cur.DTSTART.params, cur.DTSTART.value, fallbackTz) : null;
+        const startsAt = cur.DTSTART
+          ? parseIcsDate(cur.DTSTART.params, cur.DTSTART.value, fallbackTz)
+          : null;
         if (cur.UID && startsAt) {
           events.push({
             uid: cur.UID.value.trim(),
             summary: unescapeText(cur.SUMMARY?.value ?? "Untitled event"),
             startsAt,
-            endsAt: cur.DTEND ? parseIcsDate(cur.DTEND.params, cur.DTEND.value, fallbackTz) : null,
-            location: cur.LOCATION ? unescapeText(cur.LOCATION.value) || null : null,
-            venueName: venueFromStructured(cur["X-APPLE-STRUCTURED-LOCATION"]?.params),
-            description: cur.DESCRIPTION ? unescapeText(cur.DESCRIPTION.value) || null : null,
+            endsAt: cur.DTEND
+              ? parseIcsDate(cur.DTEND.params, cur.DTEND.value, fallbackTz)
+              : null,
+            location: cur.LOCATION
+              ? unescapeText(cur.LOCATION.value) || null
+              : null,
+            venueName: venueFromStructured(
+              cur["X-APPLE-STRUCTURED-LOCATION"]?.params,
+            ),
+            description: cur.DESCRIPTION
+              ? unescapeText(cur.DESCRIPTION.value) || null
+              : null,
             url: cur.URL ? cur.URL.value.trim() || null : null,
           });
         }
@@ -108,13 +145,20 @@ export function parseIcs(text: string, fallbackTz = "Australia/Sydney"): IcsEven
   return events;
 }
 
-const MONTHS = "January|February|March|April|May|June|July|August|September|October|November|December";
+const MONTHS =
+  "January|February|March|April|May|June|July|August|September|October|November|December";
 
 // "WTF: Sydney, Australia - Social, October 21st, 2026" -> "Social"
 export function cleanTitle(summary: string): string {
   const t = summary
     .replace(/^WTF:\s.*?\s-\s+/, "")
-    .replace(new RegExp(`,?\\s*(${MONTHS})\\s+\\d{1,2}(st|nd|rd|th)?,?\\s*\\d{4}\\s*$`, "i"), "")
+    .replace(
+      new RegExp(
+        `,?\\s*(${MONTHS})\\s+\\d{1,2}(st|nd|rd|th)?,?\\s*\\d{4}\\s*$`,
+        "i",
+      ),
+      "",
+    )
     .trim();
   return t || summary.trim();
 }
@@ -123,38 +167,63 @@ export function cleanTitle(summary: string): string {
 // "co-working" only in the description (Kai, 1 Nov 2026). The opening of the
 // description is enough; FAQs further down can mention anything.
 const COWORK = /co-?working|\bcowork/i;
-export function isCoworking(summary: string, description?: string | null): boolean {
+export function isCoworking(
+  summary: string,
+  description?: string | null,
+): boolean {
   if (/movie challenge|3\s?mmc|minute movie/i.test(summary)) return false;
   return COWORK.test(summary) || COWORK.test((description ?? "").slice(0, 600));
 }
 
 // The title shown in the Hub: a generic "Social" that's really co-working
 // becomes "Vegan Co-Working Hang"; anything more specific is kept.
-export function displayTitle(summary: string, description?: string | null): string {
+export function displayTitle(
+  summary: string,
+  description?: string | null,
+): string {
   const t = cleanTitle(summary);
-  if (isCoworking(summary, description) && /^(social|community event|hang ?out|co-?working|cowork(ing)?)$/i.test(t))
+  if (
+    isCoworking(summary, description) &&
+    /^(social|community event|hang ?out|co-?working|cowork(ing)?)$/i.test(t)
+  )
     return "Vegan Co-Working Hang";
   return t;
 }
 
 // Best guess at the event type from its title (and, for co-working, the
 // description). null = leave for an organiser to pick.
-export function guessType(summary: string, description?: string | null): string | null {
-  if (/movie challenge|3\s?mmc|minute movie/i.test(summary)) return "Movie Challenge";
+export function guessType(
+  summary: string,
+  description?: string | null,
+): string | null {
+  if (/movie challenge|3\s?mmc|minute movie/i.test(summary))
+    return "Movie Challenge";
   if (isCoworking(summary, description)) return "Co-working";
-  if (/\bsocial\b|lunch|dinner|picnic|potluck|gathering|new years?|community/i.test(summary)) return "Community Event";
-  if (/workshop|training|introduction to|intro to|strategy/i.test(summary)) return "Workshop/Training";
-  if (/outreach|cube|vigil|stall|demo\b|protest|street/i.test(summary)) return "Other Outreach";
+  if (
+    /\bsocial\b|lunch|dinner|picnic|potluck|gathering|new years?|community/i.test(
+      summary,
+    )
+  )
+    return "Community Event";
+  if (/workshop|training|introduction to|intro to|strategy/i.test(summary))
+    return "Workshop/Training";
+  if (/outreach|cube|vigil|stall|demo\b|protest|street/i.test(summary))
+    return "Other Outreach";
   return null;
 }
 
 // "483 George St, Sydney 2000 (Town Hall Square)" -> venue "Town Hall Square"
 // "Town Hall Square, 483 George St, Sydney 2000"   -> venue "Town Hall Square"
-export function splitLocation(location: string | null): { venue: string | null; address: string | null } {
+export function splitLocation(location: string | null): {
+  venue: string | null;
+  address: string | null;
+} {
   if (!location) return { venue: null, address: null };
   const paren = location.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
-  if (paren) return { venue: paren[2].trim(), address: paren[1].trim() || null };
+  if (paren)
+    return { venue: paren[2].trim(), address: paren[1].trim() || null };
   const [first, ...rest] = location.split(",").map((s) => s.trim());
-  if (rest.length && !/^\d/.test(first)) return { venue: first, address: rest.join(", ") };
+  if (rest.length && !/^\d/.test(first))
+    return { venue: first, address: rest.join(", ") };
   return { venue: null, address: location };
 }

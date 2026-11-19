@@ -58,7 +58,7 @@ export function RegularsSheet({
         }}
       >
         {quietTeamId
-          ? "Message them"
+          ? "Connect with them"
           : thanks
             ? "Thank everyone"
             : invites

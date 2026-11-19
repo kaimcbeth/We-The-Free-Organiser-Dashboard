@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'Moved away: tap "Moved away" beside someone in Quiet members (or switch it on in their profile) and they\'re left off every message list and reach-out list. Their history stays. The quiet members button now says Connect with them.',
+      },
+      {
+        level: "organiser",
         text: "Fixed: closing an introduction now really saves, so it stops coming back. Also fixed: \"How did they find us\" and best contact from check-in, Don't show this again on the setup checklist, and marking chat prompts as posted weren't being saved.",
       },
       {

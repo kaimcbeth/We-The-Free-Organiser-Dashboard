@@ -1231,6 +1231,25 @@ export async function markInvited(
   return {};
 }
 
+// Moved away (Kai, 19 Nov 2026): left off every message list and reach-out
+// list; their history stays. Organisers of any community they belong to.
+export async function setMovedAway(
+  personId: string,
+  value: boolean,
+): Promise<{ error?: string }> {
+  const { supabase } = await requireCore();
+  const { data, error } = await supabase
+    .from("people")
+    .update({ moved_away_at: value ? new Date().toISOString() : null })
+    .eq("id", personId)
+    .select("id");
+  if (error || !data?.length)
+    return { error: "Couldn't save. Please try again." };
+  revalidatePath(`/people/${personId}`);
+  revalidatePath("/insights");
+  return {};
+}
+
 // Someone who'd rather not get personal messages: never listed again.
 export async function setNoMessages(
   personId: string,

@@ -9,7 +9,8 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const APP_URL = Deno.env.get("APP_URL") ?? "https://wtf-movement-hub.vercel.app";
+const APP_URL =
+  Deno.env.get("APP_URL") ?? "https://wtf-movement-hub.vercel.app";
 
 type Due = {
   kind: "going" | "upcoming";
@@ -28,17 +29,28 @@ type Due = {
 };
 
 const esc = (s: string) =>
-  s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+  s.replace(
+    /[&<>"]/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!,
+  );
 
 function words(r: Due) {
   const when = new Intl.DateTimeFormat("en-AU", {
-    timeZone: r.timezone, weekday: "long", hour: "numeric", minute: "2-digit",
+    timeZone: r.timezone,
+    weekday: "long",
+    hour: "numeric",
+    minute: "2-digit",
   }).format(new Date(r.starts_at));
   const day = new Intl.DateTimeFormat("en-AU", {
-    timeZone: r.timezone, weekday: "long", day: "numeric", month: "long",
+    timeZone: r.timezone,
+    weekday: "long",
+    day: "numeric",
+    month: "long",
   }).format(new Date(r.starts_at));
   const time = new Intl.DateTimeFormat("en-AU", {
-    timeZone: r.timezone, hour: "numeric", minute: "2-digit",
+    timeZone: r.timezone,
+    hour: "numeric",
+    minute: "2-digit",
   }).format(new Date(r.starts_at));
   const where = r.venue ?? r.address;
   const at = where ? ` at ${where}` : "";
@@ -59,7 +71,11 @@ function intl(phone: string, timezone: string) {
   const d = phone.replace(/[^\d+]/g, "");
   if (d.startsWith("+")) return d;
   if (d.startsWith("00")) return "+" + d.slice(2);
-  const cc = timezone.startsWith("Pacific/Auckland") ? "64" : timezone.startsWith("Australia/") ? "61" : null;
+  const cc = timezone.startsWith("Pacific/Auckland")
+    ? "64"
+    : timezone.startsWith("Australia/")
+      ? "61"
+      : null;
   if (cc && d.startsWith("0")) return "+" + cc + d.slice(1);
   return cc ? "+" + cc + d : "+" + d;
 }
@@ -70,7 +86,9 @@ async function sendSms(to: string, body: string) {
   const user = Deno.env.get("CLICKSEND_USER");
   const key = Deno.env.get("CLICKSEND_KEY");
   if (!key) return { ok: false, error: "text sender not set up" };
-  const from = (Deno.env.get("SMS_FROM") ?? "").replace(/\s+/g, "").slice(0, 11);
+  const from = (Deno.env.get("SMS_FROM") ?? "")
+    .replace(/\s+/g, "")
+    .slice(0, 11);
   const payload = JSON.stringify({
     messages: [{ source: "movementhub", body, to, ...(from ? { from } : {}) }],
   });
@@ -85,14 +103,22 @@ async function sendSms(to: string, body: string) {
   const json = await res.json().catch(() => null);
   const msg = json?.data?.messages?.[0];
   const ok = res.ok && (!msg || msg.status === "SUCCESS");
-  return ok ? { ok: true } : { ok: false, error: msg?.status ?? json?.response_msg ?? `HTTP ${res.status}` };
+  return ok
+    ? { ok: true }
+    : {
+        ok: false,
+        error: msg?.status ?? json?.response_msg ?? `HTTP ${res.status}`,
+      };
 }
 
 Deno.serve(async (req) => {
   const reqBody = await req.json().catch(() => null);
   const test = reqBody?.test === true;
   const smsTest = reqBody?.smsTest === true;
-  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
 
   const smtpUser = Deno.env.get("SMTP_USER");
   const smtpPass = Deno.env.get("SMTP_PASS");
@@ -128,24 +154,36 @@ Deno.serve(async (req) => {
       });
       return Response.json({ test: "sent", to: smtpUser });
     } catch (err) {
-      return Response.json({ test: "failed", error: err instanceof Error ? err.message : String(err) });
+      return Response.json({
+        test: "failed",
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 
   // Text test (Kai, 4 Nov 2026): POST {"smsTest": true} texts God accounts'
   // own phones only (sms_test_recipients), nobody else.
   if (smsTest) {
-    const { data: to } = await supabase.rpc("sms_test_recipients")
+    const { data: to } = await supabase
+      .rpc("sms_test_recipients")
       .returns<{ first_name: string; phone: string; timezone: string }[]>();
     const sent = [];
     for (const r of to ?? []) {
-      sent.push(await sendSms(intl(r.phone, r.timezone),
-        `Hi ${r.first_name}, this is a test text from the Movement Hub. Event reminders by text are working. - We The Free`));
+      sent.push(
+        await sendSms(
+          intl(r.phone, r.timezone),
+          `Hi ${r.first_name}, this is a test text from the Movement Hub. Event reminders by text are working. - We The Free`,
+        ),
+      );
     }
-    return Response.json({ smsTest: sent.length ? sent : "no God account has a phone number" });
+    return Response.json({
+      smsTest: sent.length ? sent : "no God account has a phone number",
+    });
   }
 
-  const { data: due, error } = await supabase.rpc("reminders_due").returns<Due[]>();
+  const { data: due, error } = await supabase
+    .rpc("reminders_due")
+    .returns<Due[]>();
   if (error) return Response.json({ error: error.message }, { status: 500 });
 
   // deno-lint-ignore no-explicit-any
@@ -159,7 +197,11 @@ Deno.serve(async (req) => {
       const k = Object.fromEntries((keys ?? []).map((r) => [r.name, r.value]));
       if (!k.vapid_public_key || !k.vapid_private_key) return null;
       const webpush = (await import("npm:web-push@3.6.7")).default;
-      webpush.setVapidDetails(k.vapid_subject ?? "mailto:hello@activism.wtf", k.vapid_public_key, k.vapid_private_key);
+      webpush.setVapidDetails(
+        k.vapid_subject ?? "mailto:hello@activism.wtf",
+        k.vapid_public_key,
+        k.vapid_private_key,
+      );
       push = webpush;
     }
     return push;
@@ -167,12 +209,21 @@ Deno.serve(async (req) => {
 
   const results: Record<string, unknown>[] = [];
   for (const r of due ?? []) {
-    const result: Record<string, unknown> = { kind: r.kind, event: r.event_id, person: r.person_id };
+    const result: Record<string, unknown> = {
+      kind: r.kind,
+      event: r.event_id,
+      person: r.person_id,
+    };
     const mark = () =>
       r.kind === "upcoming"
-        ? supabase.from("event_heads_up").upsert({ event_id: r.event_id, person_id: r.person_id })
-        : supabase.from("event_rsvps").update({ reminded_at: new Date().toISOString() })
-          .eq("event_id", r.event_id).eq("person_id", r.person_id);
+        ? supabase
+            .from("event_heads_up")
+            .upsert({ event_id: r.event_id, person_id: r.person_id })
+        : supabase
+            .from("event_rsvps")
+            .update({ reminded_at: new Date().toISOString() })
+            .eq("event_id", r.event_id)
+            .eq("person_id", r.person_id);
     if (!r.user_id) {
       await mark();
       results.push({ ...result, skipped: "no login" });
@@ -181,7 +232,9 @@ Deno.serve(async (req) => {
     const { title, body } = words(r);
     const url = "/me";
 
-    await supabase.from("notifications").insert({ user_id: r.user_id, kind: "event_reminder", title, body, url });
+    await supabase
+      .from("notifications")
+      .insert({ user_id: r.user_id, kind: "event_reminder", title, body, url });
     result.inApp = true;
     try {
       if (r.notify_channel === "email" && r.email) {
@@ -198,7 +251,10 @@ Deno.serve(async (req) => {
         } else result.email = "email sender not set up";
       } else if (r.notify_channel === "sms" && r.phone) {
         // Short, one text (160 characters) where possible; no link.
-        const sms = await sendSms(intl(r.phone, r.timezone), `${title}. ${body}`.slice(0, 300));
+        const sms = await sendSms(
+          intl(r.phone, r.timezone),
+          `${title}. ${body}`.slice(0, 300),
+        );
         result.sms = sms.ok ? "sent" : sms.error;
       } else if (r.notify_channel === "push") {
         const wp = await getPush();
@@ -211,13 +267,20 @@ Deno.serve(async (req) => {
           for (const s of subs ?? []) {
             try {
               await wp.sendNotification(
-                { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+                {
+                  endpoint: s.endpoint,
+                  keys: { p256dh: s.p256dh, auth: s.auth },
+                },
                 JSON.stringify({ title, body, url }),
               );
               sent++;
             } catch (err) {
               const code = (err as { statusCode?: number }).statusCode;
-              if (code === 404 || code === 410) await supabase.from("push_subscriptions").delete().eq("id", s.id);
+              if (code === 404 || code === 410)
+                await supabase
+                  .from("push_subscriptions")
+                  .delete()
+                  .eq("id", s.id);
             }
           }
           result.push = `${sent} sent`;

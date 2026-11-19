@@ -24,7 +24,7 @@ export async function loadInsightData(
     supabase
       .from("people")
       .select(
-        "id, first_name, last_name, starting_outreach_count, attended_before_app",
+        "id, first_name, last_name, starting_outreach_count, attended_before_app, moved_away_at",
       )
       .eq("team_id", teamId)
       .returns<InsightPerson[]>(),

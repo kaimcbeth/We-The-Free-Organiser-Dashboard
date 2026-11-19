@@ -2,7 +2,12 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { markInvited, setPersonFacebook, setPersonPhone } from "@/app/actions";
+import {
+  markInvited,
+  setMovedAway,
+  setPersonFacebook,
+  setPersonPhone,
+} from "@/app/actions";
 import { inputClass } from "@/components/form";
 import { messengerLink } from "@/lib/messenger";
 import { whatsappLink, type Invite, type InviteReason } from "@/lib/invites";
@@ -48,6 +53,26 @@ export function InviteList({
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState({ phone: "", facebook: "" });
   const [saving, startSave] = useTransition();
+  // Marked "Moved away" here (Kai, 19 Nov 2026): off the list, with Undo.
+  const [gone, setGone] = useState<{ id: string; name: string }[]>([]);
+
+  async function moveAway(i: Invite, away: boolean) {
+    setError("");
+    setGone((g) =>
+      away
+        ? [...g, { id: i.personId, name: i.name }]
+        : g.filter((x) => x.id !== i.personId),
+    );
+    const r = await setMovedAway(i.personId, away);
+    if (r.error) {
+      setError(r.error);
+      setGone((g) =>
+        away
+          ? g.filter((x) => x.id !== i.personId)
+          : [...g, { id: i.personId, name: i.name }],
+      );
+    }
+  }
 
   function openEdit(i: Invite) {
     const c = contact[i.personId];
@@ -114,7 +139,7 @@ export function InviteList({
     });
   }
 
-  const shown = invites;
+  const shown = invites.filter((i) => !gone.some((g) => g.id === i.personId));
   const groups = [
     {
       title: "Priority",
@@ -131,12 +156,37 @@ export function InviteList({
   ];
   const done = shown.filter((i) => sent.has(i.personId)).length;
 
+  const goneNote = gone.length > 0 && (
+    <p className="mt-3 text-xs text-stone-500">
+      Marked as moved away (left off message lists):{" "}
+      {gone.map((g, n) => (
+        <span key={g.id}>
+          {n > 0 && ", "}
+          {g.name}{" "}
+          <button
+            type="button"
+            onClick={() => {
+              const i = invites.find((x) => x.personId === g.id);
+              if (i) void moveAway(i, false);
+            }}
+            className="font-medium text-pink-ink hover:underline"
+          >
+            Undo
+          </button>
+        </span>
+      ))}
+    </p>
+  );
+
   if (shown.length === 0)
     return (
-      <p className="mt-6 rounded-2xl bg-white p-4 text-sm text-stone-600 shadow-sm ring-1 ring-black/5">
-        {empty ??
-          "Nobody needs a personal message for this one. Everyone's either been messaged recently or isn't due yet."}
-      </p>
+      <>
+        <p className="mt-6 rounded-2xl bg-white p-4 text-sm text-stone-600 shadow-sm ring-1 ring-black/5">
+          {empty ??
+            "Nobody needs a personal message for this one. Everyone's either been messaged recently or isn't due yet."}
+        </p>
+        {goneNote}
+      </>
     );
 
   return (
@@ -282,6 +332,14 @@ export function InviteList({
                                 : "Add details"}
                             </button>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => moveAway(i, true)}
+                            title="Moved away or not coming back: leave them off message lists"
+                            className="ml-auto text-xs text-stone-400 hover:text-navy hover:underline"
+                          >
+                            Moved away
+                          </button>
                         </div>
                       </div>
                     </li>
@@ -291,6 +349,7 @@ export function InviteList({
             </section>
           ),
       )}
+      {goneNote}
     </>
   );
 }

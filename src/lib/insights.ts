@@ -9,6 +9,7 @@ export type InsightPerson = {
   last_name: string | null;
   starting_outreach_count: number;
   attended_before_app?: boolean; // came to events before the app: never a first-timer
+  moved_away_at?: string | null; // moved away: not on the reach-out lists
 };
 
 export type InsightCheckIn = {
@@ -209,6 +210,7 @@ export function computeInsights(
 
     if (
       !p.attended_before_app &&
+      !p.moved_away_at &&
       list.length === 1 &&
       b.lastSeen &&
       daysAgo(b.lastSeen) > RULES.oneTimerMinAgeDays
@@ -222,7 +224,12 @@ export function computeInsights(
       RULES.driftedQuietDays + RULES.regularWindowDays,
       RULES.driftedQuietDays,
     );
-    if (quiet && before >= RULES.regularMinEvents && b.lastSeen) {
+    if (
+      quiet &&
+      !p.moved_away_at &&
+      before >= RULES.regularMinEvents &&
+      b.lastSeen
+    ) {
       drifted.push({
         ...b,
         detail: `Last came ${ago(b.lastSeen)}, after ${before} events`,

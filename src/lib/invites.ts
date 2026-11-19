@@ -242,6 +242,7 @@ export async function loadInviteList(
       .eq("team_id", event.team_id)
       .eq("is_test", false)
       .eq("no_messages", false)
+      .is("moved_away_at", null)
       .returns<Row[]>(),
     supabase
       .from("person_messages")
@@ -348,6 +349,7 @@ export async function loadRegularsList(
         .eq("team_id", event.team_id)
         .eq("is_test", false)
         .eq("no_messages", false)
+        .is("moved_away_at", null)
         .returns<Row[]>(),
       supabase.rpc("list_roles"),
       supabase
@@ -425,6 +427,7 @@ export async function loadQuietList(
       .eq("team_id", teamId)
       .eq("is_test", false)
       .eq("no_messages", false)
+      .is("moved_away_at", null)
       .returns<Row[]>(),
     supabase.rpc("list_roles"),
   ]);
@@ -477,11 +480,17 @@ export async function loadAttendeesList(
     supabase
       .from("attendance")
       .select(
-        "person:people!inner(id, first_name, last_name, phone, facebook_url, attended_before_app, pending_role, is_test, no_messages, attendance(event:events(id, starts_at, event_type_id)))",
+        "person:people!inner(id, first_name, last_name, phone, facebook_url, attended_before_app, pending_role, is_test, no_messages, moved_away_at, attendance(event:events(id, starts_at, event_type_id)))",
       )
       .eq("event_id", eventId)
       .returns<
-        { person: Row & { is_test: boolean; no_messages: boolean } }[]
+        {
+          person: Row & {
+            is_test: boolean;
+            no_messages: boolean;
+            moved_away_at: string | null;
+          };
+        }[]
       >(),
     supabase.rpc("list_roles"),
     loadTracking(supabase, event.team_id, now),
@@ -493,7 +502,7 @@ export async function loadAttendeesList(
   );
   const out: Invite[] = [];
   for (const { person: p } of att ?? []) {
-    if (!p || p.is_test || p.no_messages) continue;
+    if (!p || p.is_test || p.no_messages || p.moved_away_at) continue;
     const dates = p.attendance.flatMap((a) =>
       a.event ? [a.event.starts_at] : [],
     );

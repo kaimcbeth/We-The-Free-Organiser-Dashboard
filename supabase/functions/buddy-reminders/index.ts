@@ -8,7 +8,8 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const APP_URL = Deno.env.get("APP_URL") ?? "https://wtf-movement-hub.vercel.app";
+const APP_URL =
+  Deno.env.get("APP_URL") ?? "https://wtf-movement-hub.vercel.app";
 
 type DuePrompt = {
   id: string;
@@ -18,7 +19,12 @@ type DuePrompt = {
     team_id: string;
     ended_at: string | null;
     newcomer: { first_name: string } | null;
-    buddy: { first_name: string; user_id: string | null; email: string | null; notify_channel: string } | null;
+    buddy: {
+      first_name: string;
+      user_id: string | null;
+      email: string | null;
+      notify_channel: string;
+    } | null;
   } | null;
 };
 
@@ -33,7 +39,10 @@ const when = (iso: string, timeZone: string) =>
   }).format(new Date(iso));
 
 Deno.serve(async () => {
-  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
 
   const { data: due, error } = await supabase
     .from("buddy_prompts")
@@ -48,7 +57,15 @@ Deno.serve(async () => {
   if (error) return Response.json({ error: error.message }, { status: 500 });
 
   // Next upcoming event per team, to suggest in the invite.
-  const nextEvent = new Map<string, { title: string; starts_at: string; venue: string | null; tz: string } | null>();
+  const nextEvent = new Map<
+    string,
+    {
+      title: string;
+      starts_at: string;
+      venue: string | null;
+      tz: string;
+    } | null
+  >();
   async function nextFor(teamId: string) {
     if (!nextEvent.has(teamId)) {
       const { data } = await supabase
@@ -59,14 +76,19 @@ Deno.serve(async () => {
         .order("starts_at")
         .limit(1)
         .maybeSingle();
-      nextEvent.set(teamId, data
+      nextEvent.set(
+        teamId,
+        data
           ? {
               title: data.title,
               starts_at: data.starts_at,
               venue: data.venue ?? data.address,
-              tz: (data.team as unknown as { timezone: string } | null)?.timezone ?? "Australia/Sydney",
+              tz:
+                (data.team as unknown as { timezone: string } | null)
+                  ?.timezone ?? "Australia/Sydney",
             }
-          : null);
+          : null,
+      );
     }
     return nextEvent.get(teamId)!;
   }
@@ -100,7 +122,11 @@ Deno.serve(async () => {
       const k = Object.fromEntries((keys ?? []).map((r) => [r.name, r.value]));
       if (!k.vapid_public_key || !k.vapid_private_key) return null;
       const webpush = (await import("npm:web-push@3.6.7")).default;
-      webpush.setVapidDetails(k.vapid_subject ?? "mailto:hello@activism.wtf", k.vapid_public_key, k.vapid_private_key);
+      webpush.setVapidDetails(
+        k.vapid_subject ?? "mailto:hello@activism.wtf",
+        k.vapid_public_key,
+        k.vapid_private_key,
+      );
       push = webpush;
     }
     return push;
@@ -116,7 +142,10 @@ Deno.serve(async () => {
 
     // Pairing ended or supporter has no login: nothing to send, just close it off.
     if (!pairing || pairing.ended_at || !buddy?.user_id) {
-      await supabase.from("buddy_prompts").update({ notified_at: new Date().toISOString() }).eq("id", p.id);
+      await supabase
+        .from("buddy_prompts")
+        .update({ notified_at: new Date().toISOString() })
+        .eq("id", p.id);
       results.push({ ...result, skipped: "no active supporter login" });
       continue;
     }
@@ -128,7 +157,15 @@ Deno.serve(async () => {
       : `It's been a week since you started supporting ${newcomer}. Send them a friendly invite to the next event.`;
     const url = "/me#buddies";
 
-    await supabase.from("notifications").insert({ user_id: buddy.user_id, kind: "buddy_invite", title, body, url });
+    await supabase
+      .from("notifications")
+      .insert({
+        user_id: buddy.user_id,
+        kind: "buddy_invite",
+        title,
+        body,
+        url,
+      });
     result.inApp = true;
 
     try {
@@ -154,14 +191,18 @@ Deno.serve(async () => {
         for (const s of subs ?? []) {
           try {
             await wp.sendNotification(
-              { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+              {
+                endpoint: s.endpoint,
+                keys: { p256dh: s.p256dh, auth: s.auth },
+              },
               JSON.stringify({ title, body, url }),
             );
             sent++;
           } catch (err) {
             // Subscription gone (phone uninstalled / permission removed): forget it.
             const code = (err as { statusCode?: number }).statusCode;
-            if (code === 404 || code === 410) await supabase.from("push_subscriptions").delete().eq("id", s.id);
+            if (code === 404 || code === 410)
+              await supabase.from("push_subscriptions").delete().eq("id", s.id);
           }
         }
         result.push = `${sent} sent`;
@@ -170,7 +211,10 @@ Deno.serve(async () => {
       result.error = err instanceof Error ? err.message : String(err);
     }
 
-    await supabase.from("buddy_prompts").update({ notified_at: new Date().toISOString() }).eq("id", p.id);
+    await supabase
+      .from("buddy_prompts")
+      .update({ notified_at: new Date().toISOString() })
+      .eq("id", p.id);
     results.push(result);
   }
 

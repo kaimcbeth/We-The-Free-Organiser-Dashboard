@@ -10,10 +10,14 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...cors, "Content-Type": "application/json" },
+  });
 
 const DAILY_LIMIT = 40;
 
@@ -22,19 +26,25 @@ Deno.serve(async (req) => {
   try {
     const url = Deno.env.get("SUPABASE_URL")!;
     const asUser = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
+      global: {
+        headers: { Authorization: req.headers.get("Authorization") ?? "" },
+      },
     });
     const {
       data: { user },
     } = await asUser.auth.getUser();
     if (!user) return json({ error: "Sign in to the Hub to use this." }, 401);
     const key = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!key) return json({ error: "The writing assistant isn't set up yet." }, 500);
+    if (!key)
+      return json({ error: "The writing assistant isn't set up yet." }, 500);
 
     const body = await req.json();
     const teamId = body?.teamId;
-    const responses = Array.isArray(body?.responses) ? body.responses.slice(0, 200) : [];
-    if (!teamId || responses.length === 0) return json({ error: "No responses to summarise yet." }, 400);
+    const responses = Array.isArray(body?.responses)
+      ? body.responses.slice(0, 200)
+      : [];
+    if (!teamId || responses.length === 0)
+      return json({ error: "No responses to summarise yet." }, 400);
 
     const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: me } = await admin
@@ -44,7 +54,12 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (
       !me ||
-      !(me.access === "god" || me.access === "regional_lead" || me.team_id === teamId || me.organiser_team_id === teamId)
+      !(
+        me.access === "god" ||
+        me.access === "regional_lead" ||
+        me.team_id === teamId ||
+        me.organiser_team_id === teamId
+      )
     )
       return json({ error: "Only organisers can use this." }, 403);
     const since = new Date(Date.now() - 864e5).toISOString();
@@ -53,12 +68,25 @@ Deno.serve(async (req) => {
       .select("id", { count: "exact", head: true })
       .eq("team_id", teamId)
       .gte("created_at", since);
-    if ((count ?? 0) >= DAILY_LIMIT) return json({ error: "That's a lot of writing for one day. Try again tomorrow." }, 429);
+    if ((count ?? 0) >= DAILY_LIMIT)
+      return json(
+        { error: "That's a lot of writing for one day. Try again tomorrow." },
+        429,
+      );
 
-    const { data: team } = await admin.from("teams").select("name").eq("id", teamId).maybeSingle();
-    const city = String(team?.name ?? "").split(",")[0].trim();
+    const { data: team } = await admin
+      .from("teams")
+      .select("name")
+      .eq("id", teamId)
+      .maybeSingle();
+    const city = String(team?.name ?? "")
+      .split(",")[0]
+      .trim();
 
-    const clip = (v: unknown) => String(v ?? "").trim().slice(0, 2000);
+    const clip = (v: unknown) =>
+      String(v ?? "")
+        .trim()
+        .slice(0, 2000);
     const text = responses
       .map((r: Record<string, unknown>, i: number) =>
         [
@@ -68,7 +96,8 @@ Deno.serve(async (req) => {
           r.better ? `Make it better: ${clip(r.better)}` : "",
         ]
           .filter(Boolean)
-          .join("\n"))
+          .join("\n"),
+      )
       .join("\n");
 
     const prompt = `These are answers from members of We The Free${city ? ` ${city}` : ""} (a grassroots animal rights community) to a short feedback form: how they're finding it, what's working well, what would make it better.
@@ -90,7 +119,11 @@ Always answer by calling the summary tool (never plain text), filled in like thi
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      headers: {
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
       body: JSON.stringify({
         model: Deno.env.get("ANTHROPIC_MODEL") ?? "claude-sonnet-5-5",
         max_tokens: 2000,
@@ -117,10 +150,19 @@ Always answer by calling the summary tool (never plain text), filled in like thi
     });
     if (!res.ok) {
       console.error(res.status, await res.text());
-      return json({ error: "The writing assistant didn't answer. Try again in a moment." }, 502);
+      return json(
+        {
+          error: "The writing assistant didn't answer. Try again in a moment.",
+        },
+        502,
+      );
     }
     const out = await res.json();
-    const content: { type?: string; text?: string; input?: Record<string, unknown> }[] = out.content ?? [];
+    const content: {
+      type?: string;
+      text?: string;
+      input?: Record<string, unknown>;
+    }[] = out.content ?? [];
     const used = content.find((c) => c.type === "tool_use")?.input;
     const raw = content.map((c) => c.text ?? "").join("");
     try {
@@ -131,7 +173,14 @@ Always answer by calling the summary tool (never plain text), filled in like thi
           s = JSON.parse(match ? match[0] : raw);
         } catch {
           // Plain words instead of the tool: show them as the chat message.
-          if (raw.trim().length > 40) s = { overall: "", working: [], better: [], ideas: [], message: raw.trim() };
+          if (raw.trim().length > 40)
+            s = {
+              overall: "",
+              working: [],
+              better: [],
+              ideas: [],
+              message: raw.trim(),
+            };
         }
       }
       if (!s) throw new Error("empty");
@@ -140,12 +189,15 @@ Always answer by calling the summary tool (never plain text), filled in like thi
           .replace(/\s*[—–]\s*/g, ", ")
           .replace(/\s*\(\d+ of \d+\)/g, "")
           .trim();
-      const list = (v: unknown) => (Array.isArray(v) ? v.map(tidy).filter(Boolean).slice(0, 4) : []);
+      const list = (v: unknown) =>
+        Array.isArray(v) ? v.map(tidy).filter(Boolean).slice(0, 4) : [];
       const message = String(s.message ?? "")
         .replace(/\s*[—–]\s*/g, ", ")
         .replace(/\s*\(\d+ of \d+\)/g, "")
         .trim();
-      await admin.from("copy_generations").insert({ team_id: teamId, event_id: null, user_id: user.id });
+      await admin
+        .from("copy_generations")
+        .insert({ team_id: teamId, event_id: null, user_id: user.id });
       return json({
         summary: {
           overall: tidy(s.overall),
@@ -156,7 +208,12 @@ Always answer by calling the summary tool (never plain text), filled in like thi
         },
       });
     } catch (e) {
-      console.error("feedback-summary parse", e, out.stop_reason, raw.slice(0, 500));
+      console.error(
+        "feedback-summary parse",
+        e,
+        out.stop_reason,
+        raw.slice(0, 500),
+      );
       return json({ error: "That didn't come out right. Try again." }, 502);
     }
   } catch (e) {

@@ -11,17 +11,41 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...cors, "Content-Type": "application/json" },
+  });
 
 const DAILY_LIMIT = 40;
 const COUNTRY_CODES: Record<string, string> = {
-  australia: "AU", "new zealand": "NZ", "united kingdom": "GB", uk: "GB", england: "GB", scotland: "GB",
-  wales: "GB", ireland: "IE", "united states": "US", usa: "US", canada: "CA", japan: "JP", india: "IN",
-  germany: "DE", france: "FR", netherlands: "NL", spain: "ES", italy: "IT", brazil: "BR", mexico: "MX",
-  singapore: "SG", "south africa": "ZA", philippines: "PH", indonesia: "ID",
+  australia: "AU",
+  "new zealand": "NZ",
+  "united kingdom": "GB",
+  uk: "GB",
+  england: "GB",
+  scotland: "GB",
+  wales: "GB",
+  ireland: "IE",
+  "united states": "US",
+  usa: "US",
+  canada: "CA",
+  japan: "JP",
+  india: "IN",
+  germany: "DE",
+  france: "FR",
+  netherlands: "NL",
+  spain: "ES",
+  italy: "IT",
+  brazil: "BR",
+  mexico: "MX",
+  singapore: "SG",
+  "south africa": "ZA",
+  philippines: "PH",
+  indonesia: "ID",
 };
 const RULES = ["price", "postage", "battery"] as const;
 
@@ -30,12 +54,18 @@ Deno.serve(async (req) => {
   try {
     const url = Deno.env.get("SUPABASE_URL")!;
     const asUser = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
+      global: {
+        headers: { Authorization: req.headers.get("Authorization") ?? "" },
+      },
     });
     const {
       data: { user },
     } = await asUser.auth.getUser();
-    if (!user) return json({ error: "Sign in to the Hub to use the laptop checker." }, 401);
+    if (!user)
+      return json(
+        { error: "Sign in to the Hub to use the laptop checker." },
+        401,
+      );
     const key = Deno.env.get("ANTHROPIC_API_KEY");
     if (!key) return json({ error: "The checker isn't set up yet." }, 500);
 
@@ -45,25 +75,58 @@ Deno.serve(async (req) => {
       .select("access, team_id, organiser_team_id")
       .eq("id", user.id)
       .maybeSingle();
-    if (!me) return json({ error: "Only organisers and the Core Team can use this." }, 403);
+    if (!me)
+      return json(
+        { error: "Only organisers and the Core Team can use this." },
+        403,
+      );
 
     const body = await req.json();
-    const link = String(body?.link ?? "").trim().slice(0, 1000);
-    const model = String(body?.model ?? "").trim().slice(0, 300);
-    const image = body?.image && typeof body.image.data === "string" ? body.image : null;
-    if (!link && !model && !image) return json({ error: "Add a link, a screenshot or a model name." }, 400);
+    const link = String(body?.link ?? "")
+      .trim()
+      .slice(0, 1000);
+    const model = String(body?.model ?? "")
+      .trim()
+      .slice(0, 300);
+    const image =
+      body?.image && typeof body.image.data === "string" ? body.image : null;
+    if (!link && !model && !image)
+      return json({ error: "Add a link, a screenshot or a model name." }, 400);
     if (link && !/^https?:\/\//i.test(link))
-      return json({ error: "That link doesn't look right. It should start with https://" }, 400);
-    if (image && (image.data.length > 7_000_000 || !/^image\/(jpeg|png|webp|gif)$/.test(String(image.media_type))))
-      return json({ error: "That screenshot is too big or not a picture. Try a smaller one." }, 400);
+      return json(
+        {
+          error: "That link doesn't look right. It should start with https://",
+        },
+        400,
+      );
+    if (
+      image &&
+      (image.data.length > 7_000_000 ||
+        !/^image\/(jpeg|png|webp|gif)$/.test(String(image.media_type)))
+    )
+      return json(
+        {
+          error:
+            "That screenshot is too big or not a picture. Try a smaller one.",
+        },
+        400,
+      );
 
     // Their community's country, for the price and postage.
     const teamId = me.organiser_team_id ?? me.team_id;
     let country = "Australia";
     let tz = "Australia/Sydney";
     if (teamId) {
-      const { data: team } = await admin.from("teams").select("name, timezone").eq("id", teamId).maybeSingle();
-      const c = String(team?.name ?? "").split(",").slice(1).join(",").trim();
+      const { data: team } = await admin
+        .from("teams")
+        .select("name, timezone")
+        .eq("id", teamId)
+        .maybeSingle();
+      const c = String(team?.name ?? "")
+        .split(",")
+        .slice(1)
+        .join(",")
+        .trim();
       if (c) country = c;
       tz = team?.timezone ?? tz;
       const since = new Date(Date.now() - 864e5).toISOString();
@@ -72,12 +135,20 @@ Deno.serve(async (req) => {
         .select("id", { count: "exact", head: true })
         .eq("team_id", teamId)
         .gte("created_at", since);
-      if ((count ?? 0) >= DAILY_LIMIT) return json({ error: "That's a lot of checks for one day. Try again tomorrow." }, 429);
+      if ((count ?? 0) >= DAILY_LIMIT)
+        return json(
+          { error: "That's a lot of checks for one day. Try again tomorrow." },
+          429,
+        );
     }
     // Facebook Marketplace is local pick-up (Kai, 17 Nov 2026: "If on FB
     // marketplace it's likely local").
-    const marketplace = /facebook\.com\/(marketplace|commerce)|fb\.com\/marketplace/i.test(link);
-    const budget = country === "Australia" ? "A$150" : `A$150 (convert it to the local currency of ${country})`;
+    const marketplace =
+      /facebook\.com\/(marketplace|commerce)|fb\.com\/marketplace/i.test(link);
+    const budget =
+      country === "Australia"
+        ? "A$150"
+        : `A$150 (convert it to the local currency of ${country})`;
 
     const prompt = `A We The Free community in ${country} is buying laptops to play short films to the public at a street outreach stall (the "Movie Challenge"). Each laptop plays a 3 minute MP4 from a USB stick over and over for an afternoon, in a web browser, with headphones plugged in. Nothing fancy: any working laptop that can play a video is fine.
 
@@ -109,12 +180,33 @@ Australian spelling, plain words, no em or en dashes.`;
 
     // deno-lint-ignore no-explicit-any
     const content: any[] = [];
-    if (image) content.push({ type: "image", source: { type: "base64", media_type: image.media_type, data: image.data } });
+    if (image)
+      content.push({
+        type: "image",
+        source: {
+          type: "base64",
+          media_type: image.media_type,
+          data: image.data,
+        },
+      });
     content.push({ type: "text", text: prompt });
     const code = COUNTRY_CODES[country.toLowerCase()];
-    const search: Record<string, unknown> = { type: "web_search_20250305", name: "web_search", max_uses: 5 };
-    if (code) search.user_location = { type: "approximate", country: code, timezone: tz };
-    const fetchTool = { type: "web_fetch_20250910", name: "web_fetch", max_uses: 2 };
+    const search: Record<string, unknown> = {
+      type: "web_search_20250305",
+      name: "web_search",
+      max_uses: 5,
+    };
+    if (code)
+      search.user_location = {
+        type: "approximate",
+        country: code,
+        timezone: tz,
+      };
+    const fetchTool = {
+      type: "web_fetch_20250910",
+      name: "web_fetch",
+      max_uses: 2,
+    };
 
     // deno-lint-ignore no-explicit-any
     const messages: any[] = [{ role: "user", content }];
@@ -147,8 +239,15 @@ Australian spelling, plain words, no em or en dashes.`;
           turn--;
           continue;
         }
-        if (/web.?search/i.test(t)) return json({ error: "Web search isn't switched on for the assistant yet." }, 502);
-        return json({ error: "The checker didn't answer. Try again in a moment." }, 502);
+        if (/web.?search/i.test(t))
+          return json(
+            { error: "Web search isn't switched on for the assistant yet." },
+            502,
+          );
+        return json(
+          { error: "The checker didn't answer. Try again in a moment." },
+          502,
+        );
       }
       const out = await res.json();
       blocks = blocks.concat(out.content ?? []);
@@ -156,8 +255,14 @@ Australian spelling, plain words, no em or en dashes.`;
       messages.push({ role: "assistant", content: out.content });
     }
 
-    const text = blocks.filter((b) => b.type === "text").map((b) => b.text ?? "").join("");
-    const start = text.indexOf('{"device"') >= 0 ? text.indexOf('{"device"') : text.indexOf("{");
+    const text = blocks
+      .filter((b) => b.type === "text")
+      .map((b) => b.text ?? "")
+      .join("");
+    const start =
+      text.indexOf('{"device"') >= 0
+        ? text.indexOf('{"device"')
+        : text.indexOf("{");
     // deno-lint-ignore no-explicit-any
     let parsed: any = {};
     try {
@@ -165,13 +270,24 @@ Australian spelling, plain words, no em or en dashes.`;
     } catch {
       return json({ error: "That didn't come out right. Try again." }, 502);
     }
-    const tidy = (v: unknown) => String(v ?? "").replace(/\s*[—–]\s*/g, ", ").trim();
+    const tidy = (v: unknown) =>
+      String(v ?? "")
+        .replace(/\s*[—–]\s*/g, ", ")
+        .trim();
     const checks = RULES.map((rule) => {
       // deno-lint-ignore no-explicit-any
-      const c = (Array.isArray(parsed.checks) ? parsed.checks : []).find((x: any) => x?.rule === rule) ?? {};
+      const c =
+        (Array.isArray(parsed.checks) ? parsed.checks : []).find(
+          (x: any) => x?.rule === rule,
+        ) ?? {};
       if (rule === "postage" && marketplace && c.result !== "pass")
-        return { rule, result: "pass", detail: "Facebook Marketplace, local pick-up" };
-      const result = c.result === "pass" || c.result === "fail" ? c.result : "unknown";
+        return {
+          rule,
+          result: "pass",
+          detail: "Facebook Marketplace, local pick-up",
+        };
+      const result =
+        c.result === "pass" || c.result === "fail" ? c.result : "unknown";
       return { rule, result, detail: tidy(c.detail) };
     });
     // The verdict follows the checks.
@@ -180,13 +296,19 @@ Australian spelling, plain words, no em or en dashes.`;
       : checks.every((c) => c.result === "pass")
         ? "good"
         : "check";
-    if (teamId) await admin.from("copy_generations").insert({ team_id: teamId, event_id: null, user_id: user.id });
+    if (teamId)
+      await admin
+        .from("copy_generations")
+        .insert({ team_id: teamId, event_id: null, user_id: user.id });
     return json({
       device: tidy(parsed.device) || model || "This laptop",
       verdict,
       summary: tidy(parsed.summary),
       checks,
-      notes: (Array.isArray(parsed.notes) ? parsed.notes : []).map(tidy).filter(Boolean).slice(0, 3),
+      notes: (Array.isArray(parsed.notes) ? parsed.notes : [])
+        .map(tidy)
+        .filter(Boolean)
+        .slice(0, 3),
       country,
     });
   } catch (e) {

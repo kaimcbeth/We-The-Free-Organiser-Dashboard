@@ -13,10 +13,18 @@ type Ev = {
   starts_at: string;
   ends_at: string | null;
   venue: string | null;
-  team: { lat: number | null; lng: number | null; is_example: boolean; is_practice: boolean } | null;
+  team: {
+    lat: number | null;
+    lng: number | null;
+    is_example: boolean;
+    is_practice: boolean;
+  } | null;
 };
 type Forecast = {
-  hourly?: { time: string[]; precipitation_probability: (number | null)[]; precipitation?: (number | null)[];
+  hourly?: {
+    time: string[];
+    precipitation_probability: (number | null)[];
+    precipitation?: (number | null)[];
     temperature_2m?: (number | null)[];
   };
 };
@@ -45,15 +53,24 @@ export function rainDuring(f: Forecast, start: string, end: string | null) {
   }
   return max == null
     ? null
-    : { chance: max, mm: mm == null ? null : Math.round(mm * 10) / 10, temp: temp == null ? null : Math.round(temp * 10) / 10 };
+    : {
+        chance: max,
+        mm: mm == null ? null : Math.round(mm * 10) / 10,
+        temp: temp == null ? null : Math.round(temp * 10) / 10,
+      };
 }
 
 Deno.serve(async () => {
-  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
   const now = Date.now();
   const { data, error } = await supabase
     .from("events")
-    .select("id, starts_at, ends_at, venue, team:teams(lat, lng, is_example, is_practice)")
+    .select(
+      "id, starts_at, ends_at, venue, team:teams(lat, lng, is_example, is_practice)",
+    )
     .gt("starts_at", new Date(now + 2 * HOUR).toISOString())
     .lt("starts_at", new Date(now + 8 * 24 * HOUR).toISOString());
   if (error) return new Response(error.message, { status: 500 });
@@ -68,7 +85,13 @@ Deno.serve(async () => {
   );
 
   // One forecast per place; Open-Meteo takes many places in one request.
-  const places = [...new Set(events.map((e) => `${e.team!.lat!.toFixed(3)},${e.team!.lng!.toFixed(3)}`))];
+  const places = [
+    ...new Set(
+      events.map(
+        (e) => `${e.team!.lat!.toFixed(3)},${e.team!.lng!.toFixed(3)}`,
+      ),
+    ),
+  ];
   const forecasts = new Map<string, Forecast>();
   for (let i = 0; i < places.length; i += 50) {
     const chunk = places.slice(i, i + 50);
@@ -87,12 +110,24 @@ Deno.serve(async () => {
   }
 
   const rows = events.flatMap((e) => {
-    const f = forecasts.get(`${e.team!.lat!.toFixed(3)},${e.team!.lng!.toFixed(3)}`);
+    const f = forecasts.get(
+      `${e.team!.lat!.toFixed(3)},${e.team!.lng!.toFixed(3)}`,
+    );
     const r = f ? rainDuring(f, e.starts_at, e.ends_at) : null;
-    return r == null ? [] : [{ event_id: e.id, chance: r.chance, mm: r.mm, temp: r.temp }];
+    return r == null
+      ? []
+      : [{ event_id: e.id, chance: r.chance, mm: r.mm, temp: r.temp }];
   });
 
-  const { data: made, error: rpcError } = await supabase.rpc("record_rain_forecast", { p_rows: rows });
+  const { data: made, error: rpcError } = await supabase.rpc(
+    "record_rain_forecast",
+    { p_rows: rows },
+  );
   if (rpcError) return new Response(rpcError.message, { status: 500 });
-  return Response.json({ events: events.length, places: places.length, checked: rows.length, actions: made });
+  return Response.json({
+    events: events.length,
+    places: places.length,
+    checked: rows.length,
+    actions: made,
+  });
 });

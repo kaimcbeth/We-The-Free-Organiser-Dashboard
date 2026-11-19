@@ -24,29 +24,43 @@ export function parseHangout(html: string) {
   const title = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/)?.[1];
   const starts = html.match(/data-starts-at="([^"]+)"/)?.[1];
   const ends = html.match(/data-ends-at="([^"]+)"/)?.[1];
-  const audience = html.match(/<span>\s*For organi[sz]ers in ([^<]+)<\/span>/i)?.[1];
+  const audience = html.match(
+    /<span>\s*For organi[sz]ers in ([^<]+)<\/span>/i,
+  )?.[1];
   const host = html.match(/<span>\s*Hosted by ([^<]+)<\/span>/i)?.[1];
   if (!title || !starts || Number.isNaN(Date.parse(starts))) return null;
   return {
     title: decode(title.replace(/<[^>]+>/g, "")),
     starts_at: new Date(starts).toISOString(),
-    ends_at: ends && !Number.isNaN(Date.parse(ends)) ? new Date(ends).toISOString() : null,
+    ends_at:
+      ends && !Number.isNaN(Date.parse(ends))
+        ? new Date(ends).toISOString()
+        : null,
     audience: audience ? decode(audience) : null,
     host: host ? decode(host) : null,
   };
 }
 
 Deno.serve(async () => {
-  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
   const res = await fetch(`${SITE}/sitemap.xml`, { headers: UA });
-  if (!res.ok) return Response.json({ error: `Sitemap returned ${res.status}` }, { status: 502 });
+  if (!res.ok)
+    return Response.json(
+      { error: `Sitemap returned ${res.status}` },
+      { status: 502 },
+    );
   const xml = await res.text();
   // English pages only (the /es/ and /nl/ copies are the same hangouts).
   const urls = [
     ...new Set(
-      [...xml.matchAll(/<loc>\s*(https:\/\/activism\.wtf\/hangouts\/[^<\s]+)\s*<\/loc>/g)].map((m) =>
-        m[1].replace(/[?#].*$/, ""),
-      ),
+      [
+        ...xml.matchAll(
+          /<loc>\s*(https:\/\/activism\.wtf\/hangouts\/[^<\s]+)\s*<\/loc>/g,
+        ),
+      ].map((m) => m[1].replace(/[?#].*$/, "")),
     ),
   ];
 
@@ -61,13 +75,23 @@ Deno.serve(async () => {
       const { error } = await supabase
         .from("hangouts")
         .upsert(
-          { source_url: url, ...h, removed_at: null, last_seen_at: now, updated_at: now },
+          {
+            source_url: url,
+            ...h,
+            removed_at: null,
+            last_seen_at: now,
+            updated_at: now,
+          },
           { onConflict: "source_url" },
         );
       if (error) throw new Error(error.message);
       results.push({ url, ok: true });
     } catch (err) {
-      results.push({ url, ok: false, message: err instanceof Error ? err.message : String(err) });
+      results.push({
+        url,
+        ok: false,
+        message: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 
@@ -80,8 +104,14 @@ Deno.serve(async () => {
       .select("id, source_url")
       .is("removed_at", null)
       .gt("starts_at", now);
-    const gone = (upcoming ?? []).filter((h) => !seen.has(h.source_url)).map((h) => h.id);
-    if (gone.length) await supabase.from("hangouts").update({ removed_at: now }).in("id", gone);
+    const gone = (upcoming ?? [])
+      .filter((h) => !seen.has(h.source_url))
+      .map((h) => h.id);
+    if (gone.length)
+      await supabase
+        .from("hangouts")
+        .update({ removed_at: now })
+        .in("id", gone);
   }
 
   return Response.json({ found: urls.length, results });
