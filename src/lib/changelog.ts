@@ -63,6 +63,14 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Search the Photo Hub: type an event, type, tag, note or month (e.g. potluck October 2025) and only matching photos show.",
+      },
+      {
+        level: "organiser",
+        text: "Photo Hub: photos on an event now take their event type from the event's listing, so there's no Event type box to fill in when uploading.",
+      },
+      {
+        level: "organiser",
         text: 'Picking an event in the Photo Hub (when uploading, on a photo, or Attach to event) is now a search box: type a name or a date like 18 October 2025 and the best match comes first. Not there because it never went up on activism.wtf? "+ Add an event that isn\'t listed" at the bottom adds it (name, date, time optional) and picks it.',
       },
       {

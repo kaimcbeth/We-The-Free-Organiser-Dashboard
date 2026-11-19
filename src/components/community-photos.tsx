@@ -60,6 +60,35 @@ function when(p: EventPhoto) {
     : String(p.takenYear);
 }
 
+// Search the Photo Hub (Kai, 19 Nov 2026: "Make the photo hub searchable"):
+// every word typed must be found in the photo's event, type, note, tags,
+// month/year or "favourite"/"not for promo".
+function photoText(p: EventPhoto) {
+  return [
+    p.eventTitle,
+    p.eventKind,
+    p.caption,
+    ...p.tags.map((t) => PHOTO_TAGS.find((x) => x.id === t)?.label ?? t),
+    when(p),
+    p.takenMonth ? MONTHS[p.takenMonth - 1].slice(0, 3) : "",
+    p.favourite ? "favourite favorite" : "",
+    p.noPromo ? "not for promo" : "",
+    p.eventId ? "" : "no event",
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+function matchesSearch(p: EventPhoto, q: string) {
+  const words = q
+    .toLowerCase()
+    .split(/[\s,]+/)
+    .filter(Boolean);
+  if (!words.length) return true;
+  const hay = photoText(p);
+  return words.every((w) => hay.includes(w));
+}
+
 export function CommunityPhotos({ teamId }: { teamId: string }) {
   const [photos, setPhotos] = useState<EventPhoto[] | null>(null);
   const [reload, setReload] = useState(0);
@@ -89,6 +118,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
   const [caption, setCaption] = useState("");
   const [tags, setTags] = useState<PhotoTag[]>([]);
   const [filter, setFilter] = useState<PhotoFilter>(null);
+  const [search, setSearch] = useState("");
   const [sel, setSel] = useState<Set<string> | null>(null); // select mode
   // Just uploaded (Kai, 5 Nov 2026): prompt to add details to them.
   const [fresh, setFresh] = useState<string[] | null>(null);
@@ -286,16 +316,18 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
     }
   } else
     for (const p of (photos ?? []).filter((x) =>
-      onlyFresh && fresh ? fresh.includes(x.id) : matchesFilter(x, filter),
+      onlyFresh && fresh
+        ? fresh.includes(x.id)
+        : matchesFilter(x, filter) && matchesSearch(x, search),
     )) {
       const label = when(p);
       const g = groups.find((x) => x.label === label);
       if (g) g.list.push(p);
       else groups.push({ label, list: [p] });
     }
-  const shown = groups
-    .filter((g) => !folded.has(g.label))
-    .flatMap((g) => g.list);
+  // While searching, every month with a match stays open.
+  const isFolded = (label: string) => !search.trim() && folded.has(label);
+  const shown = groups.filter((g) => !isFolded(g.label)).flatMap((g) => g.list);
   const allFolded =
     groups.length > 0 && groups.every((g) => folded.has(g.label));
 
@@ -491,6 +523,34 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                 )}
               </div>
             )}
+            {!dupSets && !onlyFresh && photos.length > 0 && (
+              <div className="relative mb-2">
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search photos: event, type, tag, note or month (e.g. potluck October 2025)"
+                  aria-label="Search photos"
+                  className="w-full rounded-lg bg-white px-3 py-2 pr-8 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
+                />
+                {search && (
+                  <p className="mt-1 text-xs text-stone-500">
+                    {groups.reduce((n, g) => n + g.list.length, 0)} photo
+                    {groups.reduce((n, g) => n + g.list.length, 0) === 1
+                      ? ""
+                      : "s"}{" "}
+                    match.{" "}
+                    <button
+                      type="button"
+                      onClick={() => setSearch("")}
+                      className="font-medium underline"
+                    >
+                      Clear
+                    </button>
+                  </p>
+                )}
+              </div>
+            )}
             <div className="flex items-start justify-between gap-3">
               {!dupSets && (
                 <TagFilter
@@ -544,7 +604,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
               <h3 className="mb-1.5 text-sm font-semibold text-navy">
                 <button
                   type="button"
-                  aria-expanded={!folded.has(g.label)}
+                  aria-expanded={!isFolded(g.label)}
                   onClick={() => {
                     const n = new Set(folded);
                     if (n.has(g.label)) n.delete(g.label);
@@ -555,7 +615,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                 >
                   <span
                     aria-hidden
-                    className={`inline-block text-xs text-stone-400 transition-transform ${folded.has(g.label) ? "-rotate-90" : ""}`}
+                    className={`inline-block text-xs text-stone-400 transition-transform ${isFolded(g.label) ? "-rotate-90" : ""}`}
                   >
                     ▼
                   </span>
@@ -565,7 +625,7 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                   </span>
                 </button>
               </h3>
-              {!folded.has(g.label) && (
+              {!isFolded(g.label) && (
                 <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                   {g.list.map((p) => (
                     <PhotoTile
