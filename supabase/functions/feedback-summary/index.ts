@@ -84,7 +84,7 @@ Rules:
 - Turn criticism into something kind and constructive; never single anyone out for doing something wrong.
 - Call people in the community members, never volunteers. Australian spelling. No em or en dashes. At most 3 emoji in the whole thing, only where they fit.
 
-Reply with JSON only, shaped like:
+Answer with the summary tool, filled in like this:
 {"overall": "1-2 sentences on how people are finding it, in chat language", "working": ["one natural sentence", ...], "better": ["one natural sentence", ...], "ideas": ["something the community could try, phrased as an idea, not a promise", ...], "message": "the whole thing as one chat message: a short thank-you opener, what's going well, what we heard could be better, a couple of ideas we're thinking about, and an invitation to share more. Short paragraphs, no headings, no bullet symbols other than simple line breaks, under 170 words."}
 "working" and "better" 1-4 items each, each under 25 words. "ideas" at most 3.`;
 
@@ -93,8 +93,26 @@ Reply with JSON only, shaped like:
       headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
       body: JSON.stringify({
         model: Deno.env.get("ANTHROPIC_MODEL") ?? "claude-sonnet-5-5",
-        max_tokens: 1500,
+        max_tokens: 2000,
         messages: [{ role: "user", content: prompt }],
+        tools: [
+          {
+            name: "summary",
+            description: "Return the feedback summary.",
+            input_schema: {
+              type: "object",
+              properties: {
+                overall: { type: "string" },
+                working: { type: "array", items: { type: "string" } },
+                better: { type: "array", items: { type: "string" } },
+                ideas: { type: "array", items: { type: "string" } },
+                message: { type: "string" },
+              },
+              required: ["overall", "working", "better", "ideas", "message"],
+            },
+          },
+        ],
+        tool_choice: { type: "tool", name: "summary" },
       }),
     });
     if (!res.ok) {
@@ -102,10 +120,16 @@ Reply with JSON only, shaped like:
       return json({ error: "The writing assistant didn't answer. Try again in a moment." }, 502);
     }
     const out = await res.json();
-    const raw: string = (out.content ?? []).map((c: { text?: string }) => c.text ?? "").join("");
-    const match = raw.match(/\{[\s\S]*\}/);
+    const content: { type?: string; text?: string; input?: Record<string, unknown> }[] = out.content ?? [];
+    const used = content.find((c) => c.type === "tool_use")?.input;
+    const raw = content.map((c) => c.text ?? "").join("");
     try {
-      const s = JSON.parse(match ? match[0] : raw);
+      let s = used;
+      if (!s) {
+        const match = raw.match(/\{[\s\S]*\}/);
+        s = JSON.parse(match ? match[0] : raw);
+      }
+      if (!s) throw new Error("empty");
       const tidy = (v: unknown) =>
         String(v ?? "")
           .replace(/\s*[—–]\s*/g, ", ")
@@ -126,7 +150,8 @@ Reply with JSON only, shaped like:
           message,
         },
       });
-    } catch {
+    } catch (e) {
+      console.error("feedback-summary parse", e, out.stop_reason, raw.slice(0, 500));
       return json({ error: "That didn't come out right. Try again." }, 502);
     }
   } catch (e) {
