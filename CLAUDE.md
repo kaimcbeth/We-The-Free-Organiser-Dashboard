@@ -309,6 +309,7 @@ git push origin main
 - 30 Oct evening mobile changes (event page, People, member profile, Photo Hub long-press) not yet checked on a real phone by me.
 - Townsville's activism.wtf calendar returns 404 every hour (team moved or closed?): ask Kai.
 - No real RSL accounts yet; leaked-password protection needs Supabase Pro (org is on Free).
+- **Supabase requests are lazy**: `void createClient().rpc(…)` / `.from(…).upsert(…)` never runs unless awaited or `.then()`'d (19 Nov 2026: intro dismissals, check-in newcomer details, setup "Don't show this again" and chat prompt posts had never saved). Always `await` or end fire-and-forget calls with `.then(() => {})`.
 - Never put a `begin; … rollback;` test in the same `execute_sql` call as DDL: the whole call is one transaction, so the rollback undoes the migration too (31 Oct: 0152 trainings and 0155 my_film_results were silently lost this way and re-applied). Apply first, then test in a separate call, then confirm the objects exist.
 - Supabase approval prompts often time out here; `execute_sql` usually goes through without one (avoid `drop trigger`, use `create or replace trigger`; deletes may prompt). Otherwise send Kai the migration file for the SQL Editor.
 - Local dev server can't reach Supabase server-side (pages that load data on the server 404 locally); check those on the live site (fetch via `net.http_get` from SQL).

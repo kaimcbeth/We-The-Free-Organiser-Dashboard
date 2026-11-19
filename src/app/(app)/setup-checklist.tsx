@@ -247,9 +247,9 @@ export function SetupChecklist({
                 setHidden(true);
                 close();
                 if (preview) return;
-                void createClient().rpc("dismiss_team_setup", {
-                  p_team_id: teamId,
-                });
+                void createClient()
+                  .rpc("dismiss_team_setup", { p_team_id: teamId })
+                  .then(() => {}); // requests only run once .then()'d
               }}
               className="text-xs text-stone-400 hover:text-stone-700 hover:underline"
             >

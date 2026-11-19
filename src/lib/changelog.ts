@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Fixed: closing an introduction now really saves, so it stops coming back. Also fixed: \"How did they find us\" and best contact from check-in, Don't show this again on the setup checklist, and marking chat prompts as posted weren't being saved.",
+      },
+      {
+        level: "organiser",
         text: "Drag the tabs in the top bar to put them in your own order (on a computer).",
       },
       {

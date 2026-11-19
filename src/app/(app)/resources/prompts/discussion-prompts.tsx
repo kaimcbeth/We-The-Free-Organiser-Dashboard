@@ -64,9 +64,11 @@ export function DiscussionPrompts({
     setPosted(next);
     if (!teamId) return;
     const t = createClient().from("discussion_prompt_posts");
-    void (was
-      ? t.delete().eq("team_id", teamId).eq("prompt_id", p.id)
-      : t.upsert({ team_id: teamId, prompt_id: p.id }));
+    void (
+      was
+        ? t.delete().eq("team_id", teamId).eq("prompt_id", p.id)
+        : t.upsert({ team_id: teamId, prompt_id: p.id })
+    ).then(() => {}); // requests only run once .then()'d
   };
   const pick = () => {
     const pool = DISCUSSION_PROMPTS.filter(

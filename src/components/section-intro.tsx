@@ -54,7 +54,9 @@ export function IntroProvider({
     if (!preview)
       void createClient()
         .from("intro_dismissals")
-        .upsert({ key }, { onConflict: "user_id,key", ignoreDuplicates: true });
+        .upsert({ key }, { onConflict: "user_id,key", ignoreDuplicates: true })
+        // Supabase requests only run once awaited or .then()'d.
+        .then(() => {});
   };
   return (
     <IntroContext.Provider

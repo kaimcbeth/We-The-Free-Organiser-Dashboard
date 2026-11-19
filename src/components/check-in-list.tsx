@@ -187,25 +187,29 @@ export function CheckInList({
 
   function sendExtras(person: CheckInPerson, x: NewcomerExtras) {
     if (x.newToActivism)
-      void createClient().rpc("set_new_to_activism", {
-        p_person_id: person.id,
-        p_value: true,
-        p_token: linkToken ?? null,
-      });
+      void createClient()
+        .rpc("set_new_to_activism", {
+          p_person_id: person.id,
+          p_value: true,
+          p_token: linkToken ?? null,
+        })
+        .then(() => {}); // requests only run once .then()'d
     if (x.foundVia || x.bestContact)
-      void createClient().rpc("set_newcomer_details", {
-        p_person_id: person.id,
-        p_token: linkToken ?? null,
-        p_found_via: x.foundVia || null,
-        p_via_person:
-          x.foundVia === "person" && x.viaPerson ? x.viaPerson : null,
-        p_note:
-          x.foundVia === "other" || (x.foundVia === "person" && !x.viaPerson)
-            ? x.viaNote
-            : null,
-        p_best_contact: x.bestContact || null,
-        p_contact: x.bestContact ? x.contact : null,
-      });
+      void createClient()
+        .rpc("set_newcomer_details", {
+          p_person_id: person.id,
+          p_token: linkToken ?? null,
+          p_found_via: x.foundVia || null,
+          p_via_person:
+            x.foundVia === "person" && x.viaPerson ? x.viaPerson : null,
+          p_note:
+            x.foundVia === "other" || (x.foundVia === "person" && !x.viaPerson)
+              ? x.viaNote
+              : null,
+          p_best_contact: x.bestContact || null,
+          p_contact: x.bestContact ? x.contact : null,
+        })
+        .then(() => {});
   }
 
   // Sends what's waiting, oldest first. Stops at the first failure (still no
