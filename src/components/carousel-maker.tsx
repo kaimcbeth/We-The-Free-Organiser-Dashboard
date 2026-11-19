@@ -5,6 +5,7 @@ import { zipSync } from "fflate";
 import { PHOTO_TAGS, type EventPhoto } from "@/lib/event-photos";
 import { createClient } from "@/lib/supabase/client";
 import { Option } from "@/components/copy-maker";
+import { SaveToPlanner } from "@/components/save-to-planner";
 import {
   drawCoverTitle,
   drawNextEvent,
@@ -166,6 +167,9 @@ export function CarouselMaker({
     date: string;
   } | null>(null);
   const [edited, setEdited] = useState<{ title?: string; date?: string }>({});
+  // Caption saved with the slides to the Social Media Hub planner (Kai, 19 Nov
+  // 2026: "save this + the caption of my choosing to social media scheduler").
+  const [planCaption, setPlanCaption] = useState("");
   const [withTitle, setWithTitle] = useState(true);
   const [titleLayer, setTitleLayer] = useState<string | null>(null);
   useEffect(() => {
@@ -447,7 +451,7 @@ export function CarouselMaker({
                     }}
                     placeholder="Title"
                     aria-label="Title"
-                    className="rounded-lg px-2.5 py-1.5 text-sm ring-1 ring-stone-300"
+                    className="min-w-0 rounded-lg px-2.5 py-1.5 text-sm ring-1 ring-stone-300"
                   />
                   <input
                     value={coverDate}
@@ -457,7 +461,7 @@ export function CarouselMaker({
                     }}
                     placeholder="Date (optional)"
                     aria-label="Date"
-                    className="rounded-lg px-2.5 py-1.5 text-sm ring-1 ring-stone-300"
+                    className="min-w-0 rounded-lg px-2.5 py-1.5 text-sm ring-1 ring-stone-300"
                   />
                 </div>
               )}
@@ -609,7 +613,49 @@ export function CarouselMaker({
         to post.
       </p>
       {teamId && chosen.length > 0 && (
-        <CaptionWriter teamId={teamId} eventId={eventId} photos={chosen} />
+        <CaptionWriter
+          teamId={teamId}
+          eventId={eventId}
+          photos={chosen}
+          onUse={setPlanCaption}
+        />
+      )}
+      {teamId && chosen.length > 0 && (
+        <div className="mt-3 rounded-2xl bg-white p-3 ring-1 ring-black/5">
+          <p className="text-sm font-semibold text-navy">
+            Save to the social media planner
+          </p>
+          <p className="mt-0.5 text-xs text-stone-500">
+            The slides and this caption go on the day you pick. Write your own,
+            or tap &ldquo;Use this caption&rdquo; on one above.
+          </p>
+          <textarea
+            value={planCaption}
+            onChange={(e) => setPlanCaption(e.target.value)}
+            rows={Math.min(12, Math.max(3, Math.ceil(planCaption.length / 55)))}
+            placeholder="Caption (optional)"
+            className="mt-2 w-full rounded-xl bg-white p-2 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
+          />
+          <div className="mt-1 flex justify-end">
+            <SaveToPlanner
+              teamId={teamId}
+              caption={planCaption.trim() || undefined}
+              note={title ? `Carousel: ${title}` : "Carousel"}
+              platforms={["instagram"]}
+              eventId={fromEvent ?? null}
+              getImages={async () => {
+                try {
+                  const files = made ?? (await build());
+                  setMade(files);
+                  return files;
+                } finally {
+                  setBusy("");
+                }
+              }}
+              className="rounded-xl bg-navy px-4 py-2 text-sm font-semibold text-white"
+            />
+          </div>
+        </div>
       )}
     </div>
   );
@@ -637,11 +683,13 @@ export function CaptionWriter({
   eventId,
   photos,
   extra,
+  onUse,
 }: {
   teamId: string;
   eventId?: string;
   photos: EventPhoto[];
   extra?: string; // more to tell the writer (e.g. a monthly recap's events)
+  onUse?: (caption: string) => void; // "Use this caption" (to save with slides)
 }) {
   const [open, setOpen] = useState(false);
   const [places, setPlaces] = useState<Set<"instagram" | "facebook">>(
@@ -781,7 +829,7 @@ export function CaptionWriter({
               </h3>
               <ul className="space-y-2">
                 {options[pl].map((t, i) => (
-                  <Option key={i} text={t} />
+                  <Option key={i} text={t} onUse={onUse} />
                 ))}
               </ul>
             </section>

@@ -22,8 +22,10 @@ type Example = { id: string; platform: string | null; body: string };
 export function Option({
   text,
   plan,
+  onUse,
 }: {
   text: string;
+  onUse?: (text: string) => void; // e.g. put it with carousel slides
   // Offer "Save to planner" (Write post for an event).
   plan?: { teamId: string; day?: string; eventId?: string; platform: string };
 }) {
@@ -41,6 +43,15 @@ export function Option({
         className="w-full resize-y bg-transparent text-sm leading-relaxed text-stone-800 focus:outline-none"
       />
       <div className="mt-1 flex flex-wrap items-center justify-end gap-2">
+        {onUse && (
+          <button
+            type="button"
+            onClick={() => onUse(value)}
+            className="rounded-lg px-2.5 py-1 text-xs font-medium text-stone-500 hover:text-stone-800"
+          >
+            Use this caption
+          </button>
+        )}
         {plan && (
           <SaveToPlanner
             teamId={plan.teamId}
