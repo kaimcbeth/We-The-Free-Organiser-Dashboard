@@ -63,7 +63,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: "Insights: a Newcomers list near the top (everyone whose first event was in the last 30 days), and one Milestones list (just reached and coming up). The event title on a carousel's first photo is smaller and quieter, and double-clicking a carousel photo now opens zoom and crop. Carousels can be saved to the social media planner with a caption you write or pick. Find wins now usually opens straight away: wins are found ahead of time and kept for 3 days; Search again looks for new ones.",
+        text: "Insights: a Newcomers list near the top (everyone whose first event was in the last 30 days), and one Milestones list (just reached and coming up). The event title on a carousel's first photo is smaller and quieter, and double-clicking a carousel photo now opens zoom and crop. Carousels can be saved to the social media planner with a caption you write or pick. The writer now learns from your edits: when you change a caption and copy, share or save it, your version becomes an example of your community's voice. Find wins now usually opens straight away: wins are found ahead of time and kept for 3 days; Search again looks for new ones.",
       },
       {
         level: "organiser",

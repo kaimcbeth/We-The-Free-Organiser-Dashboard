@@ -158,7 +158,7 @@ List 3 to 8 wins, newest first. If you only find 1 or 2, that's fine: never pad 
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: Deno.env.get("ANTHROPIC_MODEL") ?? "claude-sonnet-5-5",
+        model: Deno.env.get("SEARCH_MODEL") ?? "claude-sonnet-5-5",
         max_tokens: 3000,
         system: RULES,
         tools: [tool],

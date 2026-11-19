@@ -18,6 +18,7 @@ export function SaveToPlanner({
   note,
   platforms = [],
   eventId,
+  onSave,
   className = "rounded-lg px-2.5 py-1 text-xs font-medium text-stone-500 hover:text-stone-800",
 }: {
   teamId: string;
@@ -30,6 +31,7 @@ export function SaveToPlanner({
   note?: string; // idea line shown on the calendar
   platforms?: string[];
   eventId?: string | null;
+  onSave?: () => void; // after a successful save
   className?: string;
 }) {
   const path = usePathname();
@@ -65,6 +67,7 @@ export function SaveToPlanner({
       });
       setSaved(when);
       setOpen(false);
+      onSave?.();
     } catch {
       setError("Couldn't save that. Try again?");
     }

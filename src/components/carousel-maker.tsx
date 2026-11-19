@@ -829,7 +829,12 @@ export function CaptionWriter({
               </h3>
               <ul className="space-y-2">
                 {options[pl].map((t, i) => (
-                  <Option key={i} text={t} onUse={onUse} />
+                  <Option
+                    key={i}
+                    text={t}
+                    onUse={onUse}
+                    learn={{ teamId, platform: pl }}
+                  />
                 ))}
               </ul>
             </section>

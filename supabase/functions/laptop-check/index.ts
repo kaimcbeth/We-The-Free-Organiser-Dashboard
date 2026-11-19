@@ -5,7 +5,8 @@
 // listing. Organisers and Core Team only; counts towards the community's
 // daily writing-assistant limit (copy_generations).
 //
-// Needs the Edge Function secret ANTHROPIC_API_KEY (optional ANTHROPIC_MODEL).
+// Needs the Edge Function secret ANTHROPIC_API_KEY (optional SEARCH_MODEL; stays
+// on Sonnet while ANTHROPIC_MODEL = Opus for writing, Kai 19 Nov 2026).
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -224,7 +225,7 @@ Australian spelling, plain words, no em or en dashes.`;
         method: "POST",
         headers,
         body: JSON.stringify({
-          model: Deno.env.get("ANTHROPIC_MODEL") ?? "claude-sonnet-5-5",
+          model: Deno.env.get("SEARCH_MODEL") ?? "claude-sonnet-5-5",
           max_tokens: 3000,
           tools: withFetch ? [search, fetchTool] : [search],
           messages,

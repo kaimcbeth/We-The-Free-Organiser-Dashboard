@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sheet } from "@/components/sheet";
 import { createClient } from "@/lib/supabase/client";
 import { SaveToPlanner } from "@/components/save-to-planner";
@@ -17,20 +17,50 @@ const PLACES: { id: CopyPlatform; label: string }[] = [
   { id: "story", label: "Story" },
 ];
 
-type Example = { id: string; platform: string | null; body: string };
+type Example = {
+  id: string;
+  platform: string | null;
+  body: string;
+  learned?: boolean;
+};
 
 export function Option({
   text,
   plan,
   onUse,
+  learn,
 }: {
   text: string;
   onUse?: (text: string) => void; // e.g. put it with carousel slides
+  // Keep the edited version as an example of the community's voice when it's
+  // used (Kai, 19 Nov 2026: captions "pretty non-human"). Plan implies it.
+  learn?: { teamId: string; platform?: string };
   // Offer "Save to planner" (Write post for an event).
   plan?: { teamId: string; day?: string; eventId?: string; platform: string };
 }) {
   const [value, setValue] = useState(text);
   const [copied, setCopied] = useState(false);
+  const voice =
+    learn ?? (plan && { teamId: plan.teamId, platform: plan.platform });
+  const learned = useRef("");
+  // Only edits teach: an untouched option isn't their voice.
+  function used() {
+    const v = value.trim();
+    if (!voice || v === text.trim() || v === learned.current) return;
+    if (
+      Math.abs(v.length - text.trim().length) < 3 &&
+      v.replace(/\s/g, "") === text.replace(/\s/g, "")
+    )
+      return;
+    learned.current = v;
+    createClient()
+      .rpc("learn_voice", {
+        p_team: voice.teamId,
+        p_platform: voice.platform ?? null,
+        p_body: v,
+      })
+      .then(() => {});
+  }
   return (
     <li className="rounded-xl bg-white p-3 ring-1 ring-black/10">
       <textarea
@@ -46,7 +76,10 @@ export function Option({
         {onUse && (
           <button
             type="button"
-            onClick={() => onUse(value)}
+            onClick={() => {
+              used();
+              onUse(value);
+            }}
             className="rounded-lg px-2.5 py-1 text-xs font-medium text-stone-500 hover:text-stone-800"
           >
             Use this caption
@@ -59,12 +92,16 @@ export function Option({
             caption={value}
             eventId={plan.eventId}
             platforms={[plan.platform]}
+            onSave={used}
           />
         )}
         {typeof navigator !== "undefined" && "share" in navigator && (
           <button
             type="button"
-            onClick={() => navigator.share({ text: value }).catch(() => {})}
+            onClick={() => {
+              used();
+              navigator.share({ text: value }).catch(() => {});
+            }}
             className="rounded-lg px-2.5 py-1 text-xs font-medium text-stone-500 hover:text-stone-800"
           >
             Share
@@ -73,6 +110,7 @@ export function Option({
         <button
           type="button"
           onClick={async () => {
+            used();
             await navigator.clipboard.writeText(value);
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
@@ -95,7 +133,7 @@ export function VoiceExamples({ teamId }: { teamId: string }) {
   useEffect(() => {
     createClient()
       .from("voice_examples")
-      .select("id, platform, body")
+      .select("id, platform, body, learned")
       .eq("team_id", teamId)
       .order("created_at", { ascending: false })
       .then(({ data }) => setList((data as Example[]) ?? []));
@@ -123,7 +161,7 @@ export function VoiceExamples({ teamId }: { teamId: string }) {
     setList((l) => (l ?? []).filter((x) => x.id !== id));
   }
 
-  const n = list?.length ?? 0;
+  const n = (list ?? []).filter((x) => !x.learned).length;
   return (
     <div className="mt-2 space-y-3 rounded-xl bg-stone-50 p-3 ring-1 ring-black/5">
       <p className="text-xs text-stone-600">
@@ -175,6 +213,7 @@ export function VoiceExamples({ teamId }: { teamId: string }) {
           <div className="mt-1 flex justify-between text-stone-400">
             <span>
               {PLACES.find((p) => p.id === x.platform)?.label ?? "Any place"}
+              {x.learned && " · learned from your edits"}
             </span>
             <button
               type="button"
