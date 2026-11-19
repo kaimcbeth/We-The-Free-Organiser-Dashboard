@@ -76,11 +76,13 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     ? [me.first_name, me.last_name].filter(Boolean).join(" ")
     : organiser.name;
 
-  // Section introductions: not during the overall one; God's "View as"
-  // starts fresh and saves nothing.
+  // Section introductions: not during the overall one. God's "View as"
+  // remembers the ones already seen (Kai, 19 Nov 2026: they kept coming
+  // back), except "New organiser", which starts fresh and saves nothing.
   const introsOn = !organiser.showTour && !organiser.exampleMode;
+  const introsFresh = !!organiser.viewValue?.startsWith("new_organiser");
   const { data: introRows } =
-    introsOn && !organiser.viewingAs
+    introsOn && !introsFresh
       ? await supabase.from("intro_dismissals").select("key")
       : { data: [] as { key: string }[] };
 
@@ -95,7 +97,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       <IntroProvider
         seen={(introRows ?? []).map((r) => r.key)}
         enabled={introsOn}
-        preview={!!organiser.viewingAs}
+        preview={introsFresh}
       >
         <div className="flex flex-1 flex-col">
           <header className="sticky top-0 z-10 bg-navy text-white">
