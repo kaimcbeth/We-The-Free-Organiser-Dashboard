@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Equipment guide: the Purchasing guide button on DIY signs and the DIY table banner now opens the sign splitter straight away, and the kit backpack sits right after the headphone splitters.",
+      },
+      {
+        level: "organiser",
         text: "Insights: a Newcomers list near the top (everyone whose first event was in the last 30 days), and one Milestones list (just reached and coming up). The event title on a carousel's first photo is smaller and quieter, and double-clicking a carousel photo now opens zoom and crop. Carousels can be saved to the social media planner with a caption you write or pick, and reordering photos is easier: while you drag, the others move out of the way so you see the order you'll get. In the planner, Share now works on phones, Download says when it's done, and Download everywhere in the Hub now saves each slide as its own photo, never a zip. The writer now learns from your edits: when you change a caption and copy, share or save it, your version becomes an example of your community's voice. Find wins now usually opens straight away: wins are found ahead of time and kept for 3 days; Search again looks for new ones.",
       },
       {

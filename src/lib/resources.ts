@@ -367,6 +367,16 @@ export const EQUIPMENT_GUIDE: {
         price: "~$4 each",
       },
       {
+        key: "kit_bag",
+        portable: "recommended",
+        name: "Kit backpack",
+        about:
+          "A padded, waterproof camera backpack (grey, size M) for carrying the laptops, headphones and small gear in one go.",
+        shop: "AliExpress",
+        url: "https://www.aliexpress.com/item/1005010109986450.html",
+        price: "~$28",
+      },
+      {
         key: "a_frame",
         name: "A-frame sign",
         about: "Stands on its own, so people can spot you from further away.",
@@ -441,16 +451,6 @@ export const EQUIPMENT_GUIDE: {
         shop: "AliExpress",
         url: "https://www.aliexpress.com/item/1005007499571811.html",
         price: "~$5",
-      },
-      {
-        key: "kit_bag",
-        portable: "recommended",
-        name: "Kit backpack",
-        about:
-          "A padded, waterproof camera backpack (grey, size M) for carrying the laptops, headphones and small gear in one go.",
-        shop: "AliExpress",
-        url: "https://www.aliexpress.com/item/1005010109986450.html",
-        price: "~$28",
       },
       {
         key: "video_player_box",

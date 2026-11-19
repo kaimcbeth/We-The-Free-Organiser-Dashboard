@@ -803,14 +803,25 @@ function EquipmentRow({
             )}
             {/* Get it from the RSL: the same Purchasing guide button, its
                 pop-up says to ask them (Kai, 11 Nov 2026). */}
-            {opt?.instructions !== undefined && (
-              <button
-                type="button"
-                onClick={() => setDiyOpen(true)}
+            {/* DIY made with the sign splitter: the button goes straight
+                there, no pop-up (Kai, 19 Nov 2026). */}
+            {opt?.instructions?.startsWith("/") ? (
+              <a
+                href={opt.instructions}
                 className="rounded-lg px-2 py-0.5 text-xs font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50"
               >
                 Purchasing guide
-              </button>
+              </a>
+            ) : (
+              opt?.instructions !== undefined && (
+                <button
+                  type="button"
+                  onClick={() => setDiyOpen(true)}
+                  className="rounded-lg px-2 py-0.5 text-xs font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50"
+                >
+                  Purchasing guide
+                </button>
+              )
             )}
             {opt?.contactLead && (
               <button
