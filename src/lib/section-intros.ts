@@ -159,10 +159,6 @@ export const SECTION_INTROS: SectionIntro[] = [
         body: "The Movie Challenge player, recommended prizes, the equipment guide and the sign splitter (print any sign on A3 sheets).",
         target: 'main a[href$="/resources/equipment"]',
       },
-      {
-        title: "Hear from your members",
-        body: "Share the member feedback link (no login needed), and send your own feedback to We The Free Global Support.",
-      },
     ],
   },
   {
