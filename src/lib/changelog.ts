@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "The throwback photo action only comes up when your Photo Hub has a photo from at least 4 weeks ago to share (not ones marked not for promo). No photos, no action.",
+      },
+      {
+        level: "organiser",
         text: "Member feedback summaries now read like a friendly message, with no scores or counts, and come with a ready-to-paste version for the community chat (Copy button).",
       },
       {
