@@ -745,6 +745,13 @@ function PostEditor({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [moving, setMoving] = useState(false);
   const [showCaps, setShowCaps] = useState(false);
+  // Images fetched ahead (Kai, 19 Nov 2026: "share button doesn't work"):
+  // phones only allow the share sheet straight after a tap, and fetching the
+  // slides first used that moment up, so it failed silently.
+  const [ready, setReady] = useState<{ files: File[]; base: string } | null>(
+    null,
+  );
+  const [done, setDone] = useState("");
   const caps = item ? slideCaptions(item) : [];
   const placeholder = item ? isPlaceholder(item) : true;
 
@@ -833,12 +840,35 @@ function PostEditor({
     return { files, base };
   }
 
-  async function share() {
-    const { files } = await getFiles();
-    if (caption) await navigator.clipboard.writeText(caption).catch(() => {});
+  useEffect(() => {
+    if (editing || !imgs.some((i) => i.url || i.file)) return;
+    let live = true;
+    getFiles()
+      .then((r) => live && setReady(r))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch when the images change
+  }, [editing, imgs]);
+
+  function share() {
+    // No awaits before navigator.share: it must run in the tap itself.
+    const files = ready?.files ?? [];
+    if (caption) navigator.clipboard.writeText(caption).catch(() => {});
     const data: ShareData = { text: caption || undefined };
     if (files.length && navigator.canShare?.({ files })) data.files = files;
-    await navigator.share(data).catch(() => {});
+    navigator
+      .share(data)
+      .then(() => {
+        setDone(caption ? "Shared · caption copied" : "Shared");
+        setTimeout(() => setDone(""), 3000);
+      })
+      .catch((e: Error) => {
+        if (e?.name === "AbortError") return; // closed the share sheet
+        setDone("Couldn't open sharing here. Try Download.");
+        setTimeout(() => setDone(""), 4000);
+      });
   }
 
   // Download (Kai, 6 Nov): one image as itself (caption copied); several as
@@ -846,7 +876,7 @@ function PostEditor({
   async function download() {
     setBusy(true);
     try {
-      const { files, base } = await getFiles();
+      const { files, base } = ready ?? (await getFiles());
       let blob: Blob;
       let name: string;
       if (files.length === 1) {
@@ -873,6 +903,15 @@ function PostEditor({
       a.download = name;
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+      setDone(
+        files.length === 1 && caption
+          ? "Downloaded · caption copied"
+          : "Downloaded",
+      );
+      setTimeout(() => setDone(""), 3000);
+    } catch {
+      setDone("Couldn't download. Try again?");
+      setTimeout(() => setDone(""), 4000);
     } finally {
       setBusy(false);
     }
@@ -943,9 +982,10 @@ function PostEditor({
               <button
                 type="button"
                 onClick={share}
-                className="text-stone-500 hover:text-navy"
+                disabled={imgs.length > 0 && !ready}
+                className="text-stone-500 hover:text-navy disabled:opacity-50"
               >
-                Share
+                {imgs.length > 0 && !ready ? "Getting it ready…" : "Share"}
               </button>
             )}
           {imgs.length > 0 && (
@@ -955,9 +995,10 @@ function PostEditor({
               disabled={busy}
               className="text-stone-500 hover:text-navy disabled:opacity-50"
             >
-              {busy ? "Getting it ready…" : "Download"}
+              {busy ? "Downloading…" : "Download"}
             </button>
           )}
+          {done && <span className="font-medium text-navy">{done}</span>}
           {caps.length > 1 && (
             <button
               type="button"

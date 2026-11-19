@@ -640,7 +640,11 @@ export function CarouselMaker({
             <SaveToPlanner
               teamId={teamId}
               caption={planCaption.trim() || undefined}
-              note={title ? `Carousel: ${title}` : "Carousel"}
+              note={
+                coverTitle.trim()
+                  ? `Carousel: ${coverTitle.trim()}`
+                  : "Carousel"
+              }
               platforms={["instagram"]}
               eventId={fromEvent ?? null}
               getImages={async () => {
