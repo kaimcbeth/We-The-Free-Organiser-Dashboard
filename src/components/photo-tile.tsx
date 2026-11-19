@@ -301,7 +301,7 @@ export function PhotoTile({
               );
             })}
           </div>
-          {kinds && kinds.length > 0 && (
+          {kinds && kinds.length > 0 && !p.kindFromEvent && (
             <select
               value={p.eventKind ?? ""}
               onChange={(e) => onChange({ eventKind: e.target.value || null })}

@@ -96,7 +96,6 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
   const anchor = useRef<string | null>(null); // last photo clicked (shift-click)
   const [trash, setTrash] = useState<EventPhoto[] | null>(null); // Removed, open
   const [kinds, setKinds] = useState<string[]>([]); // from the event listings
-  const [kind, setKind] = useState(""); // for the next upload
   const [uploadEvent, setUploadEvent] = useState(""); // event for the next upload
   const [events, setEvents] = useState<PickEvent[]>([]);
   // Quick add from the event search: saved, put first in the list, picked.
@@ -363,21 +362,6 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
             className="min-w-0 basis-full rounded-lg bg-white px-2 py-1.5 text-sm ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-cyan"
           />
         </div>
-        {kinds.length > 0 && !uploadEvent && (
-          <select
-            value={kind}
-            onChange={(e) => setKind(e.target.value)}
-            aria-label="Event type"
-            className={`mt-2 rounded-lg bg-white px-2 py-1.5 text-sm ring-1 ring-black/10 ${kind ? "" : "text-stone-400"}`}
-          >
-            <option value="">Event type (optional)</option>
-            {kinds.map((k) => (
-              <option key={k} value={k}>
-                {k}
-              </option>
-            ))}
-          </select>
-        )}
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <span className="text-xs text-stone-500">Tags (optional):</span>
           {PHOTO_TAGS.map((t) => {
@@ -413,7 +397,6 @@ export function CommunityPhotos({ teamId }: { teamId: string }) {
                     taken_month: year && month ? Number(month) : null,
                     caption: caption.trim() || null,
                     tags,
-                    event_kind: kind || null,
                   }
             }
             label="Upload photos"

@@ -1,3 +1,4 @@
+import { kindOf } from "@/lib/event-kinds";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type PhotoTag =
@@ -34,6 +35,7 @@ export type EventPhoto = {
   tags: PhotoTag[];
   cropped: boolean; // the original is kept and can be restored
   eventKind: string | null; // e.g. Potluck (see event-kinds)
+  kindFromEvent?: boolean; // the kind comes from its event's listing
   eventTitle?: string | null; // when attached to an event
   handDated?: boolean; // month/year set by hand (else from its event)
 };
@@ -51,8 +53,17 @@ type Row = {
   original_path: string | null;
   thumb_path?: string | null;
   event_kind: string | null;
-  event?: { starts_at: string; title: string } | null;
+  event?: {
+    starts_at: string;
+    title: string;
+    event_type?: { name: string } | null;
+  } | null;
 };
+
+// A photo on an event takes the event's kind from its listing (Kai, 19 Nov
+// 2026: "Event type should be inferred automatically by event listing").
+const kindFromEvent = (r: Row) =>
+  r.event ? kindOf(r.event.title, r.event.event_type?.name ?? null) : null;
 
 async function sign(supabase: SupabaseClient, rows: Row[]) {
   if (rows.length === 0) return [];
@@ -85,7 +96,8 @@ async function sign(supabase: SupabaseClient, rows: Row[]) {
       caption: r.caption,
       tags: r.tags ?? [],
       cropped: !!r.original_path,
-      eventKind: r.event_kind,
+      eventKind: kindFromEvent(r) ?? r.event_kind,
+      kindFromEvent: !!kindFromEvent(r),
     }));
 }
 
@@ -143,7 +155,9 @@ export async function loadCommunityPhotos(
 ): Promise<EventPhoto[]> {
   const { data } = await supabase
     .from("event_photos")
-    .select(`${COLS}, event:events(starts_at, title)`)
+    .select(
+      `${COLS}, event:events(starts_at, title, event_type:event_types(name))`,
+    )
     .eq("team_id", teamId)
     .is("archived_at", null)
     .order("created_at", { ascending: false })
