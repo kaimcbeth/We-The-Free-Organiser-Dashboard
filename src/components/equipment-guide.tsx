@@ -3,7 +3,12 @@
 import { LaptopChecker } from "@/components/laptop-checker";
 import { readHeader, subscribeHeader } from "@/lib/header-height";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import {
+  type ReactNode,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   LocationSheet,
@@ -91,6 +96,90 @@ export function Equipment({
   const qtyOf = (i: EquipmentItem) =>
     qtys[i.key] ?? (essential(i) ? (i.kitQty ?? 1) : 0);
   const bump = () => setVersion((v) => v + 1);
+
+  // The community's saved kit (Kai, 23 Nov 2026: "save and lock in the
+  // starting kits they want"). Saving brings back their picks, numbers and
+  // Portable kit next time; locking makes the builder read-only until an
+  // organiser unlocks it. `kitReady` stays false while the team_kits table
+  // isn't there yet (0251), so the buttons don't show.
+  const [kit, setKit] = useState<SavedKit | null>(null);
+  const [kitReady, setKitReady] = useState(false);
+  const [kitBusy, setKitBusy] = useState(false);
+  const [kitMsg, setKitMsg] = useState<string | null>(null);
+  const [confirmLock, setConfirmLock] = useState(false);
+  const locked = !!kit?.locked_at;
+  useEffect(() => {
+    if (!teamId) return;
+    let live = true;
+    createClient()
+      .from("team_kits")
+      .select("*")
+      .eq("team_id", teamId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (!live) return;
+        if (error) return; // table not there yet: no saving
+        setKitReady(true);
+        if (!data) return;
+        // Bring back the saved picks, numbers and Portable kit.
+        const k = data as SavedKit;
+        setKit(k);
+        setPortable(k.portable);
+        setPicks(
+          Object.fromEntries(
+            k.items.filter((x) => x.pick != null).map((x) => [x.key, x.pick!]),
+          ),
+        );
+        setQtys(Object.fromEntries(k.items.map((x) => [x.key, x.qty])));
+      });
+    return () => {
+      live = false;
+    };
+  }, [teamId]);
+  async function saveKit(items: EquipmentItem[], lock: boolean) {
+    if (!teamId) return;
+    setKitBusy(true);
+    setKitMsg(null);
+    const rows = items.map((i) => ({
+      key: i.key,
+      pick: i.options ? (picks[i.key] ?? startPick(i)) : null,
+      qty: qtyOf(i),
+    }));
+    const { total } = kitTotal(
+      items,
+      (i) => picks[i.key] ?? startPick(i),
+      qtyOf,
+    );
+    const { data, error } = await createClient().rpc("save_team_kit", {
+      p_team: teamId,
+      p_items: rows,
+      p_portable: portable,
+      p_total: Math.round(total),
+      p_lock: lock,
+    });
+    setKitBusy(false);
+    setConfirmLock(false);
+    if (error) {
+      setKitMsg(error.message || "Couldn't save the kit just now.");
+      return;
+    }
+    setKit(data as SavedKit);
+    setKitMsg(lock ? "Kit locked in." : "Kit saved.");
+  }
+  async function unlockKit() {
+    if (!teamId) return;
+    setKitBusy(true);
+    setKitMsg(null);
+    const { data, error } = await createClient().rpc("unlock_team_kit", {
+      p_team: teamId,
+    });
+    setKitBusy(false);
+    if (error) {
+      setKitMsg(error.message || "Couldn't unlock the kit just now.");
+      return;
+    }
+    setKit(data as SavedKit);
+  }
   // The order God set (Kai, 11 Nov 2026); items not in it keep their code
   // order, after the ones that are.
   const [order, setOrder] = useState<string[]>([]);
@@ -309,6 +398,17 @@ export function Equipment({
           // 11 Nov 2026).
           const building =
             newOrganiser || (!!teamId && !g.items.some((i) => hasAny(i)));
+          const kitItems = [...g.items, ...g.upgrades];
+          const priced = (i: EquipmentItem) =>
+            !!(i.price || i.options?.some((o) => o.price));
+          // Every Essential item first, then the extras (Kai, 23 Nov 2026:
+          // "don't let organisers select non-essential items until they've
+          // selected all the essentials").
+          const missing = kitItems.filter(
+            (i) => essential(i) && priced(i) && qtyOf(i) < 1,
+          );
+          const essentialsDone = missing.length === 0;
+          const kitLocked = building && locked;
           const row = (i: EquipmentItem, base: boolean) => (
             <EquipmentRow
               key={i.key}
@@ -321,13 +421,15 @@ export function Equipment({
               pick={
                 building || base ? (picks[i.key] ?? startPick(i)) : undefined
               }
-              kitQty={
-                building && (i.price || i.options?.some((o) => o.price))
-                  ? qtyOf(i)
-                  : undefined
-              }
+              kitQty={building && priced(i) ? qtyOf(i) : undefined}
               onKitQty={(n) => setQtys((q) => ({ ...q, [i.key]: n }))}
               onPick={(n) => setPicks((p) => ({ ...p, [i.key]: n }))}
+              kitLocked={kitLocked}
+              addBlocked={
+                building && !essential(i) && !essentialsDone
+                  ? "Add every Essential item first"
+                  : undefined
+              }
               inventory={have}
               onOwned={teamId ? (opt, c) => setOwned(i, opt, c) : undefined}
               onHave={
@@ -379,6 +481,7 @@ export function Equipment({
                       <button
                         type="button"
                         aria-pressed={portable}
+                        disabled={kitLocked}
                         onClick={(e) => {
                           e.currentTarget.blur(); // closes the pop-up
                           setPortable(!portable);
@@ -400,7 +503,7 @@ export function Equipment({
                           setQtys(drop);
                           setPicks(drop);
                         }}
-                        className={`rounded-full px-3.5 py-1 text-sm font-semibold ring-1 ${portable ? "bg-navy text-white ring-navy" : "bg-white text-navy ring-black/15 hover:ring-navy"}`}
+                        className={`rounded-full px-3.5 py-1 text-sm font-semibold ring-1 disabled:cursor-not-allowed disabled:opacity-60 ${portable ? "bg-navy text-white ring-navy" : "bg-white text-navy ring-black/15 hover:ring-navy"}`}
                       >
                         Portable kit
                       </button>
@@ -409,16 +512,42 @@ export function Equipment({
                 )}
                 {building && (
                   <KitTotal
-                    items={[...g.items, ...g.upgrades]}
+                    items={kitItems}
                     pickOf={(i) => picks[i.key] ?? startPick(i)}
                     qtyOf={qtyOf}
-                  />
+                  >
+                    {!essentialsDone && !kitLocked && (
+                      <p className="mt-2 rounded-lg bg-pink/15 px-2.5 py-1.5 text-xs leading-snug text-white">
+                        Add every <b className="text-pink">Essential</b> item
+                        before choosing extras. Still to add:{" "}
+                        {missing.map((i) => i.name).join(", ")}.
+                      </p>
+                    )}
+                    {teamId && kitReady && (
+                      <KitSaveBar
+                        kit={kit}
+                        busy={kitBusy}
+                        message={kitMsg}
+                        canLock={essentialsDone}
+                        confirming={confirmLock}
+                        onSave={() => saveKit(kitItems, false)}
+                        onLock={() =>
+                          confirmLock
+                            ? saveKit(kitItems, true)
+                            : setConfirmLock(true)
+                        }
+                        onCancel={() => setConfirmLock(false)}
+                        onUnlock={unlockKit}
+                      />
+                    )}
+                  </KitTotal>
                 )}
                 <ul className="mt-2 divide-y divide-black/5">
                   {building
-                    ? sorted([...g.items, ...g.upgrades]).map((i) =>
-                        row(i, essential(i)),
-                      )
+                    ? sorted(kitItems)
+                        // A locked-in kit lists only what's in it.
+                        .filter((i) => !kitLocked || !priced(i) || qtyOf(i) > 0)
+                        .map((i) => row(i, essential(i)))
                     : sorted(g.items).map((i) => row(i, true))}
                 </ul>
               </section>
@@ -473,15 +602,12 @@ function firstPick(item: EquipmentItem, inventory: Map<string, Owned>) {
 }
 
 // The base kit's cost with the versions showing below, for new organisers.
-function KitTotal({
-  items,
-  pickOf,
-  qtyOf,
-}: {
-  items: EquipmentItem[];
-  pickOf: (i: EquipmentItem) => number;
-  qtyOf: (i: EquipmentItem) => number;
-}) {
+// What the kit costs with the versions and numbers picked.
+function kitTotal(
+  items: EquipmentItem[],
+  pickOf: (i: EquipmentItem) => number,
+  qtyOf: (i: EquipmentItem) => number,
+) {
   let total = 0;
   const unpriced: string[] = [];
   for (const i of items) {
@@ -497,6 +623,142 @@ function KitTotal({
       );
     else total += c;
   }
+  return { total, unpriced };
+}
+
+type SavedKit = {
+  team_id: string;
+  items: { key: string; pick: number | null; qty: number }[];
+  portable: boolean;
+  total: number | null;
+  saved_at: string;
+  saved_by_name: string | null;
+  locked_at: string | null;
+  locked_by_name: string | null;
+};
+
+const kitDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-AU", {
+    day: "numeric",
+    month: "short",
+  });
+
+// Save / Lock in / Unlock, at the bottom of the Build Your Kit box.
+function KitSaveBar({
+  kit,
+  busy,
+  message,
+  canLock,
+  confirming,
+  onSave,
+  onLock,
+  onCancel,
+  onUnlock,
+}: {
+  kit: SavedKit | null;
+  busy: boolean;
+  message: string | null;
+  canLock: boolean;
+  confirming: boolean;
+  onSave: () => void;
+  onLock: () => void;
+  onCancel: () => void;
+  onUnlock: () => void;
+}) {
+  const by = (name: string | null) => (name ? ` by ${name}` : "");
+  if (kit?.locked_at)
+    return (
+      <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-white/15 pt-2.5">
+        <p className="text-sm leading-snug">
+          <span className="mr-1.5 rounded-full bg-cyan px-2 py-0.5 text-[11px] font-semibold text-navy">
+            Locked in
+          </span>
+          <span className="text-white/75">
+            {kitDate(kit.locked_at)}
+            {by(kit.locked_by_name)}
+          </span>
+        </p>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onUnlock}
+          className="text-xs font-medium text-white/70 hover:text-white hover:underline disabled:opacity-50"
+        >
+          Unlock to change it
+        </button>
+        {message && <p className="w-full text-xs text-white/70">{message}</p>}
+      </div>
+    );
+  return (
+    <div className="mt-2.5 border-t border-white/15 pt-2.5">
+      {confirming ? (
+        <div className="space-y-2">
+          <p className="text-sm leading-snug">
+            Lock in this kit? It&apos;s kept as your community&apos;s starting
+            kit and can&apos;t be changed until an organiser unlocks it.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={onLock}
+              className="rounded-full bg-pink px-3.5 py-1 text-sm font-semibold text-navy hover:bg-pink/90 disabled:opacity-50"
+            >
+              Yes, lock it in
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-full px-3.5 py-1 text-sm font-semibold text-white/80 ring-1 ring-white/30 hover:text-white"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={onSave}
+            className="rounded-full px-3.5 py-1 text-sm font-semibold text-white ring-1 ring-white/40 hover:ring-white disabled:opacity-50"
+          >
+            Save kit
+          </button>
+          <button
+            type="button"
+            disabled={busy || !canLock}
+            title={canLock ? undefined : "Add every Essential item first"}
+            onClick={onLock}
+            className="rounded-full bg-pink px-3.5 py-1 text-sm font-semibold text-navy hover:bg-pink/90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Lock in kit
+          </button>
+          {kit && (
+            <span className="text-xs text-white/60">
+              Saved {kitDate(kit.saved_at)}
+              {by(kit.saved_by_name)}
+            </span>
+          )}
+        </div>
+      )}
+      {message && <p className="mt-1.5 text-xs text-white/70">{message}</p>}
+    </div>
+  );
+}
+
+function KitTotal({
+  items,
+  pickOf,
+  qtyOf,
+  children,
+}: {
+  items: EquipmentItem[];
+  pickOf: (i: EquipmentItem) => number;
+  qtyOf: (i: EquipmentItem) => number;
+  children?: ReactNode; // save bar, essentials note
+}) {
+  const { total, unpriced } = kitTotal(items, pickOf, qtyOf);
 
   const money = (n: number) => `$${Math.round(n).toLocaleString("en-AU")}`;
   const gap = total - EQUIPMENT_GRANT; // > 0: to cover; < 0: left over
@@ -586,6 +848,7 @@ function KitTotal({
           </>
         )}
       </dl>
+      {children}
     </div>
   );
 }
@@ -623,7 +886,11 @@ function EquipmentRow({
   recommended = false,
   suggested = false,
   portable = false,
+  kitLocked = false,
+  addBlocked,
 }: {
+  kitLocked?: boolean; // the community locked its kit in: read-only
+  addBlocked?: string; // why + is off (Essentials first), else undefined
   // Portable kit: only the portable version, when the item has one (Kai,
   // 11 Nov 2026: no budget table in portable mode).
   portable?: boolean;
@@ -737,7 +1004,10 @@ function EquipmentRow({
                     {matchedShort((opt ? opt.price : item.price) ?? "")}
                   </span>
                 )}
-                {kitQty !== undefined && onKitQty && (
+                {kitQty !== undefined && onKitQty && kitLocked && (
+                  <span className="font-normal text-stone-600">× {kitQty}</span>
+                )}
+                {kitQty !== undefined && onKitQty && !kitLocked && (
                   <span
                     className="inline-flex items-center rounded-full font-normal ring-1 ring-black/10"
                     title="How many for your kit"
@@ -757,7 +1027,9 @@ function EquipmentRow({
                       type="button"
                       aria-label={`One more ${item.name}`}
                       onClick={() => onKitQty(Math.min(50, kitQty + 1))}
-                      className="h-7 w-7 rounded-r-full text-base font-semibold text-navy hover:bg-stone-100"
+                      disabled={!!addBlocked && kitQty === 0}
+                      title={kitQty === 0 ? addBlocked : undefined}
+                      className="h-7 w-7 rounded-r-full text-base font-semibold text-navy hover:bg-stone-100 disabled:cursor-not-allowed disabled:text-stone-300 disabled:hover:bg-transparent"
                     >
                       +
                     </button>
@@ -953,7 +1225,10 @@ function EquipmentRow({
               className={`${onlyPortable ? "hidden" : "inline-flex"} rounded-full bg-stone-100 p-0.5`}
             >
               {item.options.map((o, n) => (
+                // A locked-in kit shows only the version picked.
                 <button
+                  hidden={kitLocked && pick !== n}
+                  disabled={kitLocked}
                   key={o.label}
                   type="button"
                   role="tab"

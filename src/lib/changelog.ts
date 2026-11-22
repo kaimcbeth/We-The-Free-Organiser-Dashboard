@@ -46,6 +46,24 @@ export const COMING_SOON: { title: string; text: string }[] = [
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-11-23",
+    title: "Save and lock in your starting kit",
+    changes: [
+      {
+        level: "organiser",
+        text: "Build Your Kit: Save kit keeps your picks for next time, and Lock in kit settles your community's starting kit (unlock it any time to change it).",
+      },
+      {
+        level: "organiser",
+        text: "Build Your Kit: add every Essential item before choosing extras.",
+      },
+      {
+        level: "god",
+        text: "team_kits table + save_team_kit / unlock_team_kit (0251). The save buttons stay hidden until the table exists.",
+      },
+    ],
+  },
+  {
     date: "2026-11-19",
     title: "People moves into Insights; pin your own tabs",
     changes: [
