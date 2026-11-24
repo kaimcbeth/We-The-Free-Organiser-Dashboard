@@ -6,6 +6,7 @@ import { readHeader, subscribeHeader } from "@/lib/header-height";
 import {
   type ReactNode,
   useEffect,
+  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -425,9 +426,9 @@ export function Equipment({
               onKitQty={(n) => setQtys((q) => ({ ...q, [i.key]: n }))}
               onPick={(n) => setPicks((p) => ({ ...p, [i.key]: n }))}
               kitLocked={kitLocked}
-              addBlocked={
+              blockedBy={
                 building && !essential(i) && !essentialsDone
-                  ? "Add every Essential item first"
+                  ? missing.map((m) => ({ key: m.key, name: m.name }))
                   : undefined
               }
               inventory={have}
@@ -887,10 +888,12 @@ function EquipmentRow({
   suggested = false,
   portable = false,
   kitLocked = false,
-  addBlocked,
+  blockedBy,
 }: {
   kitLocked?: boolean; // the community locked its kit in: read-only
-  addBlocked?: string; // why + is off (Essentials first), else undefined
+  // Essentials still at 0: + on an extra explains why it can't be added yet
+  // (Kai, 23 Nov 2026), else undefined.
+  blockedBy?: { key: string; name: string }[];
   // Portable kit: only the portable version, when the item has one (Kai,
   // 11 Nov 2026: no budget table in portable mode).
   portable?: boolean;
@@ -915,6 +918,10 @@ function EquipmentRow({
 }) {
   // Open on the version the community has, else the first.
   const [ownPick, setPick] = useState(() => firstPick(item, inventory));
+  // Tapping + on an extra before the Essentials are in shows why (Kai).
+  const blocked = !!blockedBy?.length && kitQty === 0;
+  const [nudge, setNudge] = useState(false);
+  const nudgeTimer = useRef<number | undefined>(undefined);
   const pick = pickProp ?? ownPick; // base kit: the page keeps it (kit total)
   const [guideOpen, setGuideOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
@@ -1026,15 +1033,47 @@ function EquipmentRow({
                     <button
                       type="button"
                       aria-label={`One more ${item.name}`}
-                      onClick={() => onKitQty(Math.min(50, kitQty + 1))}
-                      disabled={!!addBlocked && kitQty === 0}
-                      title={kitQty === 0 ? addBlocked : undefined}
-                      className="h-7 w-7 rounded-r-full text-base font-semibold text-navy hover:bg-stone-100 disabled:cursor-not-allowed disabled:text-stone-300 disabled:hover:bg-transparent"
+                      aria-disabled={blocked || undefined}
+                      onClick={() => {
+                        if (!blocked) return onKitQty(Math.min(50, kitQty + 1));
+                        setNudge(true);
+                        window.clearTimeout(nudgeTimer.current);
+                        nudgeTimer.current = window.setTimeout(
+                          () => setNudge(false),
+                          6000,
+                        );
+                      }}
+                      className={`h-7 w-7 rounded-r-full text-base font-semibold ${blocked ? "cursor-not-allowed text-stone-300" : "text-navy hover:bg-stone-100"}`}
                     >
                       +
                     </button>
                   </span>
                 )}
+              </span>
+            )}
+            {blocked && nudge && (
+              <span
+                role="status"
+                className="kit-nudge mt-1.5 block rounded-lg bg-pink/10 px-2.5 py-1.5 text-sm leading-snug text-navy ring-1 ring-pink/40"
+              >
+                Add every <b className="font-semibold">Essential</b> item before
+                choosing extras. Still to add:{" "}
+                {blockedBy!.map((m, n) => (
+                  <span key={m.key}>
+                    {n > 0 && ", "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNudge(false);
+                        jumpTo(`#item-${m.key}`);
+                      }}
+                      className="font-semibold text-pink-ink underline decoration-pink/50 underline-offset-2 hover:decoration-pink"
+                    >
+                      {m.name}
+                    </button>
+                  </span>
+                ))}
+                .
               </span>
             )}
             {item.parts && (

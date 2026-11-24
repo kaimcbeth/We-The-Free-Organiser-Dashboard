@@ -142,3 +142,36 @@ body {
     animation: none;
   }
 }
+
+/* Build Your Kit: why an extra can't be added yet (Kai, 23 Nov 2026). */
+@keyframes kit-nudge {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  15% {
+    opacity: 1;
+    transform: translateX(-4px);
+  }
+  30% {
+    transform: translateX(4px);
+  }
+  45% {
+    transform: translateX(-3px);
+  }
+  60% {
+    transform: translateX(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.kit-nudge {
+  animation: kit-nudge 0.45s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kit-nudge {
+    animation: none;
+  }
+}

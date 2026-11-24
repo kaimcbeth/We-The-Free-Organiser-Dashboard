@@ -55,7 +55,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
-        text: "Build Your Kit: add every Essential item before choosing extras.",
+        text: "Build Your Kit: add every Essential item before choosing extras. Tapping + on an extra too early says which Essential is still missing, with a link to it.",
       },
       {
         level: "god",
