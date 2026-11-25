@@ -78,6 +78,7 @@ export type Row = {
   weekday: string | null; // "Wednesday" when every date is on the same day
   place: string | null;
   tag: Tag;
+  also: string[]; // month calendar: later dates of the same event
   emoji: string; // the listing's own emoji, else the special event's, else a guess
   score: number;
 };
@@ -123,7 +124,7 @@ export function seasonRows(
   events: SeasonEvent[],
   pastTitles: Set<string>,
   tz: string,
-  eachDate = false, // month calendar: every date its own row, unless weekly
+  eachDate = false, // month calendar: one row per event, later dates as "Also on …"
 ): Row[] {
   const dayName = new Intl.DateTimeFormat("en-AU", {
     timeZone: tz,
@@ -138,10 +139,7 @@ export function seasonRows(
   }
   const rows: Row[] = [];
   const lists: [string, SeasonEvent[]][] = [];
-  for (const [key, list] of groups)
-    if (eachDate)
-      list.forEach((e, i) => lists.push([i ? `${key}#${i}` : key, [e]]));
-    else lists.push([key, list]);
+  for (const [key, list] of groups) lists.push([key, list]);
   for (const [key, list] of lists) {
     const e = list[0];
     const days = new Set(
@@ -166,7 +164,11 @@ export function seasonRows(
       dates: list.length,
       // "Every Wednesday" only for weekly repeats (most gaps a week; a
       // holiday break is fine).
-      weekday: weekly(list) && days.size === 1 ? [...days][0] : null,
+      // Season: "Every Wednesday" for weekly repeats. Month (Kai, 26 Nov
+      // 2026): the first date with "Also on the 9th, 16th" instead of rows.
+      weekday:
+        !eachDate && weekly(list) && days.size === 1 ? [...days][0] : null,
+      also: eachDate ? list.slice(1).map((x) => x.starts_at) : [],
       place: e.venue || (e.address ? e.address.split(",")[0] : null),
       tag,
       emoji: eventEmoji(
@@ -181,6 +183,25 @@ export function seasonRows(
 }
 
 // The rows ticked to start with: highest priority first, then soonest.
+const ordinal = (n: number) =>
+  n +
+  (n % 100 >= 11 && n % 100 <= 13
+    ? "th"
+    : (["th", "st", "nd", "rd"][n % 10] ?? "th"));
+
+// "Also on the 9th, 16th & 23rd" (up to 3 dates, then "+ N more").
+export function alsoOn(dates: string[], tz: string) {
+  const day = new Intl.DateTimeFormat("en-AU", {
+    timeZone: tz,
+    day: "numeric",
+  });
+  const ds = dates.map((x) => ordinal(Number(day.format(new Date(x)))));
+  if (ds.length > 3)
+    return `Also on the ${ds.slice(0, 2).join(", ")} + ${ds.length - 2} more`;
+  if (ds.length === 1) return `Also on the ${ds[0]}`;
+  return `Also on the ${ds.slice(0, -1).join(", ")} & ${ds[ds.length - 1]}`;
+}
+
 export function pickRows(rows: Row[], max = MAX_ROWS) {
   return new Set(
     [...rows]
@@ -334,13 +355,29 @@ export function drawSeason(
     ctx.font = `500 ${rowH < 100 ? 24 : 28}px ${font}`;
     ctx.fillStyle = "rgba(255,255,255,0.7)";
     const sub = [
-      r.weekday ? `${r.weekday}s` : r.dates > 1 ? `${r.dates} dates` : null,
+      r.weekday
+        ? `${r.weekday}s`
+        : r.dates > 1 && !r.also.length
+          ? `${r.dates} dates`
+          : null,
       r.place,
     ]
       .filter(Boolean)
       .join("  ·  ");
-    if (sub)
-      ctx.fillText(wrap(ctx, sub, tw, 1)[0], tx, y + (rowH < 100 ? 70 : 76));
+    const subY = y + (rowH < 100 ? 70 : 76);
+    const alsoText = r.also.length ? alsoOn(r.also, d.tz) : "";
+    if (alsoText) {
+      // "Also on …" in yellow first, so it never gets cut; place after it.
+      ctx.fillStyle = YELLOW;
+      const a = wrap(ctx, alsoText, tw, 1)[0];
+      ctx.fillText(a, tx, subY);
+      const aw = ctx.measureText(a + "  ·  ").width;
+      if (sub && aw < tw - 60) {
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        ctx.fillText("·", tx + ctx.measureText(a + "  ").width, subY);
+        ctx.fillText(wrap(ctx, sub, tw - aw, 1)[0], tx + aw, subY);
+      }
+    } else if (sub) ctx.fillText(wrap(ctx, sub, tw, 1)[0], tx, subY);
     y += rowH;
   }
   if (d.more) {
@@ -366,6 +403,7 @@ export function drawSeason(
 }
 
 type Team = { name: string; timezone: string; lat: number | null };
+type Rename = { title?: string; emoji?: string };
 
 // "Make the calendar" on the Seasonal calendar posted action.
 export function SeasonCalendarButton({
@@ -487,6 +525,30 @@ export function SeasonCalendar({
   const [mark, setMark] = useState<HTMLImageElement | null>(null);
   const [fonts, setFonts] = useState(false);
   const [msg, setMsg] = useState("");
+  // Hand-changed names and emojis (Kai, 26 Nov 2026), per community on this
+  // device, keyed by the row's normalised title so they carry to next month.
+  const namesKey = `wtf-calendar-names-${teamId}`;
+  const [names, setNames] = useState<Record<string, Rename>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(namesKey) ?? "{}");
+    } catch {
+      return {};
+    }
+  });
+  function rename(key: string, change: Rename | null) {
+    const next = { ...names };
+    if (change) next[key] = { ...next[key], ...change };
+    else delete next[key];
+    setNames(next);
+    try {
+      localStorage.setItem(namesKey, JSON.stringify(next));
+    } catch {}
+  }
+  const withNames = (r: Row): Row => ({
+    ...r,
+    title: names[r.key]?.title?.trim() || r.title,
+    emoji: names[r.key]?.emoji?.trim() || r.emoji,
+  });
   const canvas = useRef<HTMLCanvasElement>(null);
 
   const tz = team?.timezone ?? "Australia/Sydney";
@@ -591,7 +653,7 @@ export function SeasonCalendar({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load once
   }, [teamId]);
 
-  const shown = (rows ?? []).filter((r) => picked.has(r.key));
+  const shown = (rows ?? []).filter((r) => picked.has(r.key)).map(withNames);
   const more = (rows ?? []).length - shown.length;
   const community = communityLabel(team?.name ?? "");
 
@@ -658,7 +720,7 @@ export function SeasonCalendar({
       .sort((a, b) => a.first.localeCompare(b.first))
       .map(
         (r) =>
-          `${r.emoji} ${r.weekday ? `Every ${r.weekday}` : day.format(new Date(r.first))}: ${r.title}${r.place ? ` (${r.place})` : ""}`,
+          `${r.emoji} ${r.weekday ? `Every ${r.weekday}` : day.format(new Date(r.first))}: ${r.title}${r.place ? ` (${r.place})` : ""}${r.also.length ? `. ${alsoOn(r.also, tz)}` : ""}`,
       );
     return [
       month
@@ -694,7 +756,9 @@ export function SeasonCalendar({
         : the {what}&apos;s {month ? "events" : "highlights"} as one post. Up to{" "}
         {MAX_ROWS} events fit, so special events, trainings, collabs and new
         events go first.
-        {!month && ' Weekly ones show once as "Every Wednesday".'} Tick to swap.
+        {!month && ' Weekly ones show once as "Every Wednesday".'}
+        {month && " Repeats show once, with the other dates beside them."} Tick
+        to swap; tap a name or emoji to change it.
       </p>
       {!rows ? (
         <p className="text-sm text-stone-400">
@@ -745,31 +809,53 @@ export function SeasonCalendar({
               </li>
             )}
             {sorted.map((r) => (
-              <li key={r.key}>
-                <label className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm">
+              <li
+                key={r.key}
+                className="flex items-center gap-2 px-3 py-2 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  aria-label={`Show ${r.title}`}
+                  checked={picked.has(r.key)}
+                  onChange={() => toggle(r.key)}
+                />
+                <input
+                  aria-label="Emoji"
+                  className="w-10 shrink-0 rounded-md border border-stone-200 bg-white px-1 py-1 text-center text-base"
+                  value={names[r.key]?.emoji ?? r.emoji}
+                  onChange={(e) => rename(r.key, { emoji: e.target.value })}
+                />
+                <span className="min-w-0 flex-1">
                   <input
-                    type="checkbox"
-                    checked={picked.has(r.key)}
-                    onChange={() => toggle(r.key)}
+                    aria-label="Name on the calendar"
+                    className="w-full rounded-md border border-transparent bg-transparent px-1 py-0.5 font-medium text-navy hover:border-stone-200 focus:border-stone-300 focus:bg-white"
+                    value={names[r.key]?.title ?? r.title}
+                    onChange={(e) => rename(r.key, { title: e.target.value })}
                   />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium text-navy">
-                      {r.emoji} {r.title}
-                    </span>
-                    <span className="block text-xs text-stone-500">
-                      {r.weekday
+                  <span className="block px-1 text-xs text-stone-500">
+                    {r.also.length
+                      ? `${fmt.format(new Date(r.first))} · ${alsoOn(r.also, tz)}`
+                      : r.weekday
                         ? `Every ${r.weekday} (${r.dates} dates)`
                         : r.dates > 1
                           ? `${r.dates} dates from ${fmt.format(new Date(r.first))}`
                           : fmt.format(new Date(r.first))}
-                    </span>
+                    {names[r.key] && (
+                      <button
+                        type="button"
+                        className="ml-2 underline hover:text-navy"
+                        onClick={() => rename(r.key, null)}
+                      >
+                        Undo
+                      </button>
+                    )}
                   </span>
-                  {r.tag && (
-                    <span className="shrink-0 rounded-full bg-navy/5 px-2 py-0.5 text-xs font-semibold text-navy">
-                      {r.tag}
-                    </span>
-                  )}
-                </label>
+                </span>
+                {r.tag && (
+                  <span className="shrink-0 rounded-full bg-navy/5 px-2 py-0.5 text-xs font-semibold text-navy">
+                    {r.tag}
+                  </span>
+                )}
               </li>
             ))}
           </ul>

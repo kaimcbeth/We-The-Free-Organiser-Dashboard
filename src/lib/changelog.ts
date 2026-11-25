@@ -51,6 +51,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'Month calendar: repeat events (like weekly co-working) show once with "Also on the 9th, 16th & 23rd", and you can change any event\'s name or emoji for the calendar.',
+      },
+      {
+        level: "organiser",
         text: "Month and season calendars: every event now has its own emoji (from the listing, the special event, or a guess from the title), the NEW tags and special-event highlights are gone, and long titles shrink to fit.",
       },
       {
