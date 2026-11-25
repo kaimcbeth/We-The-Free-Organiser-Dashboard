@@ -52,6 +52,7 @@ import { inputClass } from "@/components/form";
 import { PodShareButton } from "@/components/engagement-pod";
 import {
   SeasonCalendarButton,
+  MonthCalendarButton,
   SeasonHostsSheet,
 } from "@/components/season-calendar";
 import {
@@ -524,6 +525,15 @@ export function TaskCard({
                 >
                   Pod chat
                 </a>
+              )}
+              {task.kind === "promo_month_calendar" && task.teamId && (
+                <MonthCalendarButton
+                  teamId={task.teamId}
+                  tz={tz}
+                  dueAt={task.dueAt}
+                  label="Make the calendar"
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
               )}
               {task.kind === "promo_season_calendar" && task.teamId && (
                 <SeasonCalendarButton

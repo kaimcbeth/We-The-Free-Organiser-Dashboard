@@ -452,9 +452,11 @@ export function MonthCalendarButton({
   tz,
   className,
   label = "Month calendar",
+  dueAt,
 }: {
   teamId: string;
   tz: string;
+  dueAt?: string; // "Month calendar posted" action: due 5 days into the month it's for
   className?: string;
   label?: string;
 }) {
@@ -466,9 +468,10 @@ export function MonthCalendarButton({
       month: "2-digit",
       day: "2-digit",
     })
-      .format(new Date())
+      .format(dueAt ? new Date(dueAt) : new Date())
       .split("-")
       .map(Number);
+    if (dueAt) return { year: y, month: m };
     // From the 15th, next month is the one being planned.
     return d >= 15
       ? { year: m === 12 ? y + 1 : y, month: m === 12 ? 1 : m + 1 }

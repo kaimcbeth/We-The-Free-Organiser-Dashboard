@@ -82,6 +82,14 @@ export const CHANGELOG: Release[] = [
         text: "Resources: the member feedback survey has its own card, with how many responses you've had and buttons to share it or read them.",
       },
       {
+        level: "organiser",
+        text: "Build Your Kit: save your starting kit and lock it in once you've settled on it.",
+      },
+      {
+        level: "organiser",
+        text: "New end-of-month action: Month calendar posted, with a button that makes next month's What's on graphic.",
+      },
+      {
         level: "god",
         text: "New Community Manager role, between God Mode and Regional Support Lead: every region at once, without test accounts, View as or usage stats. God Mode can give it and preview it.",
       },
