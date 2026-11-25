@@ -46,6 +46,20 @@ export const COMING_SOON: { title: string; text: string }[] = [
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-11-25",
+    title: "Tidier Actions",
+    changes: [
+      {
+        level: "organiser",
+        text: "Paired with a regular is now one card per week, with a row for each newcomer and a Pick a regular button on each.",
+      },
+      {
+        level: "organiser",
+        text: "Actions due before an event (Facebook event, promotion and so on) drop off once the event has started.",
+      },
+    ],
+  },
+  {
     date: "2026-11-23",
     title: "Save and lock in your starting kit",
     changes: [

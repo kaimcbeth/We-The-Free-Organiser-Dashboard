@@ -217,6 +217,18 @@ function toRow(t: Raw): TaskRow {
   };
 }
 
+// Before-the-event actions (due by the time the event starts: Facebook
+// event, promotion, tech check…) stop showing once the event has started
+// (Kai, 25 Nov 2026: "if an event has elapsed … pre-event tasks … should go
+// away"). They're only hidden, not dismissed, so nothing changes in the
+// database; during- and after-event actions are due after the start and stay.
+export function pastPreEvent(
+  t: { eventAt: string | null; dueAt: string },
+  nowIso: string,
+) {
+  return !!t.eventAt && t.eventAt <= nowIso && t.dueAt <= t.eventAt;
+}
+
 // A team's (or several teams') open tasks, soonest due first, and the last
 // fortnight's done ones. Regional Support Lead tasks only when asked for.
 export async function loadTeamTasks(
@@ -250,7 +262,10 @@ export async function loadTeamTasks(
   const keep = (t: TaskRow) => regional || !t.regional;
   // Moved tasks stay out of the way until their day.
   const nowIso = new Date().toISOString();
-  let all = (open.data ?? []).map(toRow).filter(keep);
+  let all = (open.data ?? [])
+    .map(toRow)
+    .filter(keep)
+    .filter((t) => !pastPreEvent(t, nowIso));
   await attachNewcomers(supabase, all);
   all = await dropEmptyQuiet(supabase, all);
   return {

@@ -1,3 +1,4 @@
+import { pastPreEvent } from "@/lib/tasks";
 import { HubSearch } from "@/components/hub-search";
 import Link from "next/link";
 import { EasterEggLogo } from "@/components/easter-egg-logo";
@@ -53,10 +54,11 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     organiser.role === "god" || organiser.role === "regional_lead";
   let countQuery = supabase
     .from("tasks")
-    .select("id, kind:task_kinds!inner(audience)", {
-      count: "exact",
-      head: true,
-    })
+    // Rows, not a head count, so actions for events that have already
+    // started can be left out (pastPreEvent compares two columns).
+    .select(
+      "id, due_at, event:events(starts_at), kind:task_kinds!inner(audience)",
+    )
     .in(
       "team_id",
       organiser.allCommunities
@@ -71,7 +73,18 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     countQuery = countQuery.eq("kind.audience", "regional");
   else if (!regionalStaff)
     countQuery = countQuery.eq("kind.audience", "community");
-  const { count: openTasks } = await countQuery;
+  const { data: countRows } =
+    await countQuery.returns<
+      { due_at: string; event: { starts_at: string } | null }[]
+    >();
+  const nowIso = new Date().toISOString();
+  const openTasks = (countRows ?? []).filter(
+    (r) =>
+      !pastPreEvent(
+        { eventAt: r.event?.starts_at ?? null, dueAt: r.due_at },
+        nowIso,
+      ),
+  ).length;
   const name = me
     ? [me.first_name, me.last_name].filter(Boolean).join(" ")
     : organiser.name;

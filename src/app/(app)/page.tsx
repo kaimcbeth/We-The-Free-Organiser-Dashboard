@@ -1,3 +1,4 @@
+import { pastPreEvent } from "@/lib/tasks";
 import { Countdown } from "@/components/countdown";
 import { EventsShare } from "@/components/events-share";
 import { RemindersLink } from "@/components/reminders-link";
@@ -194,7 +195,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
       // Open actions per event, for the "N actions" links.
       supabase
         .from("tasks")
-        .select("event_id, show_from")
+        .select("event_id, show_from, due_at, event:events(starts_at)")
         .eq("team_id", organiser.team_id)
         .is("done_at", null)
         .is("dismissed_at", null)
@@ -202,7 +203,18 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
     ]);
   const actionsFor = new Map<string, number>();
   for (const t of openActions.data ?? [])
-    if (!t.show_from || t.show_from <= nowIso())
+    if (
+      (!t.show_from || t.show_from <= nowIso()) &&
+      !pastPreEvent(
+        {
+          eventAt:
+            (t.event as unknown as { starts_at: string } | null)?.starts_at ??
+            null,
+          dueAt: t.due_at,
+        },
+        nowIso(),
+      )
+    )
       actionsFor.set(t.event_id!, (actionsFor.get(t.event_id!) ?? 0) + 1);
 
   if (today.error || upcoming.error || past.error)

@@ -25,6 +25,7 @@ import {
 import { loadConnectContext } from "@/lib/connect";
 import { loadRslTeams } from "@/lib/rsl-teams";
 import { GroupedCheckIns } from "@/components/grouped-checkins";
+import { NewcomerPairing } from "@/components/newcomer-pairing";
 import { OrganiserChatsLink } from "@/components/organiser-chats-link";
 import { loadChatLinks } from "@/lib/beeper";
 import { RegionTasks } from "./region-tasks";
@@ -421,9 +422,17 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         }
       >
         <ul className="space-y-3">
-          {g.tasks.map((t) => (
-            <TaskCard key={t.id} task={t} {...common} hideEvent />
-          ))}
+          {g.tasks
+            .filter((t) => t.kind !== "com_buddies")
+            .map((t) => (
+              <TaskCard key={t.id} task={t} {...common} hideEvent />
+            ))}
+          {g.tasks.some((t) => t.kind === "com_buddies") && (
+            <NewcomerPairing
+              tasks={g.tasks.filter((t) => t.kind === "com_buddies")}
+              card={{ ...common, hideEvent: true }}
+            />
+          )}
         </ul>
         {upcomingFor(g.key).length > 0 && (
           <>
