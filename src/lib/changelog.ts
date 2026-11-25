@@ -50,6 +50,10 @@ export const CHANGELOG: Release[] = [
     title: "PDRs for Regional Support Leads",
     changes: [
       {
+        level: "organiser",
+        text: "Month and season calendars: every event now has its own emoji (from the listing, the special event, or a guess from the title), the NEW tags and special-event highlights are gone, and long titles shrink to fit.",
+      },
+      {
         level: "regional_lead",
         text: "Your Performance & Development Review now lives in the Hub: fill in your draft before the meeting, see your community manager's notes in the meeting, tick to sign it off and download the PDF.",
       },
