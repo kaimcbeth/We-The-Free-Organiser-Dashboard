@@ -27,6 +27,85 @@ const SIZES = {
 } as const;
 type Size = keyof typeof SIZES;
 
+const CYAN = "#2fd9df";
+
+// Colour variants (Kai, 25 Nov 2026: "a few basic colour variants").
+// ink = the colour lines, rings and faint text are made from.
+type Theme = {
+  label: string;
+  swatch: string;
+  bg: string;
+  glow: string; // r,g,b of the top-right glow
+  text: string;
+  ink: string; // r,g,b
+  accent: string; // details line + names beside the roles
+  fill: string; // filled spot circle + count bar
+  fillText: string;
+  mark: string | null; // tint the logo this colour, null = as it is
+};
+const THEMES = {
+  navy: {
+    label: "Navy",
+    swatch: NAVY,
+    bg: NAVY,
+    glow: "255,71,185",
+    text: "#ffffff",
+    ink: "255,255,255",
+    accent: YELLOW,
+    fill: PINK,
+    fillText: NAVY,
+    mark: null,
+  },
+  pink: {
+    label: "Pink",
+    swatch: PINK,
+    bg: PINK,
+    glow: "255,217,15",
+    text: NAVY,
+    ink: "7,17,48",
+    accent: NAVY,
+    fill: NAVY,
+    fillText: "#ffffff",
+    mark: NAVY,
+  },
+  yellow: {
+    label: "Yellow",
+    swatch: YELLOW,
+    bg: YELLOW,
+    glow: "255,71,185",
+    text: NAVY,
+    ink: "7,17,48",
+    accent: "#c8007f",
+    fill: NAVY,
+    fillText: YELLOW,
+    mark: NAVY,
+  },
+  cyan: {
+    label: "Cyan",
+    swatch: CYAN,
+    bg: CYAN,
+    glow: "255,255,255",
+    text: NAVY,
+    ink: "7,17,48",
+    accent: NAVY,
+    fill: PINK,
+    fillText: NAVY,
+    mark: NAVY,
+  },
+  white: {
+    label: "White",
+    swatch: "#ffffff",
+    bg: "#f7f5f0",
+    glow: "255,71,185",
+    text: NAVY,
+    ink: "7,17,48",
+    accent: "#c8007f",
+    fill: PINK,
+    fillText: NAVY,
+    mark: "#c8007f",
+  },
+} satisfies Record<string, Theme>;
+type ThemeKey = keyof typeof THEMES;
 type Texts = {
   kicker: string;
   heading: string;
@@ -107,6 +186,7 @@ function lines(
   return out.length > max ? null : out;
 }
 
+export { THEMES as SIGNUP_THEMES };
 export function drawSignups(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -116,30 +196,43 @@ export function drawSignups(
   target: number,
   mark: HTMLImageElement | null,
   roles: Role[] = [],
+  theme: ThemeKey = "navy",
 ) {
+  const th: Theme = THEMES[theme] ?? THEMES.navy;
+  const ink = (a: number) => `rgba(${th.ink},${a})`;
   const body = bodyFont();
   const m = 72;
-  ctx.fillStyle = NAVY;
+  ctx.fillStyle = th.bg;
   ctx.fillRect(0, 0, w, h);
   grain(ctx, w, h);
-  // Soft pink glow top right.
+  // Soft glow top right.
   const glow = ctx.createRadialGradient(w, 0, 0, w, 0, w * 0.8);
-  glow.addColorStop(0, "rgba(255,71,185,0.22)");
-  glow.addColorStop(1, "rgba(255,71,185,0)");
+  glow.addColorStop(0, `rgba(${th.glow},${theme === "navy" ? 0.22 : 0.35})`);
+  glow.addColorStop(1, `rgba(${th.glow},0)`);
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, w, h);
 
   if (mark) {
     const mh = 76;
     const mw = (mark.naturalWidth / mark.naturalHeight) * mh;
-    ctx.drawImage(mark, w - m - mw, m - 8, mw, mh);
+    if (th.mark) {
+      const tint = document.createElement("canvas");
+      tint.width = Math.ceil(mw * 2);
+      tint.height = Math.ceil(mh * 2);
+      const t2 = tint.getContext("2d")!;
+      t2.drawImage(mark, 0, 0, tint.width, tint.height);
+      t2.globalCompositeOperation = "source-in";
+      t2.fillStyle = th.mark;
+      t2.fillRect(0, 0, tint.width, tint.height);
+      ctx.drawImage(tint, w - m - mw, m - 8, mw, mh);
+    } else ctx.drawImage(mark, w - m - mw, m - 8, mw, mh);
   }
 
   let y = m + 30;
   ctx.textBaseline = "alphabetic";
   ctx.textAlign = "left";
   if (t.kicker) {
-    ctx.fillStyle = PINK;
+    ctx.fillStyle = theme === "navy" ? PINK : th.text;
     ctx.font = `800 34px ${body}`;
     ctx.letterSpacing = "4px";
     ctx.fillText(t.kicker.toUpperCase(), m, y);
@@ -157,7 +250,7 @@ export function drawSignups(
     if (heading) break;
     size -= 4;
   }
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = th.text;
   for (const l of heading ?? [t.heading]) {
     y += size * 1.02;
     ctx.fillText(l, m, y);
@@ -165,7 +258,7 @@ export function drawSignups(
 
   if (t.details) {
     y += 56;
-    ctx.fillStyle = YELLOW;
+    ctx.fillStyle = th.accent;
     ctx.font = `700 36px ${body}`;
     ctx.fillText(t.details, m, y);
   }
@@ -174,17 +267,17 @@ export function drawSignups(
   const filled = names.length;
   const spots = Math.max(target, filled);
   y += 58;
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = th.text;
   ctx.font = `700 30px ${body}`;
   const count = `${filled} of ${target} spots filled`;
   ctx.fillText(count, m, y);
   const barX = m + ctx.measureText(count).width + 24;
   const barW = w - m - barX;
-  ctx.fillStyle = "rgba(255,255,255,0.14)";
+  ctx.fillStyle = ink(0.14);
   ctx.beginPath();
   ctx.roundRect(barX, y - 20, barW, 14, 7);
   ctx.fill();
-  ctx.fillStyle = PINK;
+  ctx.fillStyle = th.fill;
   ctx.beginPath();
   ctx.roundRect(
     barX,
@@ -201,7 +294,7 @@ export function drawSignups(
   if (roles.length) {
     y += story ? 76 : 62;
     if (t.rolesTitle) {
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = th.text;
       ctx.font = `700 ${story ? 32 : 30}px ${body}`;
       ctx.fillText(t.rolesTitle, m, y);
       y += story ? 18 : 10;
@@ -236,17 +329,17 @@ export function drawSignups(
       const label = r.label || "Role";
       ctx.font = `800 ${ps}px ${body}`;
       const pw = ctx.measureText(label).width + ps * 1.5;
-      ctx.strokeStyle = "rgba(255,255,255,0.5)";
+      ctx.strokeStyle = ink(0.5);
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.roundRect(x + 1, py + 1, pw - 2, pillH - 2, pillH / 2);
       ctx.stroke();
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = th.text;
       ctx.textBaseline = "middle";
       ctx.fillText(label, x + ps * 0.75, py + pillH / 2 + 1);
       if (r.names.length) {
         ctx.font = `700 ${ps}px ${body}`;
-        ctx.fillStyle = YELLOW;
+        ctx.fillStyle = th.accent;
         ctx.fillText(r.names.join(", "), x + pw + 12, py + pillH / 2 + 1);
       }
       ctx.textBaseline = "alphabetic";
@@ -255,7 +348,7 @@ export function drawSignups(
     y = py + pillH;
     // A thin rule between the roles and the numbered list.
     y += story ? 40 : 28;
-    ctx.fillStyle = "rgba(255,255,255,0.15)";
+    ctx.fillStyle = ink(0.15);
     ctx.fillRect(m, y, w - m * 2, 2);
     y -= 8;
   }
@@ -280,14 +373,14 @@ export function drawSignups(
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     if (name) {
-      ctx.fillStyle = PINK;
+      ctx.fillStyle = th.fill;
       ctx.fill();
     } else {
-      ctx.strokeStyle = "rgba(255,255,255,0.35)";
+      ctx.strokeStyle = ink(0.35);
       ctx.lineWidth = 2;
       ctx.stroke();
     }
-    ctx.fillStyle = name ? NAVY : "rgba(255,255,255,0.55)";
+    ctx.fillStyle = name ? th.fillText : ink(0.55);
     ctx.font = `800 ${Math.round(r * 0.95)}px ${body}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -302,10 +395,10 @@ export function drawSignups(
         s -= 2;
         ctx.font = `700 ${s}px ${body}`;
       }
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = th.text;
       ctx.fillText(name, nx, cy + 1);
     } else {
-      ctx.strokeStyle = "rgba(255,255,255,0.25)";
+      ctx.strokeStyle = ink(0.3);
       ctx.lineWidth = 2;
       ctx.setLineDash([10, 9]);
       ctx.beginPath();
@@ -320,7 +413,7 @@ export function drawSignups(
   // Footer.
   ctx.textAlign = "center";
   if (t.footer) {
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = th.text;
     ctx.font = `700 34px ${body}`;
     ctx.fillText(t.footer, w / 2, h - 60);
   }
@@ -424,6 +517,14 @@ function Maker({
   onClose: () => void;
 }) {
   const [size, setSize] = useState<Size>("post");
+  const [theme, setTheme] = useState<ThemeKey>(() => {
+    try {
+      const v = localStorage.getItem("wtf-signup-theme") as ThemeKey | null;
+      return v && v in THEMES ? v : "navy";
+    } catch {
+      return "navy";
+    }
+  });
   const [texts, setTexts] = useState<Texts>(() => defaults(event, tz));
   const [list, setList] = useState("");
   const [target, setTarget] = useState(20);
@@ -533,8 +634,9 @@ function Maker({
       target,
       mark,
       JSON.parse(rolesKey),
+      theme,
     );
-  }, [w, h, texts, namesKey, target, mark, fonts, rolesKey]);
+  }, [w, h, texts, namesKey, target, mark, fonts, rolesKey, theme]);
 
   const missing = going.filter(
     (g) => !names.some((n) => n.toLowerCase() === g.toLowerCase()),
@@ -608,6 +710,27 @@ function Maker({
             className={`rounded-full px-3 py-1 text-sm font-medium ring-1 ${size === s ? "bg-navy text-white ring-navy" : "bg-white text-stone-600 ring-stone-300"}`}
           >
             {SIZES[s].label}
+          </button>
+        ))}
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {(Object.keys(THEMES) as ThemeKey[]).map((k) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => {
+              setTheme(k);
+              try {
+                localStorage.setItem("wtf-signup-theme", k);
+              } catch {}
+            }}
+            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-medium ring-1 ${theme === k ? "bg-navy text-white ring-navy" : "bg-white text-stone-600 ring-stone-300"}`}
+          >
+            <span
+              className="size-3.5 rounded-full ring-1 ring-black/15"
+              style={{ background: THEMES[k].swatch }}
+            />
+            {THEMES[k].label}
           </button>
         ))}
       </div>
