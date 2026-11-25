@@ -178,6 +178,23 @@ function toRow(t: Raw): TaskRow {
             },
           }
         : null,
+    // Movie Challenge sign-up list (Kai, 25 Nov 2026): opens the maker.
+    signup:
+      t.kind?.kind === "mmc_signup_list" && t.event && t.team_id
+        ? {
+            title: t.event.title,
+            startsAt: t.event.starts_at,
+            endsAt: t.event.ends_at,
+            venue: t.event.venue,
+            address: t.event.address,
+            typeName: t.event.event_type?.name ?? null,
+            community:
+              t.event.team?.name.replace(/, (Australia|New Zealand)$/, "") ??
+              null,
+            teamId: t.team_id,
+            eventId: t.event.id,
+          }
+        : null,
     // Weather backup plan: a "still on / cancelled / moved" post (12 Nov 2026).
     weather:
       t.kind?.kind === "rain_backup" && t.event && t.team_id

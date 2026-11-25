@@ -57,6 +57,10 @@ export const CHANGELOG: Release[] = [
         level: "organiser",
         text: "Actions due before an event (Facebook event, promotion and so on) drop off once the event has started.",
       },
+      {
+        level: "organiser",
+        text: "New Movie Challenge action: Sign-up list posted, with a button that opens the sign-up list maker. It comes up 10 days before and is due 4 days before.",
+      },
     ],
   },
   {

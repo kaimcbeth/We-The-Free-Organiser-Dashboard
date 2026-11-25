@@ -1,6 +1,7 @@
 "use client";
 
 import { WeatherUpdateMaker, type Forecast } from "@/components/weather-update";
+import { SignupListMaker } from "@/components/signup-list";
 import { RegionWhatsOnButton } from "@/components/region-whats-on";
 import { RegionSpotlightButton } from "@/components/region-spotlight";
 import { useFold } from "@/lib/use-fold";
@@ -157,6 +158,8 @@ export type TaskRow = {
   eventAt: string | null;
   fbEvent?: FbEventDetails | null; // "Facebook event created" tasks
   graphic?: { size: GraphicSize; event: GraphicEvent } | null; // promo actions
+  // "Sign-up list posted" (Movie Challenges): the event for the maker.
+  signup?: (GraphicEvent & { teamId: string; eventId: string }) | null;
   // "Weather backup plan made": still on / cancelled / moved post.
   weather?: {
     event: GraphicEvent & { teamId: string };
@@ -827,6 +830,14 @@ export function TaskCard({
                     />
                   );
                 })()}
+              {task.signup && (
+                <SignupListMaker
+                  event={task.signup}
+                  tz={tz}
+                  label="Make the sign-up list"
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
+              )}
               {task.weather && (
                 <WeatherUpdateMaker
                   event={task.weather.event}
