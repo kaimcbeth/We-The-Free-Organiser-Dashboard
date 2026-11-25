@@ -10,6 +10,7 @@ export type IcsEvent = {
   venueName: string | null; // from X-APPLE-STRUCTURED-LOCATION's X-TITLE, when present
   description: string | null;
   url: string | null;
+  cancelled: boolean; // STATUS:CANCELLED
 };
 
 // Lines starting with a space or tab continue the previous line.
@@ -127,6 +128,7 @@ export function parseIcs(
               ? unescapeText(cur.DESCRIPTION.value) || null
               : null,
             url: cur.URL ? cur.URL.value.trim() || null : null,
+            cancelled: /^cancelled$/i.test(cur.STATUS?.value.trim() ?? ""),
           });
         }
       }

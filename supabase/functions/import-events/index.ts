@@ -88,8 +88,10 @@ Deno.serve(async (req) => {
       if (!text.includes("BEGIN:VCALENDAR"))
         throw new Error("Feed isn't a calendar");
 
+      // Events marked cancelled on activism.wtf are never added or updated
+      // (Kai, 26 Nov 2026: a cancelled Movie Challenge kept showing).
       const events = parseIcs(text, team.timezone).filter(
-        (e) => Date.parse(e.startsAt) >= cutoff,
+        (e) => !e.cancelled && Date.parse(e.startsAt) >= cutoff,
       );
       run.found = events.length;
 
