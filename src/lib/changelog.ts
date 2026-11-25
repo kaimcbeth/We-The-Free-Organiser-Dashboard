@@ -79,6 +79,14 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Resources: the member feedback survey has its own card, with how many responses you've had and buttons to share it or read them.",
+      },
+      {
+        level: "god",
+        text: "New Community Manager role, between God Mode and Regional Support Lead: every region at once, without test accounts, View as or usage stats. God Mode can give it and preview it.",
+      },
+      {
+        level: "organiser",
         text: "New Movie Challenge action: Sign-up list posted, with a button that opens the sign-up list maker. It comes up 10 days before and is due 4 days before.",
       },
     ],

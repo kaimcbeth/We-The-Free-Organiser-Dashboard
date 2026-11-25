@@ -10,6 +10,7 @@ import {
   loadEquipmentPhotos,
   loadOwnedGear,
 } from "@/lib/funding";
+import { isGlobal } from "@/lib/roles";
 
 export default async function EquipmentPage() {
   const { supabase, organiser } = await requireOrganiser();
@@ -73,9 +74,9 @@ export default async function EquipmentPage() {
         <Equipment
           teamId={teamId}
           newOrganiser={newOrganiser}
-          isGod={organiser.access === "god"}
+          isGod={isGlobal(organiser.access)}
           canEditPhotos={
-            organiser.role === "god" || organiser.role === "regional_lead"
+            isGlobal(organiser.role) || organiser.role === "regional_lead"
           }
         />
       </div>

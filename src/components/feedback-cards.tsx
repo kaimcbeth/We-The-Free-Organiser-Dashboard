@@ -17,15 +17,27 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
   const [linkOpen, setLinkOpen] = useState(false);
   const [link, setLink] = useState("");
   const [copied, setCopied] = useState(false);
+  const [stats, setStats] = useState<{ n: number; latest: string | null }>({
+    n: 0,
+    latest: null,
+  });
 
   useEffect(() => {
     if (!teamId) return;
     let live = true;
-    createClient()
-      .rpc("team_feedback_token", { p_team_id: teamId })
-      .then(({ data }) => {
-        if (live && data)
-          setLink(`${window.location.origin}/tell/${data as string}`);
+    const db = createClient();
+    db.rpc("team_feedback_token", { p_team_id: teamId }).then(({ data }) => {
+      if (live && data)
+        setLink(`${window.location.origin}/tell/${data as string}`);
+    });
+    db.from("volunteer_feedback")
+      .select("created_at", { count: "exact" })
+      .eq("team_id", teamId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .then(({ data, count }) => {
+        if (live)
+          setStats({ n: count ?? 0, latest: data?.[0]?.created_at ?? null });
       });
     return () => {
       live = false;
@@ -57,21 +69,59 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
 
   return (
     <>
-      {teamId && link && (
-        <button
-          type="button"
-          onClick={() => setLinkOpen(true)}
-          className={RESOURCE_CARD}
-        >
-          <ResourceCardBody
-            emoji="📣"
-            title="Member feedback form"
-            about="A link for members to send you feedback."
-          />
-        </button>
+      {teamId && (
+        // Local member feedback survey (Kai, 26 Nov 2026: "make sure it looks
+        // distinct" from the Global Support card): a cyan survey card with
+        // the response count and its own two buttons.
+        <div className="relative flex h-full flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-cyan/30 via-cyan/10 to-white px-4 py-3 text-navy shadow-sm ring-1 ring-cyan/60">
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -right-4 -top-5 text-7xl opacity-15"
+          >
+            💬
+          </span>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-800">
+            From your members
+          </span>
+          <span className="mt-0.5 font-semibold leading-snug">
+            📝 Member feedback survey
+          </span>
+          <span className="mt-1 text-sm text-stone-700">
+            Your local members tell you how they&apos;re finding things, with or
+            without their name.
+          </span>
+          <span className="mt-2 text-xs font-medium text-cyan-900">
+            {stats.n === 0
+              ? "No responses yet"
+              : `${stats.n} ${stats.n === 1 ? "response" : "responses"}${
+                  stats.latest
+                    ? ` · latest ${new Date(stats.latest).toLocaleDateString("en-AU", { day: "numeric", month: "short" })}`
+                    : ""
+                }`}
+          </span>
+          <span className="mt-auto flex flex-wrap gap-2 pt-3">
+            <button
+              type="button"
+              onClick={() => setLinkOpen(true)}
+              disabled={!link}
+              className="rounded-lg bg-navy px-3 py-1.5 text-sm font-semibold text-white hover:bg-navy/90 disabled:opacity-50"
+            >
+              Share the survey
+            </button>
+            <Link
+              href="/feedback-inbox"
+              className="rounded-lg bg-white/80 px-3 py-1.5 text-sm font-semibold text-navy ring-1 ring-cyan/60 hover:bg-white"
+            >
+              Read responses
+            </Link>
+          </span>
+        </div>
       )}
       {linkOpen && (
-        <Sheet title="Member feedback form" onClose={() => setLinkOpen(false)}>
+        <Sheet
+          title="Member feedback survey"
+          onClose={() => setLinkOpen(false)}
+        >
           <p className="text-sm text-stone-600">
             Share this link with your members. They can give the organisers
             feedback any time, with or without their name. You&apos;ll get a

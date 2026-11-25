@@ -31,7 +31,7 @@ import { BirthdayField } from "@/components/birthday-field";
 import { MoveCommunity } from "./move-community";
 import { MessengerButton } from "@/components/messenger-button";
 import { WhatsAppButton } from "@/components/whatsapp-button";
-import { GIVES, type Access, type CoreRole } from "@/lib/roles";
+import { GIVES, type Access, type CoreRole, isGlobal } from "@/lib/roles";
 
 type Person = {
   id: string;
@@ -138,7 +138,7 @@ export default async function PersonPage({
   );
   const realRole =
     ((roleRows as { person_id: string | null; role: Access }[] | null) ?? [])
-      .filter((r) => organiser.role === "god" || r.role !== "god")
+      .filter((r) => organiser.access === "god" || r.role !== "god")
       .find((r) => r.person_id === person.id)?.role ?? null;
   const role = realRole ?? person.pending_role;
   // Contact details: organisers and up, for anyone in the community.
@@ -286,7 +286,7 @@ export default async function PersonPage({
           regions={regions ?? []}
         />
       </div>
-      {(organiser.role === "god" || organiser.role === "regional_lead") &&
+      {(isGlobal(organiser.role) || organiser.role === "regional_lead") &&
         organiser.teams.length > 1 && (
           <MoveCommunity
             personId={person.id}

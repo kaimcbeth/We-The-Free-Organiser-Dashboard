@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireOrganiser } from "@/lib/organiser";
 import { getFeedback } from "@/app/actions";
 import { formatEventDate } from "@/lib/time";
+import { isGlobal } from "@/lib/roles";
 
 const SCALE = ["Not great", "Meh", "OK", "Good", "Loving it"];
 
@@ -14,7 +15,7 @@ export default async function FeedbackInboxPage({
   const { supabase, organiser } = await requireOrganiser();
   // Regional Support Leads (and God): organisers' feedback for them too.
   const lead =
-    organiser.access === "god" || organiser.access === "regional_lead";
+    isGlobal(organiser.access) || organiser.access === "regional_lead";
   if (lead && from === "organisers") {
     const { data } = await supabase
       .from("organiser_feedback")

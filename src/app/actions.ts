@@ -16,7 +16,7 @@ import {
   PREVIEW_REGION_COOKIE,
   type ViewRole,
 } from "@/lib/organiser";
-import { GIVES, type Access } from "@/lib/roles";
+import { GIVES, type Access, isGlobal } from "@/lib/roles";
 import { cleanFacebookUrl } from "@/lib/messenger";
 import { dayBoundsUtc, todayInTz, zonedToUtcIso } from "@/lib/time";
 
@@ -1357,7 +1357,7 @@ export async function movePersonToTeam(
   teamId: string,
 ): Promise<{ error?: string }> {
   const { supabase, organiser } = await requireOrganiser();
-  if (organiser.role !== "god" && organiser.role !== "regional_lead")
+  if (!isGlobal(organiser.role) && organiser.role !== "regional_lead")
     return { error: "Only Regional Support Leads can move people." };
   if (!organiser.teams.some((t) => t.id === teamId))
     return { error: "You can't move people to that community." };
@@ -1452,7 +1452,7 @@ export async function findMergeCandidates(
     .replace(/[%_,()]/g, " ")
     .trim();
   const teamIds =
-    organiser.role === "god" || organiser.role === "regional_lead"
+    isGlobal(organiser.role) || organiser.role === "regional_lead"
       ? organiser.teams.map((t) => t.id)
       : [organiser.team_id];
   let req = supabase

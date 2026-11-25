@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { requireCore } from "@/lib/organiser";
-import { CORE_ROLE_LABEL, ROLE_LABEL, type CoreRole } from "@/lib/roles";
+import {
+  CORE_ROLE_LABEL,
+  ROLE_LABEL,
+  type CoreRole,
+  isGlobal,
+} from "@/lib/roles";
 import { formatEventDate, formatTimeRange } from "@/lib/time";
 import { ordinal, shortTime } from "@/lib/approval-forms";
 import { ApprovalForm } from "./approval-form";
@@ -109,7 +114,7 @@ export default async function ApprovalPage({
   const title =
     organiser.access === "core_team" && leadRole
       ? CORE_ROLE_LABEL[leadRole]
-      : organiser.access === "god"
+      : isGlobal(organiser.access)
         ? "Organiser"
         : ROLE_LABEL[organiser.access];
   let signatureUrl: string | null = null;

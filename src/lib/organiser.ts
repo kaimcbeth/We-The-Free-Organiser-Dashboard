@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { setRequestTz } from "@/lib/time";
 
 import type { Access, ViewRole } from "@/lib/roles";
-import { ROLE_LABEL, ROLE_RANK } from "@/lib/roles";
+import { ROLE_LABEL, ROLE_RANK, isGlobal } from "@/lib/roles";
 export { ROLE_LABEL, ROLE_RANK } from "@/lib/roles";
 export type { Access, ViewRole } from "@/lib/roles";
 
@@ -166,7 +166,7 @@ export async function getStaff() {
     !(tourPreview || (row.access === "organiser" && !row.tutorial_done_at)) &&
     jar.get(ALL_COOKIE)?.value === "1" &&
     teams.length > 1 &&
-    (role === "god" || role === "regional_lead");
+    (isGlobal(role) || role === "regional_lead");
   // With "All communities", pages that still need one community use their
   // own (Kai's Sydney), not whichever one was last picked or previewed
   // (Kai, 6 Nov 2026: "still on Bedford").
@@ -225,7 +225,7 @@ export async function getStaff() {
     leadRegionIds:
       row.access === "regional_lead" && row.region_id
         ? [row.region_id]
-        : row.access === "god" && row.lead_region_id
+        : isGlobal(row.access) && row.lead_region_id
           ? [row.lead_region_id]
           : [],
     team_id: team.id,

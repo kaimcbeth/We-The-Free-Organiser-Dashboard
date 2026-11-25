@@ -8,6 +8,7 @@ import {
   type SpecialEvent,
 } from "@/lib/special-events";
 import { SpecialEventsEditor } from "./special-events-editor";
+import { isGlobal } from "@/lib/roles";
 
 // Next date an event falls on (yyyy-mm-dd), on or after today.
 function nextDate(e: SpecialEvent, today: string): string | null {
@@ -35,9 +36,9 @@ function nextDate(e: SpecialEvent, today: string): string | null {
 
 export default async function SpecialEventsPage() {
   const { supabase, organiser } = await requireOrganiser();
-  if (organiser.role !== "god" && organiser.role !== "regional_lead")
+  if (!isGlobal(organiser.role) && organiser.role !== "regional_lead")
     redirect("/");
-  const isGod = organiser.role === "god";
+  const isGod = isGlobal(organiser.role);
   const today = todayInTz();
   const [{ data: events }, { data: regions }] = await Promise.all([
     supabase

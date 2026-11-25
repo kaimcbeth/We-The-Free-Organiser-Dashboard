@@ -8,10 +8,16 @@ import {
 } from "@/lib/engagement";
 import { requireOrganiser } from "@/lib/organiser";
 import { OrganiserInviteLink } from "@/components/organiser-invite-link";
-import { GIVES, type Access, type CoreRole } from "@/lib/roles";
+import { GIVES, type Access, type CoreRole, isGlobal } from "@/lib/roles";
 import type { RegionRole } from "./people-list";
 
-const ROLE_ORDER: Access[] = ["god", "regional_lead", "organiser", "core_team"];
+const ROLE_ORDER: Access[] = [
+  "god",
+  "community_manager",
+  "regional_lead",
+  "organiser",
+  "core_team",
+];
 import { signPhotos } from "@/lib/photos";
 import { LoadError } from "@/components/load-error";
 import { PeopleList, type PersonRow } from "./people-list";
@@ -111,7 +117,7 @@ export default async function PeoplePage({
     leads.set(r.person_id, [...(leads.get(r.person_id) ?? []), r.core_role]);
   const roles = new Map(
     ((roleRows as { person_id: string | null; role: Access }[] | null) ?? [])
-      .filter((r) => organiser.role === "god" || r.role !== "god")
+      .filter((r) => organiser.access === "god" || r.role !== "god")
       .map((r) => [r.person_id, r.role]),
   );
 
@@ -155,9 +161,9 @@ export default async function PeoplePage({
   );
   // Regional Support Leads (and God Mode) see the people who run things
   // first: Organisers, Core Team, members, then attendees.
-  if (organiser.role === "regional_lead" || organiser.role === "god") {
+  if (organiser.role === "regional_lead" || isGlobal(organiser.role)) {
     const rank = (p: PersonRow) =>
-      p.role === "organiser" || p.role === "regional_lead" || p.role === "god"
+      p.role === "organiser" || p.role === "regional_lead" || isGlobal(p.role)
         ? 0
         : p.role === "core_team"
           ? 1
@@ -197,9 +203,9 @@ export default async function PeoplePage({
         | null) ?? []
     ).filter(
       (r) =>
-        (r.role !== "god" || organiser.role === "god") &&
+        (r.role !== "god" || organiser.access === "god") &&
         (r.role === "regional_lead" ||
-          r.role === "god" ||
+          isGlobal(r.role) ||
           (r.team && teamByName.has(r.team))),
     );
     regionRoles = [
@@ -209,18 +215,17 @@ export default async function PeoplePage({
         teamId: r.team ? (teamByName.get(r.team)?.id ?? null) : null,
         name: r.name,
         role: r.role,
-        where:
-          r.role === "god"
-            ? [
-                "All regions",
-                r.also_region && `${r.also_region} RSL`,
-                r.also_team && `${short(r.also_team)} organiser`,
-              ]
-                .filter(Boolean)
-                .join(" · ")
-            : r.role === "regional_lead"
-              ? (r.region ?? "")
-              : short(r.team ?? ""),
+        where: isGlobal(r.role)
+          ? [
+              "All regions",
+              r.also_region && `${r.also_region} RSL`,
+              r.also_team && `${short(r.also_team)} organiser`,
+            ]
+              .filter(Boolean)
+              .join(" · ")
+          : r.role === "regional_lead"
+            ? (r.region ?? "")
+            : short(r.team ?? ""),
         pending: false,
       })),
       ...(pendingRows ?? []).map((p) => {
@@ -255,7 +260,7 @@ export default async function PeoplePage({
           : (organiser.team?.name ?? "your community")}{" "}
         · {connected} with an account
       </p>
-      {(organiser.role === "god" || organiser.role === "regional_lead") &&
+      {(isGlobal(organiser.role) || organiser.role === "regional_lead") &&
         !organiser.allCommunities &&
         organiser.team && (
           <div className="mt-2">
@@ -313,11 +318,11 @@ export default async function PeoplePage({
         homeTeamId={organiser.team_id}
         canMove={
           !organiser.allCommunities &&
-          (organiser.role === "god" || organiser.role === "regional_lead")
+          (isGlobal(organiser.role) || organiser.role === "regional_lead")
         }
         tz={organiser.team.timezone}
         withContact={
-          organiser.role === "god" || organiser.role === "regional_lead"
+          isGlobal(organiser.role) || organiser.role === "regional_lead"
         }
       />
     </div>

@@ -24,6 +24,7 @@ import { OrganiserTour } from "./organiser-tour";
 import { loadTaskSetup } from "@/lib/task-setup";
 import { NotificationBell } from "@/components/notification-bell";
 import { IntroProvider, SectionIntroCard } from "@/components/section-intro";
+import { isGlobal } from "@/lib/roles";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const { supabase, user, organiser } = await requireOrganiser();
@@ -51,7 +52,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   // Tasks badge: Regional Support Leads (and "All communities") count only
   // their own tasks; everyone else the community's tasks.
   const regionalStaff =
-    organiser.role === "god" || organiser.role === "regional_lead";
+    isGlobal(organiser.role) || organiser.role === "regional_lead";
   let countQuery = supabase
     .from("tasks")
     // Rows, not a head count, so actions for events that have already
@@ -106,7 +107,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       initial={navPins?.pins ?? []}
       initialHidden={navPins?.hidden ?? []}
       initialOrder={navPins?.tab_order ?? []}
-      rsl={organiser.role === "god" || organiser.role === "regional_lead"}
+      rsl={isGlobal(organiser.role) || organiser.role === "regional_lead"}
     >
       <IntroProvider
         seen={(introRows ?? []).map((r) => r.key)}
@@ -216,7 +217,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             </div>
             <NavLinks
               openTasks={openTasks ?? 0}
-              isGod={organiser.role === "god"}
+              isGod={isGlobal(organiser.role)}
             />
           </header>
           <StaffBar
@@ -225,10 +226,11 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             teams={organiser.teams.map((t) => ({ id: t.id, name: t.name }))}
             teamId={organiser.team_id}
             isGod={organiser.access === "god"}
+            isManager={organiser.access === "community_manager"}
             viewingAs={organiser.viewingAs}
             viewValue={organiser.viewValue}
             allowAll={
-              organiser.role === "god" || organiser.role === "regional_lead"
+              isGlobal(organiser.role) || organiser.role === "regional_lead"
             }
             allCommunities={organiser.allCommunities}
           />

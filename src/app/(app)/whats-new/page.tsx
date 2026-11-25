@@ -10,6 +10,7 @@ import {
 } from "@/lib/changelog";
 import { MarkSeen } from "./mark-seen";
 import { Suggest, type Suggestion } from "./suggest";
+import { isGlobal } from "@/lib/roles";
 
 const BADGE: Record<ChangeLevel, { label: string; tone: string } | null> = {
   organiser: null,
@@ -19,14 +20,13 @@ const BADGE: Record<ChangeLevel, { label: string; tone: string } | null> = {
 
 export default async function WhatsNewPage() {
   const { supabase, organiser } = await requireOrganiser();
-  const level: ChangeLevel =
-    organiser.role === "god"
-      ? "god"
-      : organiser.role === "regional_lead"
-        ? "regional_lead"
-        : "organiser";
+  const level: ChangeLevel = isGlobal(organiser.role)
+    ? "god"
+    : organiser.role === "regional_lead"
+      ? "regional_lead"
+      : "organiser";
   const releases = changelogFor(level);
-  const everyone = organiser.access === "god";
+  const everyone = isGlobal(organiser.access);
   const { data: rows } = await supabase
     .from("feature_suggestions")
     .select("id, body, created_at, author_name, user_id, team:teams(name)")

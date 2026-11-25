@@ -1,6 +1,7 @@
 import { requireOrganiser } from "@/lib/organiser";
 import { createClient } from "@/lib/supabase/server";
 import { ResourcesList } from "@/components/resources-list";
+import { isGlobal } from "@/lib/roles";
 
 export default async function ResourcesPage() {
   const { organiser } = await requireOrganiser();
@@ -21,8 +22,8 @@ export default async function ResourcesPage() {
     <ResourcesList
       teamId={teamId}
       teamSlug={team?.slug ?? null}
-      isGod={organiser.role === "god"}
-      rsl={organiser.role === "god" || organiser.role === "regional_lead"}
+      isGod={isGlobal(organiser.role)}
+      rsl={isGlobal(organiser.role) || organiser.role === "regional_lead"}
     />
   );
 }

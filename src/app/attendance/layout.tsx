@@ -5,6 +5,7 @@ import { StaffBar } from "@/components/staff-bar";
 import { NotificationBell } from "@/components/notification-bell";
 import { CoreTabs } from "./core-tabs";
 import { CoreTour } from "./core-tour";
+import { isGlobal } from "@/lib/roles";
 
 // Core Team: just their team's events and the attendance list.
 export default async function AttendanceLayout({
@@ -69,10 +70,11 @@ export default async function AttendanceLayout({
         teams={organiser.teams.map((t) => ({ id: t.id, name: t.name }))}
         teamId={organiser.team_id}
         isGod={organiser.access === "god"}
+        isManager={organiser.access === "community_manager"}
         viewingAs={organiser.viewingAs}
         viewValue={organiser.viewValue}
         allowAll={
-          organiser.role === "god" || organiser.role === "regional_lead"
+          isGlobal(organiser.role) || organiser.role === "regional_lead"
         }
         allCommunities={organiser.allCommunities}
       />

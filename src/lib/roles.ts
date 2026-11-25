@@ -4,11 +4,13 @@
 //   member     has an account but no role
 //   attendee   has been to events but has no account
 //   new_member only for God Mode's "View as": a member seeing the tutorial
-export type Access = "god" | "regional_lead" | "organiser" | "core_team";
+export type Access =
+  "god" | "community_manager" | "regional_lead" | "organiser" | "core_team";
 export type ViewRole = Access | "member" | "new_member" | "attendee";
 
 export const ROLE_LABEL: Record<ViewRole, string> = {
   god: "God Mode",
+  community_manager: "Community Manager",
   regional_lead: "Regional Support Lead",
   organiser: "Organiser",
   core_team: "Core Team",
@@ -18,7 +20,8 @@ export const ROLE_LABEL: Record<ViewRole, string> = {
 };
 
 export const ROLE_RANK: Record<ViewRole, number> = {
-  god: 4,
+  god: 5,
+  community_manager: 4,
   regional_lead: 3,
   organiser: 2,
   core_team: 1,
@@ -29,7 +32,8 @@ export const ROLE_RANK: Record<ViewRole, number> = {
 
 // Which roles each role can give out (always roles below their own).
 export const GIVES: Record<ViewRole, Access[]> = {
-  god: ["regional_lead", "organiser", "core_team"],
+  god: ["community_manager", "regional_lead", "organiser", "core_team"],
+  community_manager: ["regional_lead", "organiser", "core_team"],
   regional_lead: ["organiser", "core_team"],
   organiser: ["core_team"],
   core_team: [],
@@ -47,9 +51,19 @@ export const ROLE_INFO: Record<
     summary: "Full access to every community and region.",
     can: [
       "Everything in the app, everywhere",
-      "Gives Regional Support Lead roles",
+      "Gives Community Manager and Regional Support Lead roles",
       "Can preview the app as any role",
     ],
+  },
+  community_manager: {
+    summary: "Looks after every region and community, and the RSLs.",
+    can: [
+      "Everything a Regional Support Lead can do, for every region at once",
+      "Sees how each RSL and region is going",
+      "Edits shared content: hangout library, special events, equipment order, action ranking",
+      "Gives Regional Support Lead, Organiser and Core Team roles",
+    ],
+    cannot: "No test accounts, View as or usage stats (God Mode only).",
   },
   regional_lead: {
     summary: "Looks after every community in their region.",
@@ -95,6 +109,7 @@ export const ROLE_INFO: Record<
 
 export const ROLE_ACCENT: Record<ViewRole, string> = {
   god: "border-navy",
+  community_manager: "border-violet-500",
   regional_lead: "border-pink",
   organiser: "border-cyan",
   core_team: "border-yellow",
@@ -149,3 +164,9 @@ export const CORE_ROLE_DUTIES: Record<CoreRole, string[]> = {
     "Promoting upcoming trainings and workshops",
   ],
 };
+
+// God Mode or Community Manager: every region at once (Kai, 26 Nov 2026).
+// Test accounts, "View as" and usage stats stay God Mode only.
+export function isGlobal(role: ViewRole | null | undefined): boolean {
+  return role === "god" || role === "community_manager";
+}

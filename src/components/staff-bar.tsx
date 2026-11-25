@@ -12,6 +12,7 @@ type ViewOption = {
 };
 const ROLE_OPTIONS: ViewOption[] = [
   { value: "god", label: "God Mode" },
+  { value: "community_manager", label: "Community Manager" },
   { value: "regional_lead", label: "Regional Support Lead" },
   { value: "organiser", label: "Organiser" },
   { value: "core_team", label: "Core Team Member" },
@@ -30,6 +31,7 @@ export function StaffBar({
   teams,
   teamId,
   isGod,
+  isManager = false,
   viewingAs,
   viewValue,
   allowAll = false,
@@ -46,6 +48,7 @@ export function StaffBar({
   allowAll?: boolean; // offer "All communities" (Regional Support Lead / God)
   allCommunities?: boolean;
   isGod: boolean;
+  isManager?: boolean; // Community Manager: Action ranking link, no View as
   viewingAs: ViewRole | null;
   viewValue?: string | null;
 }) {
@@ -162,6 +165,16 @@ export function StaffBar({
             {switching && <span className="opacity-75">Switching…</span>}
             {error && <span className="font-semibold">{error}</span>}
           </label>
+        )}
+        {isManager && (
+          <span className="ml-auto flex gap-1">
+            <Link
+              href="/action-ranking"
+              className="rounded-md px-1.5 py-0.5 font-medium opacity-75 hover:bg-white/10 hover:opacity-100"
+            >
+              Action ranking
+            </Link>
+          </span>
         )}
         {isGod && !viewingAs && (
           <span className="ml-auto flex gap-1">

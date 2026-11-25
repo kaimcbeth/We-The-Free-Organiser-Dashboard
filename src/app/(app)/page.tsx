@@ -30,6 +30,7 @@ import {
   nowIso,
   todayInTz,
 } from "@/lib/time";
+import { isGlobal } from "@/lib/roles";
 
 type EventRow = {
   id: string;
@@ -330,7 +331,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
     })
     .slice(0, 3);
   const canManageSpecial =
-    organiser.role === "god" || organiser.role === "regional_lead";
+    isGlobal(organiser.role) || organiser.role === "regional_lead";
 
   return (
     <div className="space-y-8">
@@ -389,7 +390,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
         !setup.dismissed &&
         (organiser.role === "organiser" ||
           organiser.role === "regional_lead" ||
-          organiser.role === "god") && (
+          isGlobal(organiser.role)) && (
           <div>
             <SetupChecklist
               teamId={organiser.team_id}
@@ -505,7 +506,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
         events={upcoming.data ?? []}
         hangouts={hangouts}
         planHangouts={
-          organiser.role === "god" || organiser.role === "regional_lead"
+          isGlobal(organiser.role) || organiser.role === "regional_lead"
         }
         nearby={nearby}
         empty="Nothing scheduled yet."

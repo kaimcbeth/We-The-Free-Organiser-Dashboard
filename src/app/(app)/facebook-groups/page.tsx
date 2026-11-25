@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
 import { GroupsList, type FbGroup } from "./groups-list";
+import { isGlobal } from "@/lib/roles";
 
 export default async function FacebookGroupsPage({
   searchParams,
@@ -16,7 +17,7 @@ export default async function FacebookGroupsPage({
       : null;
   const { supabase, organiser } = await requireOrganiser();
   if (organiser.role === "core_team") redirect("/");
-  const isGod = organiser.role === "god";
+  const isGod = isGlobal(organiser.role);
 
   const [{ data: groups }, { data: teams }] = await Promise.all([
     supabase

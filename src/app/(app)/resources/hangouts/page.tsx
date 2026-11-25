@@ -2,18 +2,19 @@ import { redirect } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
 import { loadRegionChoices } from "@/lib/rsl-teams";
 import { HangoutBuilder } from "@/components/hangout-builder";
+import { isGlobal } from "@/lib/roles";
 
 // Organiser hangout builder: Regional Support Leads and God (Kai, 13 Nov 2026).
 export default async function HangoutsPage({
   searchParams,
 }: PageProps<"/resources/hangouts">) {
   const { supabase, organiser } = await requireOrganiser();
-  if (organiser.role !== "god" && organiser.role !== "regional_lead")
+  if (!isGlobal(organiser.role) && organiser.role !== "regional_lead")
     redirect("/resources");
   const { hangout, region: asked } = await searchParams;
   const hangoutId = typeof hangout === "string" ? hangout : null;
 
-  const isGod = organiser.access === "god";
+  const isGod = isGlobal(organiser.access);
   const regions = isGod
     ? (await loadRegionChoices(supabase)).filter((r) => r.communities > 0)
     : null;

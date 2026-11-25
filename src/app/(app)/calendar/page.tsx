@@ -4,6 +4,7 @@ import { requireOrganiser } from "@/lib/organiser";
 import { LoadError } from "@/components/load-error";
 import { todayInTz, zonedToUtcIso } from "@/lib/time";
 import { CalendarView, type CalEvent, type CalTeam } from "./calendar-view";
+import { isGlobal } from "@/lib/roles";
 
 // A team colour for each team, in a fixed order so colours stay put.
 const COLOURS = [
@@ -34,7 +35,7 @@ export default async function CalendarPage({
   const isOrganiser = organiser.role === "organiser";
   if (
     !isOrganiser &&
-    organiser.role !== "god" &&
+    !isGlobal(organiser.role) &&
     organiser.role !== "regional_lead"
   )
     redirect("/");
@@ -264,7 +265,7 @@ export default async function CalendarPage({
       next={shiftMonth(month, 1)}
       teams={teams}
       events={events}
-      regions={organiser.role === "god" ? (regions ?? []) : []}
+      regions={isGlobal(organiser.role) ? (regions ?? []) : []}
       regionId={regionId ?? ""}
       regionName={regionName}
       today={todayInTz("Australia/Sydney")}

@@ -2,6 +2,7 @@ import { ROLE_LABEL, type ViewRole } from "@/lib/roles";
 
 const STYLE: Record<ViewRole, string> = {
   god: "bg-navy text-yellow",
+  community_manager: "bg-violet-600 text-white",
   regional_lead: "bg-pink text-navy",
   organiser: "bg-cyan text-navy",
   core_team: "bg-yellow text-navy",

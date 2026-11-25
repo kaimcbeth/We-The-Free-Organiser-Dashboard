@@ -33,7 +33,7 @@ import { GodOverview } from "./god-overview";
 import { CoreTeamTasks } from "./core-team-tasks";
 import { ActionSearch } from "./action-search";
 import { EventGroup } from "./event-group";
-import { CORE_ROLE_LABEL, type CoreRole } from "@/lib/roles";
+import { CORE_ROLE_LABEL, type CoreRole, isGlobal } from "@/lib/roles";
 
 // Under 100 minutes: "85 min"; 100 and over: "2 hr 42 min".
 const hoursMinutes = (m: number) =>
@@ -45,7 +45,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
   const { event: onlyEvent } = await searchParams;
   const { supabase, organiser } = await requireOrganiser();
   const regionalStaff =
-    organiser.role === "god" || organiser.role === "regional_lead";
+    isGlobal(organiser.role) || organiser.role === "regional_lead";
   // Regional Support Leads only get their own tasks (the communities' tasks
   // are for the communities). God Mode sees both.
   // God Mode with "All communities": a light overview by region.
@@ -55,7 +55,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
     supabase,
     organiser.viewingAs ? [] : organiser.leadRegionIds,
   );
-  if (organiser.role === "god" && organiser.allCommunities)
+  if (isGlobal(organiser.role) && organiser.allCommunities)
     return (
       <GodOverview
         supabase={supabase}
@@ -95,7 +95,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
       <RegionTasks
         supabase={supabase}
         teams={rslTeams.length ? rslTeams : [organiser.team]}
-        showCommunities={organiser.role === "god"}
+        showCommunities={isGlobal(organiser.role)}
         regionTasks={previewRegion ?? regionTasks.open}
         planRegionId={regionIds[0]}
       />

@@ -2,6 +2,7 @@ import { requireCore } from "@/lib/organiser";
 import { loadInviteList, loadRegularsList } from "@/lib/invites";
 import { formatEventDate, formatTimeRange } from "@/lib/time";
 import { InviteList } from "./invite-list";
+import { isGlobal } from "@/lib/roles";
 
 // The personal invite list for one event, opened in its own window from the
 // "Personal invites sent" action so it can sit beside WhatsApp/Messenger.
@@ -20,7 +21,7 @@ export default async function InvitesPage({
       supabase,
       id,
       now,
-      organiser.role === "god" || organiser.role === "regional_lead",
+      isGlobal(organiser.role) || organiser.role === "regional_lead",
     ),
     supabase
       .from("events")

@@ -2,13 +2,14 @@ import { redirect } from "next/navigation";
 import { requireOrganiser } from "@/lib/organiser";
 import { KIND_COLUMNS, toSetupKind, type KindRow } from "@/lib/task-setup";
 import { ActionRanking } from "./ranking";
+import { isGlobal } from "@/lib/roles";
 
 // God only (Kai, 6 Nov 2026): every action a community can choose, in order
 // of importance. "How much time do you have?" in Choose actions suggests
 // from the top down until the time runs out.
 export default async function ActionRankingPage() {
   const { supabase, organiser } = await requireOrganiser();
-  if (organiser.access !== "god") redirect("/");
+  if (!isGlobal(organiser.access)) redirect("/");
   const { data } = await supabase
     .from("task_kinds")
     .select(KIND_COLUMNS)

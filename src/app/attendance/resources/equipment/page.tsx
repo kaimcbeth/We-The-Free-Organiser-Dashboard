@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireCore } from "@/lib/organiser";
 import { Equipment } from "@/components/equipment-guide";
+import { isGlobal } from "@/lib/roles";
 
 export default async function EquipmentPage() {
   const { organiser } = await requireCore();
@@ -27,7 +28,7 @@ export default async function EquipmentPage() {
         <Equipment
           teamId={teamId}
           canEditPhotos={
-            organiser.role === "god" || organiser.role === "regional_lead"
+            isGlobal(organiser.role) || organiser.role === "regional_lead"
           }
         />
       </div>

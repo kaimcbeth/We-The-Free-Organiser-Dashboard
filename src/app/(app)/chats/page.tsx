@@ -3,6 +3,7 @@ import { requireOrganiser } from "@/lib/organiser";
 import { loadRslTeams } from "@/lib/rsl-teams";
 import { loadConnectContext, type ConnectContext } from "@/lib/connect";
 import { OrganiserChats, type ChatTeam } from "./organiser-chats";
+import { isGlobal } from "@/lib/roles";
 
 // Organiser chats (Kai, 13 Nov 2026: "responding to messages as an RSL",
 // "I can mark which chats are organisers and which are not"). The RSL's
@@ -12,7 +13,7 @@ export default async function ChatsPage({ searchParams }: PageProps<"/chats">) {
   const { supabase, organiser } = await requireOrganiser();
   // God can open it while previewing too (the chats are always their own).
   const allowed =
-    organiser.access === "god" ||
+    isGlobal(organiser.access) ||
     organiser.access === "regional_lead" ||
     organiser.leadRegionIds.length > 0;
   if (!allowed)

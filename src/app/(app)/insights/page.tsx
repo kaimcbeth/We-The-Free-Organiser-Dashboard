@@ -16,10 +16,11 @@ import {
 import { GlobalInsights } from "./global-insights";
 import { computeYear } from "@/lib/year-insights";
 import { YearOverview, type YearFilms } from "./year-overview";
+import { isGlobal } from "@/lib/roles";
 
 export default async function InsightsPage() {
   const { supabase, organiser } = await requireOrganiser();
-  if (organiser.allCommunities && organiser.role === "god")
+  if (organiser.allCommunities && isGlobal(organiser.role))
     return <GlobalInsights supabase={supabase} teams={organiser.teams} />;
   if (organiser.allCommunities)
     return <RegionInsights supabase={supabase} teams={organiser.teams} />;

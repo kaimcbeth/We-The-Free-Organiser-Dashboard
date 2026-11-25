@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireOrganiser } from "@/lib/organiser";
 import { MOCK_BANKED } from "@/lib/funding";
 import { PrizeGuide } from "@/components/prize-guide";
+import { isGlobal } from "@/lib/roles";
 
 export default async function PrizesPage() {
   const { organiser } = await requireOrganiser();
@@ -24,7 +25,7 @@ export default async function PrizesPage() {
         <PrizeGuide
           banked={MOCK_BANKED}
           canEditPhotos={
-            organiser.role === "god" || organiser.role === "regional_lead"
+            isGlobal(organiser.role) || organiser.role === "regional_lead"
           }
         />
       </div>
