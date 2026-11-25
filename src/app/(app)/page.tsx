@@ -534,6 +534,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/">) {
           events={past.data ?? []}
           empty="No past events yet."
           actions={actionsFor}
+          newestFirst
         />
       )}
       {(past.data?.length ?? 0) >= 20 && (

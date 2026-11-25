@@ -63,6 +63,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Past events on the Events tab now show the most recent first.",
+      },
+      {
+        level: "organiser",
         text: "New Movie Challenge action: Sign-up list posted, with a button that opens the sign-up list maker. It comes up 10 days before and is due 4 days before.",
       },
     ],
