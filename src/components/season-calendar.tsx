@@ -120,6 +120,7 @@ export function seasonRows(
   events: SeasonEvent[],
   pastTitles: Set<string>,
   tz: string,
+  eachDate = false, // month calendar: every date its own row, unless weekly
 ): Row[] {
   const dayName = new Intl.DateTimeFormat("en-AU", {
     timeZone: tz,
@@ -133,7 +134,12 @@ export function seasonRows(
     groups.set(k, [...(groups.get(k) ?? []), e]);
   }
   const rows: Row[] = [];
-  for (const [key, list] of groups) {
+  const lists: [string, SeasonEvent[]][] = [];
+  for (const [key, list] of groups)
+    if (eachDate && !weekly(list))
+      list.forEach((e, i) => lists.push([i ? `${key}#${i}` : key, [e]]));
+    else lists.push([key, list]);
+  for (const [key, list] of lists) {
     const e = list[0];
     const days = new Set(
       list.map((x) => dayName.format(new Date(x.starts_at))),
@@ -144,7 +150,8 @@ export function seasonRows(
         ? "Training"
         : list.some(isCollab)
           ? "Collab"
-          : list.length === 1 && !pastTitles.has(key)
+          : (groups.get(key.split("#")[0])?.length ?? 0) === 1 &&
+              !pastTitles.has(key.split("#")[0])
             ? "New"
             : null;
     rows.push({
@@ -190,6 +197,7 @@ export function drawSeason(
   d: {
     season: string;
     range: string;
+    kicker?: string; // "WHAT'S ON THIS" (season) or "WHAT'S ON IN" (month)
     rows: Row[];
     more: number;
     community: string;
@@ -208,7 +216,7 @@ export function drawSeason(
   ctx.font = `800 32px ${font}`;
   ctx.letterSpacing = "6px";
   ctx.fillStyle = PINK;
-  ctx.fillText("WHAT'S ON THIS", x, 180);
+  ctx.fillText(d.kicker ?? "WHAT'S ON THIS", x, 180);
   ctx.letterSpacing = "0px";
   const title = d.season.toUpperCase();
   const size = fit(
@@ -365,13 +373,88 @@ export function SeasonCalendarButton({
   );
 }
 
+// Month calendar (Kai, 25 Nov 2026: "Can we do a month calendar
+// generator?"): the same graphic for one month, with a ‹ › month switcher.
+export function MonthCalendarButton({
+  teamId,
+  tz,
+  className,
+  label = "Month calendar",
+}: {
+  teamId: string;
+  tz: string;
+  className?: string;
+  label?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [month, setMonth] = useState(() => {
+    const [y, m, d] = new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+      .format(new Date())
+      .split("-")
+      .map(Number);
+    // From the 15th, next month is the one being planned.
+    return d >= 15
+      ? { year: m === 12 ? y + 1 : y, month: m === 12 ? 1 : m + 1 }
+      : { year: y, month: m };
+  });
+  const shift = (n: number) =>
+    setMonth(({ year, month: m }) => {
+      const i = year * 12 + (m - 1) + n;
+      return { year: Math.floor(i / 12), month: (i % 12) + 1 };
+    });
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} className={className}>
+        {label}
+      </button>
+      {open && (
+        <Sheet title="Month calendar" onClose={() => setOpen(false)}>
+          <div className="mb-3 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => shift(-1)}
+              aria-label="Month before"
+              className="rounded-lg bg-navy/5 px-2.5 py-1 text-sm font-semibold text-navy hover:bg-navy/10"
+            >
+              ‹
+            </button>
+            <span className="min-w-36 text-center text-sm font-semibold text-navy">
+              {MONTHS[month.month - 1]} {month.year}
+            </span>
+            <button
+              type="button"
+              onClick={() => shift(1)}
+              aria-label="Next month"
+              className="rounded-lg bg-navy/5 px-2.5 py-1 text-sm font-semibold text-navy hover:bg-navy/10"
+            >
+              ›
+            </button>
+          </div>
+          <SeasonCalendar
+            key={`${month.year}-${month.month}`}
+            teamId={teamId}
+            month={month}
+          />
+        </Sheet>
+      )}
+    </>
+  );
+}
+
 export function SeasonCalendar({
   teamId,
   dueAt,
+  month,
   initial,
 }: {
   teamId: string;
-  dueAt: string;
+  dueAt?: string; // season: the day before it starts
+  month?: { year: number; month: number }; // one month instead of a season
   initial?: { team: Team; events: SeasonEvent[]; past: string[] }; // tests
 }) {
   const [team, setTeam] = useState<Team | null>(initial?.team ?? null);
@@ -389,15 +472,20 @@ export function SeasonCalendar({
     year: "numeric",
     month: "2-digit",
   })
-    .format(new Date(Date.parse(dueAt) + 36 * 36e5))
+    .format(new Date(Date.parse(dueAt ?? "") + 36 * 36e5 || 0))
     .split("-")
     .map(Number);
-  const start = { year: startParts[0], month: startParts[1] };
+  const start = month ?? { year: startParts[0], month: startParts[1] };
+  const span = month ? 1 : 3;
   const south =
     team?.lat != null
       ? team.lat < 0
       : /^(Australia|Pacific\/Auckland|Antarctica)/.test(tz);
-  const season = seasonOf(start, south);
+  const season = month
+    ? { name: MONTHS[month.month - 1], range: String(month.year) }
+    : seasonOf(start, south);
+  const kicker = month ? "WHAT'S ON IN" : "WHAT'S ON THIS";
+  const what = month ? "month" : "season";
 
   useEffect(() => {
     let live = true;
@@ -407,7 +495,12 @@ export function SeasonCalendar({
       .catch(() => {});
     const done = (t: Team, events: SeasonEvent[], past: string[]) => {
       if (!live) return;
-      const r = seasonRows(events, new Set(past.map(norm)), t.timezone);
+      const r = seasonRows(
+        events,
+        new Set(past.map(norm)),
+        t.timezone,
+        !!month,
+      );
       setTeam(t);
       setRows(r);
       setPicked(pickRows(r));
@@ -427,7 +520,9 @@ export function SeasonCalendar({
         .maybeSingle<Team>();
       if (!t) return;
       const from = new Date(Date.UTC(start.year, start.month - 1, 1) - 864e5);
-      const to = new Date(Date.UTC(start.year, start.month + 2, 1) + 864e5);
+      const to = new Date(
+        Date.UTC(start.year, start.month - 1 + span, 1) + 864e5,
+      );
       const ym = new Intl.DateTimeFormat("en-CA", {
         timeZone: t.timezone,
         year: "numeric",
@@ -436,7 +531,7 @@ export function SeasonCalendar({
       const inSeason = (iso: string) => {
         const [y, m] = ym.format(new Date(iso)).split("-").map(Number);
         const n = (y - start.year) * 12 + (m - start.month);
-        return n >= 0 && n < 3;
+        return n >= 0 && n < span;
       };
       const [{ data: ev }, { data: past }] = await Promise.all([
         db
@@ -484,6 +579,7 @@ export function SeasonCalendar({
     drawSeason(ctx, {
       season: season.name,
       range: season.range,
+      kicker,
       rows: shown,
       more,
       community,
@@ -541,7 +637,9 @@ export function SeasonCalendar({
           `• ${r.weekday ? `Every ${r.weekday}` : day.format(new Date(r.first))}: ${r.title}${r.place ? ` (${r.place})` : ""}`,
       );
     return [
-      `What's on this ${season.name.toLowerCase()} 🗓️`,
+      month
+        ? `What's on in ${season.name} 🗓️`
+        : `What's on this ${season.name.toLowerCase()} 🗓️`,
       "",
       ...lines,
       ...(more ? ["", `+ ${more} more at ${URL_TEXT}`] : []),
@@ -566,13 +664,17 @@ export function SeasonCalendar({
   return (
     <div className="space-y-4">
       <p className="text-sm text-stone-600">
-        {season.name} ({season.range}): the season&apos;s highlights as one
-        post. Up to {MAX_ROWS} events fit, so special events, trainings, collabs
-        and new events go first. Tick to swap.
+        {month
+          ? `${season.name} ${season.range}`
+          : `${season.name} (${season.range})`}
+        : the {what}&apos;s {month ? "events" : "highlights"} as one post. Up to{" "}
+        {MAX_ROWS} events fit, so special events, trainings, collabs and new
+        events go first. Weekly ones show once as &quot;Every Wednesday&quot;.
+        Tick to swap.
       </p>
       {!rows ? (
         <p className="text-sm text-stone-400">
-          Loading the season&apos;s events…
+          Loading the {what}&apos;s events…
         </p>
       ) : (
         <>
@@ -612,8 +714,10 @@ export function SeasonCalendar({
           <ul className="divide-y divide-black/5 rounded-xl ring-1 ring-black/5">
             {sorted.length === 0 && (
               <li className="p-3 text-sm text-stone-500">
-                No events in {season.range} yet. Add them on activism.wtf and
-                they&apos;ll show here within the hour.
+                No events in{" "}
+                {month ? `${season.name} ${season.range}` : season.range} yet.
+                Add them on activism.wtf and they&apos;ll show here within the
+                hour.
               </li>
             )}
             {sorted.map((r) => (

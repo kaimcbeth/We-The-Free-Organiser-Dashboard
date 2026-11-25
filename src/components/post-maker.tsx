@@ -6,7 +6,10 @@ import { MeetingPointMaker } from "@/components/meeting-point";
 import { CopyMaker } from "@/components/copy-maker";
 import { createClient } from "@/lib/supabase/client";
 import { MeetMembersButton } from "@/components/meet-members-maker";
-import { SeasonCalendarButton } from "@/components/season-calendar";
+import {
+  MonthCalendarButton,
+  SeasonCalendarButton,
+} from "@/components/season-calendar";
 import { SeasonHostsGraphic } from "@/components/season-hosts-graphic";
 import { RecapButton } from "@/components/recap-maker";
 
@@ -311,6 +314,20 @@ export function PostMaker({ teamId, tz }: { teamId: string; tz: string }) {
             blurb: "The month's photos, plus what's coming up next month.",
             button: (
               <RecapButton teamId={teamId} label="Make it" className={go} />
+            ),
+          },
+          {
+            key: "month-calendar",
+            left: "Monthly",
+            title: "Month calendar",
+            blurb: "What's on in a month, on one graphic.",
+            button: (
+              <MonthCalendarButton
+                teamId={teamId}
+                tz={tz}
+                label="Make it"
+                className={go}
+              />
             ),
           },
           {
