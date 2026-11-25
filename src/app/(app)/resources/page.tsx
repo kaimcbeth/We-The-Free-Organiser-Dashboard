@@ -4,7 +4,11 @@ import { ResourcesList } from "@/components/resources-list";
 import { isGlobal } from "@/lib/roles";
 
 export default async function ResourcesPage() {
-  const { organiser } = await requireOrganiser();
+  const { supabase, organiser } = await requireOrganiser();
+  // RSL PDRs card: whoever has the "runs PDRs" switch (0256), not in previews.
+  const { data: reviewers } = isGlobal(organiser.role)
+    ? await supabase.rpc("pdr_reviewers")
+    : { data: null };
   const teamId =
     organiser.allCommunities || organiser.exampleMode
       ? null
@@ -24,6 +28,7 @@ export default async function ResourcesPage() {
       teamSlug={team?.slug ?? null}
       isGod={isGlobal(organiser.role)}
       rsl={isGlobal(organiser.role) || organiser.role === "regional_lead"}
+      pdrs={!!reviewers}
     />
   );
 }

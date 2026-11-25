@@ -55,7 +55,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "god",
-        text: "PDRs (0256): community manager starts a PDR (RSL + meeting date) from PDRs in the staff bar; the RSL gets an email + bell, drafts every section, reviewer notes stay private until Start the meeting, both tick to lock, goals carry over to the next PDR, organisational goals with live progress, PDF download. Who can run PDRs is a switch on the PDRs page.",
+        text: "PDRs (0256): community manager starts a PDR (RSL + meeting date) from the RSL PDRs card in Resources; the RSL gets an email + bell, drafts every section, reviewer notes stay private until Start the meeting, both tick to lock, goals carry over to the next PDR, organisational goals with live progress, PDF download. Who can run PDRs is a switch on the PDRs page.",
       },
       {
         level: "organiser",

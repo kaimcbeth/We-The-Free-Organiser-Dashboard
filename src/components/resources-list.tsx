@@ -21,11 +21,13 @@ export function ResourcesList({
   teamId,
   teamSlug,
   rsl = false,
+  pdrs = false,
 }: {
   teamId: string | null;
   teamSlug: string | null;
   isGod?: boolean; // (unused now: Facebook groups is for all organisers)
   rsl?: boolean; // Regional Support Lead or God: the hangout builder
+  pdrs?: boolean; // runs RSL PDRs (community manager's switch, 0256)
 }) {
   const path = usePathname();
   const [query, setQuery] = useState("");
@@ -106,6 +108,21 @@ export function ResourcesList({
               </a>
             </Pinnable>
           )}
+          {pdrs &&
+            !core &&
+            has(
+              q,
+              "pdr performance development review rsl regional support lead appraisal goals",
+            ) && (
+              <a href="/pdr" data-resource="pdrs" className={RESOURCE_CARD}>
+                <ResourceCardBody
+                  emoji="📋"
+                  title="RSL PDRs"
+                  newKey="pdrs"
+                  about="Start, prepare and sign off RSL reviews."
+                />
+              </a>
+            )}
           {rsl &&
             !core &&
             has(
