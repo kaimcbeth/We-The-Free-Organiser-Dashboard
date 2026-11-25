@@ -63,6 +63,7 @@ export type SeasonEvent = {
   address: string | null;
   description: string | null;
   special_event_id: string | null;
+  special?: { emoji: string | null } | null;
   time_unknown: boolean | null;
   event_type: { name: string } | null;
 };
@@ -76,6 +77,7 @@ export type Row = {
   weekday: string | null; // "Wednesday" when every date is on the same day
   place: string | null;
   tag: Tag;
+  emoji?: string | null; // the special event's emoji
   score: number;
 };
 
@@ -136,7 +138,7 @@ export function seasonRows(
   const rows: Row[] = [];
   const lists: [string, SeasonEvent[]][] = [];
   for (const [key, list] of groups)
-    if (eachDate && !weekly(list))
+    if (eachDate)
       list.forEach((e, i) => lists.push([i ? `${key}#${i}` : key, [e]]));
     else lists.push([key, list]);
   for (const [key, list] of lists) {
@@ -164,6 +166,7 @@ export function seasonRows(
       weekday: weekly(list) && days.size === 1 ? [...days][0] : null,
       place: e.venue || (e.address ? e.address.split(",")[0] : null),
       tag,
+      emoji: list.find((x) => x.special_event_id)?.special?.emoji ?? null,
       score: tag ? TAG_SCORE[tag] : list.length > 1 ? 0 : 1,
     });
   }
@@ -190,6 +193,25 @@ export function seasonOf(
     name,
     range: `${MONTHS[start.month - 1]} – ${MONTHS[endMonth - 1]}`,
   };
+}
+
+// A four-pointed sparkle.
+function sparkle(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  r: number,
+  colour: string,
+) {
+  const k = r * 0.28;
+  ctx.fillStyle = colour;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r);
+  ctx.quadraticCurveTo(cx + k, cy - k, cx + r, cy);
+  ctx.quadraticCurveTo(cx + k, cy + k, cx, cy + r);
+  ctx.quadraticCurveTo(cx - k, cy + k, cx - r, cy);
+  ctx.quadraticCurveTo(cx - k, cy - k, cx, cy - r);
+  ctx.fill();
 }
 
 export function drawSeason(
@@ -266,13 +288,38 @@ export function drawSeason(
   });
   for (const r of rows) {
     const at = new Date(r.first);
+    const special = r.tag === "Special";
+    // Special events (Kai, 26 Nov 2026: "more creative … instead of just
+    // saying special"): a glowing pink card, pink date, and the special
+    // event's emoji in a yellow badge with sparkles.
+    if (special) {
+      const top = y - 10;
+      const h = Math.min(rowH - 8, 118);
+      const g = ctx.createLinearGradient(x - 22, 0, W - x + 22, 0);
+      g.addColorStop(0, "rgba(255,71,185,0.30)");
+      g.addColorStop(0.6, "rgba(140,70,255,0.16)");
+      g.addColorStop(1, "rgba(255,71,185,0.06)");
+      ctx.save();
+      ctx.shadowColor = "rgba(255,71,185,0.75)";
+      ctx.shadowBlur = 28;
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.roundRect(x - 22, top, width + 44, h, 24);
+      ctx.fill();
+      ctx.restore();
+      ctx.strokeStyle = "rgba(255,71,185,0.9)";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.roundRect(x - 22, top, width + 44, h, 24);
+      ctx.stroke();
+    }
     ctx.font = `800 22px ${font}`;
     ctx.letterSpacing = "3px";
     ctx.fillStyle = "rgba(255,255,255,0.75)";
     ctx.fillText(r.weekday ? "EVERY" : mon.format(at).toUpperCase(), x, y + 26);
     ctx.letterSpacing = "0px";
     ctx.font = `${r.weekday ? Math.round(big * 0.85) : big}px ${DISPLAY}`;
-    ctx.fillStyle = YELLOW;
+    ctx.fillStyle = special ? PINK : YELLOW;
     ctx.fillText(
       r.weekday ? r.weekday.slice(0, 3).toUpperCase() : day.format(at),
       x,
@@ -280,8 +327,33 @@ export function drawSeason(
     );
     const tx = x + 150;
     let tw = width - 150;
+    if (special) {
+      const rad = Math.min(34, (rowH - 30) / 2);
+      const cx = W - x - rad + 4;
+      const cy = y + Math.min(rowH - 8, 118) / 2 - 10;
+      ctx.save();
+      ctx.shadowColor = "rgba(255,217,15,0.8)";
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = YELLOW;
+      ctx.beginPath();
+      ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      if (r.emoji) {
+        ctx.font = `${Math.round(rad * 1.15)}px ${font}`;
+        ctx.fillText(r.emoji, cx, cy + 2);
+      } else sparkle(ctx, cx, cy, rad * 0.62, NAVY);
+      ctx.textAlign = "left";
+      ctx.textBaseline = "alphabetic";
+      sparkle(ctx, cx - rad - 14, cy - rad + 2, 11, YELLOW);
+      sparkle(ctx, cx + rad - 2, cy + rad + 4, 8, "#ffffff");
+      sparkle(ctx, cx - rad - 4, cy + rad - 2, 6, PINK);
+      tw -= rad * 2 + 30;
+    }
     // Tag pill on the right of the title line.
-    if (r.tag) {
+    if (r.tag && !special) {
       ctx.font = `800 20px ${font}`;
       ctx.letterSpacing = "2px";
       const label = r.tag.toUpperCase();
@@ -305,7 +377,11 @@ export function drawSeason(
     }
     ctx.font = `700 ${rowH < 100 ? 32 : 38}px ${font}`;
     ctx.fillStyle = "#ffffff";
-    ctx.fillText(wrap(ctx, r.title, tw, 1)[0], tx, y + 36);
+    const title =
+      special && r.emoji && r.title.startsWith(r.emoji)
+        ? r.title.slice(r.emoji.length).trim()
+        : r.title;
+    ctx.fillText(wrap(ctx, title, tw, 1)[0], tx, y + 36);
     ctx.font = `500 ${rowH < 100 ? 24 : 28}px ${font}`;
     ctx.fillStyle = "rgba(255,255,255,0.7)";
     const sub = [
@@ -315,11 +391,7 @@ export function drawSeason(
       .filter(Boolean)
       .join("  ·  ");
     if (sub)
-      ctx.fillText(
-        wrap(ctx, sub, width - 150, 1)[0],
-        tx,
-        y + (rowH < 100 ? 70 : 76),
-      );
+      ctx.fillText(wrap(ctx, sub, tw, 1)[0], tx, y + (rowH < 100 ? 70 : 76));
     y += rowH;
   }
   if (d.more) {
@@ -537,7 +609,7 @@ export function SeasonCalendar({
         db
           .from("events")
           .select(
-            "id, title, starts_at, venue, address, description, special_event_id, time_unknown, event_type:event_types(name)",
+            "id, title, starts_at, venue, address, description, special_event_id, time_unknown, event_type:event_types(name), special:special_events(emoji)",
           )
           .eq("team_id", teamId)
           .gte("starts_at", from.toISOString())
@@ -669,8 +741,8 @@ export function SeasonCalendar({
           : `${season.name} (${season.range})`}
         : the {what}&apos;s {month ? "events" : "highlights"} as one post. Up to{" "}
         {MAX_ROWS} events fit, so special events, trainings, collabs and new
-        events go first. Weekly ones show once as &quot;Every Wednesday&quot;.
-        Tick to swap.
+        events go first.
+        {!month && ' Weekly ones show once as "Every Wednesday".'} Tick to swap.
       </p>
       {!rows ? (
         <p className="text-sm text-stone-400">

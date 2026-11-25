@@ -75,6 +75,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Month calendar lists every date separately, and special events now glow pink with their emoji instead of a Special tag (seasonal calendar too).",
+      },
+      {
+        level: "organiser",
         text: "New Movie Challenge action: Sign-up list posted, with a button that opens the sign-up list maker. It comes up 10 days before and is due 4 days before.",
       },
     ],
