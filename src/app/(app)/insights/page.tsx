@@ -14,6 +14,8 @@ import {
   TopEvents,
 } from "./charts";
 import { GlobalInsights } from "./global-insights";
+import { computeYear } from "@/lib/year-insights";
+import { YearOverview, type YearFilms } from "./year-overview";
 
 export default async function InsightsPage() {
   const { supabase, organiser } = await requireOrganiser();
@@ -34,6 +36,45 @@ export default async function InsightsPage() {
     data.events,
     r.everyone,
   );
+  const year = computeYear(data.people, data.checkIns, data.events);
+  const yearStart = `${year.year - 1}-12-31T00:00:00Z`; // a day early for time zones
+  const [answers, stops, photos] = await Promise.all([
+    supabase
+      .from("film_survey_responses")
+      .select("impact, answered_at")
+      .eq("team_id", organiser.team_id)
+      .gte("answered_at", yearStart)
+      .limit(20000),
+    supabase
+      .from("film_stops")
+      .select("id", { count: "exact", head: true })
+      .eq("team_id", organiser.team_id)
+      .gte("created_at", `${year.year}-01-01T00:00:00Z`),
+    supabase
+      .from("event_photos")
+      .select("id", { count: "exact", head: true })
+      .eq("team_id", organiser.team_id)
+      .is("archived_at", null)
+      .gte("created_at", `${year.year}-01-01T00:00:00Z`),
+  ]);
+  const yearAnswers = (answers.data ?? []).filter((a) =>
+    String(a.answered_at).startsWith(String(year.year)),
+  );
+  const scored = yearAnswers
+    .map((a) => a.impact as number | null)
+    .filter((n): n is number => typeof n === "number");
+  const films: YearFilms = answers.error
+    ? null
+    : {
+        watched: yearAnswers.length,
+        impact: scored.length
+          ? Math.round(
+              (scored.reduce((a, b) => a + b, 0) / scored.length) * 10,
+            ) / 10
+          : null,
+        tapouts: stops.count ?? 0,
+      };
+
   // Weeks while the community is new to the app (months would be one bar).
   const startWeeks =
     !charts.firstData ||
@@ -100,6 +141,8 @@ export default async function InsightsPage() {
           />
         </div>
       </section>
+
+      <YearOverview y={year} films={films} photos={photos.count ?? 0} />
 
       <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
         <PeopleSection

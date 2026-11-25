@@ -40,7 +40,7 @@ export type InsightCharts = {
   firstData: string | null; // first check-in ever (ISO)
 };
 
-const KIND_LABEL: Record<string, string> = {
+export const KIND_LABEL: Record<string, string> = {
   movie_challenge: "Movie Challenge",
   demonstration: "Demonstration",
   potluck: "Potluck or meal",

@@ -67,6 +67,10 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "organiser",
+        text: "Insights has a new year so far card: events held, people, first-timers, films watched and impact, photos, events each month, kinds of events and highlights.",
+      },
+      {
+        level: "organiser",
         text: "New Movie Challenge action: Sign-up list posted, with a button that opens the sign-up list maker. It comes up 10 days before and is due 4 days before.",
       },
     ],
