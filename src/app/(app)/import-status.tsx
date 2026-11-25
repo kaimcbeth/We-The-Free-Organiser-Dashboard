@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-// "Synced from activism.wtf 2 hrs ago · Import now", with a warning if the import is failing.
+// "Synced from activism.wtf 2 hrs ago · Sync now", with a warning if the import is failing.
 export function ImportStatus({
   text,
   warning,
@@ -59,7 +59,7 @@ export function ImportStatus({
           disabled={busy}
           className="hover:text-navy hover:underline disabled:opacity-60"
         >
-          {busy ? "Checking…" : "Import now"}
+          {busy ? "Syncing…" : "Sync now"}
         </button>
         {note && <span className="text-stone-500">{note}</span>}
       </p>
@@ -79,7 +79,7 @@ export function ImportStatus({
         disabled={busy}
         className="shrink-0 rounded-lg px-2.5 py-1.5 font-semibold text-pink-ink hover:bg-pink/10 disabled:opacity-60"
       >
-        {busy ? "Checking…" : "Import now"}
+        {busy ? "Syncing…" : "Sync now"}
       </button>
     </div>
   );
