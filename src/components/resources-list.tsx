@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { RESOURCE_SECTIONS, RESOURCES_COMING_SOON } from "@/lib/resources";
 import { CommunityPhotos } from "@/components/community-photos";
+import Link from "next/link";
 import { Pinnable } from "@/components/nav-pins-context";
 import { GuideShare } from "@/components/guide-share";
 import { FeedbackCards } from "@/components/feedback-cards";
@@ -114,14 +115,14 @@ export function ResourcesList({
               q,
               "pdr performance development review rsl regional support lead appraisal goals",
             ) && (
-              <a href="/pdr" data-resource="pdrs" className={RESOURCE_CARD}>
+              <Link href="/pdr" data-resource="pdrs" className={RESOURCE_CARD}>
                 <ResourceCardBody
                   emoji="📋"
                   title="RSL PDRs"
                   newKey="pdrs"
                   about="Start, prepare and sign off RSL reviews."
                 />
-              </a>
+              </Link>
             )}
           {rsl &&
             !core &&
