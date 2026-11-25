@@ -169,6 +169,12 @@ export function StaffBar({
         {isManager && (
           <span className="ml-auto flex gap-1">
             <Link
+              href="/pdr"
+              className="rounded-md px-1.5 py-0.5 font-medium opacity-75 hover:bg-white/10 hover:opacity-100"
+            >
+              PDRs
+            </Link>
+            <Link
               href="/action-ranking"
               className="rounded-md px-1.5 py-0.5 font-medium opacity-75 hover:bg-white/10 hover:opacity-100"
             >
@@ -178,6 +184,12 @@ export function StaffBar({
         )}
         {isGod && !viewingAs && (
           <span className="ml-auto flex gap-1">
+            <Link
+              href="/pdr"
+              className="rounded-md px-1.5 py-0.5 font-medium opacity-75 hover:bg-white/10 hover:opacity-100"
+            >
+              PDRs
+            </Link>
             <Link
               href="/usage"
               className="rounded-md px-1.5 py-0.5 font-medium opacity-75 hover:bg-white/10 hover:opacity-100"

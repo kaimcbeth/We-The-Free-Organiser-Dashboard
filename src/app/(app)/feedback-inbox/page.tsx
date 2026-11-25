@@ -3,6 +3,7 @@ import { requireOrganiser } from "@/lib/organiser";
 import { getFeedback } from "@/app/actions";
 import { formatEventDate } from "@/lib/time";
 import { isGlobal } from "@/lib/roles";
+import { MarkFeedbackSeen } from "@/components/feedback-cards";
 
 const SCALE = ["Not great", "Meh", "OK", "Good", "Loving it"];
 
@@ -72,6 +73,7 @@ export default async function FeedbackInboxPage({
   const { responses } = await getFeedback(organiser.team_id);
   return (
     <div className="space-y-4">
+      <MarkFeedbackSeen teamId={organiser.team_id} />
       <Header
         lead={lead}
         from="members"

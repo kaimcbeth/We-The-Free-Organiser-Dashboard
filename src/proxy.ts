@@ -10,6 +10,7 @@ const PUBLIC_PATHS = [
   "/invite",
   "/beeper", // Mac helper files for Organiser chats (0231; no secrets)
   "/start", // one-use link that makes someone an organiser (0213)
+  "/pdr-invite", // PDR email link; also an RSL's way into the Hub (0256)
   "/checkin",
   "/drop", // temporary photo upload links (Photo Hub QR code)
   "/feedback", // volunteer feedback form (secret link per community)

@@ -46,6 +46,24 @@ export const COMING_SOON: { title: string; text: string }[] = [
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-11-26",
+    title: "PDRs for Regional Support Leads",
+    changes: [
+      {
+        level: "regional_lead",
+        text: "Your Performance & Development Review now lives in the Hub: fill in your draft before the meeting, see your community manager's notes in the meeting, tick to sign it off and download the PDF.",
+      },
+      {
+        level: "god",
+        text: "PDRs (0256): community manager starts a PDR (RSL + meeting date) from PDRs in the staff bar; the RSL gets an email + bell, drafts every section, reviewer notes stay private until Start the meeting, both tick to lock, goals carry over to the next PDR, organisational goals with live progress, PDF download. Who can run PDRs is a switch on the PDRs page.",
+      },
+      {
+        level: "organiser",
+        text: "The member feedback survey card opens the responses when you tap it, with a small badge for new answers.",
+      },
+    ],
+  },
+  {
     date: "2026-11-25",
     title: "Tidier Actions",
     changes: [

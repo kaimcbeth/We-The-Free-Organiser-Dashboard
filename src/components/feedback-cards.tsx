@@ -10,6 +10,24 @@ import { RESOURCE_CARD, ResourceCardBody } from "@/components/resource-card";
 const small =
   "rounded-lg px-3 py-1.5 text-sm font-semibold text-navy ring-1 ring-black/10 hover:bg-stone-50";
 
+const seenKey = (team: string) => `wtf-feedback-seen-${team}`;
+
+export function readFeedbackSeen(team: string): string | null {
+  try {
+    return localStorage.getItem(seenKey(team));
+  } catch {
+    return null;
+  }
+}
+
+export function markFeedbackSeen(team: string) {
+  try {
+    localStorage.setItem(seenKey(team), new Date().toISOString());
+  } catch {
+    // Private mode etc.: the badge just won't clear.
+  }
+}
+
 // Resources: organisers' own feedback for their Regional Support Lead, and the
 // link members use to give the organisers feedback (copy or share it).
 export function FeedbackCards({ teamId }: { teamId: string | null }) {
@@ -21,6 +39,7 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
     n: 0,
     latest: null,
   });
+  const [fresh, setFresh] = useState(0);
 
   useEffect(() => {
     if (!teamId) return;
@@ -39,6 +58,18 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
         if (live)
           setStats({ n: count ?? 0, latest: data?.[0]?.created_at ?? null });
       });
+    // New since this person last opened the responses (Kai, 26 Nov 2026:
+    // "a little notification for any new answers"); kept per device.
+    const seen = readFeedbackSeen(teamId);
+    if (seen === null) markFeedbackSeen(teamId);
+    else
+      db.from("volunteer_feedback")
+        .select("id", { count: "exact", head: true })
+        .eq("team_id", teamId)
+        .gt("created_at", seen)
+        .then(({ count }) => {
+          if (live) setFresh(count ?? 0);
+        });
     return () => {
       live = false;
     };
@@ -73,24 +104,36 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
         // Local member feedback survey (Kai, 26 Nov 2026: "make sure it looks
         // distinct" from the Global Support card): a cyan survey card with
         // the response count and its own two buttons.
-        <div className="relative flex h-full flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-cyan/30 via-cyan/10 to-white px-4 py-3 text-navy shadow-sm ring-1 ring-cyan/60">
+        <div className="relative flex h-full flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-cyan/30 via-cyan/10 to-white px-4 py-3 text-navy shadow-sm ring-1 ring-cyan/60 transition hover:ring-cyan">
+          {/* The whole card opens the responses (Kai, 26 Nov 2026: no
+              "Read responses" button). */}
+          <Link
+            href="/feedback-inbox"
+            aria-label="Read the responses"
+            className="absolute inset-0 rounded-2xl"
+          />
           <span
             aria-hidden
             className="pointer-events-none absolute -right-4 -top-5 text-7xl opacity-15"
           >
             💬
           </span>
-          <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-800">
+          {fresh > 0 && (
+            <span className="pointer-events-none absolute right-3 top-3 rounded-full bg-pink px-2 py-0.5 text-[11px] font-bold text-navy shadow-sm">
+              {fresh} new
+            </span>
+          )}
+          <span className="pointer-events-none text-[11px] font-bold uppercase tracking-wider text-cyan-800">
             From your members
           </span>
-          <span className="mt-0.5 font-semibold leading-snug">
+          <span className="pointer-events-none mt-0.5 font-semibold leading-snug">
             📝 Member feedback survey
           </span>
-          <span className="mt-1 text-sm text-stone-700">
+          <span className="pointer-events-none mt-1 text-sm text-stone-700">
             Your local members tell you how they&apos;re finding things, with or
             without their name.
           </span>
-          <span className="mt-2 text-xs font-medium text-cyan-900">
+          <span className="pointer-events-none mt-2 text-xs font-medium text-cyan-900">
             {stats.n === 0
               ? "No responses yet"
               : `${stats.n} ${stats.n === 1 ? "response" : "responses"}${
@@ -99,7 +142,7 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
                     : ""
                 }`}
           </span>
-          <span className="mt-auto flex flex-wrap gap-2 pt-3">
+          <span className="relative mt-auto flex flex-wrap gap-2 pt-3">
             <button
               type="button"
               onClick={() => setLinkOpen(true)}
@@ -108,12 +151,6 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
             >
               Share the survey
             </button>
-            <Link
-              href="/feedback-inbox"
-              className="rounded-lg bg-white/80 px-3 py-1.5 text-sm font-semibold text-navy ring-1 ring-cyan/60 hover:bg-white"
-            >
-              Read responses
-            </Link>
           </span>
         </div>
       )}
@@ -171,4 +208,13 @@ export function FeedbackCards({ teamId }: { teamId: string | null }) {
       )}
     </>
   );
+}
+
+// On the members' responses page: everything there now counts as seen, so the
+// "N new" badge on the survey card clears.
+export function MarkFeedbackSeen({ teamId }: { teamId: string }) {
+  useEffect(() => {
+    markFeedbackSeen(teamId);
+  }, [teamId]);
+  return null;
 }

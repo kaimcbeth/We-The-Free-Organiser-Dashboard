@@ -12,6 +12,7 @@ import {
 } from "@/lib/changelog";
 import { requireOrganiser, ROLE_LABEL } from "@/lib/organiser";
 import { StaffBar } from "@/components/staff-bar";
+import { PdrNudge } from "./pdr/pdr-nudge";
 import { loadRegionChoices } from "@/lib/rsl-teams";
 import { signPhotos } from "@/lib/photos";
 import { Avatar } from "@/components/avatar";
@@ -257,6 +258,9 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
           )}
           <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-5">
             <SectionIntroCard />
+            {organiser.access === "regional_lead" && !organiser.viewingAs && (
+              <PdrNudge />
+            )}
             <EventsViewSwitch />
             <InsightsViewSwitch />
             {children}
