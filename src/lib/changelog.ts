@@ -51,7 +51,7 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
-        text: 'New special event promo posts: What to bring, Why you should come, New Year\'s resolutions, Animal-friendly NYE, FAQs, Playlist, Location and Easy dishes. "What to bring posted" makes a carousel: a cover, one slide per thing with a big picture, and the whole list at the end (five colours). Edit the list, share or download the slides, copy it as text or save it to the planner.',
+        text: "New special event promo posts: What to bring, Why you should come, New Year's resolutions, Animal-friendly NYE, FAQs, Playlist, Location and Easy dishes. \"What to bring posted\" makes a carousel: a cover, one slide per thing with a big picture, the whole list, and the event's main poster as the last slide (five colours). Edit the list, share or download the slides, copy it as text or save it to the planner.",
       },
       {
         level: "god",

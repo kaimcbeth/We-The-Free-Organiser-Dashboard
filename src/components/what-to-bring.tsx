@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Sheet } from "@/components/sheet";
 import { SaveToPlanner } from "@/components/save-to-planner";
 import type { GraphicEvent } from "@/components/graphic-maker";
@@ -8,6 +8,8 @@ import { grain, loadPosterFonts } from "@/components/graphic-poster";
 import { fmt, place, shortTitle } from "@/components/graphic-photo-styles";
 import { SIGNUP_THEMES } from "@/components/signup-list";
 import { saveFiles } from "@/lib/save-files";
+import { drawMainPoster, loadMainPosterFonts } from "@/lib/main-poster";
+import { createClient } from "@/lib/supabase/client";
 import { eventKind } from "@/lib/insight-charts";
 import { DISPLAY, PINK, bodyFont, loadImage } from "@/components/recap-maker";
 
@@ -15,7 +17,8 @@ import { DISPLAY, PINK, bodyFont, loadImage } from "@/components/recap-maker";
 // "Make a template for the what to bring post and a generator button", then
 // "Should be a carousel"): a cover, one slide per thing to bring (with an
 // optional short note, "A plate to share - vegan, enough for a few"), and
-// the whole ticked checklist last. Same colours as the sign-up list. The
+// the whole ticked checklist, then the event's main promo poster last
+// (Kai: "Always put the main promo poster at the end of the carousel"). Same colours as the sign-up list. The
 // list is kept per event on this device.
 
 const W = 1080;
@@ -546,7 +549,10 @@ export function WhatToBringMaker({
 
 type Saved = { items: string; texts: Texts };
 
-// Draws slide i of the carousel: 0 = cover, then the things, then the list.
+type Poster = { event: GraphicEvent; tz: string; handle: string | null };
+
+// Draws slide i of the carousel: 0 = cover, then the things, the list, and
+// the event's main promo poster last.
 function drawSlide(
   ctx: CanvasRenderingContext2D,
   i: number,
@@ -554,6 +560,7 @@ function drawSlide(
   items: Item[],
   mark: HTMLImageElement | null,
   theme: ThemeKey,
+  poster: Poster,
 ) {
   if (i === 0)
     drawBringCover(
@@ -565,7 +572,9 @@ function drawSlide(
     );
   else if (i <= items.length)
     drawBringItem(ctx, t, items[i - 1], i, items.length, mark, theme);
-  else drawWhatToBring(ctx, W, H, t, items, mark, theme);
+  else if (i === items.length + 1)
+    drawWhatToBring(ctx, W, H, t, items, mark, theme);
+  else drawMainPoster(ctx.canvas, poster.event, poster.tz, poster.handle, mark);
 }
 
 function SlideCanvas({
@@ -575,8 +584,10 @@ function SlideCanvas({
   mark,
   fonts,
   theme,
+  poster,
 }: {
   i: number;
+  poster: Poster;
   texts: Texts;
   itemsKey: string;
   mark: HTMLImageElement | null;
@@ -586,8 +597,9 @@ function SlideCanvas({
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const ctx = ref.current?.getContext("2d");
-    if (ctx) drawSlide(ctx, i, texts, JSON.parse(itemsKey), mark, theme);
-  }, [i, texts, itemsKey, mark, fonts, theme]);
+    if (ctx)
+      drawSlide(ctx, i, texts, JSON.parse(itemsKey), mark, theme, poster);
+  }, [i, texts, itemsKey, mark, fonts, theme, poster]);
   return (
     <canvas
       ref={ref}
@@ -636,21 +648,35 @@ function Maker({
   const [fonts, setFonts] = useState(0);
   const [msg, setMsg] = useState("");
   const [files, setFiles] = useState<File[] | null>(null);
+  const [handle, setHandle] = useState<string | null>(null);
+  const poster = useMemo<Poster>(
+    () => ({ event, tz, handle }),
+    [event, tz, handle],
+  );
   const items = parseItems(list);
   const itemsKey = JSON.stringify(items);
-  const slides = items.length + 2;
+  const slides = items.length + 3;
   const tooMany = list.split("\n").filter((l) => l.trim()).length > MAX_ITEMS;
 
   useEffect(() => {
     let live = true;
     loadPosterFonts()?.then(() => live && setFonts((n) => n + 1));
+    loadMainPosterFonts(event.title)?.then(
+      () => live && setFonts((n) => n + 1),
+    );
+    createClient()
+      .from("teams")
+      .select("instagram_handle")
+      .eq("id", event.teamId)
+      .maybeSingle()
+      .then(({ data }) => live && setHandle(data?.instagram_handle ?? null));
     loadImage("/brand/wtf-mark.png")
       .then((img) => live && setMark(img))
       .catch(() => {});
     return () => {
       live = false;
     };
-  }, []);
+  }, [event.title, event.teamId]);
 
   // Keep the list for this event on this device.
   useEffect(() => {
@@ -666,11 +692,11 @@ function Maker({
     const id = window.setTimeout(async () => {
       const its = JSON.parse(itemsKey) as Item[];
       const out: File[] = [];
-      for (let i = 0; i < its.length + 2; i++) {
+      for (let i = 0; i < its.length + 3; i++) {
         const c = document.createElement("canvas");
         c.width = W;
         c.height = H;
-        drawSlide(c.getContext("2d")!, i, texts, its, mark, theme);
+        drawSlide(c.getContext("2d")!, i, texts, its, mark, theme, poster);
         const b = await new Promise<Blob | null>((r) =>
           c.toBlob(r, "image/png"),
         );
@@ -691,7 +717,7 @@ function Maker({
       live = false;
       window.clearTimeout(id);
     };
-  }, [texts, itemsKey, mark, fonts, theme]);
+  }, [texts, itemsKey, mark, fonts, theme, poster]);
 
   const canShare =
     !!files &&
@@ -755,7 +781,8 @@ function Maker({
         ))}
       </div>
       <p className="mt-3 text-xs text-stone-500">
-        {slides} slides: a cover, one for each thing, then the whole list.
+        {slides} slides: a cover, one for each thing, the whole list, then the
+        event poster.
       </p>
       <div className="mt-1.5 flex snap-x gap-2 overflow-x-auto pb-2">
         {Array.from({ length: slides }, (_, i) => (
@@ -767,6 +794,7 @@ function Maker({
             mark={mark}
             fonts={fonts}
             theme={theme}
+            poster={poster}
           />
         ))}
       </div>
