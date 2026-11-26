@@ -51,6 +51,14 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'New special event promo posts: What to bring, Why you should come, New Year\'s resolutions, Animal-friendly NYE, FAQs, Playlist, Location and Easy dishes. "What to bring posted" makes a carousel: a cover, one slide per thing with a big picture, and the whole list at the end (five colours). Edit the list, share or download the slides, copy it as text or save it to the planner.',
+      },
+      {
+        level: "god",
+        text: "0260: 8 special_* task kinds (not in create_special_promo_tasks yet, so they're only made by hand until their days are set); Sydney NYE social tagged as a special event with all 9 made by hand. `WhatToBringMaker` in what-to-bring.tsx (carousel: drawBringCover / drawBringItem / drawWhatToBring; emoji per line or `pictureFor` keywords), `task.bring` from tasks.ts.",
+      },
+      {
+        level: "organiser",
         text: 'The "Thank-you messages sent" action has been removed.',
       },
       {

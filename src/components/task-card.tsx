@@ -2,6 +2,7 @@
 
 import { WeatherUpdateMaker, type Forecast } from "@/components/weather-update";
 import { SignupListMaker } from "@/components/signup-list";
+import { WhatToBringMaker } from "@/components/what-to-bring";
 import { RegionWhatsOnButton } from "@/components/region-whats-on";
 import { RegionSpotlightButton } from "@/components/region-spotlight";
 import { useFold } from "@/lib/use-fold";
@@ -76,6 +77,7 @@ const COPY_FOR: Record<string, [CopyPlatform | CopyPlatform[], boolean]> = {
   special_spread: ["facebook", false],
   special_expect: [["instagram", "whatsapp"], false],
   special_signup: ["whatsapp", false],
+  special_bring: [["story", "whatsapp"], false],
   special_countdown: [["story", "whatsapp"], false],
   special_final: ["whatsapp", false],
   special_live: ["story", false],
@@ -108,6 +110,8 @@ const SPECIAL_NOTE: Record<string, string> = {
   special_expect:
     "What to expect: what to bring, where to meet, how long it runs, and that first-timers are welcome.",
   special_signup: "One week to go: who's coming? Ask people to lock in.",
+  special_bring:
+    "What to bring: a short, friendly list (a plate to share, water, hat and sunscreen, something to sit on). Say it's fine to come empty-handed.",
   special_countdown: "A countdown: 3 days to go. Short and fun.",
   special_final:
     "Final details for tomorrow: meeting point, time, what to wear and bring, weather.",
@@ -161,6 +165,8 @@ export type TaskRow = {
   graphic?: { size: GraphicSize; event: GraphicEvent } | null; // promo actions
   // "Sign-up list posted" (Movie Challenges): the event for the maker.
   signup?: (GraphicEvent & { teamId: string; eventId: string }) | null;
+  // Special event "What to bring posted": the event for the maker.
+  bring?: (GraphicEvent & { teamId: string; eventId: string }) | null;
   // "Weather backup plan made": still on / cancelled / moved post.
   weather?: {
     event: GraphicEvent & { teamId: string };
@@ -845,6 +851,17 @@ export function TaskCard({
                   event={task.signup}
                   tz={tz}
                   label="Make the sign-up list"
+                  className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
+                />
+              )}
+              {task.bring && (
+                <WhatToBringMaker
+                  event={task.bring}
+                  tz={tz}
+                  planDay={new Intl.DateTimeFormat("en-CA", {
+                    timeZone: tz,
+                  }).format(new Date(task.dueAt))}
+                  label="Make the list"
                   className="rounded-xl bg-pink px-3 py-1.5 text-sm font-semibold text-navy hover:bg-pink-strong"
                 />
               )}
