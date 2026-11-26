@@ -10,6 +10,7 @@ import { SIGNUP_THEMES } from "@/components/signup-list";
 import { saveFiles } from "@/lib/save-files";
 import { drawMainPoster, loadMainPosterFonts } from "@/lib/main-poster";
 import { createClient } from "@/lib/supabase/client";
+import { loadCommunityPhotos, type EventPhoto } from "@/lib/event-photos";
 import { eventKind } from "@/lib/insight-charts";
 import { DISPLAY, PINK, bodyFont, loadImage } from "@/components/recap-maker";
 
@@ -32,7 +33,40 @@ type Texts = {
   details: string;
   footer: string;
 };
-type Item = { emoji: string; text: string; note: string };
+type Item = {
+  emoji: string;
+  text: string;
+  note: string;
+  img?: HTMLImageElement | null; // a real photo instead of the emoji
+};
+// Photos are kept per thing by its name (Kai, 26 Nov 2026: "a version with
+// real pictures").
+export const photoKey = (text: string) => text.trim().toLowerCase();
+
+// Draws an image covering the box (centre crop).
+function coverImage(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+) {
+  const s = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+  const sw = w / s;
+  const sh = h / s;
+  ctx.drawImage(
+    img,
+    (img.naturalWidth - sw) / 2,
+    (img.naturalHeight - sh) / 2,
+    sw,
+    sh,
+    x,
+    y,
+    w,
+    h,
+  );
+}
 
 // A picture for each thing (Kai, 26 Nov 2026: "a bit more visual with the
 // items"): the emoji a line starts with, else one guessed from the words.
@@ -315,6 +349,7 @@ function picture(
   cy: number,
   r: number,
   th: Theme,
+  img?: HTMLImageElement | null,
 ) {
   const halo = ctx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r * 1.35);
   halo.addColorStop(0, `rgba(${th.ink},0.16)`);
@@ -327,6 +362,18 @@ function picture(
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.fill();
+  if (img) {
+    ctx.save();
+    ctx.clip();
+    coverImage(ctx, img, cx - r, cy - r, r * 2, r * 2);
+    ctx.restore();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = th.fill;
+    ctx.lineWidth = Math.max(4, r * 0.05);
+    ctx.stroke();
+    return;
+  }
   ctx.strokeStyle = th.fill;
   ctx.lineWidth = Math.max(4, r * 0.05);
   ctx.stroke();
@@ -343,7 +390,7 @@ function picture(
 export function drawBringCover(
   ctx: CanvasRenderingContext2D,
   t: Texts,
-  pics: string[],
+  pics: Item[],
   mark: HTMLImageElement | null,
   theme: ThemeKey = "navy",
   kind: ListKind = BRING,
@@ -365,7 +412,7 @@ export function drawBringCover(
   ];
   pics.slice(0, spots.length).forEach((e, i) => {
     const [x, y, r] = spots[i];
-    picture(ctx, e, W * x, H * 0.58 * y + 40, r, th);
+    picture(ctx, e.emoji, W * x, H * 0.58 * y + 40, r, th, e.img);
   });
   // The heading block sits above the bottom line: measure it first.
   const probe = document.createElement("canvas").getContext("2d")!;
@@ -426,10 +473,33 @@ export function drawBringItem(
   const r = 220;
   const cx = W / 2;
   const cy = 450;
-  picture(ctx, it.emoji, cx, cy, r, th);
   const badge = 96;
-  if (kind.tick) tick(ctx, cx + r * 0.62, cy + r * 0.62 - badge / 2, badge, th);
   let y = cy + r + 70;
+  if (it.img) {
+    // A real photo: a big rounded picture across the slide.
+    const pw = W - m * 2;
+    const ph = r * 2 + 40;
+    const px = m;
+    const py = cy - r - 20;
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(px, py, pw, ph, 36);
+    ctx.clip();
+    coverImage(ctx, it.img, px, py, pw, ph);
+    ctx.restore();
+    ctx.strokeStyle = th.fill;
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.roundRect(px, py, pw, ph, 36);
+    ctx.stroke();
+    if (kind.tick)
+      tick(ctx, px + pw - badge * 0.75, py + ph - badge * 0.75, badge, th);
+    y = py + ph + 70;
+  } else {
+    picture(ctx, it.emoji, cx, cy, r, th);
+    if (kind.tick)
+      tick(ctx, cx + r * 0.62, cy + r * 0.62 - badge / 2, badge, th);
+  }
   ctx.textAlign = "center";
   ctx.fillStyle = th.text;
   for (const l of words) {
@@ -496,7 +566,7 @@ export function drawWhatToBring(
       ctx.fillStyle = ink(0.12);
       ctx.fillRect(textX, top0 + i * rowH, w - m - textX, 2);
     }
-    picture(ctx, it.emoji, m + box / 2, cy, box * 0.56, th);
+    picture(ctx, it.emoji, m + box / 2, cy, box * 0.56, th, it.img);
 
     let s = Math.round(Math.min(story ? 50 : 44, rowH * 0.36));
     ctx.font = `800 ${s}px ${body}`;
@@ -569,13 +639,19 @@ export function ListCarouselMaker({
   );
 }
 
-type Saved = { items: string; texts: Texts };
+type Saved = {
+  items: string;
+  texts: Texts;
+  photos?: boolean; // real photos instead of emoji
+  hub?: Record<string, string>; // thing → Photo Hub photo id
+};
 
 type Poster = {
   event: GraphicEvent;
   tz: string;
   handle: string | null;
   kind: ListKind;
+  imgs: Map<string, HTMLImageElement>; // photo per thing (photos mode)
 };
 
 // Draws slide i of the carousel: 0 = cover, then the things, the list, and
@@ -589,15 +665,11 @@ function drawSlide(
   theme: ThemeKey,
   poster: Poster,
 ) {
-  if (i === 0)
-    drawBringCover(
-      ctx,
-      t,
-      items.map((x) => x.emoji),
-      mark,
-      theme,
-      poster.kind,
-    );
+  items = items.map((it) => ({
+    ...it,
+    img: poster.imgs.get(photoKey(it.text)) ?? null,
+  }));
+  if (i === 0) drawBringCover(ctx, t, items, mark, theme, poster.kind);
   else if (i <= items.length)
     drawBringItem(
       ctx,
@@ -688,9 +760,28 @@ function Maker({
   const [msg, setMsg] = useState("");
   const [files, setFiles] = useState<File[] | null>(null);
   const [handle, setHandle] = useState<string | null>(null);
+  // Real photos (Kai, 26 Nov 2026): per thing, from the Photo Hub (kept by
+  // photo id) or from the phone (this visit only).
+  const [usePhotos, setUsePhotos] = useState(() => saved?.photos ?? false);
+  const [hubPick, setHubPick] = useState<Record<string, string>>(
+    () => saved?.hub ?? {},
+  );
+  const [local, setLocal] = useState<Record<string, string>>({});
+  const [hub, setHub] = useState<EventPhoto[] | null>(null);
+  const [picking, setPicking] = useState<string | null>(null);
+  const [imgs, setImgs] = useState<Map<string, HTMLImageElement>>(
+    () => new Map(),
+  );
+  const loaded = useRef(new Map<string, HTMLImageElement>()); // url → image
   const poster = useMemo<Poster>(
-    () => ({ event, tz, handle, kind }),
-    [event, tz, handle, kind],
+    () => ({
+      event,
+      tz,
+      handle,
+      kind,
+      imgs: usePhotos ? imgs : new Map(),
+    }),
+    [event, tz, handle, kind, imgs, usePhotos],
   );
   const items = parseItems(list);
   const itemsKey = JSON.stringify(items);
@@ -720,9 +811,60 @@ function Maker({
   // Keep the list for this event on this device.
   useEffect(() => {
     try {
-      localStorage.setItem(key, JSON.stringify({ items: list, texts }));
+      localStorage.setItem(
+        key,
+        JSON.stringify({ items: list, texts, photos: usePhotos, hub: hubPick }),
+      );
     } catch {}
-  }, [key, list, texts]);
+  }, [key, list, texts, usePhotos, hubPick]);
+
+  // The community's Photo Hub, once photos are switched on.
+  useEffect(() => {
+    if (!usePhotos || hub) return;
+    let live = true;
+    loadCommunityPhotos(createClient(), event.teamId)
+      .then((p) => live && setHub(p.filter((x) => !x.noPromo)))
+      .catch(() => live && setHub([]));
+    return () => {
+      live = false;
+    };
+  }, [usePhotos, hub, event.teamId]);
+
+  // Load the chosen photos as images for the canvas.
+  const hubKey = JSON.stringify(hubPick);
+  const localKey = JSON.stringify(local);
+  useEffect(() => {
+    if (!usePhotos) return;
+    let live = true;
+    const byId = new Map((hub ?? []).map((p) => [p.id, p.url]));
+    const want: [string, string][] = [];
+    for (const [k, id] of Object.entries(
+      JSON.parse(hubKey) as Record<string, string>,
+    )) {
+      const url = byId.get(id);
+      if (url) want.push([k, url]);
+    }
+    for (const [k, url] of Object.entries(
+      JSON.parse(localKey) as Record<string, string>,
+    ))
+      want.push([k, url]);
+    Promise.all(
+      want.map(async ([k, url]) => {
+        let img = loaded.current.get(url);
+        if (!img) {
+          img = await loadImage(url).catch(() => undefined);
+          if (img) loaded.current.set(url, img);
+        }
+        return img ? ([k, img] as const) : null;
+      }),
+    ).then((pairs) => {
+      if (!live) return;
+      setImgs(new Map(pairs.filter((p) => !!p)));
+    });
+    return () => {
+      live = false;
+    };
+  }, [usePhotos, hub, hubKey, localKey]);
 
   // The slides as files, ready before Share is tapped (phones only open the
   // share menu straight from a tap).
@@ -908,6 +1050,142 @@ function Maker({
           >
             Back to the suggested list
           </button>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-stone-600">Pictures</p>
+          <div className="mt-1 flex gap-1.5">
+            {(
+              [
+                [false, "Emoji"],
+                [true, "Real photos"],
+              ] as const
+            ).map(([on, lab]) => (
+              <button
+                key={lab}
+                type="button"
+                onClick={() => setUsePhotos(on)}
+                className={`rounded-full px-3 py-1 text-sm font-medium ring-1 ${usePhotos === on ? "bg-navy text-white ring-navy" : "bg-white text-stone-600 ring-stone-300"}`}
+              >
+                {lab}
+              </button>
+            ))}
+          </div>
+          {usePhotos && (
+            <div className="mt-2 space-y-1.5">
+              <p className="text-xs text-stone-500">
+                Pick a photo for each one from your Photo Hub or your phone. Any
+                without a photo keep their emoji.
+              </p>
+              {items.map((it) => {
+                const k = photoKey(it.text);
+                const img = imgs.get(k);
+                const open = picking === k;
+                return (
+                  <div
+                    key={k}
+                    className="rounded-xl bg-stone-50 p-2 ring-1 ring-stone-200"
+                  >
+                    <div className="flex items-center gap-2">
+                      {img ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={img.src}
+                          alt=""
+                          className="size-11 shrink-0 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-white text-2xl ring-1 ring-stone-200">
+                          {it.emoji}
+                        </span>
+                      )}
+                      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-navy">
+                        {it.text}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setPicking(open ? null : k)}
+                        className="rounded-lg px-2 py-1 text-xs font-medium text-pink-ink hover:bg-white"
+                      >
+                        Photo Hub
+                      </button>
+                      <label className="cursor-pointer rounded-lg px-2 py-1 text-xs font-medium text-pink-ink hover:bg-white">
+                        Upload
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            e.target.value = "";
+                            if (!f) return;
+                            setLocal({ ...local, [k]: URL.createObjectURL(f) });
+                            const { [k]: _drop, ...rest } = hubPick;
+                            void _drop;
+                            setHubPick(rest);
+                          }}
+                        />
+                      </label>
+                      {img && (
+                        <button
+                          type="button"
+                          aria-label={`Take the photo off ${it.text}`}
+                          onClick={() => {
+                            const { [k]: _a, ...l } = local;
+                            const { [k]: _b, ...h } = hubPick;
+                            void _a;
+                            void _b;
+                            setLocal(l);
+                            setHubPick(h);
+                          }}
+                          className="px-1 text-stone-400 hover:text-navy"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                    {open && (
+                      <div className="mt-2">
+                        {!hub ? (
+                          <p className="text-xs text-stone-500">
+                            Loading the Photo Hub…
+                          </p>
+                        ) : hub.length === 0 ? (
+                          <p className="text-xs text-stone-500">
+                            No photos in the Photo Hub yet. Use Upload instead.
+                          </p>
+                        ) : (
+                          <div className="grid max-h-64 grid-cols-5 gap-1 overflow-y-auto sm:grid-cols-6">
+                            {hub.map((p) => (
+                              <button
+                                key={p.id}
+                                type="button"
+                                onClick={() => {
+                                  setHubPick({ ...hubPick, [k]: p.id });
+                                  const { [k]: _c, ...l } = local;
+                                  void _c;
+                                  setLocal(l);
+                                  setPicking(null);
+                                }}
+                                className={`aspect-square overflow-hidden rounded-md ring-2 ${hubPick[k] === p.id ? "ring-pink" : "ring-transparent"}`}
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={p.thumb ?? p.url}
+                                  alt=""
+                                  loading="lazy"
+                                  className="size-full object-cover"
+                                />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
         {field("kicker", "Small line")}
         {field("heading", "Heading")}
