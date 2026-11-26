@@ -50,6 +50,10 @@ export const CHANGELOG: Release[] = [
     title: "PDRs for Regional Support Leads",
     changes: [
       {
+        level: "organiser",
+        text: "Monthly recap now comes up once your last event of the month has finished, the month calendar 3 days before the month ends, and pairing newcomers with a regular every Monday for the week before.",
+      },
+      {
         level: "god",
         text: "Meeting planner in Resources: pick a meeting time and see it in every place you choose, with a ready-to-send message, Add to calendar and a graphic.",
       },
