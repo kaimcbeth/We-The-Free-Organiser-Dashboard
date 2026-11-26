@@ -50,6 +50,10 @@ export const CHANGELOG: Release[] = [
     title: "PDRs for Regional Support Leads",
     changes: [
       {
+        level: "god",
+        text: "Meeting planner in Resources: pick a meeting time and see it in every place you choose, with a ready-to-send message, Add to calendar and a graphic.",
+      },
+      {
         level: "organiser",
         text: 'Month calendar: repeat events (like weekly co-working) show once with "Also on the 9th, 16th & 23rd", and you can change any event\'s name or emoji for the calendar.',
       },

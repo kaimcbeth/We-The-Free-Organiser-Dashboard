@@ -23,12 +23,14 @@ export function ResourcesList({
   teamSlug,
   rsl = false,
   pdrs = false,
+  manager = false,
 }: {
   teamId: string | null;
   teamSlug: string | null;
   isGod?: boolean; // (unused now: Facebook groups is for all organisers)
   rsl?: boolean; // Regional Support Lead or God: the hangout builder
   pdrs?: boolean; // runs RSL PDRs (community manager's switch, 0256)
+  manager?: boolean; // God or Community Manager: meeting planner
 }) {
   const path = usePathname();
   const [query, setQuery] = useState("");
@@ -109,6 +111,25 @@ export function ResourcesList({
               </a>
             </Pinnable>
           )}
+          {manager &&
+            !core &&
+            has(
+              q,
+              "meeting planner time zones schedule global support team call promote world times",
+            ) && (
+              <a
+                href="/resources/meetings"
+                data-resource="meetings"
+                className={RESOURCE_CARD}
+              >
+                <ResourceCardBody
+                  emoji="🌏"
+                  title="Meeting planner"
+                  newKey="meetings"
+                  about="Times around the world, a message and a graphic."
+                />
+              </a>
+            )}
           {pdrs &&
             !core &&
             has(

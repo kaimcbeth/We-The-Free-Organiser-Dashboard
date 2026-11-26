@@ -7,6 +7,7 @@ export const NEW_DAYS = 30;
 export const RESOURCE_ADDED: Record<string, string> = {
   hangouts: "2026-11-13",
   pdrs: "2026-11-26",
+  meetings: "2026-11-26",
   equipment: "2026-11-11", // Build Your Kit
   social: "2026-11-05",
   "engagement-pod": "2026-11-05",

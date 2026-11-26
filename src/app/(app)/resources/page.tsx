@@ -29,6 +29,7 @@ export default async function ResourcesPage() {
       isGod={isGlobal(organiser.role)}
       rsl={isGlobal(organiser.role) || organiser.role === "regional_lead"}
       pdrs={!!reviewers}
+      manager={isGlobal(organiser.role)}
     />
   );
 }
