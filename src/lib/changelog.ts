@@ -54,6 +54,10 @@ export const CHANGELOG: Release[] = [
         text: "New special event promo posts: What to bring, Why you should come, New Year's resolutions, Animal-friendly NYE, FAQs, Playlist, Location and Easy dishes. \"What to bring posted\" makes a carousel: a cover, one slide per thing with a big picture, the whole list, and the event's main poster as the last slide (five colours). Edit the list, share or download the slides, copy it as text or save it to the planner.",
       },
       {
+        level: "organiser",
+        text: '"Animal-friendly NYE posted" makes a carousel too: 7 kind ways to see the year out (plant-based food, vegan drinks, pets kept close, no balloons or glitter, a resolution for the animals), each with a big picture, then the list and the event poster. Every line can be changed.',
+      },
+      {
         level: "god",
         text: "0260: 8 special_* task kinds (not in create_special_promo_tasks yet, so they're only made by hand until their days are set); Sydney NYE social tagged as a special event with all 9 made by hand. `WhatToBringMaker` in what-to-bring.tsx (carousel: drawBringCover / drawBringItem / drawWhatToBring; emoji per line or `pictureFor` keywords), `task.bring` from tasks.ts.",
       },
