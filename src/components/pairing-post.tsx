@@ -96,7 +96,7 @@ export function drawPairing(
   const heading = d.heading.toUpperCase();
   let hs = 96;
   let lines: string[] = [];
-  for (; hs >= 50; hs -= 4) {
+  for (; heading.trim() && hs >= 50; hs -= 4) {
     ctx.font = `${hs}px ${DISPLAY}`;
     lines = wrapLines(ctx, heading, width);
     if (lines.length <= 3) break;
@@ -108,7 +108,7 @@ export function drawPairing(
   }
 
   // One row per newcomer: coloured dot, name, first event under it.
-  const top = y + 70;
+  const top = y + (lines.length ? 70 : 50);
   const bottom = H - (d.foot ? 170 : 90);
   const n = Math.max(1, d.rows.length);
   const rowH = Math.min(150, (bottom - top) / n);
@@ -202,11 +202,9 @@ function PairingPost({
 }) {
   const [firsts, setFirsts] = useState<Record<string, string> | null>(null);
   const [left, setLeft] = useState<Set<string>>(new Set());
-  const [kicker, setKicker] = useState(`New faces · ${dates}`);
-  const [heading, setHeading] = useState("Who can help welcome them?");
-  const [foot, setFoot] = useState(
-    "Reply if you can reach out to one of them.",
-  );
+  const [kicker, setKicker] = useState(`Newcomers · ${dates}`);
+  const [heading, setHeading] = useState("");
+  const [foot, setFoot] = useState("");
   const [logo, setLogo] = useState<HTMLImageElement | null>(null);
   const [fonts, setFonts] = useState(false);
   const [msg, setMsg] = useState("");
@@ -275,8 +273,8 @@ function PairingPost({
     ...rows.map(
       (r) => `• ${r.name}${r.event ? ` (first came to ${r.event})` : ""}`,
     ),
-    "",
-    heading,
+    ...(heading || foot ? [""] : []),
+    ...(heading ? [heading] : []),
     ...(foot ? [foot] : []),
   ].join("\n");
 
@@ -398,7 +396,9 @@ function PairingPost({
           />
         </label>
         <label className="block text-sm">
-          <span className="font-medium text-navy">Heading</span>
+          <span className="font-medium text-navy">
+            Heading <span className="text-stone-400">(empty = left off)</span>
+          </span>
           <input
             className={input}
             value={heading}
