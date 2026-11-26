@@ -51,6 +51,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: 'The "Thank-you messages sent" action has been removed.',
+      },
+      {
+        level: "organiser",
         text: "Paired with a regular: Make the post turns the week's newcomers and the first event each came to into an image and message for your regulars' chat.",
       },
       {
