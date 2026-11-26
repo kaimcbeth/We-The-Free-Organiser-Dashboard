@@ -58,6 +58,10 @@ export const CHANGELOG: Release[] = [
         text: '"Animal-friendly NYE posted" makes a carousel too: 7 kind ways to see the year out (plant-based food, vegan drinks, pets kept close, no balloons or glitter, a resolution for the animals), each with a big picture, then the list and the event poster. Every line can be changed.',
       },
       {
+        level: "organiser",
+        text: "What to bring and Animal-friendly NYE can use real photos: switch Pictures to Real photos, then pick a photo for each one from your Photo Hub or upload one from your phone. Anything without a photo keeps its emoji.",
+      },
+      {
         level: "god",
         text: "0260: 8 special_* task kinds (not in create_special_promo_tasks yet, so they're only made by hand until their days are set); Sydney NYE social tagged as a special event with all 9 made by hand. `WhatToBringMaker` in what-to-bring.tsx (carousel: drawBringCover / drawBringItem / drawWhatToBring; emoji per line or `pictureFor` keywords), `task.bring` from tasks.ts.",
       },
