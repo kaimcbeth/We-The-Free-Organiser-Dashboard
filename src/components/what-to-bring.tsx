@@ -53,6 +53,19 @@ const PICTURES: [RegExp, string][] = [
   [/drink|juice|kombucha/i, "🧃"],
   [/bag|bin|rubbish/i, "♻️"],
 ];
+// One kind of list carousel (Kai, 26 Nov 2026): What to bring, then
+// Animal-friendly NYE, sharing the same maker.
+export type ListKind = {
+  id: string; // localStorage keys: wtf-<id>-<event>, wtf-<id>-theme
+  title: string; // sheet title + planner note
+  defaultItems: (e: GraphicEvent, tz: string) => string;
+  defaults: (e: GraphicEvent, tz: string) => Texts;
+  countLine: (n: number) => string; // cover, bottom left
+  tick: boolean; // tick badge on each thing's picture
+  copyLead: (t: Texts, head: string) => string; // Copy as text opening line
+  example: string; // help line under the list
+};
+
 export const pictureFor = (text: string) =>
   PICTURES.find(([re]) => re.test(text))?.[1] ?? "✨";
 const LEADING_EMOJI =
@@ -69,7 +82,7 @@ function isSummer(iso: string, tz: string) {
 const withPictures = (ls: string[]) =>
   ls.map((l) => `${pictureFor(l.split(" - ")[0])} ${l}`).join("\n");
 
-function defaultItems(e: GraphicEvent, tz: string): string {
+function bringItems(e: GraphicEvent, tz: string): string {
   const kind = eventKind(e.typeName, e.title);
   const summer = isSummer(e.startsAt, tz);
   const weather = summer
@@ -103,7 +116,7 @@ function defaultItems(e: GraphicEvent, tz: string): string {
   ]);
 }
 
-function defaults(e: GraphicEvent, tz: string): Texts {
+function bringDefaults(e: GraphicEvent, tz: string): Texts {
   const day = fmt(e.startsAt, tz, {
     weekday: "short",
     day: "numeric",
@@ -149,10 +162,10 @@ export function parseItems(text: string): Item[] {
     .filter((i) => i.text);
 }
 
-export function bringText(items: Item[], t: Texts) {
+export function listText(items: Item[], t: Texts, kind: ListKind = BRING) {
   const head = [t.heading, t.details].filter(Boolean).join(" · ");
   return [
-    `${t.kicker || "What to bring"}${head ? ` for ${head}` : ""}:`,
+    kind.copyLead(t, head),
     items
       .map((i) => `${i.emoji} ${i.text}${i.note ? ` (${i.note})` : ""}`)
       .join("\n"),
@@ -333,6 +346,7 @@ export function drawBringCover(
   pics: string[],
   mark: HTMLImageElement | null,
   theme: ThemeKey = "navy",
+  kind: ListKind = BRING,
 ) {
   const th = SIGNUP_THEMES[theme] ?? SIGNUP_THEMES.navy;
   const m = 72;
@@ -360,8 +374,7 @@ export function drawBringCover(
   ctx.textAlign = "left";
   ctx.fillStyle = th.text;
   ctx.font = `700 36px ${body}`;
-  const count = pics.length;
-  const line = `${count} thing${count === 1 ? "" : "s"} to bring`;
+  const line = kind.countLine(pics.length);
   ctx.fillText(line, m, H - 96);
   ctx.textAlign = "right";
   ctx.fillStyle = theme === "navy" ? PINK : th.text;
@@ -379,6 +392,7 @@ export function drawBringItem(
   of: number,
   mark: HTMLImageElement | null,
   theme: ThemeKey = "navy",
+  kind: ListKind = BRING,
 ) {
   const th = SIGNUP_THEMES[theme] ?? SIGNUP_THEMES.navy;
   const ink = (a: number) => `rgba(${th.ink},${a})`;
@@ -390,7 +404,7 @@ export function drawBringItem(
   ctx.fillStyle = theme === "navy" ? PINK : th.text;
   ctx.font = `800 34px ${body}`;
   ctx.letterSpacing = "4px";
-  ctx.fillText((t.kicker || "What to bring").toUpperCase(), m, m + 30);
+  ctx.fillText((t.kicker || kind.title).toUpperCase(), m, m + 30);
   ctx.letterSpacing = "0px";
   ctx.fillStyle = ink(0.6);
   ctx.font = `700 32px ${body}`;
@@ -414,7 +428,7 @@ export function drawBringItem(
   const cy = 450;
   picture(ctx, it.emoji, cx, cy, r, th);
   const badge = 96;
-  tick(ctx, cx + r * 0.62, cy + r * 0.62 - badge / 2, badge, th);
+  if (kind.tick) tick(ctx, cx + r * 0.62, cy + r * 0.62 - badge / 2, badge, th);
   let y = cy + r + 70;
   ctx.textAlign = "center";
   ctx.fillStyle = th.text;
@@ -516,19 +530,26 @@ export function drawWhatToBring(
   }
 }
 
-export function WhatToBringMaker({
-  event,
-  tz,
-  planDay,
-  label = "What to bring post",
-  className = "text-xs font-medium text-pink-ink hover:underline",
-}: {
+type MakerProps = {
   event: GraphicEvent & { teamId: string; eventId: string };
   tz: string;
   planDay?: string;
   label?: string;
   className?: string;
-}) {
+};
+
+export function WhatToBringMaker(p: MakerProps) {
+  return <ListCarouselMaker {...p} kind={BRING} />;
+}
+
+export function ListCarouselMaker({
+  event,
+  tz,
+  planDay,
+  kind,
+  label = `${kind.title} post`,
+  className = "text-xs font-medium text-pink-ink hover:underline",
+}: MakerProps & { kind: ListKind }) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -540,6 +561,7 @@ export function WhatToBringMaker({
           event={event}
           tz={tz}
           planDay={planDay}
+          kind={kind}
           onClose={() => setOpen(false)}
         />
       )}
@@ -549,7 +571,12 @@ export function WhatToBringMaker({
 
 type Saved = { items: string; texts: Texts };
 
-type Poster = { event: GraphicEvent; tz: string; handle: string | null };
+type Poster = {
+  event: GraphicEvent;
+  tz: string;
+  handle: string | null;
+  kind: ListKind;
+};
 
 // Draws slide i of the carousel: 0 = cover, then the things, the list, and
 // the event's main promo poster last.
@@ -569,9 +596,19 @@ function drawSlide(
       items.map((x) => x.emoji),
       mark,
       theme,
+      poster.kind,
     );
   else if (i <= items.length)
-    drawBringItem(ctx, t, items[i - 1], i, items.length, mark, theme);
+    drawBringItem(
+      ctx,
+      t,
+      items[i - 1],
+      i,
+      items.length,
+      mark,
+      theme,
+      poster.kind,
+    );
   else if (i === items.length + 1)
     drawWhatToBring(ctx, W, H, t, items, mark, theme);
   else drawMainPoster(ctx.canvas, poster.event, poster.tz, poster.handle, mark);
@@ -614,14 +651,16 @@ function Maker({
   event,
   tz,
   planDay,
+  kind,
   onClose,
 }: {
   event: GraphicEvent & { teamId: string; eventId: string };
   tz: string;
   planDay?: string;
+  kind: ListKind;
   onClose: () => void;
 }) {
-  const key = `wtf-bring-${event.eventId}`;
+  const key = `wtf-${kind.id}-${event.eventId}`;
   const [saved] = useState<Saved | null>(() => {
     try {
       const v = JSON.parse(localStorage.getItem(key) ?? "null") as Saved | null;
@@ -632,17 +671,17 @@ function Maker({
   });
   const [theme, setTheme] = useState<ThemeKey>(() => {
     try {
-      const v = localStorage.getItem("wtf-bring-theme") as ThemeKey | null;
+      const v = localStorage.getItem(`wtf-${kind.id}-theme`) as ThemeKey | null;
       return v && v in SIGNUP_THEMES ? v : "navy";
     } catch {
       return "navy";
     }
   });
   const [texts, setTexts] = useState<Texts>(
-    () => saved?.texts ?? defaults(event, tz),
+    () => saved?.texts ?? kind.defaults(event, tz),
   );
   const [list, setList] = useState(
-    () => saved?.items ?? defaultItems(event, tz),
+    () => saved?.items ?? kind.defaultItems(event, tz),
   );
   const [mark, setMark] = useState<HTMLImageElement | null>(null);
   const [fonts, setFonts] = useState(0);
@@ -650,8 +689,8 @@ function Maker({
   const [files, setFiles] = useState<File[] | null>(null);
   const [handle, setHandle] = useState<string | null>(null);
   const poster = useMemo<Poster>(
-    () => ({ event, tz, handle }),
-    [event, tz, handle],
+    () => ({ event, tz, handle, kind }),
+    [event, tz, handle, kind],
   );
   const items = parseItems(list);
   const itemsKey = JSON.stringify(items);
@@ -735,7 +774,7 @@ function Maker({
   }
   async function copyText() {
     try {
-      await navigator.clipboard.writeText(bringText(items, texts));
+      await navigator.clipboard.writeText(listText(items, texts, kind));
       setMsg("Copied the list as text.");
     } catch {
       setMsg("Couldn't copy the text.");
@@ -758,7 +797,7 @@ function Maker({
   );
 
   return (
-    <Sheet title="What to bring" onClose={onClose}>
+    <Sheet title={kind.title} onClose={onClose}>
       <div className="flex flex-wrap gap-1.5">
         {(Object.keys(SIGNUP_THEMES) as ThemeKey[]).map((k) => (
           <button
@@ -767,7 +806,7 @@ function Maker({
             onClick={() => {
               setTheme(k);
               try {
-                localStorage.setItem("wtf-bring-theme", k);
+                localStorage.setItem(`wtf-${kind.id}-theme`, k);
               } catch {}
             }}
             className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-medium ring-1 ${theme === k ? "bg-navy text-white ring-navy" : "bg-white text-stone-600 ring-stone-300"}`}
@@ -828,8 +867,8 @@ function Maker({
           tz={tz}
           day={planDay}
           eventId={event.eventId}
-          note={`What to bring: ${texts.heading}`}
-          caption={bringText(items, texts)}
+          note={`${kind.title}: ${texts.heading}`}
+          caption={listText(items, texts, kind)}
           platforms={["instagram"]}
           getImages={async () => files ?? []}
           className={btn}
@@ -854,9 +893,8 @@ function Maker({
           />
           <p className="mt-1 text-xs text-stone-500">
             One thing per line, one slide each. Start a line with an emoji to
-            change its picture, and add a short note after a dash, like
-            &quot;Hat and sunscreen - it&apos;ll be hot&quot;. Up to {MAX_ITEMS}{" "}
-            things.
+            change its picture, and add a short note after a dash, like &quot;
+            {kind.example}&quot;. Up to {MAX_ITEMS} things.
           </p>
           {tooMany && (
             <p className="mt-1 text-xs font-medium text-pink-ink">
@@ -865,7 +903,7 @@ function Maker({
           )}
           <button
             type="button"
-            onClick={() => setList(defaultItems(event, tz))}
+            onClick={() => setList(kind.defaultItems(event, tz))}
             className="mt-1 text-xs text-stone-500 hover:text-navy hover:underline"
           >
             Back to the suggested list
@@ -877,7 +915,7 @@ function Maker({
         {field("footer", "Bottom line (last slide)")}
         <button
           type="button"
-          onClick={() => setTexts(defaults(event, tz))}
+          onClick={() => setTexts(kind.defaults(event, tz))}
           className="text-xs text-stone-500 hover:text-navy hover:underline"
         >
           Put the original words back
@@ -886,3 +924,65 @@ function Maker({
     </Sheet>
   );
 }
+
+export const BRING: ListKind = {
+  id: "bring",
+  title: "What to bring",
+  defaultItems: bringItems,
+  defaults: bringDefaults,
+  countLine: (n) => `${n} thing${n === 1 ? "" : "s"} to bring`,
+  tick: true,
+  copyLead: (t, head) =>
+    `${t.kicker || "What to bring"}${head ? ` for ${head}` : ""}:`,
+  example: "Hat and sunscreen - it'll be hot",
+};
+
+// Animal-friendly NYE (Kai, 26 Nov 2026). Never fireworks (Kai, 5 Nov:
+// not in line with veganism; never suggest them).
+const yearAfter = (e: GraphicEvent, tz: string) => {
+  const y = Number(fmt(e.startsAt, tz, { year: "numeric" }));
+  const m = Number(fmt(e.startsAt, tz, { month: "numeric" }));
+  return m === 12 ? y + 1 : y;
+};
+export const ANIMAL_FRIENDLY: ListKind = {
+  id: "animal-nye",
+  title: "Animal-friendly NYE",
+  defaultItems: (e, tz) =>
+    [
+      "🌱 Celebrate with plant-based food - our potluck is all vegan",
+      "🍾 Check your drinks are vegan - some wines are filtered with animal products",
+      "🐾 Keep pets inside and close - with a quiet spot to retreat to",
+      "🎈 Skip balloons and glitter - they end up in waterways",
+      "♻️ Bring your own cup and plate - less waste, happier wildlife",
+      `🌏 Make a resolution for the animals - try vegan for January ${yearAfter(e, tz)}`,
+      "🫶 See the year out with us - everyone's welcome",
+    ].join("\n"),
+  defaults: (e, tz) => {
+    const day = fmt(e.startsAt, tz, {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
+    const time = fmt(e.startsAt, tz, { hour: "numeric", minute: "2-digit" })
+      .replace(/\s/g, "")
+      .replace(":00", "")
+      .toLowerCase();
+    return {
+      kicker: "Animal-friendly NYE",
+      heading: "A kinder New Year's Eve",
+      details: [day, time, place(e)].filter(Boolean).join(" · "),
+      footer: `Start ${yearAfter(e, tz)} kind. Come along.`,
+    };
+  },
+  countLine: (n) => `${n} way${n === 1 ? "" : "s"} to see the year out kindly`,
+  tick: false,
+  copyLead: (t) =>
+    `${t.heading || "A kinder New Year's Eve"} 🐾${t.details ? `\nJoin us: ${t.details}` : ""}`,
+  example: "Keep pets inside and close - with a quiet spot to retreat to",
+};
+
+// Which action opens which list carousel.
+export const LIST_KINDS: Record<string, ListKind> = {
+  special_bring: BRING,
+  special_animal_friendly: ANIMAL_FRIENDLY,
+};

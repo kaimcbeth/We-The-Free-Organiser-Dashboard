@@ -195,9 +195,13 @@ function toRow(t: Raw): TaskRow {
             eventId: t.event.id,
           }
         : null,
-    // Special event "What to bring" post (26 Nov 2026): opens the maker.
+    // Special event list carousels (26 Nov 2026): What to bring and
+    // Animal-friendly NYE open their maker.
     bring:
-      t.kind?.kind === "special_bring" && t.event && t.team_id
+      (t.kind?.kind === "special_bring" ||
+        t.kind?.kind === "special_animal_friendly") &&
+      t.event &&
+      t.team_id
         ? {
             title: t.event.title,
             startsAt: t.event.starts_at,
