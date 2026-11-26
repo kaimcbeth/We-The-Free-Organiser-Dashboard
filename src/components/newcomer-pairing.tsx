@@ -4,6 +4,7 @@ import { useState, type ComponentProps } from "react";
 import { FoldButton, TaskCard, type TaskRow } from "@/components/task-card";
 import { TaskDoneBox } from "@/components/task-done-box";
 import { useFold } from "@/lib/use-fold";
+import { PairingPostButton } from "@/components/pairing-post";
 
 // "Paired with a regular" is made once per newcomer (com_buddies). Kai,
 // 25 Nov 2026: "make all the separate newcomer support pairing cards just be
@@ -111,10 +112,24 @@ function Week({
         />
       </div>
       {!folded && (
-        <p className="mt-2 text-sm text-stone-600">
-          Connect a regular member with each newcomer so they feel welcome. Each
-          one ticks itself off once someone is connected.
-        </p>
+        <>
+          <p className="mt-2 text-sm text-stone-600">
+            Connect a regular member with each newcomer so they feel welcome.
+            Each one ticks itself off once someone is connected.
+          </p>
+          <div className="mt-2">
+            <PairingPostButton
+              people={list
+                .filter((t) => t.personId)
+                .map((t) => {
+                  const name = t.personName ?? "Newcomer";
+                  return { id: t.personId!, name, first: name.split(" ")[0] };
+                })}
+              dates={`${short(week)} – ${short(sunday)}`}
+              tz={card.tz}
+            />
+          </div>
+        </>
       )}
       <ul className={`mt-3 divide-y divide-black/5 ${folded ? "hidden" : ""}`}>
         {rows.map((t) => {

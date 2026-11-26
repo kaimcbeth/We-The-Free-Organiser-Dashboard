@@ -51,6 +51,10 @@ export const CHANGELOG: Release[] = [
     changes: [
       {
         level: "organiser",
+        text: "Paired with a regular: Make the post turns the week's newcomers and the first event each came to into an image and message for your regulars' chat.",
+      },
+      {
+        level: "organiser",
         text: "Monthly recap now comes up once your last event of the month has finished, the month calendar 3 days before the month ends, and pairing newcomers with a regular every Monday for the week before.",
       },
       {
