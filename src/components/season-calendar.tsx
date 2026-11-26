@@ -295,6 +295,13 @@ export function drawSeason(
     timeZone: d.tz,
     day: "numeric",
   });
+  const wd = new Intl.DateTimeFormat("en-AU", {
+    timeZone: d.tz,
+    weekday: "short",
+  });
+  // Weekday above the date (Kai, 26 Nov 2026): month calendars say "SAT";
+  // season calendars span months, so "SAT · DEC".
+  const oneMonth = d.kicker === "WHAT'S ON IN";
   for (const r of rows) {
     const at = new Date(r.first);
     // Special events look like every other row (Kai, 26 Nov 2026: "ditch
@@ -303,7 +310,15 @@ export function drawSeason(
     ctx.font = `800 22px ${font}`;
     ctx.letterSpacing = "3px";
     ctx.fillStyle = "rgba(255,255,255,0.75)";
-    ctx.fillText(r.weekday ? "EVERY" : mon.format(at).toUpperCase(), x, y + 26);
+    ctx.fillText(
+      r.weekday
+        ? "EVERY"
+        : oneMonth
+          ? wd.format(at).toUpperCase()
+          : `${wd.format(at)} · ${mon.format(at)}`.toUpperCase(),
+      x,
+      y + 26,
+    );
     ctx.letterSpacing = "0px";
     ctx.font = `${r.weekday ? Math.round(big * 0.85) : big}px ${DISPLAY}`;
     ctx.fillStyle = YELLOW;
@@ -367,16 +382,21 @@ export function drawSeason(
     const subY = y + (rowH < 100 ? 70 : 76);
     const alsoText = r.also.length ? alsoOn(r.also, d.tz) : "";
     if (alsoText) {
-      // "Also on …" in yellow first, so it never gets cut; place after it.
-      ctx.fillStyle = YELLOW;
-      const a = wrap(ctx, alsoText, tw, 1)[0];
-      ctx.fillText(a, tx, subY);
-      const aw = ctx.measureText(a + "  ·  ").width;
-      if (sub && aw < tw - 60) {
+      // Place first in grey, then "Also on …" in yellow (Kai, 26 Nov 2026).
+      // The place gives way if the line is too long, so the dates still fit.
+      const sep = "  ·  ";
+      let px = tx;
+      if (sub) {
+        const room = Math.max(120, tw - ctx.measureText(sep + alsoText).width);
+        const p = wrap(ctx, sub, room, 1)[0];
         ctx.fillStyle = "rgba(255,255,255,0.7)";
-        ctx.fillText("·", tx + ctx.measureText(a + "  ").width, subY);
-        ctx.fillText(wrap(ctx, sub, tw - aw, 1)[0], tx + aw, subY);
+        ctx.fillText(p, px, subY);
+        px += ctx.measureText(p).width;
+        ctx.fillText(sep, px, subY);
+        px += ctx.measureText(sep).width;
       }
+      ctx.fillStyle = YELLOW;
+      ctx.fillText(wrap(ctx, alsoText, tx + tw - px, 1)[0], px, subY);
     } else if (sub) ctx.fillText(wrap(ctx, sub, tw, 1)[0], tx, subY);
     y += rowH;
   }
