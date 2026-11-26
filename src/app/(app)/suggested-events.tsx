@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { setEventSpecial } from "@/app/actions";
 import {
   NEW_EVENT_URL,
   onBoardLine,
@@ -89,6 +90,11 @@ function SuggestionCard({ teamId, s }: { teamId: string; s: Suggestion }) {
   const [planning, setPlanning] = useState(!!s.planning);
   const [confirm, setConfirm] = useState(false);
   const [later, setLater] = useState(false);
+  // "Already planned" (Kai, 26 Nov 2026): pick the event it is, or just say so.
+  const [already, setAlready] = useState(false);
+  const [mine, setMine] = useState<
+    { id: string; title: string; starts_at: string }[] | null
+  >(null);
   const [error, setError] = useState("");
   const [gone, setGone] = useState(false);
   const [, start] = useTransition();
@@ -105,6 +111,45 @@ function SuggestionCard({ teamId, s }: { teamId: string; s: Suggestion }) {
       router.refresh();
     });
   const shown = { ...s, planning, ...countsFor(s, planning) };
+  const openAlready = () => {
+    setAlready(true);
+    setError("");
+    if (mine || !s.date) return;
+    const at = Date.parse(s.date);
+    createClient()
+      .from("events")
+      .select("id, title, starts_at")
+      .eq("team_id", teamId)
+      .gte("starts_at", new Date(at - 60 * 864e5).toISOString())
+      .lte("starts_at", new Date(at + 60 * 864e5).toISOString())
+      .order("starts_at")
+      .then(({ data }) => {
+        // Closest to the special event's date first.
+        const list = [...(data ?? [])].sort(
+          (a, b) =>
+            Math.abs(Date.parse(a.starts_at) - at) -
+            Math.abs(Date.parse(b.starts_at) - at),
+        );
+        setMine(list.slice(0, 8));
+      });
+  };
+  const markPlanned = (eventId: string | null) => {
+    setError("");
+    start(async () => {
+      if (eventId) {
+        const r = await setEventSpecial(eventId, s.id);
+        if (r.error) return setError("Couldn't tag that event. Try again?");
+      }
+      await createClient().rpc("respond_special_event", {
+        p_team_id: teamId,
+        p_event_id: s.id,
+        p_year: s.year,
+        p_status: "planned",
+      });
+      setGone(true);
+      router.refresh();
+    });
+  };
   const laterOptions = [
     { days: 1, label: "Tomorrow" },
     { days: 7, label: "Next week" },
@@ -161,7 +206,52 @@ function SuggestionCard({ teamId, s }: { teamId: string; s: Suggestion }) {
       {s.blurb && <p className="mt-0.5 text-sm text-stone-500">{s.blurb}</p>}
       <p className="mt-2 text-xs text-stone-500">{onBoardLine(shown)}</p>
 
-      {later ? (
+      {already ? (
+        <div className="mt-3 space-y-2 text-sm">
+          <p className="text-stone-600">Which event is it?</p>
+          {mine === null ? (
+            <p className="text-stone-400">Loading your events…</p>
+          ) : (
+            <ul className="flex flex-col gap-1.5">
+              {mine.map((e) => (
+                <li key={e.id}>
+                  <button
+                    type="button"
+                    onClick={() => markPlanned(e.id)}
+                    className="w-full rounded-lg px-3 py-1.5 text-left ring-1 ring-black/10 hover:bg-stone-50"
+                  >
+                    <span className="font-medium text-navy">{e.title}</span>
+                    <span className="ml-2 text-stone-500">
+                      {new Date(e.starts_at).toLocaleDateString("en-AU", {
+                        weekday: "short",
+                        day: "numeric",
+                        month: "short",
+                      })}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => markPlanned(null)}
+              className="text-stone-500 hover:text-navy hover:underline"
+            >
+              It&apos;s not in the Hub yet
+            </button>
+            <button
+              type="button"
+              onClick={() => setAlready(false)}
+              className="rounded-lg px-2 py-1 text-stone-500 hover:bg-stone-100"
+            >
+              Cancel
+            </button>
+          </div>
+          {error && <p className="text-red-700">{error}</p>}
+        </div>
+      ) : later ? (
         <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
           <span className="text-stone-600">
             Put &ldquo;Plan your {s.name}&rdquo; in Actions:
@@ -245,6 +335,15 @@ function SuggestionCard({ teamId, s }: { teamId: string; s: Suggestion }) {
             >
               Plan it
             </a>
+          )}
+          {!planning && (
+            <button
+              type="button"
+              onClick={openAlready}
+              className="text-sm text-stone-500 hover:text-navy hover:underline"
+            >
+              Already planned
+            </button>
           )}
           {!planning && laterOptions.length > 0 && (
             <button
