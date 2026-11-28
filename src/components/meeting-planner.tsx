@@ -128,7 +128,87 @@ export type Row = Place & {
   clock: string; // "1:00 pm"
   hour: number;
   dayKey: string; // YYYY-MM-DD there
+  zone: string; // "Central Standard Time" (for that date)
+  abbr: string; // "CST"
+  offset: string; // "UTC−6"
 };
+
+// Official names where the browser's long name or initials aren't the usual
+// ones (Kai, 28 Nov 2026: the graphic shows time zones, not place names).
+const ZONE_FIX: Record<string, [string, string]> = {
+  "Central European Standard Time": ["Central European Time", "CET"],
+  "Central European Summer Time": ["Central European Summer Time", "CEST"],
+  "Eastern European Standard Time": ["Eastern European Time", "EET"],
+  "Eastern European Summer Time": ["Eastern European Summer Time", "EEST"],
+  "Western European Standard Time": ["Western European Time", "WET"],
+  "Western European Summer Time": ["Western European Summer Time", "WEST"],
+  "Nepal Time": ["Nepal Time", "NPT"],
+  "Central Indonesia Time": ["Central Indonesia Time", "WITA"],
+  "Western Indonesia Time": ["Western Indonesia Time", "WIB"],
+  "Eastern Indonesia Time": ["Eastern Indonesia Time", "WIT"],
+  "Brasilia Standard Time": ["Brasília Time", "BRT"],
+  "Argentina Standard Time": ["Argentina Time", "ART"],
+  "Singapore Standard Time": ["Singapore Time", "SGT"],
+  "Hong Kong Standard Time": ["Hong Kong Time", "HKT"],
+  "Philippine Standard Time": ["Philippine Time", "PHT"],
+  "Greenwich Mean Time": ["Greenwich Mean Time", "GMT"],
+};
+
+// The time zone in force at that moment: name, abbreviation, UTC offset.
+export function zoneInfo(tz: string, at: number) {
+  const part = (timeZoneName: "long" | "short" | "shortOffset") =>
+    new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName })
+      .formatToParts(new Date(at))
+      .find((p) => p.type === "timeZoneName")?.value ?? "";
+  const long = part("long");
+  const short = part("short");
+  const off = part("shortOffset").replace("GMT", "") || "+0";
+  const offset = `UTC${off.replace("-", "−")}`;
+  const fix = ZONE_FIX[long];
+  if (fix) return { zone: fix[0], abbr: fix[1], offset };
+  const abbr = /^[A-Z]{2,5}$/.test(short)
+    ? short
+    : long
+        .split(/\s+/)
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase();
+  return { zone: long || tz, abbr, offset };
+}
+
+// The date most people are on: label "Tuesday 15 December" + its day key.
+export function mainDate(rows: Row[], at: number) {
+  if (!rows.length) return { label: "", key: "" };
+  const count = new Map<string, number>();
+  for (const r of rows) count.set(r.dayKey, (count.get(r.dayKey) ?? 0) + 1);
+  const best = [...count.entries()].sort(
+    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+  )[0][0];
+  const r = rows.find((x) => x.dayKey === best)!;
+  const label = new Intl.DateTimeFormat("en-AU", {
+    timeZone: r.tz,
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  })
+    .format(new Date(at))
+    .replace(",", "");
+  return { label, key: best };
+}
+
+// One row per time zone: places on the same zone share it (flags merged).
+export function byZone(rows: Row[]): Row[] {
+  const out: Row[] = [];
+  for (const r of rows) {
+    const same = out.find(
+      (o) =>
+        o.zone === r.zone && o.offset === r.offset && o.dayKey === r.dayKey,
+    );
+    if (!same) out.push({ ...r });
+    else if (!same.flag.includes(r.flag)) same.flag += r.flag;
+  }
+  return out;
+}
 
 export function timesFor(at: number, places: Place[]): Row[] {
   return places.map((p) => {
@@ -164,6 +244,7 @@ export function timesFor(at: number, places: Place[]): Row[] {
       clock: clock === "12:00 am" ? "12:00 am (midnight)" : clock,
       hour,
       dayKey,
+      ...zoneInfo(p.tz, at),
     };
   });
 }
@@ -171,13 +252,17 @@ export function timesFor(at: number, places: Place[]): Row[] {
 // From 10 pm to 2 am is late, 2–7 am early, so a better slot can be found.
 const odd = (h: number) => (h >= 22 || h < 2 ? "Late" : h < 7 ? "Early" : null);
 
-function messageText(s: Saved, rows: Row[]) {
-  const days = [...new Set(rows.map((r) => r.day))];
+function messageText(s: Saved, rows: Row[], at: number) {
+  const zones = byZone(rows);
+  const main = mainDate(zones, at);
   return [
     `🌏 ${s.title}`,
-    days.length > 1 ? days.join(" / ") : days[0],
+    `📅 ${main.label}`,
     "",
-    ...rows.map((r) => `${r.flag} ${r.label}: ${r.day}, ${r.clock}`),
+    ...zones.map(
+      (r) =>
+        `${r.flag} ${r.zone} (${r.abbr}): ${r.clock}${r.dayKey === main.key ? "" : `, ${r.day}`}`,
+    ),
     ...(s.link ? ["", `Join here: ${s.link}`] : []),
   ].join("\n");
 }
@@ -217,13 +302,15 @@ function googleLink(s: Saved, at: number) {
   return `https://calendar.google.com/calendar/render?${q}`;
 }
 
-// 4:5 graphic: kicker, meeting title, then every place with its time.
+// 4:5 graphic: kicker, meeting title, the main date (big, Kai 28 Nov 2026),
+// then one row per time zone with its official name and the local time.
 export function drawMeeting(
   ctx: CanvasRenderingContext2D,
   d: {
     kicker: string;
     title: string;
     rows: Row[];
+    at: number;
     foot: string;
     mark: HTMLImageElement | null;
   },
@@ -235,6 +322,8 @@ export function drawMeeting(
   const x = 72;
   const width = W - 2 * x;
   const font = bodyFont();
+  const rows = byZone(d.rows);
+  const main = mainDate(rows, d.at);
   ctx.textBaseline = "alphabetic";
   ctx.font = `800 30px ${font}`;
   ctx.letterSpacing = "6px";
@@ -242,9 +331,10 @@ export function drawMeeting(
   ctx.fillText(d.kicker.toUpperCase(), x, 170);
   ctx.letterSpacing = "0px";
 
-  // Title: up to 3 lines, as big as fits.
+  // Title: up to 3 lines, as big as fits (a little smaller than before, to
+  // make room for the date).
   const title = d.title.toUpperCase();
-  let size = 96;
+  let size = 88;
   let lines: string[] = [];
   for (; size >= 52; size -= 4) {
     ctx.font = `${size}px ${DISPLAY}`;
@@ -252,45 +342,90 @@ export function drawMeeting(
     if (!lines.some((l) => l.endsWith("…"))) break;
   }
   ctx.fillStyle = "#ffffff";
-  let y = 170 + 24;
+  let y = 170 + 20;
   for (const l of lines) {
     y += size * 1.02;
     ctx.fillText(l, x - 3, y);
   }
 
+  // Main date: weekday small and spaced, then the day + month big in yellow.
+  if (main.label) {
+    const [weekday, ...rest] = main.label.split(" ");
+    y += 70;
+    ctx.font = `700 30px ${font}`;
+    ctx.letterSpacing = "5px";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(weekday.toUpperCase(), x, y);
+    ctx.letterSpacing = "0px";
+    const date = rest.join(" ").toUpperCase();
+    let ds = 84;
+    ctx.font = `${ds}px ${DISPLAY}`;
+    while (ds > 48 && ctx.measureText(date).width > width) {
+      ds -= 4;
+      ctx.font = `${ds}px ${DISPLAY}`;
+    }
+    y += ds * 1.02;
+    ctx.fillStyle = YELLOW;
+    ctx.fillText(date, x - 2, y);
+  }
+
   // Rows share the space down to the footer line.
-  const top = y + 70;
+  const top = y + 44;
   const bottom = H - 150;
-  const n = Math.max(1, d.rows.length);
-  const rowH = Math.min(112, (bottom - top) / n);
-  const timeSize = Math.min(46, rowH * 0.42);
-  const labelSize = Math.min(34, rowH * 0.32);
-  d.rows.forEach((r, i) => {
+  const n = Math.max(1, rows.length);
+  const rowH = Math.min(104, (bottom - top) / n);
+  const timeSize = Math.min(42, rowH * 0.46);
+  const subSize = Math.round(Math.min(22, rowH * 0.26));
+  const flagSize = Math.min(30, rowH * 0.34);
+  // Zone names: one size for every row, the biggest that fits.
+  ctx.font = `${timeSize}px ${DISPLAY}`;
+  const timeW = Math.max(
+    ...rows.map(
+      (r) =>
+        ctx.measureText(r.clock.replace(" (midnight)", "").toUpperCase()).width,
+    ),
+  );
+  const flagW = Math.max(
+    ...rows.map((r) => {
+      ctx.font = `${flagSize}px ${font}`;
+      return ctx.measureText(r.flag).width;
+    }),
+  );
+  const fx = x + flagW + 16;
+  const nameMax = x + width - timeW - 36 - fx;
+  let nameSize = Math.min(32, rowH * 0.36);
+  for (; nameSize > 18; nameSize -= 1) {
+    ctx.font = `700 ${nameSize}px ${font}`;
+    if (rows.every((r) => ctx.measureText(r.zone).width <= nameMax)) break;
+  }
+  rows.forEach((r, i) => {
     const ry = top + i * rowH;
     if (i) {
       ctx.fillStyle = "rgba(255,255,255,0.12)";
       ctx.fillRect(x, ry - 4, width, 2);
     }
     const mid = ry + rowH / 2;
-    ctx.font = `${labelSize}px ${font}`;
+    const base = mid + 2;
+    const sub = base + subSize * 1.3;
     ctx.fillStyle = "#ffffff";
-    ctx.fillText(r.flag, x, mid + labelSize * 0.36);
-    const fx = x + labelSize * 1.6;
-    ctx.font = `700 ${labelSize}px ${font}`;
-    ctx.fillText(
-      wrap(ctx, r.label, width * 0.45, 1)[0],
-      fx,
-      mid + labelSize * 0.36,
-    );
-    // Right side: time (yellow) above the day (grey).
+    ctx.font = `${flagSize}px ${font}`;
+    ctx.fillText(r.flag, x, base);
+    ctx.font = `700 ${nameSize}px ${font}`;
+    ctx.fillText(wrap(ctx, r.zone, nameMax, 1)[0], fx, base);
+    ctx.font = `600 ${subSize}px ${font}`;
+    ctx.fillStyle = "rgba(255,255,255,0.6)";
+    ctx.fillText(`${r.abbr} · ${r.offset}`, fx, sub);
+    // Right side: time (yellow); the day only when it isn't the main date.
     ctx.textAlign = "right";
     ctx.font = `${timeSize}px ${DISPLAY}`;
     ctx.fillStyle = YELLOW;
     const clock = r.clock.replace(" (midnight)", "").toUpperCase();
-    ctx.fillText(clock, x + width, mid + 2);
-    ctx.font = `600 ${Math.round(timeSize * 0.52)}px ${font}`;
-    ctx.fillStyle = "rgba(255,255,255,0.7)";
-    ctx.fillText(r.day, x + width, mid + 2 + timeSize * 0.75);
+    ctx.fillText(clock, x + width, base);
+    if (r.dayKey !== main.key) {
+      ctx.font = `700 ${subSize}px ${font}`;
+      ctx.fillStyle = PINK;
+      ctx.fillText(r.day, x + width, sub);
+    }
     ctx.textAlign = "left";
   });
 
@@ -362,8 +497,8 @@ export function MeetingPlanner() {
   useEffect(() => {
     const ctx = canvas.current?.getContext("2d");
     if (!ctx || !rows.length) return;
-    drawMeeting(ctx, { kicker, title: s.title, rows, foot, mark });
-  }, [kicker, s.title, rows, foot, mark, fonts]);
+    drawMeeting(ctx, { kicker, title: s.title, rows, at, foot, mark });
+  }, [kicker, s.title, rows, at, foot, mark, fonts]);
 
   async function copy(text: string, done: string) {
     await navigator.clipboard
@@ -517,8 +652,13 @@ export function MeetingPlanner() {
                   className="flex items-center gap-3 px-4 py-2.5 text-sm"
                 >
                   <span className="text-lg">{r.flag}</span>
-                  <span className="min-w-0 flex-1 font-medium text-navy">
-                    {r.label}
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium text-navy">
+                      {r.label}
+                    </span>
+                    <span className="block text-xs text-stone-500">
+                      {r.zone} ({r.abbr})
+                    </span>
                   </span>
                   {flag && (
                     <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
@@ -582,14 +722,14 @@ export function MeetingPlanner() {
           <section className="space-y-3 rounded-2xl bg-white p-4 ring-1 ring-black/5">
             <h2 className="font-semibold text-navy">Message</h2>
             <pre className="whitespace-pre-wrap rounded-xl bg-stone-50 p-3 font-sans text-sm text-navy">
-              {messageText(s, rows)}
+              {messageText(s, rows, at)}
             </pre>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 className={`${button} bg-pink text-white ring-0 hover:bg-pink/90`}
                 onClick={() =>
-                  copy(messageText(s, rows), "Copied the message.")
+                  copy(messageText(s, rows, at), "Copied the message.")
                 }
               >
                 Copy message

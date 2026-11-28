@@ -46,6 +46,16 @@ export const COMING_SOON: { title: string; text: string }[] = [
 
 export const CHANGELOG: Release[] = [
   {
+    date: "2026-11-28",
+    title: "Meeting graphics with time zones",
+    changes: [
+      {
+        level: "god",
+        text: "Meeting planner graphic: each row now shows the official time zone for that date (e.g. Central Standard Time · CST · UTC−6, switching to summer time names automatically), places in the same zone share a row, and the main date is shown big under the title. A row's day only shows when it's a different day. The message uses the time zone names too.",
+      },
+    ],
+  },
+  {
     date: "2026-11-26",
     title: "PDRs for Regional Support Leads",
     changes: [
