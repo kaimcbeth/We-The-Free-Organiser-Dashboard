@@ -65,7 +65,8 @@ export const ZONES: Place[] = [
 ];
 
 const byLabel = (l: string) => ZONES.find((z) => z.label === l)!;
-// Kai's list for the Global Support Team meeting (26 Nov 2026; Calgary 28 Nov).
+// Kai's list for the Global Support Team meeting (26 Nov 2026; Calgary 28 Nov;
+// Tennessee = Eastern, Arabella is on New York time).
 const USUAL = [
   "UK",
   "Europe (Berlin, Paris)",
@@ -73,7 +74,7 @@ const USUAL = [
   "Bali",
   "Sydney",
   "Montreal",
-  "Tennessee (Nashville)",
+  "Tennessee (Knoxville)",
   "Calgary",
 ].map(byLabel);
 

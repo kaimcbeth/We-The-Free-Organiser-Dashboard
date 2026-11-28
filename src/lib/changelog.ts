@@ -57,6 +57,10 @@ export const CHANGELOG: Release[] = [
         level: "god",
         text: "Meeting planner: Calgary added (and to the usual Global Support Team places). Alberta stays on UTC−6 all year since 1 November, shown as Alberta Time (ABT). Places on the same clock time now share one row with both flags and abbreviations (e.g. Central Standard Time · CST / ABT in December).",
       },
+      {
+        level: "god",
+        text: "Meeting planner: the usual Global Support Team places now use Eastern Tennessee (Knoxville, New York time) instead of Nashville.",
+      },
     ],
   },
   {
