@@ -53,6 +53,10 @@ export const CHANGELOG: Release[] = [
         level: "god",
         text: "Meeting planner graphic: each row now shows the official time zone for that date (e.g. Central Standard Time · CST · UTC−6, switching to summer time names automatically), places in the same zone share a row, and the main date is shown big under the title. A row's day only shows when it's a different day. The message uses the time zone names too.",
       },
+      {
+        level: "god",
+        text: "Meeting planner: Calgary added (and to the usual Global Support Team places). Alberta stays on UTC−6 all year since 1 November, shown as Alberta Time (ABT).",
+      },
     ],
   },
   {

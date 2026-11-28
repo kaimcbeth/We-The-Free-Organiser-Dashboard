@@ -54,6 +54,7 @@ export const ZONES: Place[] = [
   { label: "Montreal", tz: "America/Toronto", flag: "🇨🇦" },
   { label: "Toronto", tz: "America/Toronto", flag: "🇨🇦" },
   { label: "Vancouver", tz: "America/Vancouver", flag: "🇨🇦" },
+  { label: "Calgary", tz: "America/Edmonton", flag: "🇨🇦" },
   { label: "New York", tz: "America/New_York", flag: "🇺🇸" },
   { label: "Tennessee (Nashville)", tz: "America/Chicago", flag: "🇺🇸" },
   { label: "Tennessee (Knoxville)", tz: "America/New_York", flag: "🇺🇸" },
@@ -64,7 +65,7 @@ export const ZONES: Place[] = [
 ];
 
 const byLabel = (l: string) => ZONES.find((z) => z.label === l)!;
-// Kai's list for the Global Support Team meeting (26 Nov 2026).
+// Kai's list for the Global Support Team meeting (26 Nov 2026; Calgary 28 Nov).
 const USUAL = [
   "UK",
   "Europe (Berlin, Paris)",
@@ -73,6 +74,7 @@ const USUAL = [
   "Sydney",
   "Montreal",
   "Tennessee (Nashville)",
+  "Calgary",
 ].map(byLabel);
 
 type Saved = {
@@ -164,6 +166,10 @@ export function zoneInfo(tz: string, at: number) {
   const short = part("short");
   const off = part("shortOffset").replace("GMT", "") || "+0";
   const offset = `UTC${off.replace("-", "−")}`;
+  // Alberta stays on UTC−6 all year since 1 Nov 2026 and calls it Alberta
+  // Time (ABT); browsers still call it Mountain Daylight Time.
+  if (tz === "America/Edmonton" && off === "-6")
+    return { zone: "Alberta Time", abbr: "ABT", offset };
   const fix = ZONE_FIX[long];
   if (fix) return { zone: fix[0], abbr: fix[1], offset };
   const abbr = /^[A-Z]{2,5}$/.test(short)
