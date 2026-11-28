@@ -86,8 +86,12 @@ type Saved = {
   minutes: number;
   link: string;
   places: Place[];
+  placesV?: number; // bump PLACES_V to move saved planners onto USUAL
 };
 
+// Bumped when the usual places change (28 Nov 2026: Calgary, Eastern
+// Tennessee), so a planner saved on a device picks the new list up once.
+const PLACES_V = 2;
 const DEFAULT: Saved = {
   title: "Global Support Team meeting",
   date: "2026-12-16",
@@ -96,6 +100,7 @@ const DEFAULT: Saved = {
   minutes: 60,
   link: "",
   places: USUAL,
+  placesV: PLACES_V,
 };
 const KEY = "wtf-meeting-planner";
 
@@ -274,7 +279,7 @@ function messageText(s: Saved, rows: Row[], at: number) {
     "",
     ...zones.map(
       (r) =>
-        `${r.flag} ${r.zone} (${r.abbr}): ${r.clock}${r.dayKey === main.key ? "" : `, ${r.day}`}`,
+        `${flagOrder(splitFlags(r.flag)).join("")} ${r.zone} (${r.abbr}): ${r.clock}${r.dayKey === main.key ? "" : `, ${r.day}`}`,
     ),
     ...(s.link ? ["", `Join here: ${s.link}`] : []),
   ].join("\n");
@@ -313,6 +318,125 @@ function googleLink(s: Saved, at: number) {
     ...(s.link ? { details: `Join here: ${s.link}` } : {}),
   });
   return `https://calendar.google.com/calendar/render?${q}`;
+}
+
+// "🇺🇸🇨🇦" → ["🇺🇸", "🇨🇦"] (flags are pairs of regional indicator letters).
+export function splitFlags(flags: string): string[] {
+  return (
+    flags.match(/\p{Regional_Indicator}{2}|\p{Extended_Pictographic}/gu) ?? []
+  );
+}
+
+// On a split flag the first one gets the top-left half, so flags whose
+// corner says who they are (stars, Union Jack) go first.
+const CORNER_FLAGS = ["🇺🇸", "🇬🇧", "🇦🇺", "🇳🇿", "🇲🇾", "🇱🇷"];
+export function flagOrder(flags: string[]): string[] {
+  const rank = (f: string) => {
+    const i = CORNER_FLAGS.indexOf(f);
+    return i < 0 ? CORNER_FLAGS.length : i;
+  };
+  return [...flags].sort((a, b) => rank(a) - rank(b));
+}
+
+// A flag emoji as a picture with the empty space around the glyph cut off.
+const flagCache = new Map<string, HTMLCanvasElement | null>();
+function flagPicture(flag: string, font: string) {
+  if (flagCache.has(flag)) return flagCache.get(flag)!;
+  const c = document.createElement("canvas");
+  c.width = c.height = 160;
+  const g = c.getContext("2d", { willReadFrequently: true })!;
+  g.font = `110px ${font}`;
+  g.textBaseline = "middle";
+  g.textAlign = "center";
+  g.fillText(flag, 80, 84);
+  const d = g.getImageData(0, 0, 160, 160).data;
+  let x0 = 160,
+    y0 = 160,
+    x1 = -1,
+    y1 = -1;
+  for (let y = 0; y < 160; y++)
+    for (let x = 0; x < 160; x++)
+      if (d[(y * 160 + x) * 4 + 3] > 40) {
+        if (x < x0) x0 = x;
+        if (x > x1) x1 = x;
+        if (y < y0) y0 = y;
+        if (y > y1) y1 = y;
+      }
+  if (x1 < 0) {
+    flagCache.set(flag, null);
+    return null;
+  }
+  const out = document.createElement("canvas");
+  out.width = x1 - x0 + 1;
+  out.height = y1 - y0 + 1;
+  out
+    .getContext("2d")!
+    .drawImage(c, x0, y0, out.width, out.height, 0, 0, out.width, out.height);
+  flagCache.set(flag, out);
+  return out;
+}
+
+// One flag fills the box; two share it split corner to corner (first flag
+// top-left, second bottom-right); three or more as even upright strips.
+function drawFlags(
+  ctx: CanvasRenderingContext2D,
+  flags: string[],
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  font: string,
+) {
+  if (!flags.length) return;
+  const pics = flags.map((f) => flagPicture(f, font));
+  if (pics.some((p) => !p)) {
+    // No colour emoji font: fall back to the plain characters.
+    ctx.font = `${h}px ${font}`;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(flags.join(""), x, y + h * 0.85);
+    return;
+  }
+  const r = Math.max(3, h * 0.14);
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+  ctx.clip();
+  const n = pics.length;
+  pics.forEach((p, i) => {
+    ctx.save();
+    ctx.beginPath();
+    if (n === 2) {
+      if (i === 0) {
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + w, y);
+        ctx.lineTo(x, y + h);
+      } else {
+        ctx.moveTo(x + w, y);
+        ctx.lineTo(x + w, y + h);
+        ctx.lineTo(x, y + h);
+      }
+      ctx.closePath();
+    } else {
+      ctx.rect(x + (w * i) / n, y, w / n, h);
+    }
+    ctx.clip();
+    ctx.drawImage(p!, x, y, w, h);
+    ctx.restore();
+  });
+  if (n === 2) {
+    ctx.strokeStyle = "rgba(255,255,255,0.9)";
+    ctx.lineWidth = Math.max(2, h * 0.08);
+    ctx.beginPath();
+    ctx.moveTo(x + w, y);
+    ctx.lineTo(x, y + h);
+    ctx.stroke();
+  }
+  ctx.restore();
+  ctx.strokeStyle = "rgba(255,255,255,0.25)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(x + 0.5, y + 0.5, w - 1, h - 1, r);
+  ctx.stroke();
 }
 
 // 4:5 graphic: kicker, meeting title, the main date (big, Kai 28 Nov 2026),
@@ -398,13 +522,11 @@ export function drawMeeting(
         ctx.measureText(r.clock.replace(" (midnight)", "").toUpperCase()).width,
     ),
   );
-  const flagW = Math.max(
-    ...rows.map((r) => {
-      ctx.font = `${flagSize}px ${font}`;
-      return ctx.measureText(r.flag).width;
-    }),
-  );
-  const fx = x + flagW + 16;
+  // Flags are drawn as pictures: one per row, or one split diagonally when a
+  // row covers two countries (Kai, 28 Nov 2026: "half half flag").
+  const flagH = Math.round(flagSize * 1.05);
+  const flagW = Math.round(flagH * 1.45);
+  const fx = x + flagW + 18;
   const nameMax = x + width - timeW - 36 - fx;
   let nameSize = Math.min(32, rowH * 0.36);
   for (; nameSize > 18; nameSize -= 1) {
@@ -421,8 +543,15 @@ export function drawMeeting(
     const base = mid + 2;
     const sub = base + subSize * 1.3;
     ctx.fillStyle = "#ffffff";
-    ctx.font = `${flagSize}px ${font}`;
-    ctx.fillText(r.flag, x, base);
+    drawFlags(
+      ctx,
+      flagOrder(splitFlags(r.flag)),
+      x,
+      base - flagH * 0.82,
+      flagW,
+      flagH,
+      font,
+    );
     ctx.font = `700 ${nameSize}px ${font}`;
     ctx.fillText(wrap(ctx, r.zone, nameMax, 1)[0], fx, base);
     ctx.font = `600 ${subSize}px ${font}`;
@@ -453,7 +582,11 @@ export function MeetingPlanner() {
   const [s, setS] = useState<Saved>(() => {
     try {
       const v = JSON.parse(localStorage.getItem(KEY) ?? "null");
-      return v ? { ...DEFAULT, ...v } : DEFAULT;
+      if (!v) return DEFAULT;
+      const saved: Saved = { ...DEFAULT, ...v };
+      return saved.placesV === PLACES_V
+        ? saved
+        : { ...saved, places: USUAL, placesV: PLACES_V };
     } catch {
       return DEFAULT;
     }

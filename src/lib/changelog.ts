@@ -59,7 +59,7 @@ export const CHANGELOG: Release[] = [
       },
       {
         level: "god",
-        text: "Meeting planner: the usual Global Support Team places now use Eastern Tennessee (Knoxville, New York time) instead of Nashville.",
+        text: "Meeting planner: the usual Global Support Team places now use Eastern Tennessee (Knoxville, New York time) instead of Nashville. Planners saved on a device switch to the new list by themselves (once). Flags are drawn as pictures; a row covering two countries gets one flag split corner to corner (e.g. US and Canada for Eastern Standard Time).",
       },
     ],
   },
