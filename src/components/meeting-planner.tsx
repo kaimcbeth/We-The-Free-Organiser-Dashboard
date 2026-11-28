@@ -202,16 +202,22 @@ export function mainDate(rows: Row[], at: number) {
   return { label, key: best };
 }
 
-// One row per time zone: places on the same zone share it (flags merged).
+// One row per clock time: places with the same UTC offset on the same day
+// share a row (Kai, 28 Nov 2026: Central Standard Time and Alberta Time are
+// both UTC−6), keeping the first zone's name, all the flags and every
+// abbreviation ("CST / ABT").
 export function byZone(rows: Row[]): Row[] {
   const out: Row[] = [];
   for (const r of rows) {
     const same = out.find(
-      (o) =>
-        o.zone === r.zone && o.offset === r.offset && o.dayKey === r.dayKey,
+      (o) => o.offset === r.offset && o.dayKey === r.dayKey,
     );
-    if (!same) out.push({ ...r });
-    else if (!same.flag.includes(r.flag)) same.flag += r.flag;
+    if (!same) {
+      out.push({ ...r });
+      continue;
+    }
+    if (!same.flag.includes(r.flag)) same.flag += r.flag;
+    if (!same.abbr.split(" / ").includes(r.abbr)) same.abbr += ` / ${r.abbr}`;
   }
   return out;
 }
